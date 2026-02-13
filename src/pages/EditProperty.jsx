@@ -1,0 +1,462 @@
+import { useState, useEffect } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
+import { createPageUrl } from "@/utils";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Home, MapPin, Image, PoundSterling, FileText, Upload, X, Loader2, ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
+import { Link } from "react-router-dom";
+
+const PROPERTY_TYPES = [
+  { value: "house", label: "House" },
+  { value: "apartment", label: "Apartment" },
+  { value: "villa", label: "Villa" },
+  { value: "cabin", label: "Cabin" },
+  { value: "cottage", label: "Cottage" },
+  { value: "bungalow", label: "Bungalow" },
+];
+
+const AMENITIES = [
+  "WiFi", "Pool", "Parking", "Air Conditioning", "Kitchen", "Washing Machine",
+  "TV", "Hot Tub", "Garden", "BBQ", "Gym", "Beach Access", "Fireplace",
+  "Workspace", "Iron", "Hair Dryer", "Dishwasher", "Coffee Maker"
+];
+
+export default function EditProperty() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const propertyId = urlParams.get('id');
+  
+  const [isUploading, setIsUploading] = useState(false);
+  const [formData, setFormData] = useState(null);
+
+  const { data: property, isLoading } = useQuery({
+    queryKey: ['property', propertyId],
+    queryFn: async () => {
+      const results = await base44.entities.Property.filter({ id: propertyId });
+      return results[0];
+    },
+    enabled: !!propertyId,
+  });
+
+  useEffect(() => {
+    if (property) {
+      setFormData({
+        title: property.title || "",
+        property_type: property.property_type || "house",
+        guest_capacity: property.guest_capacity || 4,
+        bedrooms: property.bedrooms || 2,
+        bathrooms: property.bathrooms || 1,
+        location: property.location || { address: "", city: "", postcode: "", country: "UK" },
+        photos: property.photos || [],
+        nightly_rate: property.nightly_rate || 100,
+        cleaning_fee: property.cleaning_fee || 0,
+        security_deposit: property.security_deposit || 0,
+        minimum_stay: property.minimum_stay || 1,
+        description: property.description || "",
+        amenities: property.amenities || [],
+        house_rules: property.house_rules || "",
+        pets_allowed: property.pets_allowed || false,
+        smoking_allowed: property.smoking_allowed || false,
+        check_in_time: property.check_in_time || "15:00",
+        check_out_time: property.check_out_time || "10:00",
+        status: property.status || "draft",
+      });
+    }
+  }, [property]);
+
+  const updateMutation = useMutation({
+    mutationFn: (data) => base44.entities.Property.update(propertyId, data),
+    onSuccess: () => {
+      toast.success("Property updated successfully!");
+    },
+  });
+
+  const handleChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleLocationChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      location: { ...prev.location, [field]: value }
+    }));
+  };
+
+  const handlePhotoUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    setIsUploading(true);
+    const uploadedUrls = [];
+
+    for (const file of files) {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      uploadedUrls.push(file_url);
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      photos: [...prev.photos, ...uploadedUrls]
+    }));
+    setIsUploading(false);
+  };
+
+  const removePhoto = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      photos: prev.photos.filter((_, i) => i !== index)
+    }));
+  };
+
+  const toggleAmenity = (amenity) => {
+    setFormData(prev => ({
+      ...prev,
+      amenities: prev.amenities.includes(amenity)
+        ? prev.amenities.filter(a => a !== amenity)
+        : [...prev.amenities, amenity]
+    }));
+  };
+
+  const handleSave = () => {
+    updateMutation.mutate(formData);
+  };
+
+  if (isLoading || !formData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-teal-600" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 pb-20">
+      <div className="bg-white border-b border-gray-100 sticky top-0 z-40">
+        <div className="max-w-4xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Link to={createPageUrl('HostProperties')}>
+                <Button variant="ghost" size="icon">
+                  <ArrowLeft className="w-5 h-5" />
+                </Button>
+              </Link>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">Edit Property</h1>
+                <p className="text-sm text-gray-500">{formData.title}</p>
+              </div>
+            </div>
+            <Button 
+              onClick={handleSave}
+              disabled={updateMutation.isPending}
+              className="bg-teal-600 hover:bg-teal-700"
+            >
+              {updateMutation.isPending ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
+              ) : (
+                "Save Changes"
+              )}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <Tabs defaultValue="basics" className="space-y-6">
+          <TabsList className="bg-white border border-gray-100">
+            <TabsTrigger value="basics"><Home className="w-4 h-4 mr-2" /> Basics</TabsTrigger>
+            <TabsTrigger value="location"><MapPin className="w-4 h-4 mr-2" /> Location</TabsTrigger>
+            <TabsTrigger value="photos"><Image className="w-4 h-4 mr-2" /> Photos</TabsTrigger>
+            <TabsTrigger value="pricing"><PoundSterling className="w-4 h-4 mr-2" /> Pricing</TabsTrigger>
+            <TabsTrigger value="details"><FileText className="w-4 h-4 mr-2" /> Details</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="basics">
+            <Card>
+              <CardHeader>
+                <CardTitle>Property Basics</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <Label>Property Title</Label>
+                  <Input
+                    value={formData.title}
+                    onChange={(e) => handleChange("title", e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label>Property Type</Label>
+                  <Select value={formData.property_type} onValueChange={(v) => handleChange("property_type", v)}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PROPERTY_TYPES.map(type => (
+                        <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Label>Guests</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      value={formData.guest_capacity}
+                      onChange={(e) => handleChange("guest_capacity", parseInt(e.target.value) || 1)}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label>Bedrooms</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={formData.bedrooms}
+                      onChange={(e) => handleChange("bedrooms", parseInt(e.target.value) || 0)}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label>Bathrooms</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      value={formData.bathrooms}
+                      onChange={(e) => handleChange("bathrooms", parseInt(e.target.value) || 1)}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label>Status</Label>
+                  <Select value={formData.status} onValueChange={(v) => handleChange("status", v)}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft">Draft</SelectItem>
+                      <SelectItem value="published">Published</SelectItem>
+                      <SelectItem value="paused">Paused</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="location">
+            <Card>
+              <CardHeader>
+                <CardTitle>Location</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <Label>Address</Label>
+                  <Input
+                    value={formData.location.address}
+                    onChange={(e) => handleLocationChange("address", e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>City / Town</Label>
+                    <Input
+                      value={formData.location.city}
+                      onChange={(e) => handleLocationChange("city", e.target.value)}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label>Postcode</Label>
+                    <Input
+                      value={formData.location.postcode}
+                      onChange={(e) => handleLocationChange("postcode", e.target.value)}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label>Country</Label>
+                  <Select value={formData.location.country} onValueChange={(v) => handleLocationChange("country", v)}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="UK">United Kingdom</SelectItem>
+                      <SelectItem value="Spain">Spain</SelectItem>
+                      <SelectItem value="Portugal">Portugal</SelectItem>
+                      <SelectItem value="France">France</SelectItem>
+                      <SelectItem value="Italy">Italy</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="photos">
+            <Card>
+              <CardHeader>
+                <CardTitle>Photos</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:border-teal-300 transition-colors">
+                  <input type="file" accept="image/*" multiple onChange={handlePhotoUpload} className="hidden" id="photo-upload" />
+                  <label htmlFor="photo-upload" className="cursor-pointer">
+                    {isUploading ? (
+                      <Loader2 className="w-12 h-12 mx-auto mb-4 text-teal-600 animate-spin" />
+                    ) : (
+                      <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                    )}
+                    <p className="text-gray-600 font-medium">{isUploading ? "Uploading..." : "Click to upload photos"}</p>
+                  </label>
+                </div>
+                {formData.photos.length > 0 && (
+                  <div className="grid grid-cols-3 gap-4">
+                    {formData.photos.map((photo, idx) => (
+                      <div key={idx} className="relative group aspect-square">
+                        <img src={photo} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover rounded-lg" />
+                        <button
+                          onClick={() => removePhoto(idx)}
+                          className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                        {idx === 0 && <span className="absolute bottom-2 left-2 px-2 py-1 bg-black/70 text-white text-xs rounded">Cover</span>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="pricing">
+            <Card>
+              <CardHeader>
+                <CardTitle>Pricing</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <Label>Nightly Rate (£)</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={formData.nightly_rate}
+                    onChange={(e) => handleChange("nightly_rate", parseInt(e.target.value) || 0)}
+                    className="mt-1 text-2xl font-semibold h-14"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Cleaning Fee (£)</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={formData.cleaning_fee}
+                      onChange={(e) => handleChange("cleaning_fee", parseInt(e.target.value) || 0)}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label>Security Deposit (£)</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={formData.security_deposit}
+                      onChange={(e) => handleChange("security_deposit", parseInt(e.target.value) || 0)}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label>Minimum Stay (nights)</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={formData.minimum_stay}
+                    onChange={(e) => handleChange("minimum_stay", parseInt(e.target.value) || 1)}
+                    className="mt-1"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Check-in Time</Label>
+                    <Input type="time" value={formData.check_in_time} onChange={(e) => handleChange("check_in_time", e.target.value)} className="mt-1" />
+                  </div>
+                  <div>
+                    <Label>Check-out Time</Label>
+                    <Input type="time" value={formData.check_out_time} onChange={(e) => handleChange("check_out_time", e.target.value)} className="mt-1" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="details">
+            <Card>
+              <CardHeader>
+                <CardTitle>Description & Amenities</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <Label>Property Description</Label>
+                  <Textarea
+                    value={formData.description}
+                    onChange={(e) => handleChange("description", e.target.value)}
+                    rows={6}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label className="mb-3 block">Amenities</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {AMENITIES.map(amenity => (
+                      <label key={amenity} className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+                        <Checkbox
+                          checked={formData.amenities.includes(amenity)}
+                          onCheckedChange={() => toggleAmenity(amenity)}
+                        />
+                        <span className="text-sm">{amenity}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <Label>House Rules</Label>
+                  <Textarea
+                    value={formData.house_rules}
+                    onChange={(e) => handleChange("house_rules", e.target.value)}
+                    rows={3}
+                    className="mt-1"
+                  />
+                </div>
+                <div className="flex gap-6">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox checked={formData.pets_allowed} onCheckedChange={(v) => handleChange("pets_allowed", v)} />
+                    <span>Pets allowed</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox checked={formData.smoking_allowed} onCheckedChange={(v) => handleChange("smoking_allowed", v)} />
+                    <span>Smoking allowed</span>
+                  </label>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+}

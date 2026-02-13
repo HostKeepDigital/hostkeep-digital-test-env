@@ -58,6 +58,7 @@ import HostProperties from './pages/HostProperties';
 import Subscription from './pages/Subscription';
 import HostMessages from './pages/HostMessages';
 import HostSettings from './pages/HostSettings';
+import EditProperty from './pages/EditProperty';
 import __Layout from './Layout.jsx';
 
 
@@ -73,6 +74,7 @@ export const PAGES = {
     "Subscription": Subscription,
     "HostMessages": HostMessages,
     "HostSettings": HostSettings,
+    "EditProperty": EditProperty,
 }
 
 export const pagesConfig = {
