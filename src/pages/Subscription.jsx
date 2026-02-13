@@ -1,0 +1,282 @@
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle, Crown, Zap, Rocket, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { format, addMonths } from "date-fns";
+
+const PLANS = [
+  {
+    id: "basic",
+    name: "Basic",
+    price: 19,
+    icon: Zap,
+    color: "teal",
+    max_properties: 1,
+    features: [
+      "1 property listing",
+      "Calendar management",
+      "Direct bookings",
+      "Guest messaging",
+      "Email notifications",
+    ],
+  },
+  {
+    id: "pro",
+    name: "Pro",
+    price: 39,
+    icon: Crown,
+    color: "violet",
+    max_properties: 5,
+    popular: true,
+    features: [
+      "Up to 5 properties",
+      "Everything in Basic",
+      "Priority support",
+      "Analytics dashboard",
+      "iCal sync",
+      "Review management",
+    ],
+  },
+  {
+    id: "premium",
+    name: "Premium",
+    price: 79,
+    icon: Rocket,
+    color: "amber",
+    max_properties: 999,
+    features: [
+      "Unlimited properties",
+      "Everything in Pro",
+      "Featured listings",
+      "API access",
+      "Dedicated account manager",
+      "Custom branding",
+    ],
+  },
+];
+
+export default function Subscription() {
+  const [user, setUser] = useState(null);
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    base44.auth.me().then(setUser).catch(() => {});
+  }, []);
+
+  const { data: subscription } = useQuery({
+    queryKey: ['subscription', user?.id],
+    queryFn: async () => {
+      const subs = await base44.entities.Subscription.filter({ user_id: user?.id });
+      return subs[0];
+    },
+    enabled: !!user?.id,
+  });
+
+  const subscribeMutation = useMutation({
+    mutationFn: async (plan) => {
+      const planDetails = PLANS.find(p => p.id === plan);
+      const startDate = format(new Date(), "yyyy-MM-dd");
+      const endDate = format(addMonths(new Date(), 1), "yyyy-MM-dd");
+
+      if (subscription) {
+        return base44.entities.Subscription.update(subscription.id, {
+          plan,
+          status: 'active',
+          price_monthly: planDetails.price,
+          max_properties: planDetails.max_properties,
+          start_date: startDate,
+          end_date: endDate,
+          features: planDetails.features,
+        });
+      } else {
+        return base44.entities.Subscription.create({
+          user_id: user.id,
+          plan,
+          status: 'active',
+          price_monthly: planDetails.price,
+          max_properties: planDetails.max_properties,
+          start_date: startDate,
+          end_date: endDate,
+          features: planDetails.features,
+        });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subscription'] });
+      toast.success("Subscription activated! You can now list your properties.");
+    },
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: () => {
+      return base44.entities.Subscription.update(subscription.id, {
+        status: 'cancelled'
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subscription'] });
+      toast.success("Subscription cancelled");
+    },
+  });
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12">
+      <div className="max-w-5xl mx-auto px-4">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-12"
+        >
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Simple, Transparent Pricing
+          </h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Pay one flat monthly fee. Keep 100% of your bookings. No commissions. Ever.
+          </p>
+        </motion.div>
+
+        {subscription && subscription.status === 'active' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-teal-50 border border-teal-200 rounded-2xl p-6 mb-8 text-center"
+          >
+            <Badge className="bg-teal-500 mb-2">Current Plan</Badge>
+            <h2 className="text-2xl font-bold text-gray-900 capitalize mb-1">
+              {subscription.plan} Plan
+            </h2>
+            <p className="text-gray-600">
+              £{subscription.price_monthly}/month • Renews {subscription.end_date}
+            </p>
+          </motion.div>
+        )}
+
+        <div className="grid md:grid-cols-3 gap-6">
+          {PLANS.map((plan, idx) => {
+            const isCurrentPlan = subscription?.plan === plan.id && subscription?.status === 'active';
+            const Icon = plan.icon;
+
+            return (
+              <motion.div
+                key={plan.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.1 }}
+              >
+                <Card className={`relative h-full flex flex-col ${
+                  plan.popular ? 'border-2 border-violet-500 shadow-lg' : 'border border-gray-200'
+                } ${isCurrentPlan ? 'ring-2 ring-teal-500' : ''}`}>
+                  {plan.popular && (
+                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-violet-500">
+                      Most Popular
+                    </Badge>
+                  )}
+                  {isCurrentPlan && (
+                    <Badge className="absolute -top-3 right-4 bg-teal-500">
+                      Current
+                    </Badge>
+                  )}
+                  
+                  <CardHeader className="text-center pb-4">
+                    <div className={`w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center ${
+                      plan.color === 'teal' ? 'bg-teal-100' :
+                      plan.color === 'violet' ? 'bg-violet-100' : 'bg-amber-100'
+                    }`}>
+                      <Icon className={`w-6 h-6 ${
+                        plan.color === 'teal' ? 'text-teal-600' :
+                        plan.color === 'violet' ? 'text-violet-600' : 'text-amber-600'
+                      }`} />
+                    </div>
+                    <CardTitle className="text-xl">{plan.name}</CardTitle>
+                    <div className="mt-2">
+                      <span className="text-4xl font-bold text-gray-900">£{plan.price}</span>
+                      <span className="text-gray-500">/month</span>
+                    </div>
+                    <CardDescription className="mt-2">
+                      {plan.max_properties === 999 ? 'Unlimited' : plan.max_properties} {plan.max_properties === 1 ? 'property' : 'properties'}
+                    </CardDescription>
+                  </CardHeader>
+
+                  <CardContent className="flex-1">
+                    <ul className="space-y-3">
+                      {plan.features.map((feature, i) => (
+                        <li key={i} className="flex items-start gap-3 text-sm text-gray-600">
+                          <CheckCircle className={`w-5 h-5 flex-shrink-0 ${
+                            plan.color === 'teal' ? 'text-teal-500' :
+                            plan.color === 'violet' ? 'text-violet-500' : 'text-amber-500'
+                          }`} />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+
+                  <CardFooter>
+                    {isCurrentPlan ? (
+                      <Button 
+                        variant="outline" 
+                        className="w-full"
+                        onClick={() => cancelMutation.mutate()}
+                        disabled={cancelMutation.isPending}
+                      >
+                        Cancel Subscription
+                      </Button>
+                    ) : (
+                      <Button
+                        className={`w-full ${
+                          plan.popular 
+                            ? 'bg-violet-600 hover:bg-violet-700' 
+                            : 'bg-teal-600 hover:bg-teal-700'
+                        }`}
+                        onClick={() => subscribeMutation.mutate(plan.id)}
+                        disabled={subscribeMutation.isPending}
+                      >
+                        {subscribeMutation.isPending ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : subscription?.status === 'active' ? (
+                          'Switch to ' + plan.name
+                        ) : (
+                          'Get Started'
+                        )}
+                      </Button>
+                    )}
+                  </CardFooter>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="mt-12 text-center"
+        >
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            All plans include:
+          </h3>
+          <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600">
+            {[
+              "No commission fees",
+              "Direct payments",
+              "Secure platform",
+              "24/7 support",
+              "Cancel anytime"
+            ].map((item, i) => (
+              <span key={i} className="flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-gray-200">
+                <CheckCircle className="w-4 h-4 text-teal-500" />
+                {item}
+              </span>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
+}

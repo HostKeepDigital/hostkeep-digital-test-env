@@ -47,9 +47,6 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
-import Dashboard from './pages/Dashboard';
-import Bookings from './pages/Bookings';
-import Income from './pages/Income';
 import Pay from './pages/Pay';
 import Home from './pages/Home';
 import Search from './pages/Search';
@@ -58,13 +55,13 @@ import HostDashboard from './pages/HostDashboard';
 import CreateProperty from './pages/CreateProperty';
 import HostBookings from './pages/HostBookings';
 import HostProperties from './pages/HostProperties';
+import Subscription from './pages/Subscription';
+import HostMessages from './pages/HostMessages';
+import HostSettings from './pages/HostSettings';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "Dashboard": Dashboard,
-    "Bookings": Bookings,
-    "Income": Income,
     "Pay": Pay,
     "Home": Home,
     "Search": Search,
@@ -73,10 +70,13 @@ export const PAGES = {
     "CreateProperty": CreateProperty,
     "HostBookings": HostBookings,
     "HostProperties": HostProperties,
+    "Subscription": Subscription,
+    "HostMessages": HostMessages,
+    "HostSettings": HostSettings,
 }
 
 export const pagesConfig = {
-    mainPage: "Dashboard",
+    mainPage: "Pay",
     Pages: PAGES,
     Layout: __Layout,
 };
