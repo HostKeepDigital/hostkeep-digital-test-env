@@ -51,6 +51,13 @@ import Dashboard from './pages/Dashboard';
 import Bookings from './pages/Bookings';
 import Income from './pages/Income';
 import Pay from './pages/Pay';
+import Home from './pages/Home';
+import Search from './pages/Search';
+import PropertyDetails from './pages/PropertyDetails';
+import HostDashboard from './pages/HostDashboard';
+import CreateProperty from './pages/CreateProperty';
+import HostBookings from './pages/HostBookings';
+import HostProperties from './pages/HostProperties';
 import __Layout from './Layout.jsx';
 
 
@@ -59,6 +66,13 @@ export const PAGES = {
     "Bookings": Bookings,
     "Income": Income,
     "Pay": Pay,
+    "Home": Home,
+    "Search": Search,
+    "PropertyDetails": PropertyDetails,
+    "HostDashboard": HostDashboard,
+    "CreateProperty": CreateProperty,
+    "HostBookings": HostBookings,
+    "HostProperties": HostProperties,
 }
 
 export const pagesConfig = {
