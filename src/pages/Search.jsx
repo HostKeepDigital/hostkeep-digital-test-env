@@ -8,10 +8,7 @@ import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Search as SearchIcon, MapPin, Calendar, Users, SlidersHorizontal, X } from "lucide-react";
-import { format, parseISO, isWithinInterval, isBefore, isAfter, addDays } from "date-fns";
 import PropertyCard from "@/components/properties/PropertyCard";
 
 const AMENITIES = [
@@ -40,36 +37,6 @@ export default function Search() {
     queryKey: ['properties'],
     queryFn: () => base44.entities.Property.filter({ status: 'published' }),
   });
-
-  const { data: allBookings = [] } = useQuery({
-    queryKey: ['all-bookings'],
-    queryFn: () => base44.entities.Booking.filter({ booking_status: 'confirmed' }),
-  });
-
-  // Get all booked date ranges
-  const getBookedDates = () => {
-    const bookedDates = [];
-    allBookings.forEach(booking => {
-      if (booking.check_in && booking.check_out) {
-        const checkIn = parseISO(booking.check_in);
-        const checkOut = parseISO(booking.check_out);
-        let current = checkIn;
-        while (isBefore(current, checkOut) || current.getTime() === checkOut.getTime()) {
-          bookedDates.push(new Date(current));
-          current = addDays(current, 1);
-        }
-      }
-    });
-    return bookedDates;
-  };
-
-  const bookedDates = getBookedDates();
-
-  const isDateBooked = (date) => {
-    return bookedDates.some(bookedDate => 
-      bookedDate.toDateString() === date.toDateString()
-    );
-  };
 
   const filteredProperties = allProperties.filter(property => {
     if (filters.location && !property.location?.city?.toLowerCase().includes(filters.location.toLowerCase()) &&
@@ -134,81 +101,20 @@ export default function Search() {
                 className="pl-10 h-11"
               />
             </div>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="h-11 w-44 justify-start text-left font-normal">
-                  <Calendar className="mr-2 h-4 w-4 text-gray-400" />
-                  {filters.checkIn ? format(parseISO(filters.checkIn), "MMM d, yyyy") : "Check in"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <CalendarComponent
-                  mode="single"
-                  selected={filters.checkIn ? parseISO(filters.checkIn) : undefined}
-                  onSelect={(date) => handleFilterChange("checkIn", date ? format(date, "yyyy-MM-dd") : "")}
-                  disabled={(date) => isBefore(date, new Date()) || isDateBooked(date)}
-                  modifiers={{ booked: bookedDates }}
-                  modifiersStyles={{
-                    booked: { 
-                      backgroundColor: '#FEE2E2', 
-                      color: '#991B1B',
-                      textDecoration: 'line-through'
-                    }
-                  }}
-                  className="rounded-md border"
-                  numberOfMonths={2}
-                />
-                <div className="p-3 border-t flex items-center gap-4 text-xs text-gray-500">
-                  <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 rounded bg-red-100 border border-red-200"></div>
-                    <span>Booked</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 rounded bg-teal-600"></div>
-                    <span>Selected</span>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="h-11 w-44 justify-start text-left font-normal">
-                  <Calendar className="mr-2 h-4 w-4 text-gray-400" />
-                  {filters.checkOut ? format(parseISO(filters.checkOut), "MMM d, yyyy") : "Check out"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <CalendarComponent
-                  mode="single"
-                  selected={filters.checkOut ? parseISO(filters.checkOut) : undefined}
-                  onSelect={(date) => handleFilterChange("checkOut", date ? format(date, "yyyy-MM-dd") : "")}
-                  disabled={(date) => {
-                    const checkInDate = filters.checkIn ? parseISO(filters.checkIn) : new Date();
-                    return isBefore(date, addDays(checkInDate, 1)) || isDateBooked(date);
-                  }}
-                  modifiers={{ booked: bookedDates }}
-                  modifiersStyles={{
-                    booked: { 
-                      backgroundColor: '#FEE2E2', 
-                      color: '#991B1B',
-                      textDecoration: 'line-through'
-                    }
-                  }}
-                  className="rounded-md border"
-                  numberOfMonths={2}
-                />
-                <div className="p-3 border-t flex items-center gap-4 text-xs text-gray-500">
-                  <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 rounded bg-red-100 border border-red-200"></div>
-                    <span>Booked</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 rounded bg-teal-600"></div>
-                    <span>Selected</span>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
+            <Input
+              type="date"
+              value={filters.checkIn}
+              onChange={(e) => handleFilterChange("checkIn", e.target.value)}
+              className="w-40 h-11"
+              placeholder="Check in"
+            />
+            <Input
+              type="date"
+              value={filters.checkOut}
+              onChange={(e) => handleFilterChange("checkOut", e.target.value)}
+              className="w-40 h-11"
+              placeholder="Check out"
+            />
             <div className="relative w-28">
               <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <Input
