@@ -72,8 +72,7 @@ export default function CreateProperty() {
   const [formData, setFormData] = useState({
     title: "",
     property_type: "apartment",
-    max_adults: 2,
-    max_children: 2,
+    guest_capacity: 4,
     bedrooms: 2,
     bathrooms: 1,
     location: {
@@ -104,11 +103,7 @@ export default function CreateProperty() {
   }, []);
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Property.create({ 
-      ...data, 
-      owner_id: user?.id,
-      guest_capacity: data.max_adults + data.max_children
-    }),
+    mutationFn: (data) => base44.entities.Property.create({ ...data, owner_id: user?.id }),
     onSuccess: (property) => {
       toast.success("Property created successfully!");
       window.location.href = createPageUrl('HostProperties');
@@ -163,7 +158,7 @@ export default function CreateProperty() {
 
   const canProceed = () => {
     switch (currentStep) {
-      case 1: return formData.title.length >= 16 && formData.title.length <= 50 && !titleError && formData.property_type && formData.max_adults > 0;
+      case 1: return formData.title.length >= 16 && formData.title.length <= 50 && !titleError && formData.property_type && formData.guest_capacity > 0;
       case 2: return formData.location.city && formData.location.postcode;
       case 3: return formData.photos.length >= 1;
       case 4: return formData.nightly_rate > 0;
@@ -278,41 +273,17 @@ export default function CreateProperty() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <Label>Number of Adults</Label>
-                      <Select 
-                        value={String(formData.max_adults)} 
-                        onValueChange={(v) => handleChange("max_adults", parseInt(v))}
-                      >
-                        <SelectTrigger className="mt-1">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {[1,2,3,4,5,6,7,8,9,10].map(num => (
-                            <SelectItem key={num} value={String(num)}>{num}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Label>Guests</Label>
+                      <Input
+                        type="number"
+                        min="1"
+                        value={formData.guest_capacity}
+                        onChange={(e) => handleChange("guest_capacity", parseInt(e.target.value) || 1)}
+                        className="mt-1"
+                      />
                     </div>
-                    <div>
-                      <Label>Number of Children</Label>
-                      <Select 
-                        value={String(formData.max_children)} 
-                        onValueChange={(v) => handleChange("max_children", parseInt(v))}
-                      >
-                        <SelectTrigger className="mt-1">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {[0,1,2,3,4,5,6,7,8,9,10].map(num => (
-                            <SelectItem key={num} value={String(num)}>{num}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label>Bedrooms</Label>
                       <Input
