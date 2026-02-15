@@ -27,12 +27,13 @@ const STEPS = [
 ];
 
 const PROPERTY_TYPES = [
+  { value: "lodges", label: "Lodges" },
   { value: "house", label: "House" },
-  { value: "apartment", label: "Apartment" },
-  { value: "villa", label: "Villa" },
+  { value: "chalet", label: "Chalet" },
+  { value: "caravan", label: "Caravan" },
   { value: "cabin", label: "Cabin" },
-  { value: "cottage", label: "Cottage" },
   { value: "bungalow", label: "Bungalow" },
+  { value: "apartment", label: "Apartment" },
 ];
 
 const AMENITIES = [
