@@ -47,9 +47,31 @@ export default function CreateProperty() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isUploading, setIsUploading] = useState(false);
 
+  const [titleError, setTitleError] = useState("");
+
+  const validateTitle = (value) => {
+    // Only allow letters, numbers, spaces, and - & ! .
+    const invalidChars = value.replace(/[a-zA-Z0-9\s\-&!.]/g, '');
+    if (invalidChars.length > 0) {
+      return `Invalid characters: ${invalidChars.split('').join(' ')} (only - & ! . allowed)`;
+    }
+    if (value.length > 0 && value.length < 16) {
+      return `Title must be at least 16 characters (${value.length}/16)`;
+    }
+    if (value.length > 20) {
+      return `Title must be maximum 20 characters (${value.length}/20)`;
+    }
+    return "";
+  };
+
+  const handleTitleChange = (value) => {
+    setFormData(prev => ({ ...prev, title: value }));
+    setTitleError(validateTitle(value));
+  };
+
   const [formData, setFormData] = useState({
     title: "",
-    property_type: "house",
+    property_type: "apartment",
     guest_capacity: 4,
     bedrooms: 2,
     bathrooms: 1,
@@ -136,7 +158,7 @@ export default function CreateProperty() {
 
   const canProceed = () => {
     switch (currentStep) {
-      case 1: return formData.title && formData.property_type && formData.guest_capacity > 0;
+      case 1: return formData.title.length >= 16 && formData.title.length <= 20 && !titleError && formData.property_type && formData.guest_capacity > 0;
       case 2: return formData.location.city && formData.location.postcode;
       case 3: return formData.photos.length >= 1;
       case 4: return formData.nightly_rate > 0;
@@ -221,10 +243,17 @@ export default function CreateProperty() {
                     <Label>Property Title</Label>
                     <Input
                       value={formData.title}
-                      onChange={(e) => handleChange("title", e.target.value)}
-                      placeholder="Charming Cottage by the Sea"
-                      className="mt-1"
+                      onChange={(e) => handleTitleChange(e.target.value)}
+                      placeholder="Seaside Cottage!"
+                      className={`mt-1 ${titleError ? 'border-red-500' : ''}`}
+                      maxLength={20}
                     />
+                    <div className="flex justify-between mt-1">
+                      <p className={`text-sm ${titleError ? 'text-red-500' : 'text-gray-400'}`}>
+                        {titleError || "16-20 characters. Special chars: - & ! ."}
+                      </p>
+                      <span className="text-sm text-gray-400">{formData.title.length}/20</span>
+                    </div>
                   </div>
                   <div>
                     <Label>Property Type</Label>
