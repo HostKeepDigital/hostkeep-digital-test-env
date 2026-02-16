@@ -284,10 +284,10 @@ export default function Home() {
             <div className="w-10 h-10 rounded-xl bg-teal-500 flex items-center justify-center">
               <HomeIcon className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-bold">StayDirect</span>
+            <span className="text-xl font-bold">HostKeep</span>
           </div>
           <p className="text-gray-400 text-sm">
-            © 2026 StayDirect. Book directly with holiday home owners.
+            © 2026 HostKeep. Book directly with holiday home owners.
           </p>
         </div>
       </footer>
