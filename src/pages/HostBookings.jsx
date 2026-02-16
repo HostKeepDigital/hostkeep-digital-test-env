@@ -9,15 +9,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { 
   Calendar, User, Mail, Phone, MessageSquare, Check, X, 
-  Clock, PoundSterling, Copy, ExternalLink, Loader2
+  Clock, PoundSterling, Copy, ExternalLink, Loader2, Star
 } from "lucide-react";
 import { format, parseISO, differenceInDays, isAfter, isBefore } from "date-fns";
 import { toast } from "sonner";
+import ReviewForm from "@/components/reviews/ReviewForm";
 
 export default function HostBookings() {
   const [user, setUser] = useState(null);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [actionDialog, setActionDialog] = useState({ open: false, action: null, booking: null });
+  const [reviewBooking, setReviewBooking] = useState(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -35,6 +37,20 @@ export default function HostBookings() {
     queryFn: () => base44.entities.Property.filter({ owner_id: user?.id }),
     enabled: !!user?.id,
   });
+
+  const { data: existingReviews = [] } = useQuery({
+    queryKey: ['host-reviews', user?.id],
+    queryFn: () => base44.entities.Review.filter({ reviewer_id: user?.id, review_type: "host_to_guest" }),
+    enabled: !!user?.id,
+  });
+
+  const hasReviewedGuest = (bookingId) => {
+    return existingReviews.some(r => r.booking_id === bookingId);
+  };
+
+  const canReviewGuest = (booking) => {
+    return ["checked_in", "completed"].includes(booking.booking_status) && !hasReviewedGuest(booking.id);
+  };
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Booking.update(id, data),
@@ -207,13 +223,38 @@ export default function HostBookings() {
               </>
             )}
             {booking.booking_status === 'checked_in' && (
+              <>
+                <Button
+                  size="sm"
+                  onClick={() => setActionDialog({ open: true, action: 'complete', booking })}
+                  className="bg-teal-600 hover:bg-teal-700"
+                >
+                  Complete Stay
+                </Button>
+                {canReviewGuest(booking) && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setReviewBooking(booking)}
+                  >
+                    <Star className="w-4 h-4 mr-1" /> Review Guest
+                  </Button>
+                )}
+              </>
+            )}
+            {booking.booking_status === 'completed' && canReviewGuest(booking) && (
               <Button
                 size="sm"
-                onClick={() => setActionDialog({ open: true, action: 'complete', booking })}
-                className="bg-teal-600 hover:bg-teal-700"
+                variant="outline"
+                onClick={() => setReviewBooking(booking)}
               >
-                Complete Stay
+                <Star className="w-4 h-4 mr-1" /> Review Guest
               </Button>
+            )}
+            {hasReviewedGuest(booking.id) && (
+              <Badge variant="outline" className="text-emerald-600 border-emerald-200">
+                <Star className="w-3 h-3 mr-1 fill-emerald-600" /> Reviewed
+              </Badge>
             )}
           </div>
         </div>
@@ -343,6 +384,18 @@ export default function HostBookings() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Review Guest Dialog */}
+        {reviewBooking && (
+          <ReviewForm
+            open={!!reviewBooking}
+            onOpenChange={(open) => !open && setReviewBooking(null)}
+            booking={reviewBooking}
+            reviewType="host_to_guest"
+            reviewerName={user?.full_name}
+            reviewerId={user?.id}
+          />
+        )}
       </div>
     </div>
   );

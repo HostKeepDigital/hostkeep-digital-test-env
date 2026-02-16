@@ -161,9 +161,14 @@ export default function Layout({ children, currentPageName }) {
                 Explore
               </Link>
               {isAuthenticated && (
-                <Link to={createPageUrl('HostDashboard')} className="text-gray-600 hover:text-gray-900 font-medium">
-                  Host Dashboard
-                </Link>
+                <>
+                  <Link to={createPageUrl('MyBookings')} className="text-gray-600 hover:text-gray-900 font-medium">
+                    My Bookings
+                  </Link>
+                  <Link to={createPageUrl('HostDashboard')} className="text-gray-600 hover:text-gray-900 font-medium">
+                    Host Dashboard
+                  </Link>
+                </>
               )}
             </nav>
 
@@ -182,6 +187,11 @@ export default function Layout({ children, currentPageName }) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem asChild>
+                      <Link to={createPageUrl('MyBookings')} className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4" /> My Bookings
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link to={createPageUrl('HostDashboard')} className="flex items-center gap-2">
                         <Building2 className="w-4 h-4" /> Host Dashboard

@@ -60,6 +60,7 @@ import PropertyDetails from './pages/PropertyDetails';
 import Search from './pages/Search';
 import Subscription from './pages/Subscription';
 import AboutUs from './pages/AboutUs';
+import MyBookings from './pages/MyBookings';
 import __Layout from './Layout.jsx';
 
 
@@ -77,6 +78,7 @@ export const PAGES = {
     "Search": Search,
     "Subscription": Subscription,
     "AboutUs": AboutUs,
+    "MyBookings": MyBookings,
 }
 
 export const pagesConfig = {
