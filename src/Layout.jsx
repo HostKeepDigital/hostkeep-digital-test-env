@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Footer from "@/components/Footer";
 
 // Pages without layout (guest facing / public)
 const PUBLIC_PAGES = ["Pay"];
@@ -219,6 +220,9 @@ export default function Layout({ children, currentPageName }) {
       <main className="pt-16">
         {children}
       </main>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }
