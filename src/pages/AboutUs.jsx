@@ -50,7 +50,7 @@ export default function AboutUs() {
             transition={{ delay: 0.1 }}
             className="text-xl text-teal-100 max-w-3xl mx-auto mb-10"
           >
-            StayDirect helps holiday home owners rent their properties without losing a percentage of every booking. Hosts pay a simple monthly subscription and keep 100% of their booking income.
+            HostKeep helps holiday home owners rent their properties without losing a percentage of every booking. Hosts pay a simple monthly subscription and keep 100% of their booking income.
           </motion.p>
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -78,13 +78,13 @@ export default function AboutUs() {
           <h2 className="text-3xl font-bold text-gray-900 mb-6">Our Story</h2>
           <div className="prose prose-lg text-gray-600 space-y-4">
             <p>
-              We started StayDirect because we saw something that didn't sit right. Holiday home owners across the UK were doing all the hard work — maintaining their properties, welcoming guests, handling every little detail — only to hand over a big chunk of their earnings to booking platforms.
+              We started HostKeep because we saw something that didn't sit right. Holiday home owners across the UK were doing all the hard work — maintaining their properties, welcoming guests, handling every little detail — only to hand over a big chunk of their earnings to booking platforms.
             </p>
             <p>
               For many independent hosts, those commissions add up fast. A 15–20% cut on every booking isn't just a fee — it's money that should stay with the people who earned it.
             </p>
             <p>
-              So we built StayDirect: a simple, subscription-based alternative. No percentage cuts. No surprise charges. Just a fair monthly fee that lets hosts list their homes and keep 100% of what they earn.
+              So we built HostKeep: a simple, subscription-based alternative. No percentage cuts. No surprise charges. Just a fair monthly fee that lets hosts list their homes and keep 100% of what they earn.
             </p>
             <p className="font-medium text-gray-800">
               Our goal is straightforward — simplicity, transparency, and giving hosts back the control they deserve.
@@ -140,12 +140,12 @@ export default function AboutUs() {
       {/* Comparison Table */}
       <section className="py-16 lg:py-24 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Why StayDirect Is Different</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Why HostKeep Is Different</h2>
           
           <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
             <div className="grid grid-cols-3 bg-gray-100 font-semibold text-sm">
               <div className="p-4 text-gray-600"></div>
-              <div className="p-4 text-center text-teal-700 bg-teal-50">StayDirect</div>
+              <div className="p-4 text-center text-teal-700 bg-teal-50">HostKeep</div>
               <div className="p-4 text-center text-gray-600">Others</div>
             </div>
             {comparisonData.map((row, index) => (
@@ -174,7 +174,7 @@ export default function AboutUs() {
             <div>
               <h2 className="text-3xl font-bold text-gray-900 mb-6">Built for the UK Holiday Market</h2>
               <p className="text-lg text-gray-600 mb-8">
-                StayDirect was born from a love of the British countryside and coastline. We're focused on helping local holiday home owners thrive — not competing on global scale, but delivering real value close to home.
+                HostKeep was born from a love of the British countryside and coastline. We're focused on helping local holiday home owners thrive — not competing on global scale, but delivering real value close to home.
               </p>
               <ul className="space-y-4">
                 {[
@@ -229,7 +229,7 @@ export default function AboutUs() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Community Focus</h2>
             <p className="text-lg text-gray-600">
-              StayDirect isn't just a platform — it's a community of independent hosts who believe there's a better way to do things.
+              HostKeep isn't just a platform — it's a community of independent hosts who believe there's a better way to do things.
             </p>
           </div>
           
@@ -251,7 +251,7 @@ export default function AboutUs() {
       <section className="py-16 lg:py-24 bg-gradient-to-br from-teal-600 to-teal-800 text-white">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to Keep More of What You Earn?</h2>
-          <p className="text-xl text-teal-100 mb-8">Join StayDirect today and take control of your holiday rental income.</p>
+          <p className="text-xl text-teal-100 mb-8">Join HostKeep today and take control of your holiday rental income.</p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link to={createPageUrl("Subscription")}>
               <Button size="lg" className="bg-white text-teal-700 hover:bg-gray-100">

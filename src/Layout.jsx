@@ -60,7 +60,7 @@ export default function Layout({ children, currentPageName }) {
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center">
                 <Home className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold text-gray-900">StayDirect</span>
+              <span className="text-xl font-bold text-gray-900">HostKeep</span>
             </Link>
             
             <nav className="flex-1 px-3 space-y-1">
@@ -100,7 +100,7 @@ export default function Layout({ children, currentPageName }) {
               <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center">
                 <Home className="w-4 h-4 text-white" />
               </div>
-              <span className="text-lg font-bold text-gray-900">StayDirect</span>
+              <span className="text-lg font-bold text-gray-900">HostKeep</span>
             </Link>
             <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -153,7 +153,7 @@ export default function Layout({ children, currentPageName }) {
               <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center">
                 <Home className="w-4 h-4 text-white" />
               </div>
-              <span className="text-xl font-bold text-gray-900 hidden sm:block">StayDirect</span>
+              <span className="text-xl font-bold text-gray-900 hidden sm:block">HostKeep</span>
             </Link>
 
             <nav className="hidden md:flex items-center gap-6">

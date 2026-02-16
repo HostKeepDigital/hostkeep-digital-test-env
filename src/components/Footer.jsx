@@ -12,7 +12,7 @@ export default function Footer() {
             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center">
               <Home className="w-4 h-4 text-white" />
             </div>
-            <span className="text-lg font-bold text-white">StayDirect</span>
+            <span className="text-lg font-bold text-white">HostKeep</span>
           </div>
           
           <div className="flex flex-wrap justify-center gap-6 text-sm">
@@ -31,7 +31,7 @@ export default function Footer() {
           </div>
           
           <p className="text-sm">
-            © {new Date().getFullYear()} StayDirect. All rights reserved.
+            © {new Date().getFullYear()} HostKeep. All rights reserved.
           </p>
         </div>
       </div>
