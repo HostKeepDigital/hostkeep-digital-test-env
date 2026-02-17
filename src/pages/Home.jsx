@@ -12,12 +12,13 @@ import {
   CheckCircle, ArrowRight, Building2, Palmtree, Mountain, Waves
 } from "lucide-react";
 import PropertyCard from "@/components/properties/PropertyCard";
+import GuestSelector from "@/components/search/GuestSelector";
 
 export default function Home() {
   const [searchLocation, setSearchLocation] = useState("");
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
-  const [guests, setGuests] = useState(2);
+  const [guestData, setGuestData] = useState({ adults: 1, children: 0, childAges: [], isValid: true });
 
   const { data: featuredProperties = [] } = useQuery({
     queryKey: ['featured-properties'],
@@ -25,11 +26,18 @@ export default function Home() {
   });
 
   const handleSearch = () => {
+    if (guestData.children > 0 && !guestData.isValid) {
+      return; // Don't search if child ages not filled
+    }
     const params = new URLSearchParams();
     if (searchLocation) params.set('location', searchLocation);
     if (checkIn) params.set('checkIn', checkIn);
     if (checkOut) params.set('checkOut', checkOut);
-    if (guests) params.set('guests', guests);
+    params.set('adults', guestData.adults);
+    params.set('children', guestData.children);
+    if (guestData.childAges.length > 0) {
+      params.set('childAges', guestData.childAges.join(','));
+    }
     window.location.href = createPageUrl('Search') + '?' + params.toString();
   };
 
@@ -106,19 +114,13 @@ export default function Home() {
               <div>
                 <label className="text-xs font-medium text-gray-500 mb-1 block">Guests</label>
                 <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <Input
-                      type="number"
-                      min="1"
-                      value={guests}
-                      onChange={(e) => setGuests(e.target.value)}
-                      className="pl-10 h-12 border-gray-200"
-                    />
+                  <div className="flex-1">
+                    <GuestSelector value={guestData} onChange={setGuestData} />
                   </div>
                   <Button 
                     onClick={handleSearch}
                     className="h-12 px-6 bg-teal-600 hover:bg-teal-700"
+                    disabled={guestData.children > 0 && !guestData.isValid}
                   >
                     <Search className="w-5 h-5" />
                   </Button>

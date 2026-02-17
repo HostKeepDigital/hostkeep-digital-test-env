@@ -19,11 +19,20 @@ const AMENITIES = [
 export default function Search() {
   const urlParams = new URLSearchParams(window.location.search);
   
+  // Parse child ages from URL
+  const parseChildAges = () => {
+    const agesParam = urlParams.get('childAges');
+    if (!agesParam) return [];
+    return agesParam.split(',').map(a => parseInt(a)).filter(a => !isNaN(a));
+  };
+
   const [filters, setFilters] = useState({
     location: urlParams.get('location') || "",
     checkIn: urlParams.get('checkIn') || "",
     checkOut: urlParams.get('checkOut') || "",
-    guests: parseInt(urlParams.get('guests')) || 1,
+    adults: parseInt(urlParams.get('adults')) || 1,
+    children: parseInt(urlParams.get('children')) || 0,
+    childAges: parseChildAges(),
     type: urlParams.get('type') || "all",
     minPrice: 0,
     maxPrice: 1000,
@@ -46,7 +55,9 @@ export default function Search() {
     if (filters.type !== "all" && property.property_type !== filters.type) {
       return false;
     }
-    if (filters.guests > property.guest_capacity) {
+    // Check total guests (adults + children) against capacity
+    const totalGuests = filters.adults + filters.children;
+    if (totalGuests > property.guest_capacity) {
       return false;
     }
     if (property.nightly_rate < filters.minPrice || property.nightly_rate > filters.maxPrice) {
@@ -59,6 +70,21 @@ export default function Search() {
       const propertyAmenities = property.amenities || [];
       if (!filters.amenities.every(a => propertyAmenities.includes(a))) {
         return false;
+      }
+    }
+    // Children filtering logic
+    if (filters.children > 0) {
+      // Exclude if children not allowed (default to false for existing properties)
+      if (property.children_allowed === false || property.children_allowed === undefined) {
+        return false;
+      }
+      // Check minimum child age requirement
+      if (property.minimum_child_age != null && property.minimum_child_age > 0) {
+        for (const age of filters.childAges) {
+          if (age < property.minimum_child_age) {
+            return false;
+          }
+        }
       }
     }
     return true;
@@ -115,15 +141,12 @@ export default function Search() {
               className="w-40 h-11"
               placeholder="Check out"
             />
-            <div className="relative w-28">
-              <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <Input
-                type="number"
-                min="1"
-                value={filters.guests}
-                onChange={(e) => handleFilterChange("guests", parseInt(e.target.value) || 1)}
-                className="pl-10 h-11"
-              />
+            <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg h-11">
+              <Users className="w-5 h-5 text-gray-400" />
+              <span className="text-sm text-gray-700">
+                {filters.adults} adult{filters.adults !== 1 ? 's' : ''}
+                {filters.children > 0 && `, ${filters.children} child${filters.children !== 1 ? 'ren' : ''}`}
+              </span>
             </div>
             
             <Sheet>

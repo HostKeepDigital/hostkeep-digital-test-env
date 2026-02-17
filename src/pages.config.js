@@ -47,6 +47,7 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import AboutUs from './pages/AboutUs';
 import CreateProperty from './pages/CreateProperty';
 import EditProperty from './pages/EditProperty';
 import Home from './pages/Home';
@@ -55,16 +56,16 @@ import HostDashboard from './pages/HostDashboard';
 import HostMessages from './pages/HostMessages';
 import HostProperties from './pages/HostProperties';
 import HostSettings from './pages/HostSettings';
+import MyBookings from './pages/MyBookings';
 import Pay from './pages/Pay';
 import PropertyDetails from './pages/PropertyDetails';
 import Search from './pages/Search';
 import Subscription from './pages/Subscription';
-import AboutUs from './pages/AboutUs';
-import MyBookings from './pages/MyBookings';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "AboutUs": AboutUs,
     "CreateProperty": CreateProperty,
     "EditProperty": EditProperty,
     "Home": Home,
@@ -73,12 +74,11 @@ export const PAGES = {
     "HostMessages": HostMessages,
     "HostProperties": HostProperties,
     "HostSettings": HostSettings,
+    "MyBookings": MyBookings,
     "Pay": Pay,
     "PropertyDetails": PropertyDetails,
     "Search": Search,
     "Subscription": Subscription,
-    "AboutUs": AboutUs,
-    "MyBookings": MyBookings,
 }
 
 export const pagesConfig = {

@@ -65,6 +65,8 @@ export default function EditProperty() {
         house_rules: property.house_rules || "",
         pets_allowed: property.pets_allowed || false,
         smoking_allowed: property.smoking_allowed || false,
+        children_allowed: property.children_allowed || false,
+        minimum_child_age: property.minimum_child_age ?? null,
         check_in_time: property.check_in_time || "15:00",
         check_out_time: property.check_out_time || "10:00",
         status: property.status || "draft",
@@ -442,7 +444,7 @@ export default function EditProperty() {
                     className="mt-1"
                   />
                 </div>
-                <div className="flex gap-6">
+                <div className="flex flex-wrap gap-6">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <Checkbox checked={formData.pets_allowed} onCheckedChange={(v) => handleChange("pets_allowed", v)} />
                     <span>Pets allowed</span>
@@ -451,7 +453,33 @@ export default function EditProperty() {
                     <Checkbox checked={formData.smoking_allowed} onCheckedChange={(v) => handleChange("smoking_allowed", v)} />
                     <span>Smoking allowed</span>
                   </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox 
+                      checked={formData.children_allowed} 
+                      onCheckedChange={(v) => {
+                        handleChange("children_allowed", v);
+                        if (!v) handleChange("minimum_child_age", null);
+                        else handleChange("minimum_child_age", 0);
+                      }} 
+                    />
+                    <span>Children allowed</span>
+                  </label>
                 </div>
+
+                {formData.children_allowed && (
+                  <div className="mt-4">
+                    <Label>Minimum Child Age</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="17"
+                      value={formData.minimum_child_age ?? 0}
+                      onChange={(e) => handleChange("minimum_child_age", parseInt(e.target.value) || 0)}
+                      className="mt-1 w-32"
+                    />
+                    <p className="text-sm text-gray-500 mt-1">Children below this age are not permitted</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
