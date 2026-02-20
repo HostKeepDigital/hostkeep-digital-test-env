@@ -171,16 +171,29 @@ export default function PropertyDetails() {
 
     // Priority B: Minimum Nights + Multiples
     const dayMin = checkInRule?.min_days || null;
-    const hasMultiples = checkInRule?.multiple_of?.length > 0;
+    
+    // Parse multiple_of - could be array or comma-separated string
+    let multiplesArray = [];
+    if (checkInRule?.multiple_of) {
+      if (typeof checkInRule.multiple_of === 'string') {
+        multiplesArray = checkInRule.multiple_of
+          .split(',')
+          .map(m => parseInt(m.trim()))
+          .filter(m => !isNaN(m) && m > 0);
+      } else if (Array.isArray(checkInRule.multiple_of)) {
+        multiplesArray = checkInRule.multiple_of
+          .map(m => typeof m === 'string' ? parseInt(m) : m)
+          .filter(m => !isNaN(m) && m > 0);
+      }
+    }
+    const hasMultiples = multiplesArray.length > 0;
 
     if (dayMin !== null && hasMultiples) {
       // Both min and multiples exist: include min + all multiples
       allowedSet.add(dayMin);
-      checkInRule.multiple_of.forEach(mult => {
-        if (typeof mult === 'number' && mult > 0) {
-          for (let i = 1; i * mult <= max; i++) {
-            allowedSet.add(i * mult);
-          }
+      multiplesArray.forEach(mult => {
+        for (let i = 1; i * mult <= max; i++) {
+          allowedSet.add(i * mult);
         }
       });
     } else if (dayMin !== null) {
@@ -190,11 +203,9 @@ export default function PropertyDetails() {
       }
     } else if (hasMultiples) {
       // Only multiples: use only multiples
-      checkInRule.multiple_of.forEach(mult => {
-        if (typeof mult === 'number' && mult > 0) {
-          for (let i = 1; i * mult <= max; i++) {
-            allowedSet.add(i * mult);
-          }
+      multiplesArray.forEach(mult => {
+        for (let i = 1; i * mult <= max; i++) {
+          allowedSet.add(i * mult);
         }
       });
     } else {
