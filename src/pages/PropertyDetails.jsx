@@ -21,7 +21,7 @@ import { format, parseISO, differenceInDays, addDays, isBefore } from "date-fns"
 import { toast } from "sonner";
 import ReviewList from "@/components/reviews/ReviewList";
 import BookingCalendar from "@/components/shared/BookingCalendar";
-import { getAllowedNights } from "@/utils/getAllowedNights";
+import { getAllowedNights } from "@/functions/getAllowedNights";
 
 const AMENITY_ICONS = {
   "WiFi": Wifi, "Parking": Car, "Air Conditioning": Wind, "Pool": Waves,
