@@ -170,35 +170,27 @@ export default function PropertyDetails() {
     }
 
     // Priority B: Minimum Nights + Multiples
-    const dayMin = checkInRule?.minimum_number_of_nights || null;
+    const dayMin = checkInRule?.minimum_number_of_nights ?? null;
     const hasMultiples = checkInRule?.multiple_of?.length > 0;
 
-    if (dayMin !== null && hasMultiples) {
-      // Both min and multiples exist: include min + all multiples
+    // Always add multiples if they exist
+    if (hasMultiples) {
+      checkInRule.multiple_of.forEach(mult => {
+        if (typeof mult === 'number' && mult > 0) {
+          for (let i = 1; i * mult <= max; i++) {
+            allowedSet.add(i * mult);
+          }
+        }
+      });
+    }
+
+    // Add day minimum if it exists
+    if (dayMin !== null) {
       allowedSet.add(dayMin);
-      checkInRule.multiple_of.forEach(mult => {
-        if (typeof mult === 'number' && mult > 0) {
-          for (let i = 1; i * mult <= max; i++) {
-            allowedSet.add(i * mult);
-          }
-        }
-      });
-    } else if (dayMin !== null) {
-      // Only minimum: use range from day min to max
-      for (let i = dayMin; i <= max; i++) {
-        allowedSet.add(i);
-      }
-    } else if (hasMultiples) {
-      // Only multiples: use only multiples
-      checkInRule.multiple_of.forEach(mult => {
-        if (typeof mult === 'number' && mult > 0) {
-          for (let i = 1; i * mult <= max; i++) {
-            allowedSet.add(i * mult);
-          }
-        }
-      });
-    } else {
-      // Priority C: No restrictions, use full range
+    }
+
+    // If neither min nor multiples, use full range
+    if (!hasMultiples && dayMin === null) {
       for (let i = min; i <= max; i++) {
         allowedSet.add(i);
       }
