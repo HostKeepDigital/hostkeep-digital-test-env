@@ -415,7 +415,6 @@ export default function PropertyDetails() {
               <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
                 <div>Check-in: {property.check_in_time || "3:00 PM"}</div>
                 <div>Check-out: {property.check_out_time || "10:00 AM"}</div>
-                <div>Minimum stay: {property.minimum_stay || 1} night(s)</div>
                 <div className="flex items-center gap-2">
                   {property.pets_allowed ? (
                     <><CheckCircle className="w-4 h-4 text-green-500" /> Pets allowed</>
