@@ -19,11 +19,9 @@ const DAY_LABELS = {
 
 const DEFAULT_DAY_RULE = {
   enabled: true,
-  min_days: 1,
-  max_days: 28,
+  minimum_number_of_nights: null,
   rule_type: "any",
-  fixed_values: [],
-  multiple_of: null
+  fixed_values: []
 };
 
 const parseMultipleOf = (str) => {
