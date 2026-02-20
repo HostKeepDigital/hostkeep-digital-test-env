@@ -54,7 +54,13 @@ export default function EditProperty() {
         guest_capacity: property.guest_capacity || 4,
         bedrooms: property.bedrooms || 2,
         bathrooms: property.bathrooms || 1,
-        location: property.location || { address: "", city: "", postcode: "", country: "UK" },
+        location: property.location || { 
+          address_line_1: "123 High Street", 
+          address_line_2: "Flat 4B", 
+          city: "London", 
+          postcode: "SW1A 1AA", 
+          country: "United Kingdom" 
+        },
         photos: property.photos || [],
         nightly_rate: property.nightly_rate || 100,
         cleaning_fee: property.cleaning_fee || 0,
@@ -263,19 +269,30 @@ export default function EditProperty() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
-                  <Label>Address</Label>
+                  <Label>Address Line 1</Label>
                   <Input
-                    value={formData.location.address}
-                    onChange={(e) => handleLocationChange("address", e.target.value)}
+                    value={formData.location.address_line_1}
+                    onChange={(e) => handleLocationChange("address_line_1", e.target.value)}
+                    placeholder="123 High Street"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label>Address Line 2 (Optional)</Label>
+                  <Input
+                    value={formData.location.address_line_2 || ""}
+                    onChange={(e) => handleLocationChange("address_line_2", e.target.value)}
+                    placeholder="Flat 4B"
                     className="mt-1"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>City / Town</Label>
+                    <Label>City</Label>
                     <Input
                       value={formData.location.city}
                       onChange={(e) => handleLocationChange("city", e.target.value)}
+                      placeholder="London"
                       className="mt-1"
                     />
                   </div>
@@ -283,7 +300,8 @@ export default function EditProperty() {
                     <Label>Postcode</Label>
                     <Input
                       value={formData.location.postcode}
-                      onChange={(e) => handleLocationChange("postcode", e.target.value)}
+                      onChange={(e) => handleLocationChange("postcode", e.target.value.toUpperCase())}
+                      placeholder="SW1A 1AA"
                       className="mt-1"
                     />
                   </div>
@@ -295,7 +313,7 @@ export default function EditProperty() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="UK">United Kingdom</SelectItem>
+                      <SelectItem value="United Kingdom">United Kingdom</SelectItem>
                       <SelectItem value="Spain">Spain</SelectItem>
                       <SelectItem value="Portugal">Portugal</SelectItem>
                       <SelectItem value="France">France</SelectItem>
