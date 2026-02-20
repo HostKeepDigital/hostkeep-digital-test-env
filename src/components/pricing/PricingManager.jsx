@@ -15,6 +15,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 export default function PricingManager({ formData, onUpdate }) {
   const [selectedDate, setSelectedDate] = useState(null);
+  const [depositError, setDepositError] = useState("");
 
   const handlePricingUpdate = (field, value) => {
     onUpdate('pricing_settings', {
@@ -146,20 +147,50 @@ export default function PricingManager({ formData, onUpdate }) {
                   onChange={(e) => {
                     const cleanValue = e.target.value.replace(/,/g, '');
                     const value = parseFloat(cleanValue);
-                    if (formData.deposit_type === "percentage" && value > 100) {
-                      onUpdate("deposit_value", 100);
-                    } else if (value < 0) {
+                    
+                    // Clear error first
+                    setDepositError("");
+                    
+                    // Prevent negative values
+                    if (value < 0 || isNaN(value)) {
                       onUpdate("deposit_value", 0);
+                      return;
+                    }
+                    
+                    if (formData.deposit_type === "percentage") {
+                      // Auto-cap at 100% for percentage
+                      const cappedValue = Math.min(value, 100);
+                      const roundedValue = Math.round(cappedValue * 100) / 100; // 2 decimal places
+                      onUpdate("deposit_value", roundedValue);
                     } else {
-                      onUpdate("deposit_value", value || 0);
+                      // Fixed amount - validate max £100
+                      const roundedValue = Math.round(value * 100) / 100; // 2 decimal places
+                      if (roundedValue > 100) {
+                        setDepositError("For deposits above £100, please use Percentage of Total Booking instead.");
+                      } else {
+                        onUpdate("deposit_value", roundedValue);
+                      }
                     }
                   }}
-                  placeholder={formData.deposit_type === "percentage" ? "e.g., 25" : "e.g., 100.00 or 1,000"}
+                  onBlur={() => {
+                    // Validate on blur to prevent saving invalid values
+                    if (formData.deposit_type === "fixed" && formData.deposit_value > 100) {
+                      setDepositError("For deposits above £100, please use Percentage of Total Booking instead.");
+                      onUpdate("deposit_value", 100);
+                    }
+                  }}
+                  placeholder={formData.deposit_type === "percentage" ? "e.g., 25" : "e.g., 50"}
                   required
-                  className="mt-1"
+                  className={`mt-1 ${depositError ? 'border-red-500' : ''}`}
                 />
                 {formData.deposit_type === "percentage" && (
-                  <p className="text-xs text-gray-500 mt-1">Enter a value between 0-100%</p>
+                  <p className="text-xs text-gray-500 mt-1">Enter a value between 0-100% (max 100%)</p>
+                )}
+                {formData.deposit_type === "fixed" && !depositError && (
+                  <p className="text-xs text-gray-500 mt-1">Maximum £100 (for higher amounts use percentage)</p>
+                )}
+                {depositError && (
+                  <p className="text-xs text-red-500 mt-1">{depositError}</p>
                 )}
               </div>
             </>
