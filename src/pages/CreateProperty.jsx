@@ -136,9 +136,27 @@ export default function CreateProperty() {
     }));
   };
 
+  const [uploadedFileIdentifiers, setUploadedFileIdentifiers] = useState([]);
+
   const handlePhotoUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
+
+    // Check for duplicates before uploading
+    const newIdentifiers = files.map(f => `${f.name}-${f.size}-${f.lastModified}`);
+    const duplicateFiles = [];
+    
+    newIdentifiers.forEach((identifier, idx) => {
+      if (uploadedFileIdentifiers.includes(identifier)) {
+        duplicateFiles.push(files[idx].name);
+      }
+    });
+
+    if (duplicateFiles.length > 0) {
+      toast.error(`Duplicate file(s) detected: ${duplicateFiles.join(', ')}`);
+      e.target.value = ''; // Reset file input
+      return;
+    }
 
     setIsUploading(true);
     const uploadedUrls = [];
@@ -152,23 +170,13 @@ export default function CreateProperty() {
       ...prev,
       photos: [...prev.photos, ...uploadedUrls]
     }));
+    setUploadedFileIdentifiers(prev => [...prev, ...newIdentifiers]);
     setIsUploading(false);
+    e.target.value = ''; // Reset file input
   };
 
   const getDuplicatePhotos = () => {
-    const duplicates = [];
-    const seen = new Map();
-    
-    formData.photos.forEach((photo, index) => {
-      const fileName = photo.split('/').pop();
-      if (seen.has(fileName)) {
-        duplicates.push({ index, fileName, originalIndex: seen.get(fileName) });
-      } else {
-        seen.set(fileName, index);
-      }
-    });
-    
-    return duplicates;
+    return [];
   };
 
   const removePhoto = (index) => {
@@ -176,6 +184,7 @@ export default function CreateProperty() {
       ...prev,
       photos: prev.photos.filter((_, i) => i !== index)
     }));
+    setUploadedFileIdentifiers(prev => prev.filter((_, i) => i !== index));
   };
 
   const toggleAmenity = (amenity) => {
@@ -426,52 +435,28 @@ export default function CreateProperty() {
                     </p>
                   )}
 
-                  {getDuplicatePhotos().length > 0 && (
-                    <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                      <p className="text-sm font-semibold text-red-900 mb-2">Duplicate photos detected:</p>
-                      <ul className="text-sm text-red-700 space-y-1">
-                        {getDuplicatePhotos().map((dup, i) => (
-                          <li key={i}>
-                            Photo {dup.index + 1} is a duplicate of Photo {dup.originalIndex + 1} ({dup.fileName})
-                          </li>
-                        ))}
-                      </ul>
-                      <p className="text-sm text-red-700 mt-2">Please remove duplicate photos to continue.</p>
-                    </div>
-                  )}
-
                   {formData.photos.length > 0 && (
                     <div className="grid grid-cols-3 gap-4">
-                      {formData.photos.map((photo, idx) => {
-                        const duplicates = getDuplicatePhotos();
-                        const isDuplicate = duplicates.some(d => d.index === idx || d.originalIndex === idx);
-                        
-                        return (
-                          <div key={idx} className={`relative group aspect-square ${isDuplicate ? 'ring-2 ring-red-500' : ''}`}>
-                            <img
-                              src={photo}
-                              alt={`Photo ${idx + 1}`}
-                              className="w-full h-full object-cover rounded-lg"
-                            />
-                            <button
-                              onClick={() => removePhoto(idx)}
-                              className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                            {idx === 0 && (
-                              <span className="absolute bottom-2 left-2 px-2 py-1 bg-black/70 text-white text-xs rounded">
-                                Cover
-                              </span>
-                            )}
-                            {isDuplicate && (
-                              <span className="absolute top-2 left-2 px-2 py-1 bg-red-500 text-white text-xs rounded">
-                                Duplicate
-                              </span>
-                            )}
-                          </div>
-                        );
-                      })}
+                      {formData.photos.map((photo, idx) => (
+                        <div key={idx} className="relative group aspect-square">
+                          <img
+                            src={photo}
+                            alt={`Photo ${idx + 1}`}
+                            className="w-full h-full object-cover rounded-lg"
+                          />
+                          <button
+                            onClick={() => removePhoto(idx)}
+                            className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                          {idx === 0 && (
+                            <span className="absolute bottom-2 left-2 px-2 py-1 bg-black/70 text-white text-xs rounded">
+                              Cover
+                            </span>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   )}
                 </CardContent>
