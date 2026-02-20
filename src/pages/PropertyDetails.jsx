@@ -301,102 +301,111 @@ export default function PropertyDetails() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24 md:pb-0">
-      {/* Professional Photo Gallery */}
-      <div className="bg-gray-100">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          {/* Mobile/Tablet: Carousel View */}
-          <div className="md:hidden">
-            <div className="relative aspect-square md:aspect-video overflow-hidden bg-gray-200 rounded-lg">
-              <img 
-                src={photos[currentImageIndex]} 
-                alt={property.title}
-                className="w-full h-full object-cover"
-              />
-              {photos.length > 1 && (
-                <>
-                  <button
-                    onClick={() => setCurrentImageIndex(prev => prev === 0 ? photos.length - 1 : prev - 1)}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-all"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setCurrentImageIndex(prev => prev === photos.length - 1 ? 0 : prev + 1)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-all"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1">
-                    {photos.map((_, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => setCurrentImageIndex(idx)}
-                        className={`w-1.5 h-1.5 rounded-full transition-all ${idx === currentImageIndex ? 'bg-white w-5' : 'bg-white/60'}`}
-                      />
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
+      {/* Professional Photo Gallery - Booking.com style */}
+       <div className="bg-white">
+         <div className="max-w-7xl mx-auto px-4 py-6">
+           {/* Mobile: Carousel */}
+           <div className="md:hidden mb-4">
+             <div className="relative aspect-square overflow-hidden bg-gray-200 rounded-lg">
+               <img 
+                 src={photos[currentImageIndex]} 
+                 alt={property.title}
+                 className="w-full h-full object-cover"
+               />
+               {photos.length > 1 && (
+                 <>
+                   <button
+                     onClick={() => setCurrentImageIndex(prev => prev === 0 ? photos.length - 1 : prev - 1)}
+                     className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-all"
+                   >
+                     <ChevronLeft className="w-5 h-5" />
+                   </button>
+                   <button
+                     onClick={() => setCurrentImageIndex(prev => prev === photos.length - 1 ? 0 : prev + 1)}
+                     className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-all"
+                   >
+                     <ChevronRight className="w-5 h-5" />
+                   </button>
+                 </>
+               )}
+             </div>
+             <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
+               {photos.map((photo, idx) => (
+                 <button
+                   key={idx}
+                   onClick={() => setCurrentImageIndex(idx)}
+                   className={`relative flex-shrink-0 w-16 h-16 rounded overflow-hidden transition-all ${
+                     idx === currentImageIndex ? 'ring-2 ring-teal-600' : 'opacity-60 hover:opacity-100'
+                   }`}
+                 >
+                   <img 
+                     src={photo} 
+                     alt={`Thumbnail ${idx + 1}`}
+                     className="w-full h-full object-cover"
+                   />
+                 </button>
+               ))}
+             </div>
+           </div>
 
-          {/* Desktop: Grid Layout with Main Image + Thumbnails */}
-          <div className="hidden md:grid grid-cols-4 gap-3 h-64">
-            {/* Main Image */}
-            <div className="col-span-3 relative overflow-hidden bg-gray-300 rounded-lg group cursor-pointer">
-              <img 
-                src={photos[currentImageIndex]} 
-                alt={property.title}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all" />
-              {photos.length > 1 && (
-                <>
-                  <button
-                    onClick={() => setCurrentImageIndex(prev => prev === 0 ? photos.length - 1 : prev - 1)}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() => setCurrentImageIndex(prev => prev === photos.length - 1 ? 0 : prev + 1)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                </>
-              )}
-            </div>
+           {/* Desktop: Booking.com style - Main image top, thumbnails below */}
+           <div className="hidden md:block">
+             {/* Main Image */}
+             <div className="relative overflow-hidden bg-gray-300 rounded-lg mb-3 group h-96">
+               <img 
+                 src={photos[currentImageIndex]} 
+                 alt={property.title}
+                 className="w-full h-full object-cover"
+               />
+               {photos.length > 1 && (
+                 <>
+                   <button
+                     onClick={() => setCurrentImageIndex(prev => prev === 0 ? photos.length - 1 : prev - 1)}
+                     className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/95 hover:bg-white rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
+                   >
+                     <ChevronLeft className="w-6 h-6" />
+                   </button>
+                   <button
+                     onClick={() => setCurrentImageIndex(prev => prev === photos.length - 1 ? 0 : prev + 1)}
+                     className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/95 hover:bg-white rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
+                   >
+                     <ChevronRight className="w-6 h-6" />
+                   </button>
+                 </>
+               )}
+             </div>
 
-            {/* Thumbnails Grid */}
-            <div className="flex flex-col gap-3">
-              {photos.slice(0, 4).map((photo, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setCurrentImageIndex(idx)}
-                  className={`relative overflow-hidden rounded-lg transition-all h-full ${
-                    idx === currentImageIndex 
-                      ? 'ring-2 ring-teal-500 ring-offset-2' 
-                      : 'hover:ring-2 hover:ring-gray-300 hover:ring-offset-2'
-                  }`}
-                >
-                  <img 
-                    src={photo} 
-                    alt={`View ${idx + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/0 hover:bg-black/5 transition-all" />
-                </button>
-              ))}
-              {photos.length > 4 && (
-                <button className="relative overflow-hidden rounded-lg bg-gray-300 hover:bg-gray-400 transition-all h-full flex items-center justify-center">
-                  <span className="text-white font-semibold">+{photos.length - 4}</span>
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
+             {/* Thumbnails Grid - 5 columns */}
+             <div className="grid grid-cols-5 gap-2">
+               {photos.slice(0, 5).map((photo, idx) => (
+                 <button
+                   key={idx}
+                   onClick={() => setCurrentImageIndex(idx)}
+                   className={`relative overflow-hidden rounded-lg aspect-square transition-all cursor-pointer group ${
+                     idx === currentImageIndex 
+                       ? 'ring-2 ring-teal-600 ring-offset-0' 
+                       : 'hover:opacity-80'
+                   }`}
+                 >
+                   <img 
+                     src={photo} 
+                     alt={`View ${idx + 1}`}
+                     className="w-full h-full object-cover"
+                   />
+                 </button>
+               ))}
+               {photos.length > 5 && (
+                 <button 
+                   onClick={() => setCurrentImageIndex(5)}
+                   className="relative overflow-hidden rounded-lg aspect-square bg-gray-400 hover:bg-gray-500 transition-all flex items-center justify-center"
+                 >
+                   <span className="text-white font-semibold text-lg">+{photos.length - 5}</span>
+                 </button>
+               )}
+             </div>
+           </div>
+         </div>
+       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header Section with Title & Quick Info */}
