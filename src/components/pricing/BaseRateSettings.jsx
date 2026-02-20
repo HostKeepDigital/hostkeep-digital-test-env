@@ -69,16 +69,6 @@ export default function BaseRateSettings({ settings = {}, onUpdate }) {
           />
           <p className="text-xs text-gray-500 mt-1">Round all prices to nearest X (optional)</p>
         </div>
-
-        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
-          <p className="font-semibold mb-1">Pricing Hierarchy:</p>
-          <ol className="list-decimal list-inside space-y-1 text-xs text-gray-700">
-            <li>Manual Date Overrides (highest priority)</li>
-            <li>Seasonal Rules</li>
-            <li>Weekday/Weekend Rates</li>
-            <li>Base Rate (fallback)</li>
-          </ol>
-        </div>
       </CardContent>
     </Card>
   );

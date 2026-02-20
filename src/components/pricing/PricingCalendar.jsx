@@ -140,7 +140,7 @@ export default function PricingCalendar({ pricingSettings, onDateClick, selected
 
         <div className="mt-4 p-3 bg-gray-50 rounded-lg">
           <div className="text-xs font-semibold mb-2">Legend:</div>
-          <div className="flex flex-wrap gap-3 text-xs">
+          <div className="flex flex-wrap gap-3 text-xs mb-3">
             <div className="flex items-center gap-1">
               <div className="w-4 h-4 rounded bg-purple-100 border border-purple-300"></div>
               <span>Manual Override</span>
@@ -157,6 +157,15 @@ export default function PricingCalendar({ pricingSettings, onDateClick, selected
               <div className="w-4 h-4 rounded bg-gray-50 border border-gray-200"></div>
               <span>Base Rate</span>
             </div>
+          </div>
+          <div className="pt-2 border-t border-gray-200">
+            <p className="font-semibold text-xs mb-1">Pricing Hierarchy:</p>
+            <ol className="list-decimal list-inside space-y-0.5 text-xs text-gray-600">
+              <li>Manual Date Overrides (highest priority)</li>
+              <li>Seasonal Rules</li>
+              <li>Weekday/Weekend Rates</li>
+              <li>Base Rate (fallback)</li>
+            </ol>
           </div>
         </div>
       </CardContent>
