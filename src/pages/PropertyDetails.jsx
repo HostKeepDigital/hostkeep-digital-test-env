@@ -134,20 +134,9 @@ export default function PropertyDetails() {
   };
 
   // Get allowed nights based on booking rules
-  const allowedNights = (() => {
-    if (!property?.day_based_restrictions_enabled || !property?.booking_rules) {
-      return Array.from({ length: 28 }, (_, i) => i + 1);
-    }
-    try {
-      const result = getAllowedNights(property);
-      return Array.isArray(result) ? result : Array.from({ length: 28 }, (_, i) => i + 1);
-    } catch (e) {
-      console.error('Error getting allowed nights:', e);
-      return Array.from({ length: 28 }, (_, i) => i + 1);
-    }
-  })();
-  const minNights = allowedNights && allowedNights.length > 0 ? Math.min(...allowedNights) : 1;
-  const maxNights = allowedNights && allowedNights.length > 0 ? Math.max(...allowedNights) : 28;
+  const allowedNights = property?.day_based_restrictions_enabled ? getAllowedNights(property) : Array.from({ length: 28 }, (_, i) => i + 1);
+  const minNights = Math.min(...allowedNights);
+  const maxNights = Math.max(...allowedNights);
 
   const bookingMutation = useMutation({
     mutationFn: async (data) => {
