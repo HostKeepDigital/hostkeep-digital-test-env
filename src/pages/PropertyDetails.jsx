@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Star, MapPin, Users, Bed, Bath, Calendar, CheckCircle, X,
   Wifi, Car, Wind, Waves, ChefHat, Tv, Flame, TreeDeciduous,
