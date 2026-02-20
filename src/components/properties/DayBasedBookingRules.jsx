@@ -100,9 +100,9 @@ export default function DayBasedBookingRules({ value, onChange }) {
             <p className="font-medium mb-1">How it works:</p>
             <ul className="list-disc list-inside space-y-1 text-xs">
               <li>Toggle each day on/off to control bookability</li>
-              <li>Set minimum and maximum stay lengths</li>
-              <li>Choose allowed patterns: any length, fixed days, multiples, or combinations</li>
-              <li>Example: Monday allows 4 days OR multiples of 7 (7, 14, 21, 28)</li>
+              <li>Set minimum stay requirement</li>
+              <li>Optionally set fixed days guests can book</li>
+              <li>Example: Monday with minimum 3 nights and fixed days 3, 7, 14</li>
             </ul>
           </div>
 
