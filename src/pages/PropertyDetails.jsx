@@ -596,7 +596,7 @@ export default function PropertyDetails() {
                 </div>
 
                 {/* Booking Inputs */}
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <BookingCalendar
                     label="Check-in"
                     value={checkIn}
