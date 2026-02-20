@@ -128,55 +128,6 @@ export default function PropertyDetails() {
     return true;
   };
 
-  // Validate minimum stay for check-out based on check-in
-  const isValidCheckOutDate = (checkInDate, checkOutDate) => {
-    if (!checkInDate || !checkOutDate) return true;
-
-    const nights = differenceInDays(checkOutDate, checkInDate);
-    
-    // Check global minimum stay
-    if (property?.minimum_stay && nights < property.minimum_stay) {
-      return false;
-    }
-
-    // Check day-based minimum stay
-    if (property?.day_based_restrictions_enabled && property?.booking_rules) {
-      const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-      const dayName = dayNames[checkInDate.getDay()];
-      const rules = property.booking_rules[dayName];
-
-      if (rules && rules.allowed) {
-        // Check minimum nights
-        if (rules.min_nights && nights < rules.min_nights) {
-          return false;
-        }
-
-        // Check maximum nights
-        if (rules.max_nights && nights > rules.max_nights) {
-          return false;
-        }
-
-        // Check rule type restrictions
-        if (rules.rule_type === 'fixed' && rules.fixed_nights?.length > 0) {
-          if (!rules.fixed_nights.includes(nights)) {
-            return false;
-          }
-        }
-
-        if (rules.rule_type === 'fixed_or_multiples') {
-          const hasFixedMatch = rules.fixed_nights?.includes(nights);
-          const hasMultipleMatch = rules.multiple_of?.some(m => nights % m === 0);
-          
-          if (!hasFixedMatch && !hasMultipleMatch) {
-            return false;
-          }
-        }
-      }
-    }
-
-    return true;
-  };
-
   const bookingMutation = useMutation({
     mutationFn: async (data) => {
       return base44.entities.Booking.create(data);
@@ -472,11 +423,7 @@ export default function PropertyDetails() {
                     onSelect={(date) => setCheckOut(date ? format(date, "yyyy-MM-dd") : "")}
                     disabled={(date) => {
                       const checkInDate = checkIn ? parseISO(checkIn) : new Date();
-                      return (
-                        isBefore(date, addDays(checkInDate, 1)) || 
-                        isDateBooked(date) ||
-                        !isValidCheckOutDate(checkInDate, date)
-                      );
+                      return isBefore(date, addDays(checkInDate, 1)) || isDateBooked(date);
                     }}
                     bookedDates={bookedDates}
                     placeholder="Select date"
@@ -615,11 +562,7 @@ export default function PropertyDetails() {
                   onSelect={(date) => setCheckOut(date ? format(date, "yyyy-MM-dd") : "")}
                   disabled={(date) => {
                     const checkInDate = checkIn ? parseISO(checkIn) : new Date();
-                    return (
-                      isBefore(date, addDays(checkInDate, 1)) || 
-                      isDateBooked(date) ||
-                      !isValidCheckOutDate(checkInDate, date)
-                    );
+                    return isBefore(date, addDays(checkInDate, 1)) || isDateBooked(date);
                   }}
                   bookedDates={bookedDates}
                   placeholder="Select date"
