@@ -20,6 +20,7 @@ import {
 import { format, parseISO, differenceInDays, addDays, isBefore } from "date-fns";
 import { toast } from "sonner";
 import ReviewList from "@/components/reviews/ReviewList";
+import BookingCalendar from "@/components/shared/BookingCalendar";
 
 const AMENITY_ICONS = {
   "WiFi": Wifi, "Parking": Car, "Air Conditioning": Wind, "Pool": Waves,
@@ -387,87 +388,25 @@ export default function PropertyDetails() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
-                  <div>
-                    <Label className="text-xs mb-1 block">Check-in</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-start text-left font-normal">
-                          <Calendar className="mr-2 h-4 w-4 text-gray-400" />
-                          {checkIn ? format(parseISO(checkIn), "MMM d, yyyy") : "Select date"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <CalendarComponent
-                          mode="single"
-                          selected={checkIn ? parseISO(checkIn) : undefined}
-                          onSelect={(date) => setCheckIn(date ? format(date, "yyyy-MM-dd") : "")}
-                          disabled={(date) => isBefore(date, new Date()) || isDateBooked(date)}
-                          modifiers={{ booked: bookedDates }}
-                          modifiersStyles={{
-                            booked: { 
-                              backgroundColor: '#FEE2E2', 
-                              color: '#991B1B',
-                              textDecoration: 'line-through'
-                            }
-                          }}
-                          className="rounded-md border"
-                          numberOfMonths={2}
-                        />
-                        <div className="p-3 border-t flex items-center gap-4 text-xs text-gray-500">
-                          <div className="flex items-center gap-1">
-                            <div className="w-3 h-3 rounded bg-red-100 border border-red-200"></div>
-                            <span>Booked</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <div className="w-3 h-3 rounded bg-teal-600"></div>
-                            <span>Selected</span>
-                          </div>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  <div>
-                    <Label className="text-xs mb-1 block">Check-out</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-start text-left font-normal">
-                          <Calendar className="mr-2 h-4 w-4 text-gray-400" />
-                          {checkOut ? format(parseISO(checkOut), "MMM d, yyyy") : "Select date"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <CalendarComponent
-                          mode="single"
-                          selected={checkOut ? parseISO(checkOut) : undefined}
-                          onSelect={(date) => setCheckOut(date ? format(date, "yyyy-MM-dd") : "")}
-                          disabled={(date) => {
-                            const checkInDate = checkIn ? parseISO(checkIn) : new Date();
-                            return isBefore(date, addDays(checkInDate, 1)) || isDateBooked(date);
-                          }}
-                          modifiers={{ booked: bookedDates }}
-                          modifiersStyles={{
-                            booked: { 
-                              backgroundColor: '#FEE2E2', 
-                              color: '#991B1B',
-                              textDecoration: 'line-through'
-                            }
-                          }}
-                          className="rounded-md border"
-                          numberOfMonths={2}
-                        />
-                        <div className="p-3 border-t flex items-center gap-4 text-xs text-gray-500">
-                          <div className="flex items-center gap-1">
-                            <div className="w-3 h-3 rounded bg-red-100 border border-red-200"></div>
-                            <span>Booked</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <div className="w-3 h-3 rounded bg-teal-600"></div>
-                            <span>Selected</span>
-                          </div>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
+                  <BookingCalendar
+                    label="Check-in"
+                    value={checkIn}
+                    onSelect={(date) => setCheckIn(date ? format(date, "yyyy-MM-dd") : "")}
+                    disabled={(date) => isBefore(date, new Date()) || isDateBooked(date)}
+                    bookedDates={bookedDates}
+                    placeholder="Select date"
+                  />
+                  <BookingCalendar
+                    label="Check-out"
+                    value={checkOut}
+                    onSelect={(date) => setCheckOut(date ? format(date, "yyyy-MM-dd") : "")}
+                    disabled={(date) => {
+                      const checkInDate = checkIn ? parseISO(checkIn) : new Date();
+                      return isBefore(date, addDays(checkInDate, 1)) || isDateBooked(date);
+                    }}
+                    bookedDates={bookedDates}
+                    placeholder="Select date"
+                  />
                 </div>
                 <div>
                   <Label className="text-xs">Guests</Label>
@@ -584,79 +523,25 @@ export default function PropertyDetails() {
             </DialogHeader>
             <div className="space-y-4 mt-4">
               <div className="space-y-3">
-                <div>
-                  <Label className="text-xs mb-1 block">Check-in</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full justify-start text-left font-normal">
-                        <Calendar className="mr-2 h-4 w-4 text-gray-400" />
-                        {checkIn ? format(parseISO(checkIn), "MMM d, yyyy") : "Select date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <CalendarComponent
-                        mode="single"
-                        selected={checkIn ? parseISO(checkIn) : undefined}
-                        onSelect={(date) => setCheckIn(date ? format(date, "yyyy-MM-dd") : "")}
-                        disabled={(date) => isBefore(date, new Date()) || isDateBooked(date)}
-                        modifiers={{ booked: bookedDates }}
-                        modifiersStyles={{
-                          booked: { 
-                            backgroundColor: '#FEE2E2', 
-                            color: '#991B1B',
-                            textDecoration: 'line-through'
-                          }
-                        }}
-                        className="rounded-md border"
-                        numberOfMonths={2}
-                      />
-                      <div className="p-3 border-t flex items-center gap-4 text-xs text-gray-500">
-                        <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 rounded bg-red-100 border border-red-200"></div>
-                          <span>Booked</span>
-                        </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <div>
-                  <Label className="text-xs mb-1 block">Check-out</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full justify-start text-left font-normal">
-                        <Calendar className="mr-2 h-4 w-4 text-gray-400" />
-                        {checkOut ? format(parseISO(checkOut), "MMM d, yyyy") : "Select date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <CalendarComponent
-                        mode="single"
-                        selected={checkOut ? parseISO(checkOut) : undefined}
-                        onSelect={(date) => setCheckOut(date ? format(date, "yyyy-MM-dd") : "")}
-                        disabled={(date) => {
-                          const checkInDate = checkIn ? parseISO(checkIn) : new Date();
-                          return isBefore(date, addDays(checkInDate, 1)) || isDateBooked(date);
-                        }}
-                        modifiers={{ booked: bookedDates }}
-                        modifiersStyles={{
-                          booked: { 
-                            backgroundColor: '#FEE2E2', 
-                            color: '#991B1B',
-                            textDecoration: 'line-through'
-                          }
-                        }}
-                        className="rounded-md border"
-                        numberOfMonths={2}
-                      />
-                      <div className="p-3 border-t flex items-center gap-4 text-xs text-gray-500">
-                        <div className="flex items-center gap-1">
-                          <div className="w-3 h-3 rounded bg-red-100 border border-red-200"></div>
-                          <span>Booked</span>
-                        </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                </div>
+                <BookingCalendar
+                  label="Check-in"
+                  value={checkIn}
+                  onSelect={(date) => setCheckIn(date ? format(date, "yyyy-MM-dd") : "")}
+                  disabled={(date) => isBefore(date, new Date()) || isDateBooked(date)}
+                  bookedDates={bookedDates}
+                  placeholder="Select date"
+                />
+                <BookingCalendar
+                  label="Check-out"
+                  value={checkOut}
+                  onSelect={(date) => setCheckOut(date ? format(date, "yyyy-MM-dd") : "")}
+                  disabled={(date) => {
+                    const checkInDate = checkIn ? parseISO(checkIn) : new Date();
+                    return isBefore(date, addDays(checkInDate, 1)) || isDateBooked(date);
+                  }}
+                  bookedDates={bookedDates}
+                  placeholder="Select date"
+                />
               </div>
               <div>
                 <Label>Guests</Label>
