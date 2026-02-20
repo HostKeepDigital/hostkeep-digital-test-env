@@ -585,7 +585,7 @@ export default function PropertyDetails() {
           {/* Right Column - Booking Widget (30%) */}
           <div className="md:col-span-5">
             <Card className="border-0 bg-white shadow-lg sticky top-24">
-              <CardContent className="p-6 space-y-6">
+              <CardContent className="p-4 space-y-4">
                 {/* Price Header */}
                 <div className="border-b border-gray-100 pb-4">
                   <p className="text-gray-600 text-sm mb-1">Starting from</p>
