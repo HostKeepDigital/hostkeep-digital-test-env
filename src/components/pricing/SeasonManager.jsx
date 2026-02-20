@@ -63,22 +63,19 @@ export default function SeasonManager({ seasons = [], onUpdate }) {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Seasonal Pricing</CardTitle>
-            <CardDescription>Define pricing for peak seasons, holidays, and special periods</CardDescription>
-          </div>
-          <Button onClick={() => setShowForm(!showForm)} size="sm">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Season
-          </Button>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="font-semibold text-sm">Seasonal Pricing</h3>
+          <p className="text-xs text-gray-500">Peak seasons & holidays</p>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {showForm && (
-          <div className="p-4 bg-gray-50 rounded-lg space-y-4">
+        <Button onClick={() => setShowForm(!showForm)} size="sm">
+          <Plus className="w-4 h-4 mr-2" />
+          Add
+        </Button>
+      </div>
+      {showForm && (
+        <div className="p-4 bg-gray-50 rounded-lg space-y-4">
             <div>
               <Label>Season Name</Label>
               <Input
@@ -143,42 +140,39 @@ export default function SeasonManager({ seasons = [], onUpdate }) {
               />
               <p className="text-xs text-gray-500 mt-1">Percentage increase for Fri-Sun during this season</p>
             </div>
-            <div className="flex gap-2">
-              <Button onClick={editingSeason ? handleUpdateSeason : handleAddSeason} className="flex-1">
-                {editingSeason ? 'Update Season' : 'Add Season'}
-              </Button>
-              <Button variant="outline" onClick={resetForm}>Cancel</Button>
-            </div>
+          <div className="flex gap-2">
+            <Button onClick={editingSeason ? handleUpdateSeason : handleAddSeason} className="flex-1">
+              {editingSeason ? 'Update' : 'Add'}
+            </Button>
+            <Button variant="outline" onClick={resetForm}>Cancel</Button>
           </div>
-        )}
+        </div>
+      )}
 
-        <div className="space-y-2">
-          {seasons.length === 0 ? (
-            <p className="text-sm text-gray-500 text-center py-8">No seasons defined yet. Add your first season to get started.</p>
-          ) : (
-            seasons.map(season => (
-              <div key={season.id} className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg">
-                <div className="flex-1">
-                  <div className="font-semibold text-sm">{season.name}</div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {season.start_date} to {season.end_date} • £{season.nightly_rate}/night
-                    {season.weekend_modifier > 0 && ` • +${season.weekend_modifier}% weekends`}
-                    {season.min_nights > 1 && ` • Min ${season.min_nights} nights`}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" onClick={() => handleEdit(season)}>
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleDeleteSeason(season.id)}>
-                    <Trash2 className="w-4 h-4 text-red-500" />
-                  </Button>
+      <div className="space-y-2 max-h-64 overflow-y-auto">
+        {seasons.length === 0 ? (
+          <p className="text-xs text-gray-500 text-center py-4">No seasons yet</p>
+        ) : (
+          seasons.map(season => (
+            <div key={season.id} className="flex items-center justify-between p-2 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold text-xs truncate">{season.name}</div>
+                <div className="text-xs text-gray-600 mt-0.5">
+                  £{season.nightly_rate}/nt • {season.start_date} to {season.end_date}
                 </div>
               </div>
-            ))
-          )}
-        </div>
-      </CardContent>
-    </Card>
+              <div className="flex items-center gap-1 ml-2">
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEdit(season)}>
+                  <Edit className="w-3 h-3" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDeleteSeason(season.id)}>
+                  <Trash2 className="w-3 h-3 text-red-500" />
+                </Button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
   );
 }
