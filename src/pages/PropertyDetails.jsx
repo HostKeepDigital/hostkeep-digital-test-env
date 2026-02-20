@@ -21,6 +21,7 @@ import { format, parseISO, differenceInDays, addDays, isBefore } from "date-fns"
 import { toast } from "sonner";
 import ReviewList from "@/components/reviews/ReviewList";
 import BookingCalendar from "@/components/shared/BookingCalendar";
+import { getAllowedNights } from "@/utils/getAllowedNights";
 
 const AMENITY_ICONS = {
   "WiFi": Wifi, "Parking": Car, "Air Conditioning": Wind, "Pool": Waves,
@@ -131,15 +132,10 @@ export default function PropertyDetails() {
     );
   };
 
-  // Get min and max nights based on restrictions
-  const getMinMaxNights = () => {
-    let minNights = property?.minimum_stay || 1;
-    let maxNights = 28; // Hard cap at 28 days
-
-    return { minNights, maxNights };
-  };
-
-  const { minNights, maxNights } = getMinMaxNights();
+  // Get allowed nights based on booking rules
+  const allowedNights = property ? getAllowedNights(property) : Array.from({ length: 28 }, (_, i) => i + 1);
+  const minNights = allowedNights.length > 0 ? Math.min(...allowedNights) : 1;
+  const maxNights = allowedNights.length > 0 ? Math.max(...allowedNights) : 28;
 
   const bookingMutation = useMutation({
     mutationFn: async (data) => {
@@ -433,15 +429,18 @@ export default function PropertyDetails() {
                   />
                   <div>
                     <Label className="text-xs mb-1 block">Number of Nights</Label>
-                    <Input
-                      type="number"
-                      min={minNights}
-                      max={maxNights}
-                      value={nights}
-                      onChange={(e) => setNights(e.target.value)}
-                      disabled={!checkIn}
-                      placeholder="Select check-in date first"
-                    />
+                    <Select value={nights} onValueChange={(value) => setNights(value)} disabled={!checkIn}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select nights" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {allowedNights.map(night => (
+                          <SelectItem key={night} value={night.toString()}>
+                            {night} {night === 1 ? 'night' : 'nights'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     {checkIn && (
                       <p className="text-xs text-gray-500 mt-1">{minNights} - {maxNights} nights</p>
                     )}
@@ -575,20 +574,23 @@ export default function PropertyDetails() {
                   placeholder="Select date"
                 />
                 <div>
-                  <Label className="text-xs mb-1 block">Number of Nights</Label>
-                  <Input
-                    type="number"
-                    min={minNights}
-                    max={maxNights}
-                    value={nights}
-                    onChange={(e) => setNights(e.target.value)}
-                    disabled={!checkIn}
-                    placeholder="Select check-in date first"
-                  />
-                  {checkIn && (
-                    <p className="text-xs text-gray-500 mt-1">{minNights} - {maxNights} nights</p>
-                  )}
-                </div>
+                   <Label className="text-xs mb-1 block">Number of Nights</Label>
+                   <Select value={nights} onValueChange={(value) => setNights(value)} disabled={!checkIn}>
+                     <SelectTrigger>
+                       <SelectValue placeholder="Select nights" />
+                     </SelectTrigger>
+                     <SelectContent>
+                       {allowedNights.map(night => (
+                         <SelectItem key={night} value={night.toString()}>
+                           {night} {night === 1 ? 'night' : 'nights'}
+                         </SelectItem>
+                       ))}
+                     </SelectContent>
+                   </Select>
+                   {checkIn && (
+                     <p className="text-xs text-gray-500 mt-1">{minNights} - {maxNights} nights</p>
+                   )}
+                 </div>
               </div>
               <div>
                 <Label>Guests</Label>
