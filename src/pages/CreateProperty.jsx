@@ -79,9 +79,9 @@ export default function CreateProperty() {
     bedrooms: 2,
     bathrooms: 1,
     location: {
-      address_line_1: "",
-      address_line_2: "",
-      city: "",
+      street: "",
+      locality: "",
+      town_city: "",
       postcode: ""
     },
     photos: [],
@@ -174,7 +174,7 @@ export default function CreateProperty() {
   const canProceed = () => {
     switch (currentStep) {
       case 1: return formData.title.length >= 16 && formData.title.length <= 50 && !titleError && formData.property_type && formData.guest_capacity > 0;
-      case 2: return formData.location.address_line_1?.trim() && formData.location.city?.trim() && formData.location.postcode?.trim();
+      case 2: return formData.location.street?.trim() && formData.location.town_city?.trim() && formData.location.postcode?.trim();
       case 3: return formData.photos.length >= 5;
       case 4: return formData.nightly_rate > 0;
       case 5: return formData.description.length >= 50;
@@ -334,29 +334,29 @@ export default function CreateProperty() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div>
-                    <Label>Address Line 1</Label>
+                    <Label>Street</Label>
                     <Input
-                      value={formData.location.address_line_1}
-                      onChange={(e) => handleLocationChange("address_line_1", e.target.value)}
+                      value={formData.location.street}
+                      onChange={(e) => handleLocationChange("street", e.target.value)}
                       placeholder="123 High Street"
                       className="mt-1"
                     />
                   </div>
                   <div>
-                    <Label>Address Line 2 (Optional)</Label>
+                    <Label>Locality/Village (Optional)</Label>
                     <Input
-                      value={formData.location.address_line_2}
-                      onChange={(e) => handleLocationChange("address_line_2", e.target.value)}
-                      placeholder="Flat 4B"
+                      value={formData.location.locality}
+                      onChange={(e) => handleLocationChange("locality", e.target.value)}
+                      placeholder="Village name"
                       className="mt-1"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label>City</Label>
+                      <Label>Town/City</Label>
                       <Input
-                        value={formData.location.city}
-                        onChange={(e) => handleLocationChange("city", e.target.value)}
+                        value={formData.location.town_city}
+                        onChange={(e) => handleLocationChange("town_city", e.target.value)}
                         placeholder="London"
                         className="mt-1"
                       />
