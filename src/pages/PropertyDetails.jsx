@@ -170,7 +170,7 @@ export default function PropertyDetails() {
     }
 
     // Priority B: Minimum Nights + Multiples
-    const dayMin = checkInRule?.minimum_number_of_nights || null;
+    const dayMin = checkInRule?.min_days || null;
     const hasMultiples = checkInRule?.multiple_of?.length > 0;
 
     if (dayMin !== null && hasMultiples) {

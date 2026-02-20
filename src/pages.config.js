@@ -58,9 +58,9 @@ import HostProperties from './pages/HostProperties';
 import HostSettings from './pages/HostSettings';
 import MyBookings from './pages/MyBookings';
 import Pay from './pages/Pay';
-import PropertyDetails from './pages/PropertyDetails';
 import Search from './pages/Search';
 import Subscription from './pages/Subscription';
+import PropertyDetails from './pages/PropertyDetails';
 import __Layout from './Layout.jsx';
 
 
@@ -76,9 +76,9 @@ export const PAGES = {
     "HostSettings": HostSettings,
     "MyBookings": MyBookings,
     "Pay": Pay,
-    "PropertyDetails": PropertyDetails,
     "Search": Search,
     "Subscription": Subscription,
+    "PropertyDetails": PropertyDetails,
 }
 
 export const pagesConfig = {
