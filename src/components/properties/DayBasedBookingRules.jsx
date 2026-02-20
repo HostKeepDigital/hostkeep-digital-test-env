@@ -104,7 +104,7 @@ export default function DayBasedBookingRules({ value, onChange }) {
               <li>Toggle each day on/off to control bookability</li>
               <li>Set minimum and maximum stay lengths</li>
               <li>Choose allowed patterns: any length, fixed days, multiples, or combinations</li>
-              <li>Example: Monday allows 4 days OR multiples of 7 (7, 14, 21, 28)</li>
+              <li>Example: Monday allows 4 days AND multiples of 7 (4, 7, 14, 21, 28)</li>
             </ul>
           </div>
 
@@ -162,7 +162,7 @@ export default function DayBasedBookingRules({ value, onChange }) {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="any">Any number between min/max</SelectItem>
-                          <SelectItem value="fixed_or_multiples">Fixed days OR multiples</SelectItem>
+                          <SelectItem value="fixed_or_multiples">Fixed days AND multiples</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -215,7 +215,7 @@ export default function DayBasedBookingRules({ value, onChange }) {
                           />
                         </div>
                         <div>
-                          <Label className="text-xs text-gray-600">OR Multiple Of (max multiplier is 7)</Label>
+                          <Label className="text-xs text-gray-600">AND Multiple Of (max multiplier is 7)</Label>
                           <Input
                             placeholder="e.g., 1, 2, 3"
                             value={Array.isArray(rules[day].multiple_of) ? rules[day].multiple_of.join(', ') : (rules[day].multiple_of || '')}
@@ -245,7 +245,7 @@ export default function DayBasedBookingRules({ value, onChange }) {
                       {rules[day].rule_type === "any" && `Guests can book any stay between ${rules[day].min_days} and ${rules[day].max_days} days.`}
                       {rules[day].rule_type === "fixed" && `Guests can only book: ${rules[day].fixed_values?.join(', ') || 'not set'} days.`}
                       {rules[day].rule_type === "multiples" && `Guests can book multiples of ${Array.isArray(rules[day].multiple_of) ? rules[day].multiple_of.join(', ') : (rules[day].multiple_of || '?')}.`}
-                      {rules[day].rule_type === "fixed_or_multiples" && `Guests can book ${rules[day].fixed_values?.join(', ') || '?'} days OR multiples of ${Array.isArray(rules[day].multiple_of) ? rules[day].multiple_of.join(', ') : (rules[day].multiple_of || '?')}.`}
+                      {rules[day].rule_type === "fixed_or_multiples" && `Guests can book ${rules[day].fixed_values?.join(', ') || '?'} days AND multiples of ${Array.isArray(rules[day].multiple_of) ? rules[day].multiple_of.join(', ') : (rules[day].multiple_of || '?')}.`}
                     </p>
                   </div>
                 )}
