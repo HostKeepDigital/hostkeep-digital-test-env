@@ -142,54 +142,63 @@ export default function PropertyDetails() {
     const min = property.minimum_stay || 1;
     const max = 28;
     const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    const allowedSet = new Set();
+    
+    // Get the check-in day
+    const checkInDate = parseISO(checkIn);
+    const checkInDayName = dayNames[checkInDate.getDay()];
+    const checkInRule = property.booking_rules[checkInDayName];
 
-    // Collect fixed days and multiples from all enabled days
-    let hasFixedDays = false;
-    let fixedDaysSet = new Set();
-    let multiplesSet = new Set();
-
-    for (const dayName of dayNames) {
-      const dayRule = property.booking_rules[dayName];
-      if (dayRule?.enabled === false) continue;
-
-      // Check for fixed days (priority A)
-      if (dayRule?.fixed_values?.length > 0) {
-        hasFixedDays = true;
-        dayRule.fixed_values.forEach(val => {
-          if (typeof val === 'number' && val > 0 && val <= max) {
-            fixedDaysSet.add(val);
-          }
-        });
-      }
-
-      // Collect multiples (for priority B)
-      if (dayRule?.multiple_of?.length > 0) {
-        dayRule.multiple_of.forEach(mult => {
-          if (typeof mult === 'number' && mult > 0) {
-            multiplesSet.add(mult);
-          }
-        });
-      }
-    }
-
-    // Priority A: If fixed days exist, use only those
-    if (hasFixedDays && fixedDaysSet.size > 0) {
-      const result = Array.from(fixedDaysSet).sort((a, b) => a - b);
+    // If no rule for this day or rule is disabled, use full range
+    if (!checkInRule || checkInRule.enabled === false) {
+      const result = Array.from({ length: max - min + 1 }, (_, i) => min + i);
       return { allowedNights: result, minNights: min, maxNights: max };
     }
 
-    // Priority B: If no fixed days, combine minimum nights with multiples
-    allowedSet.add(min); // Always include minimum nights
+    const allowedSet = new Set();
 
-    if (multiplesSet.size > 0) {
-      multiplesSet.forEach(multiple => {
-        for (let i = 1; i * multiple <= max; i++) {
-          allowedSet.add(i * multiple);
+    // Priority A: Fixed Days
+    if (checkInRule?.fixed_values?.length > 0) {
+      checkInRule.fixed_values.forEach(val => {
+        if (typeof val === 'number' && val > 0 && val <= max) {
+          allowedSet.add(val);
+        }
+      });
+      if (allowedSet.size > 0) {
+        const result = Array.from(allowedSet).sort((a, b) => a - b);
+        return { allowedNights: result, minNights: min, maxNights: max };
+      }
+    }
+
+    // Priority B: Minimum Nights + Multiples
+    const dayMin = checkInRule?.minimum_number_of_nights || null;
+    const hasMultiples = checkInRule?.multiple_of?.length > 0;
+
+    if (dayMin !== null && hasMultiples) {
+      // Both min and multiples exist: include min + all multiples
+      allowedSet.add(dayMin);
+      checkInRule.multiple_of.forEach(mult => {
+        if (typeof mult === 'number' && mult > 0) {
+          for (let i = 1; i * mult <= max; i++) {
+            allowedSet.add(i * mult);
+          }
+        }
+      });
+    } else if (dayMin !== null) {
+      // Only minimum: use range from day min to max
+      for (let i = dayMin; i <= max; i++) {
+        allowedSet.add(i);
+      }
+    } else if (hasMultiples) {
+      // Only multiples: use only multiples
+      checkInRule.multiple_of.forEach(mult => {
+        if (typeof mult === 'number' && mult > 0) {
+          for (let i = 1; i * mult <= max; i++) {
+            allowedSet.add(i * mult);
+          }
         }
       });
     } else {
-      // Priority C: If no multiples either, fill range from min to max
+      // Priority C: No restrictions, use full range
       for (let i = min; i <= max; i++) {
         allowedSet.add(i);
       }
