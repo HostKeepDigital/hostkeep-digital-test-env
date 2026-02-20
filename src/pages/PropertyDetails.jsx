@@ -33,7 +33,7 @@ export default function PropertyDetails() {
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [checkIn, setCheckIn] = useState("");
-  const [checkOut, setCheckOut] = useState("");
+  const [nights, setNights] = useState("");
   const [guestCount, setGuestCount] = useState(1);
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
@@ -128,6 +128,32 @@ export default function PropertyDetails() {
     return true;
   };
 
+  // Get min and max nights based on restrictions
+  const getMinMaxNights = () => {
+    let minNights = property?.minimum_stay || 1;
+    let maxNights = 28; // Hard cap at 28 days
+
+    if (checkIn && property?.day_based_restrictions_enabled && property?.booking_rules) {
+      const checkInDate = parseISO(checkIn);
+      const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+      const dayName = dayNames[checkInDate.getDay()];
+      const rules = property.booking_rules[dayName];
+
+      if (rules && rules.allowed) {
+        if (rules.min_nights) {
+          minNights = Math.max(minNights, rules.min_nights);
+        }
+        if (rules.max_nights) {
+          maxNights = Math.min(maxNights, rules.max_nights);
+        }
+      }
+    }
+
+    return { minNights, maxNights };
+  };
+
+  const { minNights, maxNights } = getMinMaxNights();
+
   const bookingMutation = useMutation({
     mutationFn: async (data) => {
       return base44.entities.Booking.create(data);
@@ -142,8 +168,9 @@ export default function PropertyDetails() {
     ? property.photos 
     : ["https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800"];
 
-  const nights = checkIn && checkOut ? differenceInDays(parseISO(checkOut), parseISO(checkIn)) : 0;
-  const subtotal = nights * (property?.nightly_rate || 0);
+  const numNights = nights ? parseInt(nights) : 0;
+  const checkOut = checkIn && numNights ? format(addDays(parseISO(checkIn), numNights), "yyyy-MM-dd") : "";
+  const subtotal = numNights * (property?.nightly_rate || 0);
   const cleaningFee = property?.cleaning_fee || 0;
   const total = subtotal + cleaningFee;
 
@@ -163,7 +190,7 @@ export default function PropertyDetails() {
       check_out: checkOut,
       guests_count: guestCount,
       nightly_rate: property.nightly_rate,
-      nights: nights,
+      nights: numNights,
       subtotal: subtotal,
       cleaning_fee: cleaningFee,
       total_amount: total,
@@ -417,17 +444,21 @@ export default function PropertyDetails() {
                     bookedDates={bookedDates}
                     placeholder="Select date"
                   />
-                  <BookingCalendar
-                    label="Check-out"
-                    value={checkOut}
-                    onSelect={(date) => setCheckOut(date ? format(date, "yyyy-MM-dd") : "")}
-                    disabled={(date) => {
-                      const checkInDate = checkIn ? parseISO(checkIn) : new Date();
-                      return isBefore(date, addDays(checkInDate, 1)) || isDateBooked(date);
-                    }}
-                    bookedDates={bookedDates}
-                    placeholder="Select date"
-                  />
+                  <div>
+                    <Label className="text-xs mb-1 block">Number of Nights</Label>
+                    <Input
+                      type="number"
+                      min={minNights}
+                      max={maxNights}
+                      value={nights}
+                      onChange={(e) => setNights(e.target.value)}
+                      disabled={!checkIn}
+                      placeholder="Select check-in date first"
+                    />
+                    {checkIn && (
+                      <p className="text-xs text-gray-500 mt-1">{minNights} - {maxNights} nights</p>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <Label className="text-xs">Guests</Label>
@@ -440,12 +471,12 @@ export default function PropertyDetails() {
                   />
                 </div>
 
-                {nights > 0 && (
-                  <div className="space-y-2 py-4 border-t border-gray-100">
-                    <div className="flex justify-between text-sm">
-                      <span>£{property.nightly_rate} x {nights} nights</span>
-                      <span>£{subtotal}</span>
-                    </div>
+                {numNights > 0 && (
+                   <div className="space-y-2 py-4 border-t border-gray-100">
+                     <div className="flex justify-between text-sm">
+                       <span>£{property.nightly_rate} x {numNights} nights</span>
+                       <span>£{subtotal}</span>
+                     </div>
                     {cleaningFee > 0 && (
                       <div className="flex justify-between text-sm">
                         <span>Cleaning fee</span>
@@ -461,7 +492,7 @@ export default function PropertyDetails() {
 
                 <Dialog open={showBookingDialog} onOpenChange={setShowBookingDialog}>
                   <DialogTrigger asChild>
-                    <Button className="w-full bg-teal-600 hover:bg-teal-700" disabled={!checkIn || !checkOut}>
+                    <Button className="w-full bg-teal-600 hover:bg-teal-700" disabled={!checkIn || !nights}>
                       Request to Book
                     </Button>
                   </DialogTrigger>
@@ -556,17 +587,21 @@ export default function PropertyDetails() {
                   bookedDates={bookedDates}
                   placeholder="Select date"
                 />
-                <BookingCalendar
-                  label="Check-out"
-                  value={checkOut}
-                  onSelect={(date) => setCheckOut(date ? format(date, "yyyy-MM-dd") : "")}
-                  disabled={(date) => {
-                    const checkInDate = checkIn ? parseISO(checkIn) : new Date();
-                    return isBefore(date, addDays(checkInDate, 1)) || isDateBooked(date);
-                  }}
-                  bookedDates={bookedDates}
-                  placeholder="Select date"
-                />
+                <div>
+                  <Label className="text-xs mb-1 block">Number of Nights</Label>
+                  <Input
+                    type="number"
+                    min={minNights}
+                    max={maxNights}
+                    value={nights}
+                    onChange={(e) => setNights(e.target.value)}
+                    disabled={!checkIn}
+                    placeholder="Select check-in date first"
+                  />
+                  {checkIn && (
+                    <p className="text-xs text-gray-500 mt-1">{minNights} - {maxNights} nights</p>
+                  )}
+                </div>
               </div>
               <div>
                 <Label>Guests</Label>
@@ -609,10 +644,10 @@ export default function PropertyDetails() {
                   rows={3}
                 />
               </div>
-              {nights > 0 && (
+              {numNights > 0 && (
                 <div className="bg-gray-50 rounded-lg p-4 space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>£{property.nightly_rate} x {nights} nights</span>
+                    <span>£{property.nightly_rate} x {numNights} nights</span>
                     <span>£{subtotal}</span>
                   </div>
                   {cleaningFee > 0 && (
@@ -630,7 +665,7 @@ export default function PropertyDetails() {
               <Button 
                 className="w-full bg-teal-600 hover:bg-teal-700"
                 onClick={handleBooking}
-                disabled={bookingMutation.isPending || !checkIn || !checkOut}
+                disabled={bookingMutation.isPending || !checkIn || !nights}
               >
                 {bookingMutation.isPending ? "Sending..." : "Send Booking Request"}
               </Button>
