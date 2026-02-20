@@ -258,6 +258,7 @@ export default function PropertyDetails() {
       return;
     }
     
+    const totalGuests = guestData.adults + guestData.childrenAges.length;
     bookingMutation.mutate({
       property_id: propertyId,
       host_id: property.owner_id,
@@ -266,7 +267,7 @@ export default function PropertyDetails() {
       guest_phone: guestPhone,
       check_in: checkIn,
       check_out: checkOut,
-      guests_count: guestCount,
+      guests_count: totalGuests,
       nightly_rate: property.nightly_rate,
       nights: numNights,
       subtotal: subtotal,
