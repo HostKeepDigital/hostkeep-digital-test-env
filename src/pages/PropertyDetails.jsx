@@ -611,7 +611,7 @@ export default function PropertyDetails() {
                   />
                   
                   <div>
-                    <Label className="text-sm font-medium text-gray-900 mb-2 block">Duration</Label>
+                    <Label className="text-xs font-medium text-gray-900 mb-1 block">Duration</Label>
                     <Select value={nights} onValueChange={(value) => setNights(value)} disabled={!checkIn}>
                       <SelectTrigger className="h-11 border-gray-200">
                         <SelectValue placeholder="Select duration" />
