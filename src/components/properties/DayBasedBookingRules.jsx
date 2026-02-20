@@ -49,7 +49,7 @@ export default function DayBasedBookingRules({ value, onChange }) {
 
   const parseNumberList = (str) => {
     if (!str) return [];
-    return str.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n > 0);
+    return str.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n > 0 && n <= 28);
   };
 
   return (
@@ -139,7 +139,7 @@ export default function DayBasedBookingRules({ value, onChange }) {
 
                     {rules[day].rule_type === "fixed" && (
                       <div>
-                        <Label className="text-xs text-gray-600">Fixed Days (comma-separated)</Label>
+                        <Label className="text-xs text-gray-600">Fixed Days (comma-separated, max 28)</Label>
                         <Input
                           placeholder="e.g., 3, 7, 14"
                           value={rules[day].fixed_values?.join(', ') || ''}
@@ -151,13 +151,14 @@ export default function DayBasedBookingRules({ value, onChange }) {
 
                     {rules[day].rule_type === "multiples" && (
                       <div>
-                        <Label className="text-xs text-gray-600">Multiple Of</Label>
+                        <Label className="text-xs text-gray-600">Multiple Of (comma-separated, max 28)</Label>
                         <Input
-                          type="number"
-                          min="1"
-                          placeholder="e.g., 7"
-                          value={rules[day].multiple_of || ''}
-                          onChange={(e) => updateDayRule(day, "multiple_of", parseInt(e.target.value) || null)}
+                          placeholder="e.g., 7, 14"
+                          value={Array.isArray(rules[day].multiple_of) ? rules[day].multiple_of.join(', ') : (rules[day].multiple_of || '')}
+                          onChange={(e) => {
+                            const values = parseNumberList(e.target.value);
+                            updateDayRule(day, "multiple_of", values.length > 0 ? values : null);
+                          }}
                           className="h-9 mt-1"
                         />
                       </div>
@@ -166,7 +167,7 @@ export default function DayBasedBookingRules({ value, onChange }) {
                     {rules[day].rule_type === "fixed_or_multiples" && (
                       <div className="space-y-2">
                         <div>
-                          <Label className="text-xs text-gray-600">Fixed Days (comma-separated)</Label>
+                          <Label className="text-xs text-gray-600">Fixed Days (comma-separated, max 28)</Label>
                           <Input
                             placeholder="e.g., 4"
                             value={rules[day].fixed_values?.join(', ') || ''}
@@ -175,13 +176,14 @@ export default function DayBasedBookingRules({ value, onChange }) {
                           />
                         </div>
                         <div>
-                          <Label className="text-xs text-gray-600">OR Multiple Of</Label>
+                          <Label className="text-xs text-gray-600">OR Multiple Of (comma-separated, max 28)</Label>
                           <Input
-                            type="number"
-                            min="1"
-                            placeholder="e.g., 7"
-                            value={rules[day].multiple_of || ''}
-                            onChange={(e) => updateDayRule(day, "multiple_of", parseInt(e.target.value) || null)}
+                            placeholder="e.g., 7, 14"
+                            value={Array.isArray(rules[day].multiple_of) ? rules[day].multiple_of.join(', ') : (rules[day].multiple_of || '')}
+                            onChange={(e) => {
+                              const values = parseNumberList(e.target.value);
+                              updateDayRule(day, "multiple_of", values.length > 0 ? values : null);
+                            }}
                             className="h-9 mt-1"
                           />
                         </div>
@@ -191,8 +193,8 @@ export default function DayBasedBookingRules({ value, onChange }) {
                     <p className="text-xs text-gray-500 italic">
                       {rules[day].rule_type === "any" && `Guests can book any stay between ${rules[day].min_days} and ${rules[day].max_days} days.`}
                       {rules[day].rule_type === "fixed" && `Guests can only book: ${rules[day].fixed_values?.join(', ') || 'not set'} days.`}
-                      {rules[day].rule_type === "multiples" && `Guests can book multiples of ${rules[day].multiple_of || '?'} (e.g., ${rules[day].multiple_of ? `${rules[day].multiple_of}, ${rules[day].multiple_of * 2}, ${rules[day].multiple_of * 3}` : ''}).`}
-                      {rules[day].rule_type === "fixed_or_multiples" && `Guests can book ${rules[day].fixed_values?.join(', ') || '?'} days OR multiples of ${rules[day].multiple_of || '?'}.`}
+                      {rules[day].rule_type === "multiples" && `Guests can book multiples of ${Array.isArray(rules[day].multiple_of) ? rules[day].multiple_of.join(', ') : (rules[day].multiple_of || '?')}.`}
+                      {rules[day].rule_type === "fixed_or_multiples" && `Guests can book ${rules[day].fixed_values?.join(', ') || '?'} days OR multiples of ${Array.isArray(rules[day].multiple_of) ? rules[day].multiple_of.join(', ') : (rules[day].multiple_of || '?')}.`}
                     </p>
                   </div>
                 )}
