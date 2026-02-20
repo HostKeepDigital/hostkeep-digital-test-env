@@ -21,25 +21,6 @@ import { format, parseISO, differenceInDays, addDays, isBefore } from "date-fns"
 import { toast } from "sonner";
 import ReviewList from "@/components/reviews/ReviewList";
 import BookingCalendar from "@/components/shared/BookingCalendar";
-  // Check if check-in date is allowed based on booking rules
-  const isDayAllowedForCheckIn = (date) => {
-    // If day-based restrictions not enabled, allow all days
-    if (!property?.day_based_restrictions_enabled || !property?.booking_rules) {
-      return true;
-    }
-
-    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    const dayName = dayNames[date.getDay()];
-    const dayRule = property.booking_rules[dayName];
-
-    // If no rule defined or rule is enabled, allow the day
-    if (!dayRule || dayRule.enabled !== false) {
-      return true;
-    }
-
-    // Rule explicitly disabled this day
-    return false;
-  };
 
 const AMENITY_ICONS = {
   "WiFi": Wifi, "Parking": Car, "Air Conditioning": Wind, "Pool": Waves,
@@ -64,6 +45,26 @@ export default function PropertyDetails() {
   useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => setCurrentUser(null));
   }, []);
+
+  // Check if check-in date is allowed based on booking rules
+  const isDayAllowedForCheckIn = (date) => {
+    // If day-based restrictions not enabled, allow all days
+    if (!property?.day_based_restrictions_enabled || !property?.booking_rules) {
+      return true;
+    }
+
+    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const dayName = dayNames[date.getDay()];
+    const dayRule = property.booking_rules[dayName];
+
+    // If no rule defined or rule is enabled, allow the day
+    if (!dayRule || dayRule.enabled !== false) {
+      return true;
+    }
+
+    // Rule explicitly disabled this day
+    return false;
+  };
 
   const { data: property, isLoading } = useQuery({
     queryKey: ['property', propertyId],
