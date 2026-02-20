@@ -39,20 +39,26 @@ export default function PricingManager({ formData, onUpdate }) {
             <div>
               <Label>Cleaning Fee (£)</Label>
               <Input
-                type="number"
-                min="0"
+                type="text"
                 value={formData.cleaning_fee}
-                onChange={(e) => onUpdate("cleaning_fee", parseInt(e.target.value) || 0)}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/,/g, '');
+                  onUpdate("cleaning_fee", parseInt(value) || 0);
+                }}
+                placeholder="e.g., 50 or 1,000"
                 className="mt-1"
               />
             </div>
             <div>
               <Label>Security Deposit (£)</Label>
               <Input
-                type="number"
-                min="0"
+                type="text"
                 value={formData.security_deposit}
-                onChange={(e) => onUpdate("security_deposit", parseInt(e.target.value) || 0)}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/,/g, '');
+                  onUpdate("security_deposit", parseInt(value) || 0);
+                }}
+                placeholder="e.g., 200 or 2,500"
                 className="mt-1"
               />
             </div>
@@ -135,13 +141,11 @@ export default function PricingManager({ formData, onUpdate }) {
                   {formData.deposit_type === "fixed" ? "Deposit Amount (£)" : "Deposit Percentage (%)"}
                 </Label>
                 <Input
-                  type="number"
-                  min="0"
-                  max={formData.deposit_type === "percentage" ? 100 : undefined}
-                  step={formData.deposit_type === "percentage" ? 1 : 0.01}
+                  type="text"
                   value={formData.deposit_value || ""}
                   onChange={(e) => {
-                    const value = parseFloat(e.target.value);
+                    const cleanValue = e.target.value.replace(/,/g, '');
+                    const value = parseFloat(cleanValue);
                     if (formData.deposit_type === "percentage" && value > 100) {
                       onUpdate("deposit_value", 100);
                     } else if (value < 0) {
@@ -150,7 +154,7 @@ export default function PricingManager({ formData, onUpdate }) {
                       onUpdate("deposit_value", value || 0);
                     }
                   }}
-                  placeholder={formData.deposit_type === "percentage" ? "e.g., 25" : "e.g., 100.00"}
+                  placeholder={formData.deposit_type === "percentage" ? "e.g., 25" : "e.g., 100.00 or 1,000"}
                   required
                   className="mt-1"
                 />

@@ -115,12 +115,13 @@ export default function BookingForm({ booking, onSubmit, onCancel, isLoading }) 
           </Label>
           <Input
             id="total_amount"
-            type="number"
-            min="0"
-            step="0.01"
+            type="text"
             value={formData.total_amount}
-            onChange={(e) => handleChange("total_amount", e.target.value)}
-            placeholder="500.00"
+            onChange={(e) => {
+              const value = e.target.value.replace(/,/g, '');
+              handleChange("total_amount", value);
+            }}
+            placeholder="500.00 or 1,500"
             required
             className="h-11"
           />
@@ -133,12 +134,13 @@ export default function BookingForm({ booking, onSubmit, onCancel, isLoading }) 
           </Label>
           <Input
             id="deposit_amount"
-            type="number"
-            min="0"
-            step="0.01"
+            type="text"
             value={formData.deposit_amount}
-            onChange={(e) => handleChange("deposit_amount", e.target.value)}
-            placeholder="0.00"
+            onChange={(e) => {
+              const value = e.target.value.replace(/,/g, '');
+              handleChange("deposit_amount", value);
+            }}
+            placeholder="0.00 or 1,000"
             className="h-11"
           />
         </div>
@@ -150,12 +152,13 @@ export default function BookingForm({ booking, onSubmit, onCancel, isLoading }) 
           </Label>
           <Input
             id="deposit_paid"
-            type="number"
-            min="0"
-            step="0.01"
+            type="text"
             value={formData.deposit_paid}
-            onChange={(e) => handleChange("deposit_paid", e.target.value)}
-            placeholder="0.00"
+            onChange={(e) => {
+              const value = e.target.value.replace(/,/g, '');
+              handleChange("deposit_paid", value);
+            }}
+            placeholder="0.00 or 500"
             className="h-11"
           />
         </div>
