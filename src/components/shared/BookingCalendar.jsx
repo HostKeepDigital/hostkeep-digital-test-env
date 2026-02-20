@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
@@ -13,10 +14,17 @@ export default function BookingCalendar({
   bookedDates = [],
   numberOfMonths = 2
 }) {
+  const [open, setOpen] = useState(false);
+
+  const handleSelect = (date) => {
+    onSelect(date);
+    setOpen(false);
+  };
+
   return (
     <div>
       {label && <label className="text-xs mb-1 block">{label}</label>}
-      <Popover>
+      <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button variant="outline" className="w-full justify-start text-left font-normal">
             <Calendar className="mr-2 h-4 w-4 text-gray-400" />
@@ -27,7 +35,7 @@ export default function BookingCalendar({
           <CalendarComponent
             mode="single"
             selected={value ? (typeof value === 'string' ? parseISO(value) : value) : undefined}
-            onSelect={onSelect}
+            onSelect={handleSelect}
             disabled={disabled}
             modifiers={{ booked: bookedDates }}
             modifiersStyles={{
