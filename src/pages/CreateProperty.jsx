@@ -404,9 +404,11 @@ export default function CreateProperty() {
                     </label>
                   </div>
 
-                  <p className={`text-sm mt-2 ${formData.photos.length < 5 ? 'text-red-500' : 'text-green-600'}`}>
-                    {formData.photos.length} / 5 photos uploaded {formData.photos.length < 5 && '(minimum 5 required)'}
-                  </p>
+                  {formData.photos.length < 5 && (
+                    <p className="text-sm mt-2 text-red-500">
+                      {formData.photos.length} / 5 photos uploaded (minimum 5 required)
+                    </p>
+                  )}
 
                   {formData.photos.length > 0 && (
                     <div className="grid grid-cols-3 gap-4">
