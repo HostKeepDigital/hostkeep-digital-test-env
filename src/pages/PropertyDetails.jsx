@@ -179,20 +179,23 @@ export default function PropertyDetails() {
       return { allowedNights: result, minNights: min, maxNights: max };
     }
 
-    // Priority B: If no fixed days but multiples exist
+    // Priority B: If no fixed days, combine minimum nights with multiples
+    allowedSet.add(min); // Always include minimum nights
+
     if (multiplesSet.size > 0) {
-      allowedSet.add(min); // Always include minimum
       multiplesSet.forEach(multiple => {
         for (let i = 1; i * multiple <= max; i++) {
           allowedSet.add(i * multiple);
         }
       });
-      const result = Array.from(allowedSet).sort((a, b) => a - b);
-      return { allowedNights: result, minNights: min, maxNights: max };
+    } else {
+      // Priority C: If no multiples either, fill range from min to max
+      for (let i = min; i <= max; i++) {
+        allowedSet.add(i);
+      }
     }
 
-    // Priority C: No fixed days and no multiples, use min to max range
-    const result = Array.from({ length: max - min + 1 }, (_, i) => min + i);
+    const result = Array.from(allowedSet).sort((a, b) => a - b);
     return { allowedNights: result, minNights: min, maxNights: max };
   })();
 
