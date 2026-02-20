@@ -154,7 +154,7 @@ export default function PricingCalendar({ pricingSettings, onDateClick, selected
               <span>Weekend Rate</span>
             </div>
             <div className="flex items-center gap-1">
-              <div className="w-4 h-4 rounded bg-gray-50 border border-gray-200"></div>
+              <div className="w-4 h-4 rounded bg-white border border-gray-300"></div>
               <span>Base Rate</span>
             </div>
           </div>
