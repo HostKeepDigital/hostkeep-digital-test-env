@@ -630,7 +630,7 @@ export default function PropertyDetails() {
                   </div>
 
                   <div>
-                    <Label className="text-sm font-medium text-gray-900 mb-2 block">Guests</Label>
+                    <Label className="text-xs font-medium text-gray-900 mb-1 block">Guests</Label>
                     <div className="h-11 px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-700 flex items-center">
                       <Users className="w-4 h-4 text-gray-400 mr-2" />
                       {guestData.adults} {guestData.adults === 1 ? 'adult' : 'adults'}
