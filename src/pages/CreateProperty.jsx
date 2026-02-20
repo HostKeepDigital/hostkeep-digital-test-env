@@ -595,6 +595,20 @@ export default function CreateProperty() {
                 </CardContent>
               </Card>
             )}
+
+            {/* Step 6: Booking Rules */}
+            {currentStep === 6 && (
+              <DayBasedBookingRules
+                value={{
+                  enabled: formData.day_based_restrictions_enabled,
+                  rules: formData.booking_rules
+                }}
+                onChange={(data) => {
+                  handleChange("day_based_restrictions_enabled", data.enabled);
+                  handleChange("booking_rules", data.rules);
+                }}
+              />
+            )}
           </motion.div>
         </AnimatePresence>
 
