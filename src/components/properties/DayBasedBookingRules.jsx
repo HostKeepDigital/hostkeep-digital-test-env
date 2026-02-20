@@ -130,8 +130,6 @@ export default function DayBasedBookingRules({ value, onChange }) {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="any">Any number between min/max</SelectItem>
-                          <SelectItem value="fixed">Fixed number of days only</SelectItem>
-                          <SelectItem value="multiples">Multiples of X</SelectItem>
                           <SelectItem value="fixed_or_multiples">Fixed days OR multiples</SelectItem>
                         </SelectContent>
                       </Select>
