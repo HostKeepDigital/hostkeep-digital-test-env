@@ -133,6 +133,10 @@ export default function EditProperty() {
   };
 
   const handleSave = () => {
+    if (formData.photos.length < 5) {
+      toast.error("Please upload at least 5 photos before saving");
+      return;
+    }
     updateMutation.mutate(formData);
   };
 
@@ -162,7 +166,7 @@ export default function EditProperty() {
             </div>
             <Button 
               onClick={handleSave}
-              disabled={updateMutation.isPending}
+              disabled={updateMutation.isPending || formData.photos.length < 5}
               className="bg-teal-600 hover:bg-teal-700"
             >
               {updateMutation.isPending ? (
@@ -326,6 +330,9 @@ export default function EditProperty() {
                     <p className="text-gray-600 font-medium">{isUploading ? "Uploading..." : "Click to upload photos"}</p>
                   </label>
                 </div>
+                <p className={`text-sm ${formData.photos.length < 5 ? 'text-red-500' : 'text-green-600'}`}>
+                  {formData.photos.length} / 5 photos uploaded {formData.photos.length < 5 && '(minimum 5 required)'}
+                </p>
                 {formData.photos.length > 0 && (
                   <div className="grid grid-cols-3 gap-4">
                     {formData.photos.map((photo, idx) => (

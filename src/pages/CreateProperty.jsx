@@ -162,7 +162,7 @@ export default function CreateProperty() {
     switch (currentStep) {
       case 1: return formData.title.length >= 16 && formData.title.length <= 50 && !titleError && formData.property_type && formData.guest_capacity > 0;
       case 2: return formData.location.city && formData.location.postcode;
-      case 3: return formData.photos.length >= 1;
+      case 3: return formData.photos.length >= 5;
       case 4: return formData.nightly_rate > 0;
       case 5: return formData.description.length >= 50;
       default: return true;
@@ -390,6 +390,10 @@ export default function CreateProperty() {
                       <p className="text-sm text-gray-400 mt-1">PNG, JPG up to 10MB each</p>
                     </label>
                   </div>
+
+                  <p className={`text-sm mt-2 ${formData.photos.length < 5 ? 'text-red-500' : 'text-green-600'}`}>
+                    {formData.photos.length} / 5 photos uploaded {formData.photos.length < 5 && '(minimum 5 required)'}
+                  </p>
 
                   {formData.photos.length > 0 && (
                     <div className="grid grid-cols-3 gap-4">
