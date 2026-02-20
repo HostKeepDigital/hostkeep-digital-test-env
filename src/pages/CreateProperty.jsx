@@ -213,9 +213,8 @@ export default function CreateProperty() {
           <Progress value={progress} className="h-2" />
           <div className="flex justify-between mt-4">
             {STEPS.map((step) => (
-              <button
+              <div
                 key={step.id}
-                onClick={() => setCurrentStep(step.id)}
                 className={`flex flex-col items-center gap-1 ${
                   step.id === currentStep ? 'text-teal-600' : 
                   step.id < currentStep ? 'text-teal-500' : 'text-gray-400'
@@ -232,7 +231,7 @@ export default function CreateProperty() {
                   )}
                 </div>
                 <span className="text-xs hidden md:block">{step.title}</span>
-              </button>
+              </div>
             ))}
           </div>
         </div>
