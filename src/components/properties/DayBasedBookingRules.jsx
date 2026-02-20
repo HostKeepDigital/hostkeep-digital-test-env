@@ -1,0 +1,206 @@
+import { useState, useEffect } from "react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+
+const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+const DAY_LABELS = {
+  monday: "Monday",
+  tuesday: "Tuesday", 
+  wednesday: "Wednesday",
+  thursday: "Thursday",
+  friday: "Friday",
+  saturday: "Saturday",
+  sunday: "Sunday"
+};
+
+const DEFAULT_DAY_RULE = {
+  enabled: true,
+  min_days: 1,
+  max_days: 28,
+  rule_type: "any",
+  fixed_values: [],
+  multiple_of: null
+};
+
+export default function DayBasedBookingRules({ value, onChange }) {
+  const [enabled, setEnabled] = useState(value?.enabled || false);
+  const [rules, setRules] = useState(() => {
+    const defaultRules = {};
+    DAYS.forEach(day => {
+      defaultRules[day] = value?.rules?.[day] || { ...DEFAULT_DAY_RULE };
+    });
+    return defaultRules;
+  });
+
+  useEffect(() => {
+    onChange({ enabled, rules });
+  }, [enabled, rules]);
+
+  const updateDayRule = (day, field, val) => {
+    setRules(prev => ({
+      ...prev,
+      [day]: { ...prev[day], [field]: val }
+    }));
+  };
+
+  const parseNumberList = (str) => {
+    if (!str) return [];
+    return str.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n > 0);
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Day-Based Booking Restrictions</CardTitle>
+            <CardDescription>Configure booking rules for specific days of the week (optional)</CardDescription>
+          </div>
+          <Switch checked={enabled} onCheckedChange={setEnabled} />
+        </div>
+      </CardHeader>
+
+      {enabled && (
+        <CardContent className="space-y-4">
+          <div className="text-sm text-gray-600 bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+            <p className="font-medium mb-1">How it works:</p>
+            <ul className="list-disc list-inside space-y-1 text-xs">
+              <li>Toggle each day on/off to control bookability</li>
+              <li>Set minimum and maximum stay lengths</li>
+              <li>Choose allowed patterns: any length, fixed days, multiples, or combinations</li>
+              <li>Example: Monday allows 4 days OR multiples of 7 (7, 14, 21, 28)</li>
+            </ul>
+          </div>
+
+          {DAYS.map((day, idx) => (
+            <div key={day}>
+              {idx > 0 && <Separator className="my-4" />}
+              
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base font-semibold">{DAY_LABELS[day]}</Label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-500">
+                      {rules[day].enabled ? "Bookable" : "Restricted"}
+                    </span>
+                    <Switch
+                      checked={rules[day].enabled}
+                      onCheckedChange={(v) => updateDayRule(day, "enabled", v)}
+                    />
+                  </div>
+                </div>
+
+                {rules[day].enabled && (
+                  <div className="pl-4 space-y-3 border-l-2 border-gray-200">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-xs text-gray-600">Minimum Days</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          value={rules[day].min_days}
+                          onChange={(e) => updateDayRule(day, "min_days", parseInt(e.target.value) || 1)}
+                          className="h-9"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-600">Maximum Days</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          value={rules[day].max_days}
+                          onChange={(e) => updateDayRule(day, "max_days", parseInt(e.target.value) || 28)}
+                          className="h-9"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label className="text-xs text-gray-600">Allowed Duration Pattern</Label>
+                      <Select
+                        value={rules[day].rule_type}
+                        onValueChange={(v) => updateDayRule(day, "rule_type", v)}
+                      >
+                        <SelectTrigger className="h-9 mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="any">Any number between min/max</SelectItem>
+                          <SelectItem value="fixed">Fixed number of days only</SelectItem>
+                          <SelectItem value="multiples">Multiples of X</SelectItem>
+                          <SelectItem value="fixed_or_multiples">Fixed days OR multiples</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {rules[day].rule_type === "fixed" && (
+                      <div>
+                        <Label className="text-xs text-gray-600">Fixed Days (comma-separated)</Label>
+                        <Input
+                          placeholder="e.g., 3, 7, 14"
+                          value={rules[day].fixed_values?.join(', ') || ''}
+                          onChange={(e) => updateDayRule(day, "fixed_values", parseNumberList(e.target.value))}
+                          className="h-9 mt-1"
+                        />
+                      </div>
+                    )}
+
+                    {rules[day].rule_type === "multiples" && (
+                      <div>
+                        <Label className="text-xs text-gray-600">Multiple Of</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          placeholder="e.g., 7"
+                          value={rules[day].multiple_of || ''}
+                          onChange={(e) => updateDayRule(day, "multiple_of", parseInt(e.target.value) || null)}
+                          className="h-9 mt-1"
+                        />
+                      </div>
+                    )}
+
+                    {rules[day].rule_type === "fixed_or_multiples" && (
+                      <div className="space-y-2">
+                        <div>
+                          <Label className="text-xs text-gray-600">Fixed Days (comma-separated)</Label>
+                          <Input
+                            placeholder="e.g., 4"
+                            value={rules[day].fixed_values?.join(', ') || ''}
+                            onChange={(e) => updateDayRule(day, "fixed_values", parseNumberList(e.target.value))}
+                            className="h-9 mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-gray-600">OR Multiple Of</Label>
+                          <Input
+                            type="number"
+                            min="1"
+                            placeholder="e.g., 7"
+                            value={rules[day].multiple_of || ''}
+                            onChange={(e) => updateDayRule(day, "multiple_of", parseInt(e.target.value) || null)}
+                            className="h-9 mt-1"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <p className="text-xs text-gray-500 italic">
+                      {rules[day].rule_type === "any" && `Guests can book any stay between ${rules[day].min_days} and ${rules[day].max_days} days.`}
+                      {rules[day].rule_type === "fixed" && `Guests can only book: ${rules[day].fixed_values?.join(', ') || 'not set'} days.`}
+                      {rules[day].rule_type === "multiples" && `Guests can book multiples of ${rules[day].multiple_of || '?'} (e.g., ${rules[day].multiple_of ? `${rules[day].multiple_of}, ${rules[day].multiple_of * 2}, ${rules[day].multiple_of * 3}` : ''}).`}
+                      {rules[day].rule_type === "fixed_or_multiples" && `Guests can book ${rules[day].fixed_values?.join(', ') || '?'} days OR multiples of ${rules[day].multiple_of || '?'}.`}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      )}
+    </Card>
+  );
+}

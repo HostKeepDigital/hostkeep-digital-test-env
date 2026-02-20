@@ -16,6 +16,7 @@ import {
   Home, MapPin, Image, PoundSterling, Calendar, FileText, 
   ChevronLeft, ChevronRight, Upload, X, Check, Loader2
 } from "lucide-react";
+import DayBasedBookingRules from "@/components/properties/DayBasedBookingRules";
 import { toast } from "sonner";
 
 const STEPS = [
@@ -24,6 +25,7 @@ const STEPS = [
   { id: 3, title: "Photos", icon: Image, description: "Show off your space" },
   { id: 4, title: "Pricing", icon: PoundSterling, description: "Set your rates" },
   { id: 5, title: "Description", icon: FileText, description: "Tell guests about your place" },
+  { id: 6, title: "Booking Rules", icon: Calendar, description: "Day-based restrictions (optional)" },
 ];
 
 const PROPERTY_TYPES = [
@@ -95,6 +97,8 @@ export default function CreateProperty() {
     minimum_child_age: null,
     check_in_time: "15:00",
     check_out_time: "10:00",
+    day_based_restrictions_enabled: false,
+    booking_rules: {},
     status: "draft"
   });
 
@@ -165,6 +169,7 @@ export default function CreateProperty() {
       case 3: return formData.photos.length >= 5;
       case 4: return formData.nightly_rate > 0;
       case 5: return formData.description.length >= 50;
+      case 6: return true; // Booking rules are optional
       default: return true;
     }
   };

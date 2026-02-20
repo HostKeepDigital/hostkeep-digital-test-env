@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Home, MapPin, Image, PoundSterling, FileText, Upload, X, Loader2, ArrowLeft } from "lucide-react";
+import { Home, MapPin, Image, PoundSterling, FileText, Upload, X, Loader2, ArrowLeft, Calendar } from "lucide-react";
+import DayBasedBookingRules from "@/components/properties/DayBasedBookingRules";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 
@@ -74,6 +75,8 @@ export default function EditProperty() {
         minimum_child_age: property.minimum_child_age ?? null,
         check_in_time: property.check_in_time || "15:00",
         check_out_time: property.check_out_time || "10:00",
+        day_based_restrictions_enabled: property.day_based_restrictions_enabled || false,
+        booking_rules: property.booking_rules || {},
         status: property.status || "draft",
       });
     }
@@ -187,6 +190,7 @@ export default function EditProperty() {
             <TabsTrigger value="photos"><Image className="w-4 h-4 mr-2" /> Photos</TabsTrigger>
             <TabsTrigger value="pricing"><PoundSterling className="w-4 h-4 mr-2" /> Pricing</TabsTrigger>
             <TabsTrigger value="details"><FileText className="w-4 h-4 mr-2" /> Details</TabsTrigger>
+            <TabsTrigger value="booking-rules"><Calendar className="w-4 h-4 mr-2" /> Booking Rules</TabsTrigger>
           </TabsList>
 
           <TabsContent value="basics">
@@ -491,6 +495,19 @@ export default function EditProperty() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="booking-rules">
+            <DayBasedBookingRules
+              value={{
+                enabled: formData.day_based_restrictions_enabled,
+                rules: formData.booking_rules
+              }}
+              onChange={(data) => {
+                handleChange("day_based_restrictions_enabled", data.enabled);
+                handleChange("booking_rules", data.rules);
+              }}
+            />
           </TabsContent>
         </Tabs>
       </div>
