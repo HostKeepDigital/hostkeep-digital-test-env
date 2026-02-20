@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Home, MapPin, Image, PoundSterling, FileText, Upload, X, Loader2, ArrowLeft, Calendar } from "lucide-react";
 import DayBasedBookingRules from "@/components/properties/DayBasedBookingRules";
+import PricingManager from "@/components/pricing/PricingManager";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 
@@ -77,6 +78,14 @@ export default function EditProperty() {
         check_out_time: property.check_out_time || "10:00",
         day_based_restrictions_enabled: property.day_based_restrictions_enabled || false,
         booking_rules: property.booking_rules || {},
+        pricing_settings: property.pricing_settings || {
+          base_rate: property.nightly_rate || 100,
+          price_rounding: null,
+          weekday_rate: null,
+          weekend_rate: null,
+          seasons: [],
+          date_overrides: {}
+        },
         status: property.status || "draft",
       });
     }
@@ -358,65 +367,10 @@ export default function EditProperty() {
           </TabsContent>
 
           <TabsContent value="pricing">
-            <Card>
-              <CardHeader>
-                <CardTitle>Pricing</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div>
-                  <Label>Nightly Rate (£)</Label>
-                  <Input
-                    type="number"
-                    min="1"
-                    value={formData.nightly_rate}
-                    onChange={(e) => handleChange("nightly_rate", parseInt(e.target.value) || 0)}
-                    className="mt-1 text-2xl font-semibold h-14"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Cleaning Fee (£)</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={formData.cleaning_fee}
-                      onChange={(e) => handleChange("cleaning_fee", parseInt(e.target.value) || 0)}
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label>Security Deposit (£)</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={formData.security_deposit}
-                      onChange={(e) => handleChange("security_deposit", parseInt(e.target.value) || 0)}
-                      className="mt-1"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label>Minimum Stay (nights)</Label>
-                  <Input
-                    type="number"
-                    min="1"
-                    value={formData.minimum_stay}
-                    onChange={(e) => handleChange("minimum_stay", parseInt(e.target.value) || 1)}
-                    className="mt-1"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Check-in Time</Label>
-                    <Input type="time" value={formData.check_in_time} onChange={(e) => handleChange("check_in_time", e.target.value)} className="mt-1" />
-                  </div>
-                  <div>
-                    <Label>Check-out Time</Label>
-                    <Input type="time" value={formData.check_out_time} onChange={(e) => handleChange("check_out_time", e.target.value)} className="mt-1" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <PricingManager
+              formData={formData}
+              onUpdate={(field, value) => handleChange(field, value)}
+            />
           </TabsContent>
 
           <TabsContent value="details">

@@ -99,6 +99,14 @@ export default function CreateProperty() {
     check_out_time: "10:00",
     day_based_restrictions_enabled: false,
     booking_rules: {},
+    pricing_settings: {
+      base_rate: 100,
+      price_rounding: null,
+      weekday_rate: null,
+      weekend_rate: null,
+      seasons: [],
+      date_overrides: {}
+    },
     status: "draft"
   });
 
