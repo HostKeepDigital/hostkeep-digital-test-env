@@ -122,7 +122,10 @@ export default function PricingManager({ formData, onUpdate }) {
                 <Label>Deposit Type</Label>
                 <RadioGroup
                   value={formData.deposit_type || "percentage"}
-                  onValueChange={(value) => onUpdate("deposit_type", value)}
+                  onValueChange={(value) => {
+                    setDepositError("");
+                    onUpdate("deposit_type", value);
+                  }}
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="percentage" id="percentage" />
