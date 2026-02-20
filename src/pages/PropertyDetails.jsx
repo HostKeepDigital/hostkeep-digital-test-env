@@ -21,6 +21,7 @@ import { format, parseISO, differenceInDays, addDays, isBefore } from "date-fns"
 import { toast } from "sonner";
 import ReviewList from "@/components/reviews/ReviewList";
 import BookingCalendar from "@/components/shared/BookingCalendar";
+import { isCheckInDateAllowed } from "@/utils/checkInRestrictions";
 
 const AMENITY_ICONS = {
   "WiFi": Wifi, "Parking": Car, "Air Conditioning": Wind, "Pool": Waves,
@@ -111,45 +112,10 @@ export default function PropertyDetails() {
     );
   };
 
-  // Check day-based restrictions
-  const isDayAllowedForCheckIn = (date) => {
-    // If restrictions not enabled, allow all days
-    if (!property?.day_based_restrictions_enabled || !property?.booking_rules) {
-      return true;
-    }
-
-    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    const dayName = dayNames[date.getDay()];
-    const rules = property.booking_rules[dayName];
-
-    // If rules exist and explicitly say allowed, return true. Otherwise, allow by default
-    if (rules && rules.allowed === false) {
-      return false;
-    }
-
-    return true;
-  };
-
   // Get min and max nights based on restrictions
   const getMinMaxNights = () => {
     let minNights = property?.minimum_stay || 1;
     let maxNights = 28; // Hard cap at 28 days
-
-    if (checkIn && property?.day_based_restrictions_enabled && property?.booking_rules) {
-      const checkInDate = parseISO(checkIn);
-      const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-      const dayName = dayNames[checkInDate.getDay()];
-      const rules = property.booking_rules[dayName];
-
-      if (rules && rules.allowed) {
-        if (rules.min_nights) {
-          minNights = Math.max(minNights, rules.min_nights);
-        }
-        if (rules.max_nights) {
-          maxNights = Math.min(maxNights, rules.max_nights);
-        }
-      }
-    }
 
     return { minNights, maxNights };
   };
@@ -441,7 +407,7 @@ export default function PropertyDetails() {
                     disabled={(date) => 
                       isBefore(date, new Date()) || 
                       isDateBooked(date) || 
-                      !isDayAllowedForCheckIn(date)
+                      !isCheckInDateAllowed(date, property?.allowedCheckInDays)
                     }
                     bookedDates={bookedDates}
                     placeholder="Select date"
@@ -584,7 +550,7 @@ export default function PropertyDetails() {
                   disabled={(date) => 
                     isBefore(date, new Date()) || 
                     isDateBooked(date) || 
-                    !isDayAllowedForCheckIn(date)
+                    !isCheckInDateAllowed(date, property?.allowedCheckInDays)
                   }
                   bookedDates={bookedDates}
                   placeholder="Select date"
