@@ -96,27 +96,95 @@ export default function DateOverrideManager({ overrides = {}, onUpdate, selected
           </Button>
         </div>
 
-        <div className="space-y-2">
-          {sortedDates.length === 0 ? (
-            <p className="text-sm text-gray-500 text-center py-8">No manual overrides set. Click dates in the calendar or use the form above.</p>
-          ) : (
-            sortedDates.map(date => (
-              <div key={date} className="flex items-center justify-between p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                <div className="flex-1">
-                  <div className="font-semibold text-sm">{format(parseISO(date), 'EEEE, MMMM d, yyyy')}</div>
-                  <div className="text-xs text-gray-600 mt-1">
-                    £{overrides[date].rate}/night
-                    {overrides[date].min_nights > 1 && ` • Min ${overrides[date].min_nights} nights`}
-                    {overrides[date].note && ` • ${overrides[date].note}`}
-                  </div>
-                </div>
-                <Button variant="ghost" size="icon" onClick={() => handleDelete(date)}>
-                  <Trash2 className="w-4 h-4 text-red-500" />
-                </Button>
+        {editingRange ? (
+          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-sm">
+                Editing: {format(parseISO(editingRange.startDate), 'MMM d')} - {format(parseISO(editingRange.endDate), 'MMM d, yyyy')}
+              </h3>
+              <Button variant="ghost" size="sm" onClick={() => setEditingRange(null)}>Cancel</Button>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Nightly Rate (£)</Label>
+                <Input
+                  type="number"
+                  value={editingRange.rate}
+                  onChange={(e) => setEditingRange({ ...editingRange, rate: parseInt(e.target.value) || 0 })}
+                  className="mt-1"
+                />
               </div>
-            ))
-          )}
-        </div>
+              <div>
+                <Label>Min Nights</Label>
+                <Input
+                  type="number"
+                  value={editingRange.min_nights}
+                  onChange={(e) => setEditingRange({ ...editingRange, min_nights: parseInt(e.target.value) || 1 })}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+            <div>
+              <Label>Note</Label>
+              <Input
+                value={editingRange.note || ""}
+                onChange={(e) => setEditingRange({ ...editingRange, note: e.target.value })}
+                className="mt-1"
+              />
+            </div>
+            <Button onClick={handleUpdateRange} className="w-full">Update Range</Button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {ranges.length === 0 ? (
+              <p className="text-sm text-gray-500 text-center py-8">No manual overrides set. Click dates in the calendar or use the form above.</p>
+            ) : (
+              sortedMonths.map(monthKey => (
+                <Collapsible key={monthKey} defaultOpen={true}>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <ChevronRight className="w-4 h-4 transition-transform group-data-[state=open]:rotate-90" />
+                      <span className="font-semibold text-sm">{monthKey}</span>
+                      <span className="text-xs text-gray-500">({rangesByMonth[monthKey].length} override{rangesByMonth[monthKey].length !== 1 ? 's' : ''})</span>
+                    </div>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-2 mt-2 ml-6">
+                    {rangesByMonth[monthKey].map((range, idx) => (
+                      <div key={`${range.startDate}-${idx}`} className="flex items-center justify-between p-3 bg-purple-50 border border-purple-200 rounded-lg group">
+                        <div className="flex-1">
+                          <div className="font-semibold text-sm flex items-center gap-2">
+                            {range.isBulk ? (
+                              <>
+                                {format(parseISO(range.startDate), 'MMM d')} - {format(parseISO(range.endDate), 'MMM d, yyyy')}
+                                <span className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded">Bulk Range</span>
+                              </>
+                            ) : (
+                              format(parseISO(range.startDate), 'EEEE, MMMM d, yyyy')
+                            )}
+                          </div>
+                          <div className="text-xs text-gray-600 mt-1">
+                            £{range.rate}/night
+                            {range.min_nights > 1 && ` • Min ${range.min_nights} nights`}
+                            {range.note && ` • ${range.note}`}
+                            {range.isBulk && ` • ${range.dates.length} nights`}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button variant="ghost" size="icon" onClick={() => handleEditRange(range)}>
+                            <Edit className="w-4 h-4 text-blue-600" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDeleteRange(range)}>
+                            <Trash2 className="w-4 h-4 text-red-500" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </CollapsibleContent>
+                </Collapsible>
+              ))
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
