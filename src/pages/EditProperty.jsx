@@ -57,10 +57,10 @@ export default function EditProperty() {
         bedrooms: property.bedrooms || 2,
         bathrooms: property.bathrooms || 1,
         location: property.location || { 
-          address_line_1: "123 High Street", 
-          address_line_2: "Flat 4B", 
-          city: "London", 
-          postcode: "SW1A 1AA"
+          address_line_1: "", 
+          address_line_2: "", 
+          city: "", 
+          postcode: ""
         },
         photos: property.photos || [],
         nightly_rate: property.nightly_rate || 100,

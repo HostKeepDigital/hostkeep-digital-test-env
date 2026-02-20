@@ -79,10 +79,10 @@ export default function CreateProperty() {
     bedrooms: 2,
     bathrooms: 1,
     location: {
-      address_line_1: "123 High Street",
-      address_line_2: "Flat 4B",
-      city: "London",
-      postcode: "SW1A 1AA"
+      address_line_1: "",
+      address_line_2: "",
+      city: "",
+      postcode: ""
     },
     photos: [],
     nightly_rate: 100,
@@ -174,7 +174,7 @@ export default function CreateProperty() {
   const canProceed = () => {
     switch (currentStep) {
       case 1: return formData.title.length >= 16 && formData.title.length <= 50 && !titleError && formData.property_type && formData.guest_capacity > 0;
-      case 2: return formData.location.city && formData.location.postcode;
+      case 2: return formData.location.address_line_1?.trim() && formData.location.city?.trim() && formData.location.postcode?.trim();
       case 3: return formData.photos.length >= 5;
       case 4: return formData.nightly_rate > 0;
       case 5: return formData.description.length >= 50;
