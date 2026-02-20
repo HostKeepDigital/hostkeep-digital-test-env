@@ -201,7 +201,16 @@ export default function DayBasedBookingRules({ value, onChange }) {
                           <Input
                             placeholder="e.g., 4"
                             value={rules[day].fixed_values?.join(', ') || ''}
-                            onChange={(e) => updateDayRule(day, "fixed_values", parseNumberList(e.target.value))}
+                            onChange={(e) => {
+                              const fixedValues = parseNumberList(e.target.value);
+                              updateDayRule(day, "fixed_values", fixedValues);
+                              
+                              // Auto-update minimum days to match the lowest fixed value
+                              if (fixedValues.length > 0) {
+                                const minFixed = Math.min(...fixedValues);
+                                updateDayRule(day, "min_days", minFixed);
+                              }
+                            }}
                             className="h-9 mt-1"
                           />
                         </div>
