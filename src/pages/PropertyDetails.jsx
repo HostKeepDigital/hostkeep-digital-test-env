@@ -683,12 +683,12 @@ export default function PropertyDetails() {
                      </SelectContent>
                    </Select>
                    {checkIn && (
-                     <p className="text-xs text-gray-500 mt-1">{minNights} - {maxNights} nights</p>
+                     <p className="text-xs text-gray-500 mt-1">{displayMin} - {displayMax} nights</p>
                    )}
-                 </div>
-              </div>
-              <div>
-                <Label>Guests</Label>
+                   </div>
+                   </div>
+                   <div>
+                   <Label>Guests</Label>
                 <div className="bg-gray-100 border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-600">
                   {guestData.adults} {guestData.adults === 1 ? 'adult' : 'adults'}
                   {guestData.childrenAges.length > 0 && (
