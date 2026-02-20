@@ -198,19 +198,19 @@ export default function PricingManager({ formData, onUpdate }) {
         </CardContent>
       </Card>
 
-      {/* Pricing Calendar */}
-      <PricingCalendar
-        pricingSettings={formData.pricing_settings}
-        onDateClick={handleDateClick}
-        selectedDates={selectedDate ? [selectedDate] : []}
-      />
-
       {/* Nightly Pricing */}
       <Card>
         <CardHeader>
           <CardTitle>Nightly Pricing</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
+          {/* Pricing Calendar */}
+          <PricingCalendar
+            pricingSettings={formData.pricing_settings}
+            onDateClick={handleDateClick}
+            selectedDates={selectedDate ? [selectedDate] : []}
+          />
+
           <Tabs defaultValue="base" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="base">Base Rates</TabsTrigger>
