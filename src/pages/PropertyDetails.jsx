@@ -664,7 +664,7 @@ export default function PropertyDetails() {
                 {/* CTA Button */}
                 <Dialog open={showBookingDialog} onOpenChange={setShowBookingDialog}>
                   <DialogTrigger asChild>
-                    <Button className="w-full h-12 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg" disabled={!checkIn || !nights}>
+                    <Button className="w-full h-10 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg text-sm" disabled={!checkIn || !nights}>
                       Request to Book
                     </Button>
                   </DialogTrigger>
