@@ -113,6 +113,7 @@ export default function PropertyDetails() {
 
   // Check day-based restrictions
   const isDayAllowedForCheckIn = (date) => {
+    // If restrictions not enabled, allow all days
     if (!property?.day_based_restrictions_enabled || !property?.booking_rules) {
       return true;
     }
@@ -121,7 +122,8 @@ export default function PropertyDetails() {
     const dayName = dayNames[date.getDay()];
     const rules = property.booking_rules[dayName];
 
-    if (!rules || !rules.allowed) {
+    // If rules exist and explicitly say allowed, return true. Otherwise, allow by default
+    if (rules && rules.allowed === false) {
       return false;
     }
 
