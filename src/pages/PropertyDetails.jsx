@@ -587,11 +587,11 @@ export default function PropertyDetails() {
             <Card className="border-0 bg-white shadow-lg sticky top-24">
               <CardContent className="p-4 space-y-4">
                 {/* Price Header */}
-                <div className="border-b border-gray-100 pb-4">
-                  <p className="text-gray-600 text-sm mb-1">Starting from</p>
+                <div className="border-b border-gray-100 pb-3">
+                  <p className="text-gray-600 text-xs mb-0.5">Starting from</p>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-bold text-gray-900">£{property.nightly_rate}</span>
-                    <span className="text-gray-500 text-sm">per night</span>
+                    <span className="text-3xl font-bold text-gray-900">£{property.nightly_rate}</span>
+                    <span className="text-gray-500 text-xs">per night</span>
                   </div>
                 </div>
 
