@@ -16,6 +16,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 export default function PricingManager({ formData, onUpdate }) {
   const [selectedDate, setSelectedDate] = useState(null);
   const [depositError, setDepositError] = useState("");
+  const [activeSection, setActiveSection] = useState("base"); // base, seasons, overrides
 
   const handlePricingUpdate = (field, value) => {
     onUpdate('pricing_settings', {
@@ -30,6 +31,28 @@ export default function PricingManager({ formData, onUpdate }) {
 
   return (
     <div className="space-y-6">
+      {/* Pricing Hierarchy Info Banner */}
+      <Card className="bg-gradient-to-r from-teal-50 to-blue-50 border-teal-200">
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
+            <Settings className="w-5 h-5 text-teal-600 mt-0.5" />
+            <div>
+              <h3 className="font-semibold text-sm text-gray-900 mb-2">Pricing Hierarchy - How It Works</h3>
+              <div className="flex items-center gap-2 text-xs text-gray-700">
+                <span className="px-2 py-1 bg-purple-100 border border-purple-300 rounded font-medium">1. Manual Overrides</span>
+                <span className="text-gray-400">→</span>
+                <span className="px-2 py-1 bg-blue-100 border border-blue-300 rounded font-medium">2. Seasonal Rates</span>
+                <span className="text-gray-400">→</span>
+                <span className="px-2 py-1 bg-green-100 border border-green-300 rounded font-medium">3. Weekend/Weekday</span>
+                <span className="text-gray-400">→</span>
+                <span className="px-2 py-1 bg-gray-100 border border-gray-300 rounded font-medium">4. Base Rate</span>
+              </div>
+              <p className="text-xs text-gray-600 mt-2">Each level overrides the previous. Calendar shows live pricing with color codes.</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Basic Fees Card */}
       <Card>
         <CardHeader>
@@ -198,62 +221,87 @@ export default function PricingManager({ formData, onUpdate }) {
         </CardContent>
       </Card>
 
-      {/* Calendar-Based Pricing */}
-      <Tabs defaultValue="calendar" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="calendar">
-            <Calendar className="w-4 h-4 mr-2" />
-            Calendar
-          </TabsTrigger>
-          <TabsTrigger value="settings">
-            <Settings className="w-4 h-4 mr-2" />
-            Base Rates
-          </TabsTrigger>
-          <TabsTrigger value="seasons">
-            <DollarSign className="w-4 h-4 mr-2" />
-            Seasons
-          </TabsTrigger>
-          <TabsTrigger value="overrides">
-            <Zap className="w-4 h-4 mr-2" />
-            Overrides
-          </TabsTrigger>
-        </TabsList>
+      {/* Calendar-Based Pricing - Split Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left: Controls */}
+        <div className="space-y-4">
+          {/* Section Toggles */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Pricing Controls</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-3 gap-2">
+                <Button
+                  variant={activeSection === "base" ? "default" : "outline"}
+                  onClick={() => setActiveSection("base")}
+                  className="flex flex-col items-center gap-1 h-auto py-3"
+                >
+                  <Settings className="w-5 h-5" />
+                  <span className="text-xs">Base Rates</span>
+                </Button>
+                <Button
+                  variant={activeSection === "seasons" ? "default" : "outline"}
+                  onClick={() => setActiveSection("seasons")}
+                  className="flex flex-col items-center gap-1 h-auto py-3"
+                >
+                  <DollarSign className="w-5 h-5" />
+                  <span className="text-xs">Seasons</span>
+                </Button>
+                <Button
+                  variant={activeSection === "overrides" ? "default" : "outline"}
+                  onClick={() => setActiveSection("overrides")}
+                  className="flex flex-col items-center gap-1 h-auto py-3"
+                >
+                  <Zap className="w-5 h-5" />
+                  <span className="text-xs">Overrides</span>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
-        <TabsContent value="calendar" className="space-y-4">
+          {/* Active Section Content */}
+          <div className="space-y-4">
+            {activeSection === "base" && (
+              <BaseRateSettings
+                settings={formData.pricing_settings}
+                onUpdate={(newSettings) => onUpdate('pricing_settings', newSettings)}
+              />
+            )}
+
+            {activeSection === "seasons" && (
+              <SeasonManager
+                seasons={formData.pricing_settings?.seasons || []}
+                onUpdate={(seasons) => handlePricingUpdate('seasons', seasons)}
+              />
+            )}
+
+            {activeSection === "overrides" && (
+              <div className="space-y-4">
+                <DateOverrideManager
+                  overrides={formData.pricing_settings?.date_overrides || {}}
+                  onUpdate={(overrides) => handlePricingUpdate('date_overrides', overrides)}
+                  selectedDate={selectedDate}
+                />
+                <BulkEditManager
+                  overrides={formData.pricing_settings?.date_overrides || {}}
+                  onUpdate={(overrides) => handlePricingUpdate('date_overrides', overrides)}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right: Calendar (Always Visible) */}
+        <div className="lg:sticky lg:top-4 lg:self-start space-y-4">
           <PricingCalendar
             pricingSettings={formData.pricing_settings}
             onDateClick={handleDateClick}
             selectedDates={selectedDate ? [selectedDate] : []}
           />
           <ExportPricing pricingSettings={formData.pricing_settings} />
-        </TabsContent>
-
-        <TabsContent value="settings">
-          <BaseRateSettings
-            settings={formData.pricing_settings}
-            onUpdate={(newSettings) => onUpdate('pricing_settings', newSettings)}
-          />
-        </TabsContent>
-
-        <TabsContent value="seasons">
-          <SeasonManager
-            seasons={formData.pricing_settings?.seasons || []}
-            onUpdate={(seasons) => handlePricingUpdate('seasons', seasons)}
-          />
-        </TabsContent>
-
-        <TabsContent value="overrides" className="space-y-4">
-          <BulkEditManager
-            overrides={formData.pricing_settings?.date_overrides || {}}
-            onUpdate={(overrides) => handlePricingUpdate('date_overrides', overrides)}
-          />
-          <DateOverrideManager
-            overrides={formData.pricing_settings?.date_overrides || {}}
-            onUpdate={(overrides) => handlePricingUpdate('date_overrides', overrides)}
-            selectedDate={selectedDate}
-          />
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
     </div>
   );
 }
