@@ -4,7 +4,6 @@ import { Settings, Calendar, DollarSign, Zap } from "lucide-react";
 import BaseRateSettings from "./BaseRateSettings";
 import SeasonManager from "./SeasonManager";
 import DateOverrideManager from "./DateOverrideManager";
-import BulkEditManager from "./BulkEditManager";
 import PricingCalendar from "./PricingCalendar";
 import ExportPricing from "./ExportPricing";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -237,10 +236,6 @@ export default function PricingManager({ formData, onUpdate }) {
                 overrides={formData.pricing_settings?.date_overrides || {}}
                 onUpdate={(overrides) => handlePricingUpdate('date_overrides', overrides)}
                 selectedDate={selectedDate}
-              />
-              <BulkEditManager
-                overrides={formData.pricing_settings?.date_overrides || {}}
-                onUpdate={(overrides) => handlePricingUpdate('date_overrides', overrides)}
               />
             </TabsContent>
           </Tabs>

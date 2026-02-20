@@ -3,8 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, Calendar, ChevronRight, ChevronDown, Edit } from "lucide-react";
-import { format, parseISO, differenceInDays, startOfMonth, endOfMonth, isSameMonth } from "date-fns";
+import { Plus, Trash2, Calendar, ChevronRight, ChevronDown, Edit, Zap } from "lucide-react";
+import { format, parseISO, differenceInDays, eachDayOfInterval } from "date-fns";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 export default function DateOverrideManager({ overrides = {}, onUpdate, selectedDate = null }) {
@@ -13,6 +13,12 @@ export default function DateOverrideManager({ overrides = {}, onUpdate, selected
     rate: 100,
     min_nights: 1,
     note: ""
+  });
+  const [bulkFormData, setBulkFormData] = useState({
+    start_date: "",
+    end_date: "",
+    rate: 100,
+    min_nights: 1
   });
   const [expandedRanges, setExpandedRanges] = useState({});
   const [expandedMonths, setExpandedMonths] = useState({});
@@ -86,6 +92,27 @@ export default function DateOverrideManager({ overrides = {}, onUpdate, selected
     };
     onUpdate(newOverrides);
     setFormData({ date: "", rate: 100, min_nights: 1, note: "" });
+  };
+
+  const handleBulkApply = () => {
+    if (!bulkFormData.start_date || !bulkFormData.end_date || !bulkFormData.rate) return;
+
+    const start = parseISO(bulkFormData.start_date);
+    const end = parseISO(bulkFormData.end_date);
+    const dates = eachDayOfInterval({ start, end });
+
+    const newOverrides = { ...overrides };
+    dates.forEach(date => {
+      const dateStr = format(date, 'yyyy-MM-dd');
+      newOverrides[dateStr] = {
+        rate: bulkFormData.rate,
+        min_nights: bulkFormData.min_nights,
+        note: `Bulk edit ${bulkFormData.start_date} to ${bulkFormData.end_date}`
+      };
+    });
+
+    onUpdate(newOverrides);
+    setBulkFormData({ start_date: "", end_date: "", rate: 100, min_nights: 1 });
   };
 
   const handleDeleteDate = (date) => {
@@ -197,6 +224,60 @@ export default function DateOverrideManager({ overrides = {}, onUpdate, selected
           <Button onClick={handleAdd} className="w-full">
             <Plus className="w-4 h-4 mr-2" />
             Add Override
+          </Button>
+        </div>
+
+        {/* Bulk Date Range Edit */}
+        <div className="p-4 bg-teal-50 border border-teal-200 rounded-lg space-y-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Zap className="w-5 h-5 text-teal-700" />
+            <h3 className="font-semibold text-teal-900">Bulk Date Range Edit</h3>
+          </div>
+          <p className="text-sm text-teal-700 mb-3">Apply pricing to multiple dates at once</p>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Start Date</Label>
+              <Input
+                type="date"
+                value={bulkFormData.start_date}
+                onChange={(e) => setBulkFormData({ ...bulkFormData, start_date: e.target.value })}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label>End Date</Label>
+              <Input
+                type="date"
+                value={bulkFormData.end_date}
+                onChange={(e) => setBulkFormData({ ...bulkFormData, end_date: e.target.value })}
+                className="mt-1"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Nightly Rate (£)</Label>
+              <Input
+                type="number"
+                min="1"
+                value={bulkFormData.rate}
+                onChange={(e) => setBulkFormData({ ...bulkFormData, rate: parseInt(e.target.value) || 0 })}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label>Min Nights</Label>
+              <Input
+                type="number"
+                min="1"
+                value={bulkFormData.min_nights}
+                onChange={(e) => setBulkFormData({ ...bulkFormData, min_nights: parseInt(e.target.value) || 1 })}
+                className="mt-1"
+              />
+            </div>
+          </div>
+          <Button onClick={handleBulkApply} className="w-full bg-teal-600 hover:bg-teal-700">
+            Apply to Date Range
           </Button>
         </div>
 
