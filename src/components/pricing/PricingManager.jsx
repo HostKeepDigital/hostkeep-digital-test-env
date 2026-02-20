@@ -215,7 +215,7 @@ export default function PricingManager({ formData, onUpdate }) {
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="base">Base Rates</TabsTrigger>
               <TabsTrigger value="seasons">Seasons</TabsTrigger>
-              <TabsTrigger value="overrides">Bulk Edit</TabsTrigger>
+              <TabsTrigger value="overrides">Overrides</TabsTrigger>
             </TabsList>
 
             <TabsContent value="base" className="space-y-4">
@@ -233,6 +233,11 @@ export default function PricingManager({ formData, onUpdate }) {
             </TabsContent>
 
             <TabsContent value="overrides" className="space-y-4">
+              <DateOverrideManager
+                overrides={formData.pricing_settings?.date_overrides || {}}
+                onUpdate={(overrides) => handlePricingUpdate('date_overrides', overrides)}
+                selectedDate={selectedDate}
+              />
               <BulkEditManager
                 overrides={formData.pricing_settings?.date_overrides || {}}
                 onUpdate={(overrides) => handlePricingUpdate('date_overrides', overrides)}
@@ -241,13 +246,6 @@ export default function PricingManager({ formData, onUpdate }) {
           </Tabs>
         </CardContent>
       </Card>
-
-      {/* Updated Prices Section */}
-      <DateOverrideManager
-        overrides={formData.pricing_settings?.date_overrides || {}}
-        onUpdate={(overrides) => handlePricingUpdate('date_overrides', overrides)}
-        selectedDate={selectedDate}
-      />
 
       <ExportPricing pricingSettings={formData.pricing_settings} />
     </div>
