@@ -3,8 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, Calendar } from "lucide-react";
-import { format, parseISO } from "date-fns";
+import { Plus, Trash2, Calendar, ChevronRight, Edit } from "lucide-react";
+import { format, parseISO, differenceInDays } from "date-fns";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 export default function DateOverrideManager({ overrides = {}, onUpdate, selectedDate = null }) {
   const [formData, setFormData] = useState({
@@ -13,6 +14,59 @@ export default function DateOverrideManager({ overrides = {}, onUpdate, selected
     min_nights: 1,
     note: ""
   });
+  const [editingRange, setEditingRange] = useState(null);
+
+  // Group consecutive dates with same price into ranges
+  const groupIntoRanges = () => {
+    const sortedDates = Object.keys(overrides).sort();
+    const ranges = [];
+    const rangesByMonth = {};
+
+    let i = 0;
+    while (i < sortedDates.length) {
+      const startDate = sortedDates[i];
+      const startInfo = overrides[startDate];
+      let endDate = startDate;
+      
+      // Look ahead for consecutive dates with same rate
+      while (i + 1 < sortedDates.length) {
+        const nextDate = sortedDates[i + 1];
+        const nextInfo = overrides[nextDate];
+        const daysDiff = differenceInDays(parseISO(nextDate), parseISO(endDate));
+        
+        // Check if next date is consecutive and has same rate
+        if (daysDiff === 1 && nextInfo.rate === startInfo.rate && nextInfo.min_nights === startInfo.min_nights) {
+          endDate = nextDate;
+          i++;
+        } else {
+          break;
+        }
+      }
+      
+      const range = {
+        startDate,
+        endDate,
+        rate: startInfo.rate,
+        min_nights: startInfo.min_nights,
+        note: startInfo.note,
+        isBulk: startDate !== endDate,
+        dates: sortedDates.slice(sortedDates.indexOf(startDate), sortedDates.indexOf(endDate) + 1)
+      };
+      
+      ranges.push(range);
+      
+      // Group by month
+      const monthKey = format(parseISO(startDate), 'MMMM yyyy');
+      if (!rangesByMonth[monthKey]) {
+        rangesByMonth[monthKey] = [];
+      }
+      rangesByMonth[monthKey].push(range);
+      
+      i++;
+    }
+    
+    return { ranges, rangesByMonth };
+  };
 
   const handleAdd = () => {
     if (!formData.date || !formData.rate) return;
@@ -29,13 +83,36 @@ export default function DateOverrideManager({ overrides = {}, onUpdate, selected
     setFormData({ date: "", rate: 100, min_nights: 1, note: "" });
   };
 
-  const handleDelete = (date) => {
+  const handleDeleteRange = (range) => {
     const newOverrides = { ...overrides };
-    delete newOverrides[date];
+    range.dates.forEach(date => delete newOverrides[date]);
     onUpdate(newOverrides);
   };
 
-  const sortedDates = Object.keys(overrides).sort();
+  const handleEditRange = (range) => {
+    setEditingRange(range);
+  };
+
+  const handleUpdateRange = () => {
+    if (!editingRange) return;
+    
+    const newOverrides = { ...overrides };
+    editingRange.dates.forEach(date => {
+      newOverrides[date] = {
+        rate: editingRange.rate,
+        min_nights: editingRange.min_nights,
+        note: editingRange.note
+      };
+    });
+    
+    onUpdate(newOverrides);
+    setEditingRange(null);
+  };
+
+  const { ranges, rangesByMonth } = groupIntoRanges();
+  const sortedMonths = Object.keys(rangesByMonth).sort((a, b) => 
+    parseISO(rangesByMonth[b][0].startDate) - parseISO(rangesByMonth[a][0].startDate)
+  );
 
   return (
     <Card>
