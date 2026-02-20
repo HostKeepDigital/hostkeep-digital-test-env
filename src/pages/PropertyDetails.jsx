@@ -36,7 +36,12 @@ export default function PropertyDetails() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [checkIn, setCheckIn] = useState("");
   const [nights, setNights] = useState("");
-  const [guestCount, setGuestCount] = useState(1);
+  const [guestData, setGuestData] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const adults = parseInt(params.get('adults')) || 1;
+    const childrenAges = params.get('childrenAges') ? params.get('childrenAges').split(',').map(a => parseInt(a)) : [];
+    return { adults, childrenAges };
+  });
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
