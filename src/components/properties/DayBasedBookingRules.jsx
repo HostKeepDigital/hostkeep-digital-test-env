@@ -19,9 +19,11 @@ const DAY_LABELS = {
 
 const DEFAULT_DAY_RULE = {
   enabled: true,
-  minimum_number_of_nights: null,
+  min_days: 1,
+  max_days: 28,
   rule_type: "any",
-  fixed_values: []
+  fixed_values: [],
+  multiple_of: null
 };
 
 const parseMultipleOf = (str) => {
@@ -100,9 +102,9 @@ export default function DayBasedBookingRules({ value, onChange }) {
             <p className="font-medium mb-1">How it works:</p>
             <ul className="list-disc list-inside space-y-1 text-xs">
               <li>Toggle each day on/off to control bookability</li>
-              <li>Set minimum stay requirement</li>
-              <li>Optionally set fixed days guests can book</li>
-              <li>Example: Monday with minimum 3 nights and fixed days 3, 7, 14</li>
+              <li>Set minimum and maximum stay lengths</li>
+              <li>Choose allowed patterns: any length, fixed days, multiples, or combinations</li>
+              <li>Example: Monday allows 4 days OR multiples of 7 (7, 14, 21, 28)</li>
             </ul>
           </div>
 
@@ -126,37 +128,124 @@ export default function DayBasedBookingRules({ value, onChange }) {
 
                 {rules[day].enabled && (
                   <div className="pl-4 space-y-3 border-l-2 border-gray-200">
-                    <div>
-                      <Label className="text-xs text-gray-600">Minimum Nights Required</Label>
-                      <Input
-                        type="number"
-                        min="1"
-                        max="28"
-                        value={rules[day].minimum_number_of_nights ?? ''}
-                        onChange={(e) => {
-                          const val = e.target.value ? parseInt(e.target.value) : null;
-                          updateDayRule(day, "minimum_number_of_nights", val);
-                        }}
-                        placeholder="Leave empty for no minimum"
-                        className="h-9"
-                      />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-xs text-gray-600">Minimum Days</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          value={rules[day].min_days}
+                          onChange={(e) => updateDayRule(day, "min_days", parseInt(e.target.value) || 1)}
+                          className="h-9"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-600">Maximum Days</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          value={rules[day].max_days}
+                          onChange={(e) => updateDayRule(day, "max_days", parseInt(e.target.value) || 28)}
+                          className="h-9"
+                        />
+                      </div>
                     </div>
 
                     <div>
-                      <Label className="text-xs text-gray-600">Fixed Days (Optional)</Label>
-                      <Input
-                        placeholder="e.g., 3, 7, 14"
-                        value={rules[day].fixed_values?.join(', ') || ''}
-                        onChange={(e) => updateDayRule(day, "fixed_values", parseNumberList(e.target.value))}
-                        className="h-9 mt-1"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">Comma-separated values (max 28). Leave empty to allow any duration from minimum nights.</p>
+                      <Label className="text-xs text-gray-600">Allowed Duration Pattern</Label>
+                      <Select
+                        value={rules[day].rule_type}
+                        onValueChange={(v) => updateDayRule(day, "rule_type", v)}
+                      >
+                        <SelectTrigger className="h-9 mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="any">Any number between min/max</SelectItem>
+                          <SelectItem value="fixed_or_multiples">Fixed days OR multiples</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
+
+                    {rules[day].rule_type === "fixed" && (
+                      <div>
+                        <Label className="text-xs text-gray-600">Fixed Days (max 28)</Label>
+                        <Input
+                          placeholder="e.g., 3, 7, 14"
+                          value={rules[day].fixed_values?.join(', ') || ''}
+                          onChange={(e) => updateDayRule(day, "fixed_values", parseNumberList(e.target.value))}
+                          className="h-9 mt-1"
+                        />
+                      </div>
+                    )}
+
+                    {rules[day].rule_type === "multiples" && (
+                      <div>
+                        <Label className="text-xs text-gray-600">Multiple Of (max 28)</Label>
+                        <Input
+                          placeholder="e.g., 7, 14"
+                          value={Array.isArray(rules[day].multiple_of) ? rules[day].multiple_of.join(', ') : (rules[day].multiple_of || '')}
+                          onChange={(e) => {
+                            const values = parseNumberList(e.target.value);
+                            updateDayRule(day, "multiple_of", values.length > 0 ? values : null);
+                          }}
+                          className="h-9 mt-1"
+                        />
+                      </div>
+                    )}
+
+                    {rules[day].rule_type === "fixed_or_multiples" && (
+                      <div className="space-y-2">
+                        <div>
+                          <Label className="text-xs text-gray-600">Fixed Days (max 28)</Label>
+                          <Input
+                            placeholder="e.g., 4"
+                            value={rules[day].fixed_values?.join(', ') || ''}
+                            onChange={(e) => {
+                              const fixedValues = parseNumberList(e.target.value);
+                              updateDayRule(day, "fixed_values", fixedValues);
+                              
+                              // Auto-update minimum days to match the lowest fixed value
+                              if (fixedValues.length > 0) {
+                                const minFixed = Math.min(...fixedValues);
+                                updateDayRule(day, "min_days", minFixed);
+                              }
+                            }}
+                            className="h-9 mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-gray-600">OR Multiple Of (max multiplier is 7)</Label>
+                          <Input
+                            placeholder="e.g., 1, 2, 3"
+                            value={Array.isArray(rules[day].multiple_of) ? rules[day].multiple_of.join(', ') : (rules[day].multiple_of || '')}
+                            onChange={(e) => {
+                              const { values, error } = parseMultipleOf(e.target.value);
+                              if (error) {
+                                setErrors(prev => ({ ...prev, [day]: error }));
+                              } else {
+                                setErrors(prev => {
+                                  const newErrors = { ...prev };
+                                  delete newErrors[day];
+                                  return newErrors;
+                                });
+                              }
+                              updateDayRule(day, "multiple_of", values);
+                            }}
+                            className={`h-9 mt-1 ${errors[day] ? 'border-red-500' : ''}`}
+                          />
+                          {errors[day] && (
+                            <p className="text-xs text-red-500 mt-1">{errors[day]}</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
                     <p className="text-xs text-gray-500 italic">
-                      {rules[day].fixed_values?.length > 0 
-                        ? `Guests can only book: ${rules[day].fixed_values.join(', ')} nights.`
-                        : `Guests can book ${rules[day].minimum_number_of_nights ? `${rules[day].minimum_number_of_nights} or more` : 'any number of'} nights.`}
+                      {rules[day].rule_type === "any" && `Guests can book any stay between ${rules[day].min_days} and ${rules[day].max_days} days.`}
+                      {rules[day].rule_type === "fixed" && `Guests can only book: ${rules[day].fixed_values?.join(', ') || 'not set'} days.`}
+                      {rules[day].rule_type === "multiples" && `Guests can book multiples of ${Array.isArray(rules[day].multiple_of) ? rules[day].multiple_of.join(', ') : (rules[day].multiple_of || '?')}.`}
+                      {rules[day].rule_type === "fixed_or_multiples" && `Guests can book ${rules[day].fixed_values?.join(', ') || '?'} days OR multiples of ${Array.isArray(rules[day].multiple_of) ? rules[day].multiple_of.join(', ') : (rules[day].multiple_of || '?')}.`}
                     </p>
                   </div>
                 )}
