@@ -139,9 +139,9 @@ export default function PropertyDetails() {
   };
 
   // Calculate allowed nights based on booking rules (only after check-in selected)
-  const { allowedNights, minNights, maxNights } = (() => {
+  const { allowedNights, minNights, maxNights, displayMin, displayMax } = (() => {
     if (!checkIn || !property?.booking_rules) {
-      return { allowedNights: [], minNights: 1, maxNights: 28 };
+      return { allowedNights: [], minNights: 1, maxNights: 28, displayMin: 1, displayMax: 28 };
     }
 
     const min = property.minimum_stay || 1;
