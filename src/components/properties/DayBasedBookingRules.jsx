@@ -35,10 +35,10 @@ const parseMultipleOf = (str) => {
   for (const part of parts) {
     const num = parseInt(part);
     if (isNaN(num) || num !== parseFloat(part)) {
-      return { values: null, error: "Please enter comma-separated whole numbers between 1 and 7 only." };
+      return { values: null, error: "Please enter whole numbers between 1 and 7 only." };
     }
     if (num < 1 || num > 7) {
-      return { values: null, error: "Please enter comma-separated whole numbers between 1 and 7 only." };
+      return { values: null, error: "Please enter whole numbers between 1 and 7 only." };
     }
     numbers.push(num);
   }
@@ -169,7 +169,7 @@ export default function DayBasedBookingRules({ value, onChange }) {
 
                     {rules[day].rule_type === "fixed" && (
                       <div>
-                        <Label className="text-xs text-gray-600">Fixed Days (comma-separated, max 28)</Label>
+                        <Label className="text-xs text-gray-600">Fixed Days (max 28)</Label>
                         <Input
                           placeholder="e.g., 3, 7, 14"
                           value={rules[day].fixed_values?.join(', ') || ''}
@@ -181,7 +181,7 @@ export default function DayBasedBookingRules({ value, onChange }) {
 
                     {rules[day].rule_type === "multiples" && (
                       <div>
-                        <Label className="text-xs text-gray-600">Multiple Of (comma-separated, max 28)</Label>
+                        <Label className="text-xs text-gray-600">Multiple Of (max 28)</Label>
                         <Input
                           placeholder="e.g., 7, 14"
                           value={Array.isArray(rules[day].multiple_of) ? rules[day].multiple_of.join(', ') : (rules[day].multiple_of || '')}
@@ -197,7 +197,7 @@ export default function DayBasedBookingRules({ value, onChange }) {
                     {rules[day].rule_type === "fixed_or_multiples" && (
                       <div className="space-y-2">
                         <div>
-                          <Label className="text-xs text-gray-600">Fixed Days (comma-separated, max 28)</Label>
+                          <Label className="text-xs text-gray-600">Fixed Days (max 28)</Label>
                           <Input
                             placeholder="e.g., 4"
                             value={rules[day].fixed_values?.join(', ') || ''}
@@ -215,7 +215,7 @@ export default function DayBasedBookingRules({ value, onChange }) {
                           />
                         </div>
                         <div>
-                          <Label className="text-xs text-gray-600">OR Multiple Of (comma-separated, max multiplier is 7)</Label>
+                          <Label className="text-xs text-gray-600">OR Multiple Of (max multiplier is 7)</Label>
                           <Input
                             placeholder="e.g., 1, 2, 3"
                             value={Array.isArray(rules[day].multiple_of) ? rules[day].multiple_of.join(', ') : (rules[day].multiple_of || '')}
