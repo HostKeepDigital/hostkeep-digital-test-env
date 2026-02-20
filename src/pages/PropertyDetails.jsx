@@ -133,10 +133,46 @@ export default function PropertyDetails() {
     );
   };
 
-  // Get allowed nights - using default range for now
-  const allowedNights = Array.from({ length: 28 }, (_, i) => i + 1);
-  const minNights = 1;
-  const maxNights = 28;
+  // Calculate allowed nights based on booking rules (only after check-in selected)
+  const { allowedNights, minNights, maxNights } = (() => {
+    if (!checkIn || !property?.booking_rules) {
+      return { allowedNights: [], minNights: 1, maxNights: 28 };
+    }
+
+    const min = property.minimum_stay || 1;
+    const max = 28;
+    const allowedSet = new Set();
+    allowedSet.add(min);
+
+    // Look up the first enabled day's multiple value from booking rules
+    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    let multiple = null;
+
+    for (const dayName of dayNames) {
+      const dayRule = property.booking_rules[dayName];
+      if (dayRule?.enabled !== false && dayRule?.multiple_of?.length > 0) {
+        multiple = dayRule.multiple_of[0];
+        break;
+      }
+    }
+
+    // If no multiple found, use default 1-28 range
+    if (!multiple) {
+      return { 
+        allowedNights: Array.from({ length: max - min + 1 }, (_, i) => min + i),
+        minNights: min,
+        maxNights: max
+      };
+    }
+
+    // Add multiples starting from the minimum
+    for (let i = 1; i * multiple <= max; i++) {
+      allowedSet.add(i * multiple);
+    }
+
+    const result = Array.from(allowedSet).sort((a, b) => a - b);
+    return { allowedNights: result, minNights: min, maxNights: max };
+  })();
 
   const bookingMutation = useMutation({
     mutationFn: async (data) => {
