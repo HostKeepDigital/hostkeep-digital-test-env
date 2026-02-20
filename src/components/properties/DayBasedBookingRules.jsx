@@ -145,9 +145,13 @@ export default function DayBasedBookingRules({ value, onChange }) {
                     <div>
                       <Label className="text-xs text-gray-600">Fixed Days (Optional)</Label>
                       <Input
+                        type="text"
                         placeholder="e.g., 3, 7, 14"
                         value={rules[day].fixed_values?.join(', ') || ''}
-                        onChange={(e) => updateDayRule(day, "fixed_values", parseNumberList(e.target.value))}
+                        onChange={(e) => {
+                          const values = e.target.value.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n > 0 && n <= 28);
+                          updateDayRule(day, "fixed_values", values);
+                        }}
                         className="h-9 mt-1"
                       />
                       <p className="text-xs text-gray-500 mt-1">Comma-separated values (max 28). Leave empty to allow any duration from minimum nights.</p>
