@@ -341,7 +341,7 @@ export default function PropertyDetails() {
           </div>
 
           {/* Desktop: Grid Layout with Main Image + Thumbnails */}
-          <div className="hidden md:grid grid-cols-4 gap-3 h-96">
+          <div className="hidden md:grid grid-cols-4 gap-3 h-64">
             {/* Main Image */}
             <div className="col-span-3 relative overflow-hidden bg-gray-300 rounded-lg group cursor-pointer">
               <img 
