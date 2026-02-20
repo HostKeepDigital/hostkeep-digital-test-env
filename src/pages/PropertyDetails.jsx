@@ -726,7 +726,7 @@ export default function PropertyDetails() {
                   </DialogContent>
                 </Dialog>
 
-                <p className="text-center text-xs text-gray-500">You won't be charged until the host approves</p>
+                <p className="text-center text-xs text-gray-500 text-[11px]">You won't be charged until the host approves</p>
               </CardContent>
             </Card>
           </div>
