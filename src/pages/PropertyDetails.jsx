@@ -538,7 +538,7 @@ export default function PropertyDetails() {
                       </SelectContent>
                     </Select>
                     {checkIn && (
-                      <p className="text-xs text-gray-500 mt-1">{minNights} - {maxNights} nights</p>
+                      <p className="text-xs text-gray-500 mt-1">{displayMin} - {displayMax} nights</p>
                     )}
                   </div>
                 </div>
