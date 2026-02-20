@@ -156,7 +156,7 @@ export default function PropertyDetails() {
     // If no rule for this day or rule is disabled, use full range
     if (!checkInRule || checkInRule.enabled === false) {
       const result = Array.from({ length: max - min + 1 }, (_, i) => min + i);
-      return { allowedNights: result, minNights: min, maxNights: max };
+      return { allowedNights: result, minNights: min, maxNights: max, displayMin: min, displayMax: max };
     }
 
     const allowedSet = new Set();
