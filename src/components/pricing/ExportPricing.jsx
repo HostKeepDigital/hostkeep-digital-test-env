@@ -115,7 +115,10 @@ export default function ExportPricing({ pricingSettings }) {
     const a = document.createElement('a');
     a.href = url;
     a.download = `pricing-grouped-${format(today, 'dd-MM-yyyy')}.csv`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
   };
 
   const exportDetailedCSV = () => {
@@ -139,7 +142,10 @@ export default function ExportPricing({ pricingSettings }) {
     const a = document.createElement('a');
     a.href = url;
     a.download = `pricing-detailed-${format(today, 'dd-MM-yyyy')}.csv`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
   };
 
   const exportCSV = () => {
@@ -171,7 +177,7 @@ export default function ExportPricing({ pricingSettings }) {
           />
         </div>
         
-        <Button onClick={exportCSV} className="w-full">
+        <Button type="button" onClick={exportCSV} className="w-full">
           <Download className="w-4 h-4 mr-2" />
           {exportDetailed ? "Export Detailed CSV" : "Export Grouped CSV"}
         </Button>
