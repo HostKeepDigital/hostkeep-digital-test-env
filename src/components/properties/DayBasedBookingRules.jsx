@@ -26,6 +26,28 @@ const DEFAULT_DAY_RULE = {
   multiple_of: null
 };
 
+const parseMultipleOf = (str) => {
+  if (!str || !str.trim()) return { values: null, error: null };
+  
+  const parts = str.split(',').map(s => s.trim()).filter(s => s !== '');
+  const numbers = [];
+  
+  for (const part of parts) {
+    const num = parseInt(part);
+    if (isNaN(num) || num !== parseFloat(part)) {
+      return { values: null, error: "Please enter comma-separated whole numbers between 1 and 7 only." };
+    }
+    if (num < 1 || num > 7) {
+      return { values: null, error: "Please enter comma-separated whole numbers between 1 and 7 only." };
+    }
+    numbers.push(num);
+  }
+  
+  // Remove duplicates
+  const unique = [...new Set(numbers)];
+  return { values: unique, error: null };
+};
+
 export default function DayBasedBookingRules({ value, onChange }) {
   const [enabled, setEnabled] = useState(value?.enabled || false);
   const [rules, setRules] = useState(() => {
@@ -35,6 +57,7 @@ export default function DayBasedBookingRules({ value, onChange }) {
     });
     return defaultRules;
   });
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     onChange({ enabled, rules });
@@ -45,6 +68,15 @@ export default function DayBasedBookingRules({ value, onChange }) {
       ...prev,
       [day]: { ...prev[day], [field]: val }
     }));
+    
+    // Clear error when field is updated
+    if (field === "multiple_of") {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[day];
+        return newErrors;
+      });
+    }
   };
 
   const parseNumberList = (str) => {
@@ -174,16 +206,28 @@ export default function DayBasedBookingRules({ value, onChange }) {
                           />
                         </div>
                         <div>
-                          <Label className="text-xs text-gray-600">OR Multiple Of (comma-separated, max 28)</Label>
+                          <Label className="text-xs text-gray-600">OR Multiple Of (comma-separated, max multiplier is 7)</Label>
                           <Input
-                            placeholder="e.g., 7, 14"
+                            placeholder="e.g., 1, 2, 3"
                             value={Array.isArray(rules[day].multiple_of) ? rules[day].multiple_of.join(', ') : (rules[day].multiple_of || '')}
                             onChange={(e) => {
-                              const values = parseNumberList(e.target.value);
-                              updateDayRule(day, "multiple_of", values.length > 0 ? values : null);
+                              const { values, error } = parseMultipleOf(e.target.value);
+                              if (error) {
+                                setErrors(prev => ({ ...prev, [day]: error }));
+                              } else {
+                                setErrors(prev => {
+                                  const newErrors = { ...prev };
+                                  delete newErrors[day];
+                                  return newErrors;
+                                });
+                              }
+                              updateDayRule(day, "multiple_of", values);
                             }}
-                            className="h-9 mt-1"
+                            className={`h-9 mt-1 ${errors[day] ? 'border-red-500' : ''}`}
                           />
+                          {errors[day] && (
+                            <p className="text-xs text-red-500 mt-1">{errors[day]}</p>
+                          )}
                         </div>
                       </div>
                     )}
