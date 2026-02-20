@@ -58,8 +58,7 @@ export default function EditProperty() {
           address_line_1: "123 High Street", 
           address_line_2: "Flat 4B", 
           city: "London", 
-          postcode: "SW1A 1AA", 
-          country: "United Kingdom" 
+          postcode: "SW1A 1AA"
         },
         photos: property.photos || [],
         nightly_rate: property.nightly_rate || 100,
@@ -305,21 +304,6 @@ export default function EditProperty() {
                       className="mt-1"
                     />
                   </div>
-                </div>
-                <div>
-                  <Label>Country</Label>
-                  <Select value={formData.location.country} onValueChange={(v) => handleLocationChange("country", v)}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="United Kingdom">United Kingdom</SelectItem>
-                      <SelectItem value="Spain">Spain</SelectItem>
-                      <SelectItem value="Portugal">Portugal</SelectItem>
-                      <SelectItem value="France">France</SelectItem>
-                      <SelectItem value="Italy">Italy</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
               </CardContent>
             </Card>
