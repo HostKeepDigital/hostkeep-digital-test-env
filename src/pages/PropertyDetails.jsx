@@ -306,7 +306,7 @@ export default function PropertyDetails() {
         <div className="max-w-7xl mx-auto px-4 py-4">
           {/* Mobile/Tablet: Carousel View */}
           <div className="md:hidden">
-            <div className="relative aspect-video overflow-hidden bg-gray-200 rounded-lg">
+            <div className="relative aspect-square md:aspect-video overflow-hidden bg-gray-200 rounded-lg">
               <img 
                 src={photos[currentImageIndex]} 
                 alt={property.title}
