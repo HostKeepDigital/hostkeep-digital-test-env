@@ -171,7 +171,7 @@ export default function PropertyDetails() {
       });
       if (allowedSet.size > 0) {
         const result = Array.from(allowedSet).sort((a, b) => a - b);
-        return { allowedNights: result, minNights: min, maxNights: max };
+        return { allowedNights: result, minNights: min, maxNights: max, displayMin: result[0], displayMax: result[result.length - 1] };
       }
     }
 
@@ -200,7 +200,7 @@ export default function PropertyDetails() {
       
       if (allowedSet.size > 0) {
         const result = Array.from(allowedSet).sort((a, b) => a - b);
-        return { allowedNights: result, minNights: min, maxNights: max };
+        return { allowedNights: result, minNights: min, maxNights: max, displayMin: result[0], displayMax: result[result.length - 1] };
       }
     }
 
@@ -218,7 +218,7 @@ export default function PropertyDetails() {
       }
       if (allowedSet.size > 0) {
         const result = Array.from(allowedSet).sort((a, b) => a - b);
-        return { allowedNights: result, minNights: min, maxNights: max };
+        return { allowedNights: result, minNights: min, maxNights: max, displayMin: result[0], displayMax: result[result.length - 1] };
       }
     }
 
@@ -229,7 +229,7 @@ export default function PropertyDetails() {
     }
 
     const result = Array.from(allowedSet).sort((a, b) => a - b);
-    return { allowedNights: result, minNights: min, maxNights: max };
+    return { allowedNights: result, minNights: min, maxNights: max, displayMin: result[0], displayMax: result[result.length - 1] };
   })();
 
   const bookingMutation = useMutation({
