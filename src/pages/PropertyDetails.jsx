@@ -21,7 +21,13 @@ import { format, parseISO, differenceInDays, addDays, isBefore } from "date-fns"
 import { toast } from "sonner";
 import ReviewList from "@/components/reviews/ReviewList";
 import BookingCalendar from "@/components/shared/BookingCalendar";
-import { isCheckInDateAllowed } from "@/components/utils/checkInRestrictions";
+const isCheckInDateAllowed = (date, allowedCheckInDays) => {
+  if (!allowedCheckInDays || allowedCheckInDays.length === 0) {
+    return true;
+  }
+  const dayOfWeek = date.getDay();
+  return allowedCheckInDays.includes(dayOfWeek);
+};
 
 const AMENITY_ICONS = {
   "WiFi": Wifi, "Parking": Car, "Air Conditioning": Wind, "Pool": Waves,
