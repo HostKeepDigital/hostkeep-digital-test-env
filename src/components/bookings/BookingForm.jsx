@@ -15,6 +15,9 @@ export default function BookingForm({ booking, onSubmit, onCancel, isLoading }) 
     check_in: "",
     check_out: "",
     total_amount: "",
+    deposit_amount: 0,
+    deposit_paid: 0,
+    remaining_balance: 0,
     amount_paid: 0,
     payment_status: "pending",
     booking_status: "confirmed",
@@ -24,9 +27,17 @@ export default function BookingForm({ booking, onSubmit, onCancel, isLoading }) 
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const totalAmount = parseFloat(formData.total_amount) || 0;
+    const depositAmount = parseFloat(formData.deposit_amount) || 0;
+    const depositPaid = parseFloat(formData.deposit_paid) || 0;
+    const remainingBalance = totalAmount - depositPaid;
+    
     onSubmit({
       ...formData,
-      total_amount: parseFloat(formData.total_amount) || 0,
+      total_amount: totalAmount,
+      deposit_amount: depositAmount,
+      deposit_paid: depositPaid,
+      remaining_balance: remainingBalance,
       amount_paid: parseFloat(formData.amount_paid) || 0
     });
   };
@@ -100,7 +111,7 @@ export default function BookingForm({ booking, onSubmit, onCancel, isLoading }) 
         <div className="space-y-2">
           <Label htmlFor="total_amount" className="flex items-center gap-2">
             <CreditCard className="w-4 h-4 text-gray-400" />
-            Total Amount (£)
+            Total Booking Price (£)
           </Label>
           <Input
             id="total_amount"
@@ -113,6 +124,50 @@ export default function BookingForm({ booking, onSubmit, onCancel, isLoading }) 
             required
             className="h-11"
           />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="deposit_amount" className="flex items-center gap-2">
+            <CreditCard className="w-4 h-4 text-gray-400" />
+            Deposit Required (£)
+          </Label>
+          <Input
+            id="deposit_amount"
+            type="number"
+            min="0"
+            step="0.01"
+            value={formData.deposit_amount}
+            onChange={(e) => handleChange("deposit_amount", e.target.value)}
+            placeholder="0.00"
+            className="h-11"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="deposit_paid" className="flex items-center gap-2">
+            <CreditCard className="w-4 h-4 text-gray-400" />
+            Deposit Paid (£)
+          </Label>
+          <Input
+            id="deposit_paid"
+            type="number"
+            min="0"
+            step="0.01"
+            value={formData.deposit_paid}
+            onChange={(e) => handleChange("deposit_paid", e.target.value)}
+            placeholder="0.00"
+            className="h-11"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label className="flex items-center gap-2">
+            <CreditCard className="w-4 h-4 text-gray-400" />
+            Remaining Balance (£)
+          </Label>
+          <div className="h-11 px-3 flex items-center bg-gray-50 rounded-md border border-gray-200 font-semibold text-gray-700">
+            £{((parseFloat(formData.total_amount) || 0) - (parseFloat(formData.deposit_paid) || 0)).toFixed(2)}
+          </div>
         </div>
 
         <div className="space-y-2">

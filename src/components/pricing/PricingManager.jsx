@@ -10,6 +10,8 @@ import ExportPricing from "./ExportPricing";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 export default function PricingManager({ formData, onUpdate }) {
   const [selectedDate, setSelectedDate] = useState(null);
@@ -85,6 +87,79 @@ export default function PricingManager({ formData, onUpdate }) {
               />
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Booking Deposit Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Booking Deposit</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Enable Deposit Requirement</Label>
+              <p className="text-sm text-gray-500">Require guests to pay a deposit when booking</p>
+            </div>
+            <Switch
+              checked={formData.deposit_enabled || false}
+              onCheckedChange={(checked) => onUpdate("deposit_enabled", checked)}
+            />
+          </div>
+
+          {formData.deposit_enabled && (
+            <>
+              <div className="space-y-3">
+                <Label>Deposit Type</Label>
+                <RadioGroup
+                  value={formData.deposit_type || "percentage"}
+                  onValueChange={(value) => onUpdate("deposit_type", value)}
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="percentage" id="percentage" />
+                    <Label htmlFor="percentage" className="font-normal cursor-pointer">
+                      Percentage of total booking price (%)
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="fixed" id="fixed" />
+                    <Label htmlFor="fixed" className="font-normal cursor-pointer">
+                      Fixed amount (£)
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              <div>
+                <Label>
+                  {formData.deposit_type === "fixed" ? "Deposit Amount (£)" : "Deposit Percentage (%)"}
+                </Label>
+                <Input
+                  type="number"
+                  min="0"
+                  max={formData.deposit_type === "percentage" ? 100 : undefined}
+                  step={formData.deposit_type === "percentage" ? 1 : 0.01}
+                  value={formData.deposit_value || ""}
+                  onChange={(e) => {
+                    const value = parseFloat(e.target.value);
+                    if (formData.deposit_type === "percentage" && value > 100) {
+                      onUpdate("deposit_value", 100);
+                    } else if (value < 0) {
+                      onUpdate("deposit_value", 0);
+                    } else {
+                      onUpdate("deposit_value", value || 0);
+                    }
+                  }}
+                  placeholder={formData.deposit_type === "percentage" ? "e.g., 25" : "e.g., 100.00"}
+                  required
+                  className="mt-1"
+                />
+                {formData.deposit_type === "percentage" && (
+                  <p className="text-xs text-gray-500 mt-1">Enter a value between 0-100%</p>
+                )}
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 
