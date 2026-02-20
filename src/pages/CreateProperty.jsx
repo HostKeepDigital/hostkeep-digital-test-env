@@ -17,6 +17,7 @@ import {
   ChevronLeft, ChevronRight, Upload, X, Check, Loader2
 } from "lucide-react";
 import DayBasedBookingRules from "@/components/properties/DayBasedBookingRules";
+import PricingManager from "@/components/pricing/PricingManager";
 import { toast } from "sonner";
 
 const STEPS = [
@@ -438,76 +439,10 @@ export default function CreateProperty() {
 
             {/* Step 4: Pricing */}
             {currentStep === 4 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Pricing</CardTitle>
-                  <CardDescription>Set your rates and fees</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div>
-                    <Label>Nightly Rate (£)</Label>
-                    <Input
-                      type="number"
-                      min="1"
-                      value={formData.nightly_rate}
-                      onChange={(e) => handleChange("nightly_rate", parseInt(e.target.value) || 0)}
-                      className="mt-1 text-2xl font-semibold h-14"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Cleaning Fee (£)</Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        value={formData.cleaning_fee}
-                        onChange={(e) => handleChange("cleaning_fee", parseInt(e.target.value) || 0)}
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label>Security Deposit (£)</Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        value={formData.security_deposit}
-                        onChange={(e) => handleChange("security_deposit", parseInt(e.target.value) || 0)}
-                        className="mt-1"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label>Minimum Stay (nights)</Label>
-                    <Input
-                      type="number"
-                      min="1"
-                      value={formData.minimum_stay}
-                      onChange={(e) => handleChange("minimum_stay", parseInt(e.target.value) || 1)}
-                      className="mt-1"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Check-in Time</Label>
-                      <Input
-                        type="time"
-                        value={formData.check_in_time}
-                        onChange={(e) => handleChange("check_in_time", e.target.value)}
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label>Check-out Time</Label>
-                      <Input
-                        type="time"
-                        value={formData.check_out_time}
-                        onChange={(e) => handleChange("check_out_time", e.target.value)}
-                        className="mt-1"
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <PricingManager
+                formData={formData}
+                onUpdate={(field, value) => handleChange(field, value)}
+              />
             )}
 
             {/* Step 5: Description */}
