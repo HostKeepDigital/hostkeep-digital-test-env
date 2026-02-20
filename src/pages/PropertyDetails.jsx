@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { format, parseISO, differenceInDays, addDays, isBefore } from "date-fns";
 import { toast } from "sonner";
+import ReviewList from "@/components/reviews/ReviewList";
 
 const AMENITY_ICONS = {
   "WiFi": Wifi, "Parking": Car, "Air Conditioning": Wind, "Pool": Waves,
@@ -38,6 +39,11 @@ export default function PropertyDetails() {
   const [guestPhone, setGuestPhone] = useState("");
   const [guestMessage, setGuestMessage] = useState("");
   const [showBookingDialog, setShowBookingDialog] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then(setCurrentUser).catch(() => setCurrentUser(null));
+  }, []);
 
   const { data: property, isLoading } = useQuery({
     queryKey: ['property', propertyId],
@@ -50,9 +56,18 @@ export default function PropertyDetails() {
 
   const { data: reviews = [] } = useQuery({
     queryKey: ['property-reviews', propertyId],
-    queryFn: () => base44.entities.Review.filter({ property_id: propertyId, visible: true }),
+    queryFn: () => base44.entities.Review.filter({ 
+      property_id: propertyId, 
+      visible: true,
+      review_type: "guest_to_host"
+    }),
     enabled: !!propertyId,
   });
+
+  // Calculate average rating
+  const averageRating = reviews.length > 0
+    ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+    : 0;
 
   const { data: host } = useQuery({
     queryKey: ['host', property?.owner_id],
@@ -231,10 +246,10 @@ export default function PropertyDetails() {
                 <span className="flex items-center gap-1">
                   <Bath className="w-4 h-4" /> {property.bathrooms} bathrooms
                 </span>
-                {property.average_rating > 0 && (
+                {reviews.length > 0 && (
                   <span className="flex items-center gap-1">
                     <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                    {property.average_rating.toFixed(1)} ({property.review_count} reviews)
+                    {averageRating} ({reviews.length} {reviews.length === 1 ? 'review' : 'reviews'})
                   </span>
                 )}
               </div>
@@ -298,37 +313,67 @@ export default function PropertyDetails() {
             </div>
 
             {/* Reviews */}
-            {reviews.length > 0 && (
-              <>
-                <Separator />
+            <Separator />
+            <div>
+              <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                    Reviews ({reviews.length})
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    {reviews.length > 0 ? (
+                      <>
+                        <span className="flex items-center gap-2">
+                          <Star className="w-6 h-6 fill-amber-400 text-amber-400" />
+                          {averageRating} · {reviews.length} {reviews.length === 1 ? 'review' : 'reviews'}
+                        </span>
+                      </>
+                    ) : (
+                      "Reviews"
+                    )}
                   </h2>
-                  <div className="space-y-4">
-                    {reviews.slice(0, 5).map(review => (
-                      <Card key={review.id}>
-                        <CardContent className="pt-4">
-                          <div className="flex items-start justify-between mb-2">
-                            <div>
-                              <p className="font-medium">{review.reviewer_name}</p>
-                              <p className="text-sm text-gray-500">
-                                {format(parseISO(review.created_date), "MMMM yyyy")}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                              <span className="font-medium">{review.rating}</span>
-                            </div>
-                          </div>
-                          <p className="text-gray-600">{review.comment}</p>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
                 </div>
-              </>
-            )}
+              </div>
+              
+              {reviews.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+                  <div>
+                    <p className="text-sm text-gray-500">Overall</p>
+                    <p className="text-lg font-semibold flex items-center gap-1">
+                      {averageRating}
+                      <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                    </p>
+                  </div>
+                  {reviews.some(r => r.cleanliness_rating) && (
+                    <div>
+                      <p className="text-sm text-gray-500">Cleanliness</p>
+                      <p className="text-lg font-semibold">
+                        {(reviews
+                          .filter(r => r.cleanliness_rating)
+                          .reduce((sum, r) => sum + r.cleanliness_rating, 0) / 
+                          reviews.filter(r => r.cleanliness_rating).length
+                        ).toFixed(1)}
+                      </p>
+                    </div>
+                  )}
+                  {reviews.some(r => r.communication_rating) && (
+                    <div>
+                      <p className="text-sm text-gray-500">Communication</p>
+                      <p className="text-lg font-semibold">
+                        {(reviews
+                          .filter(r => r.communication_rating)
+                          .reduce((sum, r) => sum + r.communication_rating, 0) / 
+                          reviews.filter(r => r.communication_rating).length
+                        ).toFixed(1)}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <ReviewList 
+                reviews={reviews} 
+                propertyOwnerId={property?.owner_id}
+                currentUserId={currentUser?.id}
+              />
+            </div>
           </div>
 
           {/* Booking Card - Desktop */}
