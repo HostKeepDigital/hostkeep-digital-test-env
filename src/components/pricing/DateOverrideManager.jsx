@@ -3,8 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, Calendar, ChevronRight, Edit } from "lucide-react";
-import { format, parseISO, differenceInDays } from "date-fns";
+import { Plus, Trash2, Calendar, ChevronRight, ChevronDown, Edit } from "lucide-react";
+import { format, parseISO, differenceInDays, startOfMonth, endOfMonth, isSameMonth } from "date-fns";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 export default function DateOverrideManager({ overrides = {}, onUpdate, selectedDate = null }) {
@@ -14,19 +14,21 @@ export default function DateOverrideManager({ overrides = {}, onUpdate, selected
     min_nights: 1,
     note: ""
   });
-  const [editingRange, setEditingRange] = useState(null);
+  const [expandedRanges, setExpandedRanges] = useState({});
+  const [expandedMonths, setExpandedMonths] = useState({});
+  const [editingDate, setEditingDate] = useState(null);
 
-  // Group consecutive dates with same price into ranges
-  const groupIntoRanges = () => {
+  // Group consecutive dates with same price into bulk ranges
+  const groupIntoBulkRanges = () => {
     const sortedDates = Object.keys(overrides).sort();
-    const ranges = [];
-    const rangesByMonth = {};
+    const bulkRanges = [];
 
     let i = 0;
     while (i < sortedDates.length) {
       const startDate = sortedDates[i];
       const startInfo = overrides[startDate];
       let endDate = startDate;
+      const datesInRange = [startDate];
       
       // Look ahead for consecutive dates with same rate
       while (i + 1 < sortedDates.length) {
@@ -34,38 +36,41 @@ export default function DateOverrideManager({ overrides = {}, onUpdate, selected
         const nextInfo = overrides[nextDate];
         const daysDiff = differenceInDays(parseISO(nextDate), parseISO(endDate));
         
-        // Check if next date is consecutive and has same rate
         if (daysDiff === 1 && nextInfo.rate === startInfo.rate && nextInfo.min_nights === startInfo.min_nights) {
           endDate = nextDate;
+          datesInRange.push(nextDate);
           i++;
         } else {
           break;
         }
       }
       
-      const range = {
+      // Group dates by month within this range
+      const monthGroups = {};
+      datesInRange.forEach(date => {
+        const monthKey = format(parseISO(date), 'MMMM yyyy');
+        if (!monthGroups[monthKey]) {
+          monthGroups[monthKey] = [];
+        }
+        monthGroups[monthKey].push(date);
+      });
+
+      bulkRanges.push({
+        id: `${startDate}-${endDate}`,
         startDate,
         endDate,
         rate: startInfo.rate,
         min_nights: startInfo.min_nights,
         note: startInfo.note,
-        isBulk: startDate !== endDate,
-        dates: sortedDates.slice(sortedDates.indexOf(startDate), sortedDates.indexOf(endDate) + 1)
-      };
-      
-      ranges.push(range);
-      
-      // Group by month
-      const monthKey = format(parseISO(startDate), 'MMMM yyyy');
-      if (!rangesByMonth[monthKey]) {
-        rangesByMonth[monthKey] = [];
-      }
-      rangesByMonth[monthKey].push(range);
+        totalNights: datesInRange.length,
+        isBulk: datesInRange.length > 1,
+        monthGroups
+      });
       
       i++;
     }
     
-    return { ranges, rangesByMonth };
+    return bulkRanges;
   };
 
   const handleAdd = () => {
@@ -83,36 +88,57 @@ export default function DateOverrideManager({ overrides = {}, onUpdate, selected
     setFormData({ date: "", rate: 100, min_nights: 1, note: "" });
   };
 
+  const handleDeleteDate = (date) => {
+    const newOverrides = { ...overrides };
+    delete newOverrides[date];
+    onUpdate(newOverrides);
+    setEditingDate(null);
+  };
+
+  const handleDeleteMonth = (dates) => {
+    const newOverrides = { ...overrides };
+    dates.forEach(date => delete newOverrides[date]);
+    onUpdate(newOverrides);
+  };
+
   const handleDeleteRange = (range) => {
     const newOverrides = { ...overrides };
-    range.dates.forEach(date => delete newOverrides[date]);
+    Object.values(range.monthGroups).flat().forEach(date => delete newOverrides[date]);
     onUpdate(newOverrides);
   };
 
-  const handleEditRange = (range) => {
-    setEditingRange(range);
-  };
-
-  const handleUpdateRange = () => {
-    if (!editingRange) return;
-    
-    const newOverrides = { ...overrides };
-    editingRange.dates.forEach(date => {
-      newOverrides[date] = {
-        rate: editingRange.rate,
-        min_nights: editingRange.min_nights,
-        note: editingRange.note
-      };
+  const handleEditDate = (date) => {
+    setEditingDate({
+      date,
+      ...overrides[date]
     });
-    
-    onUpdate(newOverrides);
-    setEditingRange(null);
   };
 
-  const { ranges, rangesByMonth } = groupIntoRanges();
-  const sortedMonths = Object.keys(rangesByMonth).sort((a, b) => 
-    parseISO(rangesByMonth[b][0].startDate) - parseISO(rangesByMonth[a][0].startDate)
-  );
+  const handleUpdateDate = () => {
+    if (!editingDate) return;
+    
+    const newOverrides = {
+      ...overrides,
+      [editingDate.date]: {
+        rate: editingDate.rate,
+        min_nights: editingDate.min_nights,
+        note: editingDate.note
+      }
+    };
+    
+    onUpdate(newOverrides);
+    setEditingDate(null);
+  };
+
+  const toggleRange = (rangeId) => {
+    setExpandedRanges(prev => ({ ...prev, [rangeId]: !prev[rangeId] }));
+  };
+
+  const toggleMonth = (monthKey) => {
+    setExpandedMonths(prev => ({ ...prev, [monthKey]: !prev[monthKey] }));
+  };
+
+  const bulkRanges = groupIntoBulkRanges();
 
   return (
     <Card>
@@ -124,6 +150,7 @@ export default function DateOverrideManager({ overrides = {}, onUpdate, selected
         <CardDescription>Set specific pricing for holidays, events, or special dates</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Add Override Form */}
         <div className="p-4 bg-gray-50 rounded-lg space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -173,93 +200,177 @@ export default function DateOverrideManager({ overrides = {}, onUpdate, selected
           </Button>
         </div>
 
-        {editingRange ? (
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-sm">
-                Editing: {format(parseISO(editingRange.startDate), 'MMM d')} - {format(parseISO(editingRange.endDate), 'MMM d, yyyy')}
-              </h3>
-              <Button variant="ghost" size="sm" onClick={() => setEditingRange(null)}>Cancel</Button>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Nightly Rate (£)</Label>
-                <Input
-                  type="number"
-                  value={editingRange.rate}
-                  onChange={(e) => setEditingRange({ ...editingRange, rate: parseInt(e.target.value) || 0 })}
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label>Min Nights</Label>
-                <Input
-                  type="number"
-                  value={editingRange.min_nights}
-                  onChange={(e) => setEditingRange({ ...editingRange, min_nights: parseInt(e.target.value) || 1 })}
-                  className="mt-1"
-                />
-              </div>
-            </div>
-            <div>
-              <Label>Note</Label>
-              <Input
-                value={editingRange.note || ""}
-                onChange={(e) => setEditingRange({ ...editingRange, note: e.target.value })}
-                className="mt-1"
-              />
-            </div>
-            <Button onClick={handleUpdateRange} className="w-full">Update Range</Button>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {ranges.length === 0 ? (
-              <p className="text-sm text-gray-500 text-center py-8">No manual overrides set. Click dates in the calendar or use the form above.</p>
-            ) : (
-              sortedMonths.map(monthKey => (
-                <Collapsible key={monthKey} defaultOpen={true}>
-                  <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-gray-50 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <ChevronRight className="w-4 h-4 transition-transform group-data-[state=open]:rotate-90" />
-                      <span className="font-semibold text-sm">{monthKey}</span>
-                      <span className="text-xs text-gray-500">({rangesByMonth[monthKey].length} override{rangesByMonth[monthKey].length !== 1 ? 's' : ''})</span>
-                    </div>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="space-y-2 mt-2 ml-6">
-                    {rangesByMonth[monthKey].map((range, idx) => (
-                      <div key={`${range.startDate}-${idx}`} className="flex items-center justify-between p-3 bg-purple-50 border border-purple-200 rounded-lg group">
-                        <div className="flex-1">
-                          <div className="font-semibold text-sm flex items-center gap-2">
-                            {range.isBulk ? (
-                              <>
-                                {format(parseISO(range.startDate), 'MMM d')} - {format(parseISO(range.endDate), 'MMM d, yyyy')}
-                                <span className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded">Bulk Range</span>
-                              </>
-                            ) : (
-                              format(parseISO(range.startDate), 'EEEE, MMMM d, yyyy')
-                            )}
-                          </div>
-                          <div className="text-xs text-gray-600 mt-1">
-                            £{range.rate}/night
-                            {range.min_nights > 1 && ` • Min ${range.min_nights} nights`}
-                            {range.note && ` • ${range.note}`}
-                            {range.isBulk && ` • ${range.dates.length} nights`}
-                          </div>
+        {/* Updated Prices Section */}
+        <div className="border-t pt-4">
+          <h3 className="text-sm font-semibold mb-3 text-gray-700">Updated Prices</h3>
+          
+          {bulkRanges.length === 0 ? (
+            <p className="text-sm text-gray-500 text-center py-8">No manual overrides set. Click dates in the calendar or use the form above.</p>
+          ) : (
+            <div className="space-y-2">
+              {bulkRanges.map((range) => (
+                <div key={range.id} className="border border-purple-200 rounded-lg overflow-hidden">
+                  {/* Range Header */}
+                  <div className="bg-purple-50 p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2 flex-1">
+                      <button
+                        onClick={() => toggleRange(range.id)}
+                        className="hover:bg-purple-100 p-1 rounded transition-colors"
+                      >
+                        {expandedRanges[range.id] ? (
+                          <ChevronDown className="w-4 h-4 text-purple-700" />
+                        ) : (
+                          <ChevronRight className="w-4 h-4 text-purple-700" />
+                        )}
+                      </button>
+                      <div className="flex-1">
+                        <div className="font-semibold text-sm flex items-center gap-2">
+                          {range.isBulk ? (
+                            <>
+                              <span>Bulk Range: {format(parseISO(range.startDate), 'MMM d')} – {format(parseISO(range.endDate), 'MMM d, yyyy')}</span>
+                              <span className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded">
+                                {range.totalNights} night{range.totalNights !== 1 ? 's' : ''}
+                              </span>
+                            </>
+                          ) : (
+                            <span>{format(parseISO(range.startDate), 'EEEE, MMMM d, yyyy')}</span>
+                          )}
                         </div>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" size="icon" onClick={() => handleEditRange(range)}>
-                            <Edit className="w-4 h-4 text-blue-600" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDeleteRange(range)}>
-                            <Trash2 className="w-4 h-4 text-red-500" />
-                          </Button>
+                        <div className="text-xs text-gray-600 mt-1">
+                          £{range.rate}/night
+                          {range.min_nights > 1 && ` • Min ${range.min_nights} nights`}
+                          {range.note && ` • ${range.note}`}
                         </div>
                       </div>
-                    ))}
-                  </CollapsibleContent>
-                </Collapsible>
-              ))
-            )}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteRange(range)}
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+
+                  {/* Month Breakdown */}
+                  {expandedRanges[range.id] && (
+                    <div className="bg-white p-2 space-y-1">
+                      {Object.entries(range.monthGroups).map(([monthKey, dates]) => (
+                        <div key={monthKey} className="border border-gray-200 rounded">
+                          {/* Month Header */}
+                          <div className="bg-gray-50 p-2 flex items-center justify-between">
+                            <div className="flex items-center gap-2 flex-1">
+                              <button
+                                onClick={() => toggleMonth(`${range.id}-${monthKey}`)}
+                                className="hover:bg-gray-200 p-1 rounded transition-colors"
+                              >
+                                {expandedMonths[`${range.id}-${monthKey}`] ? (
+                                  <ChevronDown className="w-3 h-3 text-gray-600" />
+                                ) : (
+                                  <ChevronRight className="w-3 h-3 text-gray-600" />
+                                )}
+                              </button>
+                              <span className="text-sm font-medium text-gray-700">
+                                {monthKey} ({dates.length} night{dates.length !== 1 ? 's' : ''})
+                              </span>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteMonth(dates)}
+                              className="h-7 text-xs text-red-500 hover:text-red-700 hover:bg-red-50"
+                            >
+                              Delete Month
+                            </Button>
+                          </div>
+
+                          {/* Individual Dates */}
+                          {expandedMonths[`${range.id}-${monthKey}`] && (
+                            <div className="p-2 space-y-1">
+                              {dates.map(date => (
+                                <div
+                                  key={date}
+                                  className="flex items-center justify-between p-2 bg-gray-50 rounded text-xs hover:bg-gray-100 transition-colors"
+                                >
+                                  <div className="flex-1">
+                                    <span className="font-medium">{format(parseISO(date), 'EEE, MMM d')}</span>
+                                    <span className="text-gray-500 ml-2">• £{overrides[date].rate}</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-6 w-6"
+                                      onClick={() => handleEditDate(date)}
+                                    >
+                                      <Edit className="w-3 h-3 text-blue-600" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-6 w-6"
+                                      onClick={() => handleDeleteDate(date)}
+                                    >
+                                      <Trash2 className="w-3 h-3 text-red-500" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Edit Date Modal */}
+        {editingDate && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full space-y-4">
+              <h3 className="font-semibold text-lg">
+                Edit {format(parseISO(editingDate.date), 'MMMM d, yyyy')}
+              </h3>
+              <div className="space-y-4">
+                <div>
+                  <Label>Nightly Rate (£)</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={editingDate.rate}
+                    onChange={(e) => setEditingDate({ ...editingDate, rate: parseInt(e.target.value) || 0 })}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label>Min Nights</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={editingDate.min_nights}
+                    onChange={(e) => setEditingDate({ ...editingDate, min_nights: parseInt(e.target.value) || 1 })}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label>Note</Label>
+                  <Input
+                    value={editingDate.note || ""}
+                    onChange={(e) => setEditingDate({ ...editingDate, note: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={handleUpdateDate} className="flex-1">Save Changes</Button>
+                <Button variant="outline" onClick={() => setEditingDate(null)} className="flex-1">Cancel</Button>
+              </div>
+            </div>
           </div>
         )}
       </CardContent>
