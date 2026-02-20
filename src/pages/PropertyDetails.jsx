@@ -643,7 +643,7 @@ export default function PropertyDetails() {
 
                 {/* Price Breakdown */}
                 {numNights > 0 && (
-                  <div className="space-y-2 py-4 border-t border-gray-100">
+                  <div className="space-y-1.5 py-3 border-t border-gray-100">
                     <div className="flex justify-between text-sm text-gray-600">
                       <span>£{property.nightly_rate} × {numNights} {numNights === 1 ? 'night' : 'nights'}</span>
                       <span>£{subtotal}</span>
