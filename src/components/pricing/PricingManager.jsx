@@ -125,6 +125,7 @@ export default function PricingManager({ formData, onUpdate }) {
                   onValueChange={(value) => {
                     setDepositError("");
                     onUpdate("deposit_type", value);
+                    onUpdate("deposit_value", null);
                   }}
                 >
                   <div className="flex items-center space-x-2">
