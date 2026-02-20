@@ -65,16 +65,6 @@ export default function PricingManager({ formData, onUpdate }) {
               />
             </div>
           </div>
-          <div>
-            <Label>Minimum Stay (nights)</Label>
-            <Input
-              type="number"
-              min="1"
-              value={formData.minimum_stay}
-              onChange={(e) => onUpdate("minimum_stay", parseInt(e.target.value) || 1)}
-              className="mt-1"
-            />
-          </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Check-in Time</Label>
