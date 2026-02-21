@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { 
   Search, MapPin, Calendar, Users, Star, Home as HomeIcon, 
-  CheckCircle, ArrowRight, Building2, Palmtree, Mountain, Waves
+  CheckCircle, ArrowRight, Building2, Mountain, Waves, TreePine, Caravan
 } from "lucide-react";
 import PropertyCard from "@/components/properties/PropertyCard";
 import GuestSelector from "@/components/search/GuestSelector";
@@ -42,10 +42,13 @@ export default function Home() {
   };
 
   const propertyTypes = [
+    { icon: TreePine, label: "Lodges", type: "lodges" },
     { icon: HomeIcon, label: "Houses", type: "house" },
+    { icon: Mountain, label: "Chalets", type: "chalet" },
+    { icon: Caravan, label: "Caravans", type: "caravan" },
+    { icon: Waves, label: "Cabins", type: "cabin" },
+    { icon: Building2, label: "Bungalows", type: "bungalow" },
     { icon: Building2, label: "Apartments", type: "apartment" },
-    { icon: Palmtree, label: "Villas", type: "villa" },
-    { icon: Mountain, label: "Cabins", type: "cabin" },
   ];
 
   return (
@@ -134,7 +137,7 @@ export default function Home() {
       {/* Property Types */}
       <section className="max-w-7xl mx-auto px-4 py-16">
         <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8">Browse by property type</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
           {propertyTypes.map((type, idx) => (
             <motion.div
               key={type.type}
