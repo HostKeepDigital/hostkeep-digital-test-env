@@ -472,9 +472,9 @@ export default function PropertyDetails() {
                     {property.amenities.map(amenity => {
                       const Icon = AMENITY_ICONS[amenity] || CheckCircle;
                       return (
-                        <div key={amenity} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50">
-                          <Icon className="w-5 h-5 text-teal-600 flex-shrink-0" />
-                          <span className="text-gray-700 text-sm">{amenity}</span>
+                        <div key={amenity} className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50">
+                          <Icon className="w-4 h-4 text-teal-600 flex-shrink-0" />
+                          <span className="text-gray-700 text-xs md:text-sm">{amenity}</span>
                         </div>
                       );
                     })}
