@@ -419,8 +419,8 @@ export default function PropertyDetails() {
                   {property.location?.city || property.location?.town_city}, {property.location?.country || 'UK'}
                 </span>
                 {reviews.length > 0 && (
-                  <span className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 rounded-full">
-                    <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                  <span className="flex items-center gap-1 md:gap-1.5 px-2 md:px-3 py-1 bg-amber-50 rounded-full text-sm">
+                    <Star className="w-3 h-3 md:w-4 md:h-4 fill-amber-400 text-amber-400" />
                     <span className="font-semibold text-gray-900">{averageRating}</span>
                     <span className="text-gray-600">({reviews.length})</span>
                   </span>
