@@ -409,8 +409,8 @@ export default function PropertyDetails() {
 
       <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 md:py-8">
         {/* Header Section with Title & Quick Info */}
-        <div className="mb-8">
-          <div className="flex items-start justify-between gap-4 mb-4">
+        <div className="mb-4 md:mb-8">
+          <div className="flex items-start justify-between gap-2 md:gap-4 mb-3 md:mb-4">
             <div className="flex-1">
               <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{property.title}</h1>
               <div className="flex flex-wrap items-center gap-4 text-gray-600">
