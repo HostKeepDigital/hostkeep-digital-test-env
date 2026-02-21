@@ -537,8 +537,8 @@ export default function PropertyDetails() {
 
             {/* Reviews Card */}
             <Card className="border-0 bg-white shadow-sm">
-              <CardContent className="pt-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-6">
+              <CardContent className="p-4 md:pt-6">
+                <h2 className="text-base md:text-lg font-semibold text-gray-900 mb-4 md:mb-6">
                   {reviews.length > 0 ? (
                     <span className="flex items-center gap-2">
                       <Star className="w-5 h-5 fill-amber-400 text-amber-400" />
