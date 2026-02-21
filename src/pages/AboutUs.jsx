@@ -63,11 +63,6 @@ export default function AboutUs() {
                 <Home className="w-5 h-5 mr-2" /> List Your Home
               </Button>
             </Link>
-            <Link to={createPageUrl("Search")}>
-              <Button size="lg" variant="outline" className="border-2 border-white text-white bg-transparent hover:bg-white/10">
-                <Search className="w-5 h-5 mr-2" /> Browse Homes
-              </Button>
-            </Link>
           </motion.div>
         </div>
       </section>
