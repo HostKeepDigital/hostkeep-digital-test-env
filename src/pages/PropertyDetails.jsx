@@ -743,8 +743,8 @@ export default function PropertyDetails() {
       </div>
 
       {/* Mobile Sticky Booking Bar */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg p-4">
-        <div className="flex items-center justify-between gap-4">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg p-3">
+        <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-xs text-gray-500">From</p>
             <span className="text-2xl font-bold text-gray-900">£{property.nightly_rate}</span>
