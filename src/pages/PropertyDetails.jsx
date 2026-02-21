@@ -551,9 +551,9 @@ export default function PropertyDetails() {
                 
                 {reviews.length > 0 && (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 mb-4 md:mb-6">
-                    <div className="p-3 bg-amber-50 rounded-lg">
-                      <p className="text-xs text-gray-500 mb-1">Overall</p>
-                      <p className="text-2xl font-bold text-gray-900">{averageRating}</p>
+                    <div className="p-2 md:p-3 bg-amber-50 rounded-lg">
+                      <p className="text-[10px] md:text-xs text-gray-500 mb-0.5 md:mb-1">Overall</p>
+                      <p className="text-xl md:text-2xl font-bold text-gray-900">{averageRating}</p>
                     </div>
                     {reviews.some(r => r.cleanliness_rating) && (
                       <div className="p-3 bg-blue-50 rounded-lg">
