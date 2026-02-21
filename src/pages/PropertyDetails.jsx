@@ -485,9 +485,9 @@ export default function PropertyDetails() {
 
             {/* House Rules Card */}
             <Card className="border-0 bg-white shadow-sm">
-              <CardContent className="pt-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">House Rules</h2>
-                <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+              <CardContent className="p-4 md:pt-6">
+                <h2 className="text-base md:text-lg font-semibold text-gray-900 mb-3 md:mb-4">House Rules</h2>
+                <div className="grid grid-cols-2 gap-2 md:gap-4 text-xs md:text-sm mb-3 md:mb-4">
                   <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
                     <Calendar className="w-4 h-4 text-teal-600" />
                     <div>
