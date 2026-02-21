@@ -502,29 +502,29 @@ export default function PropertyDetails() {
                       <p className="font-medium text-gray-900 text-xs md:text-sm">{property.check_out_time || "10:00 AM"}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-1.5 md:gap-2 p-2 md:p-3 bg-gray-50 rounded-lg">
                     {property.pets_allowed ? (
                       <>
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                        <span className="text-gray-700">Pets allowed</span>
+                        <CheckCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-green-500" />
+                        <span className="text-gray-700 text-xs md:text-sm">Pets allowed</span>
                       </>
                     ) : (
                       <>
-                        <X className="w-4 h-4 text-red-500" />
-                        <span className="text-gray-700">No pets</span>
+                        <X className="w-3.5 h-3.5 md:w-4 md:h-4 text-red-500" />
+                        <span className="text-gray-700 text-xs md:text-sm">No pets</span>
                       </>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-1.5 md:gap-2 p-2 md:p-3 bg-gray-50 rounded-lg">
                     {property.smoking_allowed ? (
                       <>
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                        <span className="text-gray-700">Smoking allowed</span>
+                        <CheckCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-green-500" />
+                        <span className="text-gray-700 text-xs md:text-sm">Smoking allowed</span>
                       </>
                     ) : (
                       <>
-                        <X className="w-4 h-4 text-red-500" />
-                        <span className="text-gray-700">No smoking</span>
+                        <X className="w-3.5 h-3.5 md:w-4 md:h-4 text-red-500" />
+                        <span className="text-gray-700 text-xs md:text-sm">No smoking</span>
                       </>
                     )}
                   </div>
