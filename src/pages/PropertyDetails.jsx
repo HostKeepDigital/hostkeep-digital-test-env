@@ -439,14 +439,14 @@ export default function PropertyDetails() {
 
           {/* Quick Info Badges */}
           <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-0">
-              <Users className="w-3.5 h-3.5 mr-1.5" /> {property.guest_capacity} guests
+            <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-0 text-xs">
+              <Users className="w-3 h-3 mr-1" /> {property.guest_capacity} guests
             </Badge>
-            <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-0">
-              <Bed className="w-3.5 h-3.5 mr-1.5" /> {property.bedrooms} beds
+            <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-0 text-xs">
+              <Bed className="w-3 h-3 mr-1" /> {property.bedrooms} beds
             </Badge>
-            <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-0">
-              <Bath className="w-3.5 h-3.5 mr-1.5" /> {property.bathrooms} baths
+            <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-0 text-xs">
+              <Bath className="w-3 h-3 mr-1" /> {property.bathrooms} baths
             </Badge>
           </div>
         </div>
