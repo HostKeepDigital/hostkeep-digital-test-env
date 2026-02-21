@@ -452,7 +452,7 @@ export default function PropertyDetails() {
         </div>
 
         {/* Two Column Layout: Content (70%) + Booking Widget (30%) */}
-        <div className="grid md:grid-cols-12 gap-8">
+        <div className="grid md:grid-cols-12 gap-4 md:gap-8">
           {/* Left Column - Main Content */}
           <div className="md:col-span-7 space-y-8">
             {/* Description Card */}
