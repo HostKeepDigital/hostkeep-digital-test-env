@@ -466,9 +466,9 @@ export default function PropertyDetails() {
             {/* Amenities Card */}
             {property.amenities?.length > 0 && (
               <Card className="border-0 bg-white shadow-sm">
-                <CardContent className="pt-6">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Amenities</h2>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <CardContent className="p-4 md:pt-6">
+                  <h2 className="text-base md:text-lg font-semibold text-gray-900 mb-3 md:mb-4">Amenities</h2>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
                     {property.amenities.map(amenity => {
                       const Icon = AMENITY_ICONS[amenity] || CheckCircle;
                       return (
