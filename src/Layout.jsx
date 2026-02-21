@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Footer from "@/components/Footer";
+import ScrollToTop from "@/components/ScrollToTop";
 
 // Pages without layout (guest facing / public)
 const PUBLIC_PAGES = ["Pay"];
@@ -33,6 +34,11 @@ export default function Layout({ children, currentPageName }) {
     base44.auth.isAuthenticated().then(setIsAuthenticated);
     base44.auth.me().then(setUser).catch(() => setUser(null));
   }, []);
+
+  // Scroll to top on route change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [currentPageName]);
 
   // No layout for payment page
   if (PUBLIC_PAGES.includes(currentPageName)) {
