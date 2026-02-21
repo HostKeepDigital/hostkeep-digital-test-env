@@ -438,7 +438,7 @@ export default function PropertyDetails() {
           </div>
 
           {/* Quick Info Badges */}
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2">
             <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-0">
               <Users className="w-3.5 h-3.5 mr-1.5" /> {property.guest_capacity} guests
             </Badge>
