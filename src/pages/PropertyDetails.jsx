@@ -303,7 +303,7 @@ export default function PropertyDetails() {
     <div className="min-h-screen bg-gray-50 pb-24 md:pb-0">
       {/* Professional Photo Gallery - Booking.com style */}
        <div className="bg-white">
-         <div className="max-w-7xl mx-auto px-4 py-6">
+         <div className="max-w-7xl mx-auto px-2 sm:px-4 py-3 md:py-6">
            {/* Mobile: Carousel */}
            <div className="md:hidden mb-4">
              <div className="relative aspect-square overflow-hidden bg-gray-200 rounded-lg">
