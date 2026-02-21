@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Crown, Zap, Rocket, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { format, addMonths } from "date-fns";
+import { createPageUrl } from "@/utils";
 
 const PLANS = [
   {
@@ -68,6 +69,60 @@ export default function Subscription() {
     base44.auth.me().then(setUser).catch(() => {});
   }, []);
 
+  // Handle successful payment redirect
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const success = urlParams.get('success');
+    const plan = urlParams.get('plan');
+    
+    if (success === 'true' && plan && user?.id) {
+      const planDetails = PLANS.find(p => p.id === plan);
+      const startDate = format(new Date(), "yyyy-MM-dd");
+      const endDate = format(addMonths(new Date(), 1), "yyyy-MM-dd");
+
+      // Create or update subscription after successful payment
+      const createSubscription = async () => {
+        try {
+          const subs = await base44.entities.Subscription.filter({ user_id: user.id });
+          const existingSub = subs[0];
+
+          if (existingSub) {
+            await base44.entities.Subscription.update(existingSub.id, {
+              plan,
+              status: 'active',
+              price_monthly: planDetails.price,
+              max_properties: planDetails.max_properties,
+              start_date: startDate,
+              end_date: endDate,
+              features: planDetails.features,
+            });
+          } else {
+            await base44.entities.Subscription.create({
+              user_id: user.id,
+              plan,
+              status: 'active',
+              price_monthly: planDetails.price,
+              max_properties: planDetails.max_properties,
+              start_date: startDate,
+              end_date: endDate,
+              features: planDetails.features,
+            });
+          }
+
+          queryClient.invalidateQueries({ queryKey: ['subscription'] });
+          toast.success("Subscription activated! You can now list your properties.");
+          
+          // Clean up URL
+          window.history.replaceState({}, '', createPageUrl('Subscription'));
+        } catch (error) {
+          toast.error("Failed to activate subscription. Please contact support.");
+        }
+      };
+
+      createSubscription();
+    }
+  }, [user?.id, queryClient]);
+
   const { data: subscription } = useQuery({
     queryKey: ['subscription', user?.id],
     queryFn: async () => {
@@ -80,36 +135,29 @@ export default function Subscription() {
   const subscribeMutation = useMutation({
     mutationFn: async (plan) => {
       const planDetails = PLANS.find(p => p.id === plan);
-      const startDate = format(new Date(), "yyyy-MM-dd");
-      const endDate = format(addMonths(new Date(), 1), "yyyy-MM-dd");
-
-      if (subscription) {
-        return base44.entities.Subscription.update(subscription.id, {
-          plan,
-          status: 'active',
-          price_monthly: planDetails.price,
-          max_properties: planDetails.max_properties,
-          start_date: startDate,
-          end_date: endDate,
-          features: planDetails.features,
-        });
-      } else {
-        return base44.entities.Subscription.create({
+      
+      // Create Stripe payment session
+      const paymentLink = await base44.integrations.Stripe.CreatePaymentLink({
+        amount: planDetails.price * 100, // Convert to pence
+        currency: "gbp",
+        description: `${planDetails.name} Plan - Monthly Subscription`,
+        success_url: window.location.origin + createPageUrl('Subscription') + '?success=true&plan=' + plan,
+        cancel_url: window.location.origin + createPageUrl('Subscription'),
+        metadata: {
+          plan: plan,
           user_id: user.id,
-          plan,
-          status: 'active',
-          price_monthly: planDetails.price,
-          max_properties: planDetails.max_properties,
-          start_date: startDate,
-          end_date: endDate,
-          features: planDetails.features,
-        });
-      }
+          subscription_type: 'monthly',
+          max_properties: planDetails.max_properties.toString()
+        }
+      });
+
+      // Redirect to Stripe checkout
+      window.location.href = paymentLink.payment_link_url;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['subscription'] });
-      toast.success("Subscription activated! You can now list your properties.");
-    },
+    onError: (error) => {
+      toast.error("Failed to process payment. Please try again.");
+      console.error(error);
+    }
   });
 
   const cancelMutation = useMutation({
