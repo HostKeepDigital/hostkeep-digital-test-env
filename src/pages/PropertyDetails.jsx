@@ -556,9 +556,9 @@ export default function PropertyDetails() {
                       <p className="text-xl md:text-2xl font-bold text-gray-900">{averageRating}</p>
                     </div>
                     {reviews.some(r => r.cleanliness_rating) && (
-                      <div className="p-3 bg-blue-50 rounded-lg">
-                        <p className="text-xs text-gray-500 mb-1">Cleanliness</p>
-                        <p className="text-2xl font-bold text-gray-900">
+                      <div className="p-2 md:p-3 bg-blue-50 rounded-lg">
+                        <p className="text-[10px] md:text-xs text-gray-500 mb-0.5 md:mb-1">Cleanliness</p>
+                        <p className="text-xl md:text-2xl font-bold text-gray-900">
                           {(reviews
                             .filter(r => r.cleanliness_rating)
                             .reduce((sum, r) => sum + r.cleanliness_rating, 0) / 
