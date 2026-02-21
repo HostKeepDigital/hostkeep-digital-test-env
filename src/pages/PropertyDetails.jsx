@@ -407,7 +407,7 @@ export default function PropertyDetails() {
          </div>
        </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 md:py-8">
         {/* Header Section with Title & Quick Info */}
         <div className="mb-8">
           <div className="flex items-start justify-between gap-4 mb-4">
