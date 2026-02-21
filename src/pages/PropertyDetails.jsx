@@ -457,9 +457,9 @@ export default function PropertyDetails() {
           <div className="md:col-span-7 space-y-4 md:space-y-8">
             {/* Description Card */}
             <Card className="border-0 bg-white shadow-sm">
-              <CardContent className="pt-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-3">About this property</h2>
-                <p className="text-gray-600 leading-relaxed whitespace-pre-line">{property.description || "No description provided."}</p>
+              <CardContent className="p-4 md:pt-6">
+                <h2 className="text-base md:text-lg font-semibold text-gray-900 mb-2 md:mb-3">About this property</h2>
+                <p className="text-sm md:text-base text-gray-600 leading-relaxed whitespace-pre-line">{property.description || "No description provided."}</p>
               </CardContent>
             </Card>
 
