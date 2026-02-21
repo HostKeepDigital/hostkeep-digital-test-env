@@ -412,8 +412,8 @@ export default function PropertyDetails() {
         <div className="mb-4 md:mb-8">
           <div className="flex items-start justify-between gap-2 md:gap-4 mb-3 md:mb-4">
             <div className="flex-1">
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{property.title}</h1>
-              <div className="flex flex-wrap items-center gap-4 text-gray-600">
+              <h1 className="text-xl sm:text-2xl md:text-4xl font-bold text-gray-900 mb-2">{property.title}</h1>
+              <div className="flex flex-wrap items-center gap-2 md:gap-4 text-sm md:text-base text-gray-600">
                 <span className="flex items-center gap-1.5">
                   <MapPin className="w-4 h-4 text-teal-600" />
                   {property.location?.city || property.location?.town_city}, {property.location?.country || 'UK'}
