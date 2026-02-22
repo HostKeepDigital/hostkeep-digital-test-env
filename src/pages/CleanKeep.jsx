@@ -545,16 +545,16 @@ export default function CleanKeep() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 px-4 bg-gradient-to-b from-teal-600 to-teal-700 text-white">
+      <section className="py-20 px-4 bg-gradient-to-b from-blue-600 to-blue-700 text-white">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Start Getting Consistent Cleaning Work
           </h2>
-          <p className="text-xl mb-8 text-teal-100">
+          <p className="text-xl mb-8 text-blue-100">
             Join CleanKeep today and connect with trusted holiday home owners near you.
           </p>
           <Link to={createPageUrl('CleanerSignup')}>
-            <Button size="lg" className="bg-white text-teal-600 hover:bg-gray-100 text-lg px-8 py-4">
+            <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-4">
               Start Free Trial
             </Button>
           </Link>
