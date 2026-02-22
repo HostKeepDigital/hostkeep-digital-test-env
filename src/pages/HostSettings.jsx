@@ -159,6 +159,17 @@ export default function HostSettings() {
                     />
                   </div>
                   <div>
+                    <Label>Email Address</Label>
+                    <Input
+                      value={user?.email || ""}
+                      disabled
+                      className="mt-1 bg-gray-100 text-gray-500 cursor-not-allowed"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
                     <Label>Phone Number</Label>
                     <Input
                       value={formData.phone}
@@ -167,16 +178,15 @@ export default function HostSettings() {
                       className="mt-1"
                     />
                   </div>
-                </div>
-
-                <div>
-                  <Label>Location</Label>
-                  <Input
-                    value={formData.location}
-                    onChange={(e) => handleChange("location", e.target.value)}
-                    placeholder="e.g. London, UK"
-                    className="mt-1"
-                  />
+                  <div>
+                    <Label>Location</Label>
+                    <Input
+                      value={formData.location}
+                      onChange={(e) => handleChange("location", e.target.value)}
+                      placeholder="e.g. London, UK"
+                      className="mt-1"
+                    />
+                  </div>
                 </div>
 
                 <div>
