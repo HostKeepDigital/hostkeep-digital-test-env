@@ -169,7 +169,7 @@ export default function Layout({ children, currentPageName }) {
               {isAuthenticated && (
                 <>
                   <Link to={createPageUrl('MyBookings')} className="text-gray-600 hover:text-gray-900 font-medium">
-                    My Bookings
+                    My Stays
                   </Link>
                   <Link to={createPageUrl('HostDashboard')} className="text-gray-600 hover:text-gray-900 font-medium">
                     Host Dashboard
@@ -198,7 +198,7 @@ export default function Layout({ children, currentPageName }) {
                   <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuItem asChild>
                       <Link to={createPageUrl('MyBookings')} className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4" /> My Bookings
+                        <Calendar className="w-4 h-4" /> My Stays
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
