@@ -449,9 +449,9 @@ export default function CleanKeep() {
               CleanKeep is part of the wider HostKeep platform connecting:
             </p>
             <div className="flex justify-center gap-8 mb-6">
-              <Badge className="bg-blue-600 text-lg py-2 px-6">Hosts</Badge>
-              <Badge className="bg-teal-600 text-lg py-2 px-6">Guests</Badge>
-              <Badge className="bg-purple-600 text-lg py-2 px-6">Cleaners</Badge>
+              <Badge className="bg-teal-600 text-lg py-2 px-6">Hosts</Badge>
+              <Badge className="bg-amber-500 text-lg py-2 px-6">Guests</Badge>
+              <Badge className="bg-blue-600 text-lg py-2 px-6">Cleaners</Badge>
             </div>
             <div className="text-left max-w-2xl mx-auto space-y-2 text-gray-700">
               <p>→ More hosts → more bookings</p>
