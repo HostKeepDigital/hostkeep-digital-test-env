@@ -5,7 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { motion } from "framer-motion";
-import { Sparkles, Search, UserPlus, LayoutDashboard, ArrowRight } from "lucide-react";
+import { Sparkles, Search, UserPlus, LayoutDashboard, ArrowRight, CheckCircle, Shield, MessageSquare, Star, TrendingUp } from "lucide-react";
 
 export default function CleanKeep() {
   const [user, setUser] = useState(null);
@@ -22,28 +22,31 @@ export default function CleanKeep() {
   const options = [
     {
       icon: Search,
-      title: "I'm a Host Looking for a Cleaner",
-      description: "Browse vetted cleaners in your area, check reviews, and hire with confidence.",
-      buttonText: "Find a Cleaner",
+      title: "Find a Cleaner",
+      description: "Browse local, vetted cleaners. Check reviews. Hire with confidence.",
+      buttonText: "Browse Cleaners",
       route: "CleanerMarketplace",
-      color: "teal"
+      isPrimary: true,
+      highlightForHost: true
     },
     {
       icon: UserPlus,
-      title: "I'm a Cleaner Looking to Join",
-      description: "Create your professional profile, set your rates, and connect with holiday home owners.",
-      buttonText: "Sign Up as a Cleaner",
+      title: "Join CleanKeep",
+      description: "Create your profile, set your rates, and connect with holiday home owners.",
+      buttonText: "Become a Cleaner",
       route: "CleanerSignup",
-      color: "blue"
+      isPrimary: false,
+      highlightForHost: false
     },
     {
       icon: LayoutDashboard,
-      title: "Existing Cleaner",
-      description: "Access your dashboard to manage jobs, availability, and messages.",
+      title: "Cleaner Dashboard",
+      description: "Manage jobs, availability, and messages.",
       buttonText: "Go to Dashboard",
       route: "CleanerDashboard",
-      color: "purple",
-      requiresAuth: true
+      isPrimary: false,
+      requiresAuth: true,
+      highlightForCleaner: true
     }
   ];
 
@@ -70,68 +73,142 @@ export default function CleanKeep() {
               <span className="text-sm font-medium text-blue-700">The Cleaner Network by HostKeep</span>
             </div>
             
-            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-4">
               CleanKeep
             </h1>
             
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-12">
-              Connecting holiday home owners with trusted cleaning professionals.
+            <p className="text-xl md:text-2xl text-gray-700 font-medium max-w-3xl mx-auto mb-4">
+              The dedicated cleaner network inside HostKeep
             </p>
 
-            {/* Quick Access for Existing Cleaner */}
-            {cleanerProfile && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-12"
-              >
-                <Link to={createPageUrl('CleanerDashboard')}>
-                  <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-4">
-                    <LayoutDashboard className="w-5 h-5 mr-2" />
-                    Go to My Dashboard
-                  </Button>
-                </Link>
-              </motion.div>
-            )}
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
+              CleanKeep helps hosts find reliable cleaners and helps cleaners secure consistent holiday-let work — all in one place.
+            </p>
           </motion.div>
         </div>
       </section>
 
-      {/* Selection Cards */}
-      <section className="pb-20 px-4">
+      {/* The Three Pathways */}
+      <section className="pb-16 px-4">
         <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-3 gap-8">
-            {options.map((option, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.1 }}
-              >
-                <Card className="h-full hover:shadow-xl transition-all duration-300 border-2 hover:border-blue-300 group cursor-pointer">
-                  <CardHeader className="text-center pb-4">
-                    <div className={`mx-auto w-20 h-20 rounded-2xl bg-gradient-to-br from-${option.color}-100 to-${option.color}-200 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                      <option.icon className={`w-10 h-10 text-${option.color}-600`} />
-                    </div>
-                    <CardTitle className="text-xl mb-2">{option.title}</CardTitle>
-                    <CardDescription className="text-base">
-                      {option.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-4">
-                    <Button 
-                      className={`w-full bg-${option.color}-600 hover:bg-${option.color}-700`}
-                      size="lg"
-                      onClick={() => handleNavigation(option.route, option.requiresAuth)}
-                    >
-                      {option.buttonText}
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+          <div className="grid md:grid-cols-3 gap-6">
+            {options.map((option, idx) => {
+              const shouldHighlight = 
+                (option.highlightForHost && user?.role !== 'cleaner') || 
+                (option.highlightForCleaner && cleanerProfile);
+              
+              return (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                  className={option.isPrimary ? 'md:scale-105' : ''}
+                >
+                  <Card className={`h-full hover:shadow-xl transition-all duration-300 border-2 group cursor-pointer ${
+                    shouldHighlight 
+                      ? 'border-teal-500 bg-teal-50/50' 
+                      : option.isPrimary 
+                        ? 'hover:border-teal-400' 
+                        : 'hover:border-blue-300'
+                  }`}>
+                    <CardHeader className="text-center pb-4">
+                      <div className={`mx-auto w-16 h-16 rounded-xl bg-gradient-to-br ${
+                        option.isPrimary ? 'from-teal-100 to-teal-200' : 'from-blue-100 to-blue-200'
+                      } flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                        <option.icon className={`w-8 h-8 ${
+                          option.isPrimary ? 'text-teal-600' : 'text-blue-600'
+                        }`} />
+                      </div>
+                      <CardTitle className="text-lg mb-2">{option.title}</CardTitle>
+                      <CardDescription className="text-sm">
+                        {option.description}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-2">
+                      <Button 
+                        className={`w-full ${
+                          option.isPrimary 
+                            ? 'bg-teal-600 hover:bg-teal-700' 
+                            : 'bg-blue-600 hover:bg-blue-700'
+                        }`}
+                        size="lg"
+                        onClick={() => handleNavigation(option.route, option.requiresAuth)}
+                      >
+                        {option.buttonText}
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
           </div>
+        </div>
+      </section>
+
+      {/* What Is CleanKeep? */}
+      <section className="pb-20 px-4">
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <Card className="bg-white border-2 border-gray-100">
+              <CardHeader>
+                <CardTitle className="text-2xl text-center mb-2">What Is CleanKeep?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                      <Shield className="w-5 h-5 text-teal-600" />
+                      Built for Holiday Lets
+                    </h3>
+                    <ul className="space-y-3 text-gray-600">
+                      <li className="flex items-start gap-2">
+                        <CheckCircle className="w-5 h-5 text-teal-500 flex-shrink-0 mt-0.5" />
+                        <span>Cleaner availability synced with bookings</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <MessageSquare className="w-5 h-5 text-teal-500 flex-shrink-0 mt-0.5" />
+                        <span>Direct messaging</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Star className="w-5 h-5 text-teal-500 flex-shrink-0 mt-0.5" />
+                        <span>Transparent reviews</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle className="w-5 h-5 text-teal-500 flex-shrink-0 mt-0.5" />
+                        <span>No commission taken</span>
+                      </li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                      <TrendingUp className="w-5 h-5 text-blue-600" />
+                      Fair & Professional
+                    </h3>
+                    <ul className="space-y-3 text-gray-600">
+                      <li className="flex items-start gap-2">
+                        <CheckCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                        <span>Subscription-based</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                        <span>No race-to-the-bottom pricing</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Star className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                        <span>Merit-based reviews</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
       </section>
     </div>
