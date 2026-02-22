@@ -201,7 +201,7 @@ export default function MyBookings() {
         {bookings.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-xl border border-gray-100">
             <Home className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No bookings yet</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No stays booked yet</h3>
             <p className="text-gray-500 mb-6">Start exploring properties for your next trip</p>
             <Link to={createPageUrl("Search")}>
               <Button className="bg-teal-600 hover:bg-teal-700">Browse Properties</Button>
