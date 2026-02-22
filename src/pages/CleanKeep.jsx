@@ -517,7 +517,7 @@ export default function CleanKeep() {
                 </div>
               ))}
             </div>
-            <p className="text-lg font-semibold text-teal-600 mt-8">
+            <p className="text-lg font-semibold text-blue-600 mt-8">
               One additional cleaning job per month easily covers the subscription.
             </p>
           </div>
