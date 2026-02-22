@@ -69,7 +69,8 @@ export default function CleanerDashboard() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-4">
           <Sparkles className="w-16 h-16 text-blue-600 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome to HostKeep Cleaners</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome to CleanKeep</h2>
+          <p className="text-gray-600 mb-6">The Cleaner Network by HostKeep</p>
           <p className="text-gray-600 mb-6">Set up your cleaner profile to start receiving jobs</p>
           <Link to={createPageUrl('CleanerSignup')}>
             <Button className="bg-blue-600 hover:bg-blue-700">
