@@ -359,7 +359,6 @@ export default function CleanKeep() {
           
           <div className="flex justify-center gap-8 mb-8 flex-wrap">
             <Badge className="text-lg px-6 py-3 bg-teal-600">Hosts</Badge>
-            <Badge className="text-lg px-6 py-3 bg-purple-600">Guests</Badge>
             <Badge className="text-lg px-6 py-3 bg-blue-600">Cleaners</Badge>
           </div>
 
