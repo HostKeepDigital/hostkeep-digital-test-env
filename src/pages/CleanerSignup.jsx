@@ -12,7 +12,7 @@ import { Sparkles, Upload, MapPin, Calendar as CalendarIcon, Clock, X } from "lu
 import { toast } from "sonner";
 import { createPageUrl } from "@/utils";
 import { useNavigate } from "react-router-dom";
-import { format } from "date-fns";
+import { format, eachDayOfInterval, parseISO } from "date-fns";
 
 export default function CleanerSignup() {
   const navigate = useNavigate();
@@ -50,6 +50,8 @@ export default function CleanerSignup() {
     { start: "09:00", end: "12:00" },
     { start: "13:00", end: "17:00" }
   ]);
+  const [bulkStart, setBulkStart] = useState("");
+  const [bulkEnd, setBulkEnd] = useState("");
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -91,6 +93,25 @@ export default function CleanerSignup() {
 
   const removeAvailability = (index) => {
     setAvailability(availability.filter((_, i) => i !== index));
+  };
+
+  const handleBulkDateSelection = () => {
+    if (!bulkStart || !bulkEnd) {
+      toast.error('Please select both start and end dates');
+      return;
+    }
+
+    const start = parseISO(bulkStart);
+    const end = parseISO(bulkEnd);
+    
+    if (end < start) {
+      toast.error('End date must be after start date');
+      return;
+    }
+
+    const dates = eachDayOfInterval({ start, end });
+    setSelectedDates(dates);
+    toast.success(`Selected ${dates.length} dates from bulk range`);
   };
 
   const handlePhotoUpload = async (e) => {
@@ -375,14 +396,57 @@ export default function CleanerSignup() {
                       </div>
                       <Label className="text-base font-semibold">Select Available Dates</Label>
                     </div>
-                    <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                      <Calendar
-                        mode="multiple"
-                        selected={selectedDates}
-                        onSelect={setSelectedDates}
-                        disabled={(date) => date < new Date()}
-                        className="rounded-md mx-auto"
-                      />
+                    <div className="grid lg:grid-cols-[1fr_320px] gap-4">
+                      <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                        <Calendar
+                          mode="multiple"
+                          selected={selectedDates}
+                          onSelect={setSelectedDates}
+                          disabled={(date) => date < new Date()}
+                          className="rounded-md w-full"
+                        />
+                      </div>
+                      
+                      {/* Bulk Date Selector */}
+                      <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm space-y-4">
+                        <div className="flex items-center gap-2 pb-3 border-b">
+                          <Sparkles className="w-5 h-5 text-blue-600" />
+                          <h4 className="font-semibold">Bulk Date Range</h4>
+                        </div>
+                        <div className="space-y-3">
+                          <div>
+                            <Label className="text-sm">Start Date</Label>
+                            <Input
+                              type="date"
+                              value={bulkStart}
+                              onChange={(e) => setBulkStart(e.target.value)}
+                              min={format(new Date(), 'yyyy-MM-dd')}
+                              className="mt-1"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-sm">End Date</Label>
+                            <Input
+                              type="date"
+                              value={bulkEnd}
+                              onChange={(e) => setBulkEnd(e.target.value)}
+                              min={bulkStart || format(new Date(), 'yyyy-MM-dd')}
+                              className="mt-1"
+                            />
+                          </div>
+                          <Button 
+                            type="button"
+                            onClick={handleBulkDateSelection}
+                            disabled={!bulkStart || !bulkEnd}
+                            className="w-full bg-blue-600 hover:bg-blue-700"
+                          >
+                            Select Date Range
+                          </Button>
+                          <p className="text-xs text-gray-500">
+                            This will select all dates between the start and end date
+                          </p>
+                        </div>
+                      </div>
                     </div>
                     {selectedDates.length > 0 && (
                       <div className="flex items-center gap-2 text-sm">
@@ -483,16 +547,18 @@ export default function CleanerSignup() {
                           {availability.length} day{availability.length !== 1 ? 's' : ''}
                         </Badge>
                       </div>
-                      <div className="space-y-2 max-h-64 overflow-y-auto">
-                        {availability.map((avail, index) => (
+                      <div className="space-y-2 max-h-80 overflow-y-auto pr-2">
+                        {availability
+                          .sort((a, b) => new Date(a.date) - new Date(b.date))
+                          .map((avail, index) => (
                           <div 
                             key={index} 
-                            className="flex items-start justify-between p-4 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                            className="flex items-start justify-between p-4 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow group"
                           >
-                            <div className="flex items-start gap-3">
-                              <CalendarIcon className="w-5 h-5 text-blue-600 mt-0.5" />
-                              <div>
-                                <div className="font-semibold text-gray-900">
+                            <div className="flex items-start gap-3 flex-1 min-w-0">
+                              <CalendarIcon className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                              <div className="min-w-0 flex-1">
+                                <div className="font-semibold text-gray-900 text-sm">
                                   {format(new Date(avail.date), 'EEEE, MMMM d, yyyy')}
                                 </div>
                                 <div className="flex flex-wrap gap-2 mt-2">
@@ -500,7 +566,7 @@ export default function CleanerSignup() {
                                     <Badge 
                                       key={i}
                                       variant="outline"
-                                      className="bg-blue-50 text-blue-700 border-blue-200"
+                                      className="bg-blue-50 text-blue-700 border-blue-200 text-xs"
                                     >
                                       <Clock className="w-3 h-3 mr-1" />
                                       {slot.start} – {slot.end}
@@ -514,7 +580,7 @@ export default function CleanerSignup() {
                               variant="ghost"
                               size="icon"
                               onClick={() => removeAvailability(index)}
-                              className="text-gray-400 hover:text-red-600 hover:bg-red-50"
+                              className="text-gray-400 hover:text-red-600 hover:bg-red-50 flex-shrink-0 ml-2"
                             >
                               <X className="w-4 h-4" />
                             </Button>
