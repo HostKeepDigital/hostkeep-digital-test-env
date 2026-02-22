@@ -189,22 +189,22 @@ export default function CleanerDashboard() {
             </Card>
           </Link>
 
+          <Link to={createPageUrl('CleanerPricing')}>
+            <Card className="hover:shadow-lg transition-all cursor-pointer">
+              <CardContent className="p-6">
+                <DollarSign className="w-8 h-8 text-green-600 mb-3" />
+                <h3 className="font-semibold text-lg text-gray-900 mb-1">Pricing</h3>
+                <p className="text-sm text-gray-600">Manage rates and add-on services</p>
+              </CardContent>
+            </Card>
+          </Link>
+
           <Link to={createPageUrl('CleanerProfile') + '?id=' + cleanerProfile.id}>
             <Card className="hover:shadow-lg transition-all cursor-pointer">
               <CardContent className="p-6">
                 <Star className="w-8 h-8 text-amber-500 mb-3" />
                 <h3 className="font-semibold text-lg text-gray-900 mb-1">My Profile</h3>
-                <p className="text-sm text-gray-600">Update your profile and pricing</p>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link to={createPageUrl('CleanerAvailability')}>
-            <Card className="hover:shadow-lg transition-all cursor-pointer">
-              <CardContent className="p-6">
-                <Clock className="w-8 h-8 text-blue-500 mb-3" />
-                <h3 className="font-semibold text-lg text-gray-900 mb-1">Availability</h3>
-                <p className="text-sm text-gray-600">Manage your calendar and availability</p>
+                <p className="text-sm text-gray-600">Update your profile and settings</p>
               </CardContent>
             </Card>
           </Link>
