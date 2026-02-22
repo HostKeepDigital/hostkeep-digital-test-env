@@ -247,34 +247,34 @@ export default function CleanKeep() {
             </CardHeader>
             <CardContent>
               <ul className="grid md:grid-cols-2 gap-3">
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-teal-500" />
-                  <span>Professional public profile</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-teal-500" />
-                  <span>Availability calendar</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-teal-500" />
-                  <span>Job notifications</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-teal-500" />
-                  <span>Direct messaging with hosts</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-teal-500" />
-                  <span>Reviews & ratings</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-teal-500" />
-                  <span>Full control over your pricing</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-teal-500" />
-                  <span>Repeat client management</span>
-                </li>
+               <li className="flex items-center gap-2">
+                 <CheckCircle className="w-5 h-5 text-blue-500" />
+                 <span>Professional public profile</span>
+               </li>
+               <li className="flex items-center gap-2">
+                 <CheckCircle className="w-5 h-5 text-blue-500" />
+                 <span>Availability calendar</span>
+               </li>
+               <li className="flex items-center gap-2">
+                 <CheckCircle className="w-5 h-5 text-blue-500" />
+                 <span>Job notifications</span>
+               </li>
+               <li className="flex items-center gap-2">
+                 <CheckCircle className="w-5 h-5 text-blue-500" />
+                 <span>Direct messaging with hosts</span>
+               </li>
+               <li className="flex items-center gap-2">
+                 <CheckCircle className="w-5 h-5 text-blue-500" />
+                 <span>Reviews & ratings</span>
+               </li>
+               <li className="flex items-center gap-2">
+                 <CheckCircle className="w-5 h-5 text-blue-500" />
+                 <span>Full control over your pricing</span>
+               </li>
+               <li className="flex items-center gap-2">
+                 <CheckCircle className="w-5 h-5 text-blue-500" />
+                 <span>Repeat client management</span>
+               </li>
               </ul>
               <p className="text-center text-lg font-semibold text-gray-900 mt-6">
                 No middleman. No commission taken from your work.
@@ -302,34 +302,34 @@ export default function CleanKeep() {
               <CardContent>
                 <ul className="space-y-3">
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-teal-500" />
+                    <CheckCircle className="w-5 h-5 text-blue-500" />
                     <span>Public cleaner profile</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-teal-500" />
+                    <CheckCircle className="w-5 h-5 text-blue-500" />
                     <span>Availability calendar</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-teal-500" />
+                    <CheckCircle className="w-5 h-5 text-blue-500" />
                     <span>Job notifications</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-teal-500" />
+                    <CheckCircle className="w-5 h-5 text-blue-500" />
                     <span>Messaging</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-teal-500" />
+                    <CheckCircle className="w-5 h-5 text-blue-500" />
                     <span>Reviews & ratings</span>
                   </li>
                 </ul>
               </CardContent>
             </Card>
 
-            <Card className="border-2 border-teal-500 shadow-lg">
+            <Card className="border-2 border-blue-500 shadow-lg">
               <CardHeader>
                 <CardTitle className="text-2xl flex items-center gap-2">
                   Pro
-                  <Badge className="bg-teal-600">Popular</Badge>
+                  <Badge className="bg-blue-600">Popular</Badge>
                 </CardTitle>
                 <div className="text-4xl font-bold text-gray-900 mt-2">
                   £10<span className="text-lg text-gray-500">/month</span>
@@ -338,23 +338,23 @@ export default function CleanKeep() {
               <CardContent>
                 <ul className="space-y-3">
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-teal-500" />
+                    <CheckCircle className="w-5 h-5 text-blue-500" />
                     <span className="font-medium">Priority placement in search</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-teal-500" />
+                    <CheckCircle className="w-5 h-5 text-blue-500" />
                     <span className="font-medium">Auto-accept job option</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-teal-500" />
+                    <CheckCircle className="w-5 h-5 text-blue-500" />
                     <span className="font-medium">Repeat client management tools</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-teal-500" />
+                    <CheckCircle className="w-5 h-5 text-blue-500" />
                     <span className="font-medium">Earnings analytics</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-teal-500" />
+                    <CheckCircle className="w-5 h-5 text-blue-500" />
                     <span className="font-medium">"Verified Cleaner" badge</span>
                   </li>
                 </ul>
@@ -400,7 +400,7 @@ export default function CleanKeep() {
             ].map((item, idx) => (
               <Card key={idx}>
                 <CardHeader>
-                  <div className="w-12 h-12 rounded-full bg-teal-600 text-white flex items-center justify-center text-2xl font-bold mb-3">
+                  <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center text-2xl font-bold mb-3">
                     {item.step}
                   </div>
                   <CardTitle className="text-lg">{item.title}</CardTitle>
@@ -430,7 +430,7 @@ export default function CleanKeep() {
                 "Review management"
               ].map((item, idx) => (
                 <div key={idx} className="flex items-center gap-2 p-4 bg-white rounded-lg">
-                  <CheckCircle className="w-5 h-5 text-teal-500" />
+                  <CheckCircle className="w-5 h-5 text-blue-500" />
                   <span className="text-gray-700">{item}</span>
                 </div>
               ))}
@@ -482,11 +482,11 @@ export default function CleanKeep() {
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-teal-500" />
+                    <CheckCircle className="w-5 h-5 text-blue-500" />
                     <span>Transparent feedback</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5 text-teal-500" />
+                    <TrendingUp className="w-5 h-5 text-blue-500" />
                     <span>Top performers rise naturally</span>
                   </div>
                 </div>
@@ -512,7 +512,7 @@ export default function CleanKeep() {
                 "Professional positioning (not gig-economy style)"
               ].map((item, idx) => (
                 <div key={idx} className="flex items-center gap-3 p-4 bg-white rounded-lg text-left">
-                  <CheckCircle className="w-6 h-6 text-teal-500 flex-shrink-0" />
+                  <CheckCircle className="w-6 h-6 text-blue-500 flex-shrink-0" />
                   <span className="text-gray-700">{item}</span>
                 </div>
               ))}
