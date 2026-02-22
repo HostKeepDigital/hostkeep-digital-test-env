@@ -224,7 +224,7 @@ export default function CleanKeep() {
             <p className="text-lg text-gray-600 mb-4">
               There has never been a simple, low-cost platform connecting the two.
             </p>
-            <p className="text-2xl font-bold text-teal-600">
+            <p className="text-2xl font-bold text-blue-600">
               CleanKeep changes that.
             </p>
           </div>
