@@ -106,12 +106,12 @@ export default function CleanerSignup() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-teal-50 to-white py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white py-12 px-4">
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 bg-white rounded-full shadow-sm border border-teal-100">
-            <Sparkles className="w-4 h-4 text-teal-600" />
-            <span className="text-sm font-medium text-teal-700">Join CleanKeep</span>
+          <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 bg-white rounded-full shadow-sm border border-blue-100">
+            <Sparkles className="w-4 h-4 text-blue-600" />
+            <span className="text-sm font-medium text-blue-700">Join CleanKeep</span>
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
             Start Your Cleaner Profile
@@ -184,7 +184,7 @@ export default function CleanerSignup() {
               {/* Service Area */}
               <div className="space-y-4 pt-6 border-t">
                 <h3 className="font-semibold text-lg flex items-center gap-2">
-                  <MapPin className="w-5 h-5 text-teal-600" />
+                  <MapPin className="w-5 h-5 text-blue-600" />
                   Service Area
                 </h3>
                 
@@ -294,7 +294,7 @@ export default function CleanerSignup() {
                 <h3 className="font-semibold text-lg">Choose Your Plan</h3>
                 
                 <div className="grid md:grid-cols-2 gap-4">
-                  <label className={`cursor-pointer border-2 rounded-lg p-4 ${formData.subscription_plan === 'basic' ? 'border-teal-500 bg-teal-50' : 'border-gray-200'}`}>
+                  <label className={`cursor-pointer border-2 rounded-lg p-4 ${formData.subscription_plan === 'basic' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
                     <input
                       type="radio"
                       name="plan"
@@ -307,7 +307,7 @@ export default function CleanerSignup() {
                     <div className="text-sm text-gray-600">All essential features</div>
                   </label>
 
-                  <label className={`cursor-pointer border-2 rounded-lg p-4 ${formData.subscription_plan === 'pro' ? 'border-teal-500 bg-teal-50' : 'border-gray-200'}`}>
+                  <label className={`cursor-pointer border-2 rounded-lg p-4 ${formData.subscription_plan === 'pro' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
                     <input
                       type="radio"
                       name="plan"
@@ -321,14 +321,14 @@ export default function CleanerSignup() {
                   </label>
                 </div>
 
-                <p className="text-sm text-gray-600 bg-teal-50 p-3 rounded-lg">
+                <p className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
                   ✨ Start with a 30-day free trial. No payment required now.
                 </p>
               </div>
 
               <Button 
                 type="submit" 
-                className="w-full bg-teal-600 hover:bg-teal-700"
+                className="w-full bg-blue-600 hover:bg-blue-700"
                 disabled={loading}
               >
                 {loading ? 'Creating Profile...' : 'Start Free Trial'}

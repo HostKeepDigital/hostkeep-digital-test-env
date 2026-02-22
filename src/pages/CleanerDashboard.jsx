@@ -68,11 +68,11 @@ export default function CleanerDashboard() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-4">
-          <Sparkles className="w-16 h-16 text-teal-600 mx-auto mb-4" />
+          <Sparkles className="w-16 h-16 text-blue-600 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome to HostKeep Cleaners</h2>
           <p className="text-gray-600 mb-6">Set up your cleaner profile to start receiving jobs</p>
           <Link to={createPageUrl('CleanerSetup')}>
-            <Button className="bg-teal-600 hover:bg-teal-700">
+            <Button className="bg-blue-600 hover:bg-blue-700">
               Create Cleaner Profile
             </Button>
           </Link>
@@ -168,7 +168,7 @@ export default function CleanerDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-2">
                   <div className="text-sm text-gray-600">Total Earnings</div>
-                  <TrendingUp className="w-5 h-5 text-teal-500" />
+                  <TrendingUp className="w-5 h-5 text-blue-500" />
                 </div>
                 <div className="text-3xl font-bold text-gray-900">£{totalEarnings}</div>
               </CardContent>
@@ -181,7 +181,7 @@ export default function CleanerDashboard() {
           <Link to={createPageUrl('CleanerJobs')}>
             <Card className="hover:shadow-lg transition-all cursor-pointer">
               <CardContent className="p-6">
-                <Calendar className="w-8 h-8 text-teal-600 mb-3" />
+                <Calendar className="w-8 h-8 text-blue-600 mb-3" />
                 <h3 className="font-semibold text-lg text-gray-900 mb-1">View All Jobs</h3>
                 <p className="text-sm text-gray-600">Manage your job requests and schedule</p>
               </CardContent>

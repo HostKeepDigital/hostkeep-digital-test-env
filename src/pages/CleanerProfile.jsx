@@ -100,7 +100,7 @@ export default function CleanerProfile() {
   return (
     <div className="min-h-screen bg-gray-50 pb-12">
       {/* Hero Section */}
-      <div className="bg-gradient-to-br from-teal-600 to-teal-700 text-white py-12">
+      <div className="bg-gradient-to-br from-blue-600 to-blue-700 text-white py-12">
         <div className="max-w-5xl mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -111,8 +111,8 @@ export default function CleanerProfile() {
               {cleaner.profile_photo ? (
                 <img src={cleaner.profile_photo} alt={cleaner.business_name} className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full bg-teal-100 flex items-center justify-center">
-                  <span className="text-5xl font-bold text-teal-600">
+                <div className="w-full h-full bg-blue-100 flex items-center justify-center">
+                  <span className="text-5xl font-bold text-blue-600">
                     {cleaner.business_name?.charAt(0)}
                   </span>
                 </div>
@@ -162,7 +162,7 @@ export default function CleanerProfile() {
               <div className="flex gap-3">
                 <Dialog open={showAssignDialog} onOpenChange={setShowAssignDialog}>
                   <DialogTrigger asChild>
-                    <Button className="bg-white text-teal-700 hover:bg-teal-50">
+                    <Button className="bg-white text-blue-700 hover:bg-blue-50">
                       Assign to Property
                     </Button>
                   </DialogTrigger>
@@ -187,7 +187,7 @@ export default function CleanerProfile() {
                         </Select>
                       </div>
                       <Button 
-                        className="w-full bg-teal-600 hover:bg-teal-700"
+                        className="w-full bg-blue-600 hover:bg-blue-700"
                         disabled={!selectedProperty || assignMutation.isPending}
                         onClick={() => assignMutation.mutate(selectedProperty)}
                       >
@@ -307,9 +307,9 @@ export default function CleanerProfile() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
-                    <div className="text-sm text-teal-700 mb-1">Base Price</div>
-                    <div className="text-3xl font-bold text-teal-900">£{cleaner.base_price}</div>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="text-sm text-blue-700 mb-1">Base Price</div>
+                    <div className="text-3xl font-bold text-blue-900">£{cleaner.base_price}</div>
                   </div>
                   
                   <div className="grid md:grid-cols-2 gap-4">
@@ -418,7 +418,7 @@ export default function CleanerProfile() {
                       <p className="text-gray-700 leading-relaxed mb-3">{review.comment}</p>
                       
                       {review.cleaner_response && (
-                        <div className="bg-gray-50 rounded-lg p-4 mt-3 border-l-4 border-teal-500">
+                        <div className="bg-gray-50 rounded-lg p-4 mt-3 border-l-4 border-blue-500">
                           <div className="text-sm font-medium text-gray-900 mb-1">
                             Response from {cleaner.business_name}
                           </div>
