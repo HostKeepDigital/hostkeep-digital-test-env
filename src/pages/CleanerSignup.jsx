@@ -355,67 +355,96 @@ export default function CleanerSignup() {
               </div>
 
               {/* Availability */}
-              <div className="space-y-4 pt-6 border-t">
-                <h3 className="font-semibold text-lg flex items-center gap-2">
-                  <CalendarIcon className="w-5 h-5 text-blue-600" />
-                  Availability (Optional)
-                </h3>
-                <p className="text-sm text-gray-600">Set your initial availability. You can update this anytime from your dashboard.</p>
+              <div className="space-y-6 pt-6 border-t">
+                <div>
+                  <h3 className="font-semibold text-lg flex items-center gap-2 mb-2">
+                    <CalendarIcon className="w-5 h-5 text-blue-600" />
+                    Set Your Availability
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Let hosts know when you're available to work. You can update this anytime from your dashboard.
+                  </p>
+                </div>
                 
-                <div className="space-y-4">
-                  <div>
-                    <Label>Select Available Dates</Label>
-                    <div className="border rounded-lg p-4 bg-white">
+                <div className="bg-gray-50 rounded-xl p-6 space-y-6">
+                  {/* Step 1: Select Dates */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-semibold">
+                        1
+                      </div>
+                      <Label className="text-base font-semibold">Select Available Dates</Label>
+                    </div>
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                       <Calendar
                         mode="multiple"
                         selected={selectedDates}
                         onSelect={setSelectedDates}
                         disabled={(date) => date < new Date()}
-                        className="rounded-md"
+                        className="rounded-md mx-auto"
                       />
                     </div>
                     {selectedDates.length > 0 && (
-                      <p className="text-sm text-gray-600 mt-2">
-                        {selectedDates.length} date(s) selected
-                      </p>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">
+                          {selectedDates.length} date{selectedDates.length !== 1 ? 's' : ''} selected
+                        </Badge>
+                      </div>
                     )}
                   </div>
 
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <Label>Time Windows</Label>
+                  {/* Step 2: Set Time Windows */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-semibold">
+                          2
+                        </div>
+                        <Label className="text-base font-semibold">Set Time Windows</Label>
+                      </div>
                       <Button 
                         type="button" 
                         variant="outline" 
                         size="sm"
                         onClick={addTimeSlot}
+                        className="text-blue-600 border-blue-200 hover:bg-blue-50"
                       >
                         <Clock className="w-4 h-4 mr-1" />
-                        Add Time Slot
+                        Add Window
                       </Button>
                     </div>
-                    <div className="space-y-2">
+                    
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm space-y-3">
                       {timeSlots.map((slot, index) => (
-                        <div key={index} className="flex items-center gap-2">
-                          <Input
-                            type="time"
-                            value={slot.start}
-                            onChange={(e) => updateTimeSlot(index, 'start', e.target.value)}
-                            className="flex-1"
-                          />
-                          <span className="text-gray-500">to</span>
-                          <Input
-                            type="time"
-                            value={slot.end}
-                            onChange={(e) => updateTimeSlot(index, 'end', e.target.value)}
-                            className="flex-1"
-                          />
+                        <div key={index} className="flex items-center gap-3">
+                          <div className="flex-1 grid grid-cols-[1fr_auto_1fr] gap-2 items-center">
+                            <div>
+                              <Label className="text-xs text-gray-500 mb-1 block">Start Time</Label>
+                              <Input
+                                type="time"
+                                value={slot.start}
+                                onChange={(e) => updateTimeSlot(index, 'start', e.target.value)}
+                                className="h-10"
+                              />
+                            </div>
+                            <div className="text-gray-400 pt-5">→</div>
+                            <div>
+                              <Label className="text-xs text-gray-500 mb-1 block">End Time</Label>
+                              <Input
+                                type="time"
+                                value={slot.end}
+                                onChange={(e) => updateTimeSlot(index, 'end', e.target.value)}
+                                className="h-10"
+                              />
+                            </div>
+                          </div>
                           {timeSlots.length > 1 && (
                             <Button
                               type="button"
                               variant="ghost"
                               size="icon"
                               onClick={() => removeTimeSlot(index)}
+                              className="mt-5 text-red-500 hover:text-red-700 hover:bg-red-50"
                             >
                               <X className="w-4 h-4" />
                             </Button>
@@ -425,35 +454,59 @@ export default function CleanerSignup() {
                     </div>
                   </div>
 
-                  <Button 
-                    type="button"
-                    onClick={addAvailability}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    Add Availability
-                  </Button>
+                  {/* Step 3: Add to Schedule */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-semibold">
+                        3
+                      </div>
+                      <Label className="text-base font-semibold">Add to Your Schedule</Label>
+                    </div>
+                    
+                    <Button 
+                      type="button"
+                      onClick={addAvailability}
+                      className="w-full bg-blue-600 hover:bg-blue-700 h-11"
+                      disabled={selectedDates.length === 0}
+                    >
+                      <CalendarIcon className="w-4 h-4 mr-2" />
+                      Add Availability
+                    </Button>
+                  </div>
 
+                  {/* Schedule Preview */}
                   {availability.length > 0 && (
-                    <div className="space-y-2">
-                      <Label>Added Availability ({availability.length})</Label>
-                      <div className="space-y-2 max-h-48 overflow-y-auto">
+                    <div className="space-y-3 pt-4 border-t border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-base font-semibold">Your Schedule</Label>
+                        <Badge variant="outline" className="bg-white">
+                          {availability.length} day{availability.length !== 1 ? 's' : ''}
+                        </Badge>
+                      </div>
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
                         {availability.map((avail, index) => (
                           <div 
                             key={index} 
-                            className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200"
+                            className="flex items-start justify-between p-4 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
                           >
-                            <div>
-                              <div className="font-medium text-sm">
-                                {format(new Date(avail.date), 'EEE, MMM d, yyyy')}
-                              </div>
-                              <div className="text-xs text-gray-600">
-                                {avail.timeSlots.map((slot, i) => (
-                                  <span key={i}>
-                                    {slot.start}–{slot.end}
-                                    {i < avail.timeSlots.length - 1 && ', '}
-                                  </span>
-                                ))}
+                            <div className="flex items-start gap-3">
+                              <CalendarIcon className="w-5 h-5 text-blue-600 mt-0.5" />
+                              <div>
+                                <div className="font-semibold text-gray-900">
+                                  {format(new Date(avail.date), 'EEEE, MMMM d, yyyy')}
+                                </div>
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                  {avail.timeSlots.map((slot, i) => (
+                                    <Badge 
+                                      key={i}
+                                      variant="outline"
+                                      className="bg-blue-50 text-blue-700 border-blue-200"
+                                    >
+                                      <Clock className="w-3 h-3 mr-1" />
+                                      {slot.start} – {slot.end}
+                                    </Badge>
+                                  ))}
+                                </div>
                               </div>
                             </div>
                             <Button
@@ -461,6 +514,7 @@ export default function CleanerSignup() {
                               variant="ghost"
                               size="icon"
                               onClick={() => removeAvailability(index)}
+                              className="text-gray-400 hover:text-red-600 hover:bg-red-50"
                             >
                               <X className="w-4 h-4" />
                             </Button>
