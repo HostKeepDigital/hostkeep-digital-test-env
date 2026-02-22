@@ -6,125 +6,100 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Upload, MapPin, Calendar as CalendarIcon, Clock, X } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import { 
+  Star, Upload, MapPin, DollarSign, Calendar, 
+  TrendingUp, Award, Shield, CheckCircle, Sparkles,
+  Clock, AlertCircle, Target, BarChart3
+} from "lucide-react";
 import { toast } from "sonner";
 import { createPageUrl } from "@/utils";
 import { useNavigate } from "react-router-dom";
-import { format, eachDayOfInterval, parseISO } from "date-fns";
 
 export default function CleanerSignup() {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   
   const [formData, setFormData] = useState({
-    // Account details
-    full_name: "",
-    email: "",
-    
-    // Cleaner profile
-    business_name: "",
+    // Profile
+    display_name: "",
+    service_area_city: "",
+    service_area_postcode: "",
+    experience_level: "intermediate",
     bio: "",
     profile_photo: "",
-    
-    // Service area
-    city: "",
-    postcode_prefix: "",
-    radius_miles: 10,
+    work_photos: [],
+    certifications: "",
+    holiday_let_experience: "",
     
     // Pricing
     base_price: "",
-    price_per_bedroom: "",
-    price_per_bathroom: "",
     minimum_charge: "",
+    optional_services: {
+      laundry: false,
+      linen_changes: false,
+      deep_cleaning: false
+    },
+    
+    // Availability Mode
+    availability_mode: "flexible", // active, flexible, unavailable
+    preferred_days: [],
+    time_windows: [],
+    
+    // Automation
+    auto_accept_enabled: false,
+    auto_accept_price_range: { min: 0, max: 0 },
+    auto_accept_radius: false,
+    max_jobs_per_day: 3,
+    travel_radius: 10,
     
     // Subscription
     subscription_plan: "basic"
   });
 
-  const [availability, setAvailability] = useState([]);
-  const [selectedDates, setSelectedDates] = useState([]);
-  const [timeSlots, setTimeSlots] = useState([
-    { start: "09:00", end: "12:00" },
-    { start: "13:00", end: "17:00" }
-  ]);
-  const [bulkStart, setBulkStart] = useState("");
-  const [bulkEnd, setBulkEnd] = useState("");
-
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const addTimeSlot = () => {
-    setTimeSlots([...timeSlots, { start: "09:00", end: "17:00" }]);
-  };
-
-  const removeTimeSlot = (index) => {
-    setTimeSlots(timeSlots.filter((_, i) => i !== index));
-  };
-
-  const updateTimeSlot = (index, field, value) => {
-    const updated = [...timeSlots];
-    updated[index][field] = value;
-    setTimeSlots(updated);
-  };
-
-  const addAvailability = () => {
-    if (selectedDates.length === 0) {
-      toast.error('Please select at least one date');
-      return;
-    }
-    if (timeSlots.length === 0) {
-      toast.error('Please add at least one time slot');
-      return;
-    }
-
-    const newAvailability = selectedDates.map(date => ({
-      date: format(date, 'yyyy-MM-dd'),
-      timeSlots: [...timeSlots]
+  const handleNestedChange = (parent, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [parent]: { ...prev[parent], [field]: value }
     }));
-
-    setAvailability([...availability, ...newAvailability]);
-    setSelectedDates([]);
-    toast.success(`Added availability for ${selectedDates.length} date(s)`);
   };
 
-  const removeAvailability = (index) => {
-    setAvailability(availability.filter((_, i) => i !== index));
-  };
-
-  const handleBulkDateSelection = () => {
-    if (!bulkStart || !bulkEnd) {
-      toast.error('Please select both start and end dates');
-      return;
-    }
-
-    const start = parseISO(bulkStart);
-    const end = parseISO(bulkEnd);
-    
-    if (end < start) {
-      toast.error('End date must be after start date');
-      return;
-    }
-
-    const dates = eachDayOfInterval({ start, end });
-    setSelectedDates(dates);
-    toast.success(`Selected ${dates.length} dates from bulk range`);
-  };
-
-  const handlePhotoUpload = async (e) => {
+  const handlePhotoUpload = async (e, type = 'profile') => {
     const file = e.target.files[0];
     if (!file) return;
     
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      handleChange('profile_photo', file_url);
+      if (type === 'profile') {
+        handleChange('profile_photo', file_url);
+      } else {
+        handleChange('work_photos', [...formData.work_photos, file_url]);
+      }
       toast.success('Photo uploaded');
     } catch (error) {
       toast.error('Failed to upload photo');
     }
+  };
+
+  const toggleDay = (day) => {
+    const days = formData.preferred_days.includes(day)
+      ? formData.preferred_days.filter(d => d !== day)
+      : [...formData.preferred_days, day];
+    handleChange('preferred_days', days);
+  };
+
+  const addTimeWindow = (preset) => {
+    const windows = {
+      morning: { start: "08:00", end: "12:00", label: "Morning Turnover" },
+      afternoon: { start: "12:00", end: "17:00", label: "Afternoon Turnover" }
+    };
+    handleChange('time_windows', [...formData.time_windows, windows[preset]]);
   };
 
   const handleSubmit = async (e) => {
@@ -132,55 +107,35 @@ export default function CleanerSignup() {
     setLoading(true);
 
     try {
-      // Check if user is authenticated
       const isAuth = await base44.auth.isAuthenticated();
       
       if (!isAuth) {
-        // Redirect to login/signup
         toast.info('Please create an account first');
         base44.auth.redirectToLogin(window.location.href);
         return;
       }
 
-      // Get current user
       const user = await base44.auth.me();
 
-      // Create cleaner profile
       const cleaner = await base44.entities.Cleaner.create({
         user_id: user.id,
-        business_name: formData.business_name,
+        business_name: formData.display_name,
         bio: formData.bio,
         profile_photo: formData.profile_photo,
+        portfolio_photos: formData.work_photos,
         service_area: {
-          city: formData.city,
-          postcode_prefix: formData.postcode_prefix,
-          radius_miles: parseInt(formData.radius_miles)
+          city: formData.service_area_city,
+          postcode_prefix: formData.service_area_postcode,
+          radius_miles: formData.travel_radius
         },
         base_price: parseFloat(formData.base_price),
-        price_per_bedroom: parseFloat(formData.price_per_bedroom) || 0,
-        price_per_bathroom: parseFloat(formData.price_per_bathroom) || 0,
         minimum_charge: parseFloat(formData.minimum_charge),
         subscription_plan: formData.subscription_plan,
         subscription_status: "trial",
-        subscription_expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        subscription_expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        auto_accept_jobs: formData.auto_accept_enabled,
+        max_jobs_per_day: formData.max_jobs_per_day
       });
-
-      // Create availability records
-      if (availability.length > 0) {
-        await Promise.all(
-          availability.map(avail => 
-            base44.entities.CleanerAvailability.create({
-              cleaner_id: cleaner.id,
-              date: avail.date,
-              available: true,
-              time_slots: avail.timeSlots.map(slot => ({
-                time: slot.start,
-                available: true
-              }))
-            })
-          )
-        );
-      }
 
       toast.success('Welcome to CleanKeep! Your 30-day trial has started.');
       navigate(createPageUrl('CleanerDashboard'));
@@ -191,454 +146,750 @@ export default function CleanerSignup() {
     }
   };
 
+  const showUpgradeMessage = formData.subscription_plan === 'basic';
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white py-12 px-4">
-      <div className="max-w-2xl mx-auto">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 bg-white rounded-full shadow-sm border border-blue-100">
-            <Sparkles className="w-4 h-4 text-blue-600" />
-            <span className="text-sm font-medium text-blue-700">Join CleanKeep</span>
+    <div className="min-h-screen bg-gradient-to-b from-teal-50 to-white py-12 px-4">
+      <div className="max-w-4xl mx-auto">
+        {/* Hero Section */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 bg-white rounded-full shadow-sm border border-teal-100">
+            <Sparkles className="w-4 h-4 text-teal-600" />
+            <span className="text-sm font-medium text-teal-700">Join CleanKeep</span>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-            Start Your Cleaner Profile
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3">
+            Earn More Cleaning Holiday Homes<br />Across the UK
           </h1>
-          <p className="text-gray-600">30-day free trial • No payment required right now • Cancel anytime</p>
+          <p className="text-xl text-gray-600 mb-6">
+            Create your professional cleaning profile in minutes.<br />
+            Connect with verified holiday home owners who need reliable cleaners.
+          </p>
+          <Button 
+            onClick={() => document.getElementById('profile-section').scrollIntoView({ behavior: 'smooth' })}
+            className="bg-teal-600 hover:bg-teal-700 text-lg px-8 py-6 h-auto"
+          >
+            Complete Your Profile — Start Free
+          </Button>
         </div>
 
-        <Card>
+        {/* Why Choose CleanKeep */}
+        <Card className="mb-8 bg-gradient-to-br from-teal-50 to-blue-50 border-teal-200">
           <CardHeader>
-            <CardTitle>Create Your Profile</CardTitle>
-            <CardDescription>
-              Tell hosts about your cleaning business and service area
-            </CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              <Star className="w-6 h-6 text-teal-600" />
+              Why Professional Cleaners Choose CleanKeep
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Business Details */}
-              <div className="space-y-4">
-                <h3 className="font-semibold text-lg">Business Information</h3>
-                
-                <div>
-                  <Label htmlFor="business_name">Business Name *</Label>
-                  <Input
-                    id="business_name"
-                    value={formData.business_name}
-                    onChange={(e) => handleChange('business_name', e.target.value)}
-                    placeholder="e.g., Sparkling Stays Cleaning"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="bio">About Your Service *</Label>
-                  <Textarea
-                    id="bio"
-                    value={formData.bio}
-                    onChange={(e) => handleChange('bio', e.target.value)}
-                    placeholder="Describe your experience, approach, and what makes you reliable..."
-                    rows={4}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <Label>Profile Photo</Label>
-                  <div className="flex items-center gap-4">
-                    {formData.profile_photo && (
-                      <img 
-                        src={formData.profile_photo} 
-                        alt="Profile" 
-                        className="w-20 h-20 rounded-full object-cover"
-                      />
-                    )}
-                    <label className="cursor-pointer">
-                      <div className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                        <Upload className="w-4 h-4" />
-                        <span className="text-sm">Upload Photo</span>
-                      </div>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handlePhotoUpload}
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
-                </div>
+          <CardContent className="grid md:grid-cols-2 gap-4">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0">
+                <DollarSign className="w-5 h-5 text-teal-600" />
               </div>
+              <div>
+                <div className="font-semibold text-gray-900">Keep 100% of your earnings</div>
+                <div className="text-sm text-gray-600">No commission fees on bookings</div>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                <Award className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <div className="font-semibold text-gray-900">Build trusted reputation</div>
+                <div className="text-sm text-gray-600">Reviews and verified badges</div>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                <Target className="w-5 h-5 text-purple-600" />
+              </div>
+              <div>
+                <div className="font-semibold text-gray-900">Direct host matching</div>
+                <div className="text-sm text-gray-600">No middlemen or agencies</div>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                <Calendar className="w-5 h-5 text-green-600" />
+              </div>
+              <div>
+                <div className="font-semibold text-gray-900">Control your schedule</div>
+                <div className="text-sm text-gray-600">Set your availability and pricing</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-              {/* Service Area */}
-              <div className="space-y-4 pt-6 border-t">
-                <h3 className="font-semibold text-lg flex items-center gap-2">
-                  <MapPin className="w-5 h-5 text-blue-600" />
-                  Service Area
-                </h3>
-                
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="city">City/Town *</Label>
-                    <Input
-                      id="city"
-                      value={formData.city}
-                      onChange={(e) => handleChange('city', e.target.value)}
-                      placeholder="e.g., Brighton"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="postcode_prefix">Postcode Prefix *</Label>
-                    <Input
-                      id="postcode_prefix"
-                      value={formData.postcode_prefix}
-                      onChange={(e) => handleChange('postcode_prefix', e.target.value)}
-                      placeholder="e.g., BN1"
-                      required
-                    />
-                  </div>
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Professional Profile */}
+          <Card id="profile-section">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-2xl">
+                <span className="w-8 h-8 rounded-full bg-teal-600 text-white flex items-center justify-center text-sm">👤</span>
+                Professional Profile
+              </CardTitle>
+              <CardDescription className="text-base">
+                Add what helps hosts trust you. <span className="font-semibold text-teal-600">2 Minute Setup</span>
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <Label htmlFor="display_name">Display Name *</Label>
+                  <Input
+                    id="display_name"
+                    value={formData.display_name}
+                    onChange={(e) => handleChange('display_name', e.target.value)}
+                    placeholder="e.g., Sarah's Cleaning Services"
+                    required
+                    className="mt-1"
+                  />
                 </div>
 
                 <div>
-                  <Label htmlFor="radius">Service Radius (miles)</Label>
+                  <Label htmlFor="experience_level">Experience Level *</Label>
                   <Select 
-                    value={formData.radius_miles.toString()}
-                    onValueChange={(val) => handleChange('radius_miles', parseInt(val))}
+                    value={formData.experience_level}
+                    onValueChange={(val) => handleChange('experience_level', val)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="mt-1">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="5">5 miles</SelectItem>
-                      <SelectItem value="10">10 miles</SelectItem>
-                      <SelectItem value="15">15 miles</SelectItem>
-                      <SelectItem value="20">20 miles</SelectItem>
-                      <SelectItem value="30">30 miles</SelectItem>
+                      <SelectItem value="beginner">Beginner (0-1 year)</SelectItem>
+                      <SelectItem value="intermediate">Intermediate (1-3 years)</SelectItem>
+                      <SelectItem value="experienced">Experienced (3-5 years)</SelectItem>
+                      <SelectItem value="expert">Expert (5+ years)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
-              {/* Pricing */}
-              <div className="space-y-4 pt-6 border-t">
-                <h3 className="font-semibold text-lg">Your Pricing</h3>
-                
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="base_price">Base Price (£) *</Label>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <Label htmlFor="city">Location / Service Area *</Label>
+                  <div className="flex gap-2 mt-1">
                     <Input
-                      id="base_price"
-                      type="number"
-                      step="0.01"
-                      value={formData.base_price}
-                      onChange={(e) => handleChange('base_price', e.target.value)}
-                      placeholder="e.g., 50"
+                      id="city"
+                      value={formData.service_area_city}
+                      onChange={(e) => handleChange('service_area_city', e.target.value)}
+                      placeholder="City"
                       required
+                      className="flex-1"
                     />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="minimum_charge">Minimum Charge (£) *</Label>
                     <Input
-                      id="minimum_charge"
-                      type="number"
-                      step="0.01"
-                      value={formData.minimum_charge}
-                      onChange={(e) => handleChange('minimum_charge', e.target.value)}
-                      placeholder="e.g., 40"
+                      value={formData.service_area_postcode}
+                      onChange={(e) => handleChange('service_area_postcode', e.target.value)}
+                      placeholder="Postcode"
                       required
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="price_per_bedroom">Per Bedroom (£)</Label>
-                    <Input
-                      id="price_per_bedroom"
-                      type="number"
-                      step="0.01"
-                      value={formData.price_per_bedroom}
-                      onChange={(e) => handleChange('price_per_bedroom', e.target.value)}
-                      placeholder="e.g., 10"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="price_per_bathroom">Per Bathroom (£)</Label>
-                    <Input
-                      id="price_per_bathroom"
-                      type="number"
-                      step="0.01"
-                      value={formData.price_per_bathroom}
-                      onChange={(e) => handleChange('price_per_bathroom', e.target.value)}
-                      placeholder="e.g., 15"
+                      className="w-32"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Availability */}
-              <div className="space-y-6 pt-6 border-t">
-                <div>
-                  <h3 className="font-semibold text-lg flex items-center gap-2 mb-2">
-                    <CalendarIcon className="w-5 h-5 text-blue-600" />
-                    Set Your Availability
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    Let hosts know when you're available to work. You can update this anytime from your dashboard.
-                  </p>
-                </div>
+              <div>
+                <Label htmlFor="bio">Short Professional Bio *</Label>
+                <Textarea
+                  id="bio"
+                  value={formData.bio}
+                  onChange={(e) => handleChange('bio', e.target.value)}
+                  placeholder="Tell hosts about your experience, approach to cleaning, and what makes you reliable..."
+                  rows={4}
+                  required
+                  className="mt-1"
+                />
+              </div>
+
+              <div className="border-t pt-6">
+                <Label className="text-base font-semibold mb-3 block">Optional (Highly Recommended)</Label>
                 
-                <div className="bg-gray-50 rounded-xl p-6 space-y-6">
-                  {/* Step 1: Select Dates */}
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-semibold">
-                        1
-                      </div>
-                      <Label className="text-base font-semibold">Select Available Dates</Label>
-                    </div>
-                    <div className="grid lg:grid-cols-[1fr_320px] gap-4">
-                      <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                        <Calendar
-                          mode="multiple"
-                          selected={selectedDates}
-                          onSelect={setSelectedDates}
-                          disabled={(date) => date < new Date()}
-                          className="rounded-md w-full"
+                <div className="space-y-4">
+                  <div>
+                    <Label>Profile Photo</Label>
+                    <div className="flex items-center gap-4 mt-1">
+                      {formData.profile_photo && (
+                        <img 
+                          src={formData.profile_photo} 
+                          alt="Profile" 
+                          className="w-20 h-20 rounded-full object-cover border-2 border-teal-200"
                         />
-                      </div>
-                      
-                      {/* Bulk Date Selector */}
-                      <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm space-y-4">
-                        <div className="flex items-center gap-2 pb-3 border-b">
-                          <Sparkles className="w-5 h-5 text-blue-600" />
-                          <h4 className="font-semibold">Bulk Date Range</h4>
+                      )}
+                      <label className="cursor-pointer">
+                        <div className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                          <Upload className="w-4 h-4" />
+                          <span className="text-sm">Upload Photo</span>
                         </div>
-                        <div className="space-y-3">
-                          <div>
-                            <Label className="text-sm">Start Date</Label>
-                            <Input
-                              type="date"
-                              value={bulkStart}
-                              onChange={(e) => setBulkStart(e.target.value)}
-                              min={format(new Date(), 'yyyy-MM-dd')}
-                              className="mt-1"
-                            />
-                          </div>
-                          <div>
-                            <Label className="text-sm">End Date</Label>
-                            <Input
-                              type="date"
-                              value={bulkEnd}
-                              onChange={(e) => setBulkEnd(e.target.value)}
-                              min={bulkStart || format(new Date(), 'yyyy-MM-dd')}
-                              className="mt-1"
-                            />
-                          </div>
-                          <Button 
-                            type="button"
-                            onClick={handleBulkDateSelection}
-                            disabled={!bulkStart || !bulkEnd}
-                            className="w-full bg-blue-600 hover:bg-blue-700"
-                          >
-                            Select Date Range
-                          </Button>
-                          <p className="text-xs text-gray-500">
-                            This will select all dates between the start and end date
-                          </p>
-                        </div>
-                      </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handlePhotoUpload(e, 'profile')}
+                          className="hidden"
+                        />
+                      </label>
                     </div>
-                    {selectedDates.length > 0 && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">
-                          {selectedDates.length} date{selectedDates.length !== 1 ? 's' : ''} selected
-                        </Badge>
+                  </div>
+
+                  <div>
+                    <Label>Work Photos (Portfolio)</Label>
+                    <div className="mt-1">
+                      <label className="cursor-pointer block">
+                        <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center hover:border-teal-300 transition-colors">
+                          <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                          <p className="text-sm text-gray-600">Upload before/after photos of your work</p>
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handlePhotoUpload(e, 'work')}
+                          className="hidden"
+                        />
+                      </label>
+                      {formData.work_photos.length > 0 && (
+                        <div className="grid grid-cols-4 gap-2 mt-3">
+                          {formData.work_photos.map((photo, idx) => (
+                            <img 
+                              key={idx}
+                              src={photo} 
+                              alt={`Work ${idx + 1}`} 
+                              className="w-full h-24 object-cover rounded-lg border"
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="certifications">Certification Badges</Label>
+                    <Input
+                      id="certifications"
+                      value={formData.certifications}
+                      onChange={(e) => handleChange('certifications', e.target.value)}
+                      placeholder="e.g., DBS checked, Fully insured, First Aid certified"
+                      className="mt-1"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="holiday_experience">Holiday Let Experience Notes</Label>
+                    <Textarea
+                      id="holiday_experience"
+                      value={formData.holiday_let_experience}
+                      onChange={(e) => handleChange('holiday_let_experience', e.target.value)}
+                      placeholder="Describe your experience with holiday home turnovers..."
+                      rows={3}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-blue-900">
+                  <strong>💡 Tip:</strong> Profiles with photos and experience details receive more job requests.
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Pricing */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-2xl">
+                <span className="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center text-sm">💰</span>
+                Your Pricing
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <Label htmlFor="base_price">Base Price (£) *</Label>
+                  <Input
+                    id="base_price"
+                    type="number"
+                    step="0.01"
+                    value={formData.base_price}
+                    onChange={(e) => handleChange('base_price', e.target.value)}
+                    placeholder="75"
+                    required
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Your standard rate for a typical turnover clean</p>
+                </div>
+
+                <div>
+                  <Label htmlFor="minimum_charge">Minimum Charge (£) *</Label>
+                  <Input
+                    id="minimum_charge"
+                    type="number"
+                    step="0.01"
+                    value={formData.minimum_charge}
+                    onChange={(e) => handleChange('minimum_charge', e.target.value)}
+                    placeholder="50"
+                    required
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Lowest price for smaller jobs</p>
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-base font-semibold mb-3 block">Add Optional Services</Label>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <Checkbox
+                      checked={formData.optional_services.laundry}
+                      onCheckedChange={(v) => handleNestedChange('optional_services', 'laundry', v)}
+                    />
+                    <span>Laundry</span>
+                  </label>
+                  <label className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <Checkbox
+                      checked={formData.optional_services.linen_changes}
+                      onCheckedChange={(v) => handleNestedChange('optional_services', 'linen_changes', v)}
+                    />
+                    <span>Linen Changes</span>
+                  </label>
+                  <label className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <Checkbox
+                      checked={formData.optional_services.deep_cleaning}
+                      onCheckedChange={(v) => handleNestedChange('optional_services', 'deep_cleaning', v)}
+                    />
+                    <span>Deep Cleaning</span>
+                  </label>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Smart Availability */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-2xl">
+                <span className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm">📅</span>
+                Smart Availability
+              </CardTitle>
+              <CardDescription>Choose how you want to work</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <label className={`flex items-start gap-4 p-4 border-2 rounded-lg cursor-pointer transition-all ${formData.availability_mode === 'active' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                  <input
+                    type="radio"
+                    name="availability_mode"
+                    value="active"
+                    checked={formData.availability_mode === 'active'}
+                    onChange={(e) => handleChange('availability_mode', e.target.value)}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                      <span className="font-semibold text-lg">Active Mode</span>
+                      <Badge className="bg-green-100 text-green-700">Recommended</Badge>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-3">You are actively looking for work</p>
+                    
+                    {formData.availability_mode === 'active' && (
+                      <div className="space-y-4 mt-4 pt-4 border-t">
+                        <div>
+                          <Label className="text-sm font-medium mb-2 block">Preferred Working Days</Label>
+                          <div className="flex flex-wrap gap-2">
+                            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                              <Button
+                                key={day}
+                                type="button"
+                                variant={formData.preferred_days.includes(day) ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => toggleDay(day)}
+                                className={formData.preferred_days.includes(day) ? "bg-green-600" : ""}
+                              >
+                                {day}
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <Label className="text-sm font-medium mb-2 block">Time Windows</Label>
+                          <div className="flex gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => addTimeWindow('morning')}
+                            >
+                              <Clock className="w-4 h-4 mr-1" />
+                              Morning Turnover (08:00–12:00)
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => addTimeWindow('afternoon')}
+                            >
+                              <Clock className="w-4 h-4 mr-1" />
+                              Afternoon Turnover (12:00–17:00)
+                            </Button>
+                          </div>
+                          {formData.time_windows.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {formData.time_windows.map((window, idx) => (
+                                <Badge key={idx} variant="outline" className="bg-green-50">
+                                  {window.label}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
+                </label>
 
-                  {/* Step 2: Set Time Windows */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-semibold">
-                          2
-                        </div>
-                        <Label className="text-base font-semibold">Set Time Windows</Label>
-                      </div>
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="sm"
-                        onClick={addTimeSlot}
-                        className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                      >
-                        <Clock className="w-4 h-4 mr-1" />
-                        Add Window
-                      </Button>
+                <label className={`flex items-start gap-4 p-4 border-2 rounded-lg cursor-pointer transition-all ${formData.availability_mode === 'flexible' ? 'border-yellow-500 bg-yellow-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                  <input
+                    type="radio"
+                    name="availability_mode"
+                    value="flexible"
+                    checked={formData.availability_mode === 'flexible'}
+                    onChange={(e) => handleChange('availability_mode', e.target.value)}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                      <span className="font-semibold text-lg">Flexible Mode</span>
+                      <Badge className="bg-yellow-100 text-yellow-700">⭐ Most Popular</Badge>
                     </div>
-                    
-                    <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm space-y-3">
-                      {timeSlots.map((slot, index) => (
-                        <div key={index} className="flex items-center gap-3">
-                          <div className="flex-1 grid grid-cols-[1fr_auto_1fr] gap-2 items-center">
-                            <div>
-                              <Label className="text-xs text-gray-500 mb-1 block">Start Time</Label>
-                              <Input
-                                type="time"
-                                value={slot.start}
-                                onChange={(e) => updateTimeSlot(index, 'start', e.target.value)}
-                                className="h-10"
-                              />
-                            </div>
-                            <div className="text-gray-400 pt-5">→</div>
-                            <div>
-                              <Label className="text-xs text-gray-500 mb-1 block">End Time</Label>
-                              <Input
-                                type="time"
-                                value={slot.end}
-                                onChange={(e) => updateTimeSlot(index, 'end', e.target.value)}
-                                className="h-10"
-                              />
-                            </div>
-                          </div>
-                          {timeSlots.length > 1 && (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => removeTimeSlot(index)}
-                              className="mt-5 text-red-500 hover:text-red-700 hover:bg-red-50"
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
+                    <p className="text-sm text-gray-600 mb-1">Best for earning more without burnout</p>
+                    <p className="text-sm text-gray-700">• Receive job requests<br />• Accept or decline before booking is confirmed</p>
                   </div>
+                </label>
 
-                  {/* Step 3: Add to Schedule */}
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-semibold">
-                        3
-                      </div>
-                      <Label className="text-base font-semibold">Add to Your Schedule</Label>
+                <label className={`flex items-start gap-4 p-4 border-2 rounded-lg cursor-pointer transition-all ${formData.availability_mode === 'unavailable' ? 'border-red-500 bg-red-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                  <input
+                    type="radio"
+                    name="availability_mode"
+                    value="unavailable"
+                    checked={formData.availability_mode === 'unavailable'}
+                    onChange={(e) => handleChange('availability_mode', e.target.value)}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                      <span className="font-semibold text-lg">Unavailable Mode</span>
                     </div>
-                    
-                    <Button 
-                      type="button"
-                      onClick={addAvailability}
-                      className="w-full bg-blue-600 hover:bg-blue-700 h-11"
-                      disabled={selectedDates.length === 0}
-                    >
-                      <CalendarIcon className="w-4 h-4 mr-2" />
-                      Add Availability
-                    </Button>
+                    <p className="text-sm text-gray-600">Block personal time or holidays</p>
                   </div>
-
-                  {/* Schedule Preview */}
-                  {availability.length > 0 && (
-                    <div className="space-y-3 pt-4 border-t border-gray-200">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-base font-semibold">Your Schedule</Label>
-                        <Badge variant="outline" className="bg-white">
-                          {availability.length} day{availability.length !== 1 ? 's' : ''}
-                        </Badge>
-                      </div>
-                      <div className="space-y-2 max-h-80 overflow-y-auto pr-2">
-                        {availability
-                          .sort((a, b) => new Date(a.date) - new Date(b.date))
-                          .map((avail, index) => (
-                          <div 
-                            key={index} 
-                            className="flex items-start justify-between p-4 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow group"
-                          >
-                            <div className="flex items-start gap-3 flex-1 min-w-0">
-                              <CalendarIcon className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                              <div className="min-w-0 flex-1">
-                                <div className="font-semibold text-gray-900 text-sm">
-                                  {format(new Date(avail.date), 'EEEE, MMMM d, yyyy')}
-                                </div>
-                                <div className="flex flex-wrap gap-2 mt-2">
-                                  {avail.timeSlots.map((slot, i) => (
-                                    <Badge 
-                                      key={i}
-                                      variant="outline"
-                                      className="bg-blue-50 text-blue-700 border-blue-200 text-xs"
-                                    >
-                                      <Clock className="w-3 h-3 mr-1" />
-                                      {slot.start} – {slot.end}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              </div>
-                            </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => removeAvailability(index)}
-                              className="text-gray-400 hover:text-red-600 hover:bg-red-50 flex-shrink-0 ml-2"
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                </label>
               </div>
 
-              {/* Subscription Choice */}
-              <div className="space-y-4 pt-6 border-t">
-                <h3 className="font-semibold text-lg">Choose Your Plan</h3>
-                
-                <div className="grid md:grid-cols-2 gap-4">
-                  <label className={`cursor-pointer border-2 rounded-lg p-4 ${formData.subscription_plan === 'basic' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
-                    <input
-                      type="radio"
-                      name="plan"
-                      value="basic"
-                      checked={formData.subscription_plan === 'basic'}
-                      onChange={(e) => handleChange('subscription_plan', e.target.value)}
-                      className="mb-2"
-                    />
-                    <div className="font-semibold">Basic - £5/month</div>
-                    <div className="text-sm text-gray-600">All essential features</div>
-                  </label>
+              {formData.availability_mode === 'flexible' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
+                  <TrendingUp className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm text-blue-900">
+                    <strong>💡 Soft Conversion Message:</strong> 68% of top-rated cleaners use Flexible Mode.
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-                  <label className={`cursor-pointer border-2 rounded-lg p-4 ${formData.subscription_plan === 'pro' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
-                    <input
-                      type="radio"
-                      name="plan"
-                      value="pro"
-                      checked={formData.subscription_plan === 'pro'}
-                      onChange={(e) => handleChange('subscription_plan', e.target.value)}
-                      className="mb-2"
-                    />
-                    <div className="font-semibold">Pro - £10/month</div>
-                    <div className="text-sm text-gray-600">Priority + verified badge</div>
-                  </label>
+          {/* Automation & Smart Matching */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-2xl">
+                <span className="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center text-sm">🤖</span>
+                Automation & Smart Matching
+              </CardTitle>
+              <CardDescription>Set job automation rules (Growth Feature)</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <Label className="text-base font-medium">Auto-accept jobs within price range</Label>
+                    <p className="text-sm text-gray-500">Automatically accept jobs that match your criteria</p>
+                  </div>
+                  <Switch
+                    checked={formData.auto_accept_enabled}
+                    onCheckedChange={(v) => handleChange('auto_accept_enabled', v)}
+                  />
                 </div>
 
-                <p className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
-                  ✨ Start with a 30-day free trial. No payment required right now. After your trial ends, you'll be automatically enrolled in the plan you selected. You can cancel anytime.
-                </p>
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <Label className="text-base font-medium">Auto-accept jobs within travel radius</Label>
+                    <p className="text-sm text-gray-500">Only auto-accept jobs within your service area</p>
+                  </div>
+                  <Switch
+                    checked={formData.auto_accept_radius}
+                    onCheckedChange={(v) => handleChange('auto_accept_radius', v)}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="max_jobs">Maximum jobs per day</Label>
+                  <Input
+                    id="max_jobs"
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={formData.max_jobs_per_day}
+                    onChange={(e) => handleChange('max_jobs_per_day', parseInt(e.target.value))}
+                    className="mt-1 w-32"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="travel_radius">Travel Radius</Label>
+                  <Select 
+                    value={formData.travel_radius.toString()}
+                    onValueChange={(val) => handleChange('travel_radius', parseInt(val))}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="5">5 miles</SelectItem>
+                      <SelectItem value="10">10 miles</SelectItem>
+                      <SelectItem value="20">20 miles</SelectItem>
+                      <SelectItem value="30">Custom radius (30 miles)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500 mt-1">💡 Tip: Shorter travel radius increases repeat client bookings</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Reputation System */}
+          <Card className="bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-2xl">
+                <Award className="w-8 h-8 text-amber-600" />
+                Reputation & Ranking System
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-700 mb-4">Your profile visibility improves based on:</p>
+              <div className="grid md:grid-cols-2 gap-3">
+                <div className="flex items-center gap-3 p-3 bg-white rounded-lg">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  <span className="text-sm">Response speed</span>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-white rounded-lg">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  <span className="text-sm">Job completion rate</span>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-white rounded-lg">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  <span className="text-sm">Host reviews</span>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-white rounded-lg">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  <span className="text-sm">Reliability</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Subscription Comparison */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-2xl">
+                <span className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-sm">🏆</span>
+                Subscription Comparison
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <label className={`cursor-pointer border-2 rounded-lg p-6 transition-all ${formData.subscription_plan === 'basic' ? 'border-teal-500 bg-teal-50' : 'border-gray-200'}`}>
+                  <input
+                    type="radio"
+                    name="subscription_plan"
+                    value="basic"
+                    checked={formData.subscription_plan === 'basic'}
+                    onChange={(e) => handleChange('subscription_plan', e.target.value)}
+                    className="mb-3"
+                  />
+                  <div className="font-bold text-xl mb-2">Basic — £5/month</div>
+                  <div className="text-sm text-gray-600 mb-3">Best for starting out</div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <span>Profile listing</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <span>Availability calendar</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <span>Job notifications</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <span>Messaging</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <span>Reviews</span>
+                    </div>
+                  </div>
+                </label>
+
+                <label className={`cursor-pointer border-2 rounded-lg p-6 transition-all relative ${formData.subscription_plan === 'pro' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200'}`}>
+                  <Badge className="absolute top-4 right-4 bg-indigo-600">⭐ Recommended</Badge>
+                  <input
+                    type="radio"
+                    name="subscription_plan"
+                    value="pro"
+                    checked={formData.subscription_plan === 'pro'}
+                    onChange={(e) => handleChange('subscription_plan', e.target.value)}
+                    className="mb-3"
+                  />
+                  <div className="font-bold text-xl mb-2">Pro — £10/month</div>
+                  <div className="text-sm text-gray-600 mb-3">Recommended for Growth</div>
+                  <div className="text-sm font-medium text-indigo-700 mb-3">
+                    Pro gives you stronger visibility and more job opportunities
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm">
+                      <CheckCircle className="w-4 h-4 text-indigo-600" />
+                      <span>Priority search placement</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <CheckCircle className="w-4 h-4 text-indigo-600" />
+                      <span>Auto-accept job rules</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <CheckCircle className="w-4 h-4 text-indigo-600" />
+                      <span>Earnings analytics</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <CheckCircle className="w-4 h-4 text-indigo-600" />
+                      <span>Verified Cleaner Badge</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <CheckCircle className="w-4 h-4 text-indigo-600" />
+                      <span>Repeat client matching</span>
+                    </div>
+                  </div>
+                </label>
               </div>
 
-              <Button 
-                type="submit" 
-                className="w-full bg-blue-600 hover:bg-blue-700"
-                disabled={loading}
-              >
-                {loading ? 'Creating Profile...' : 'Start Free Trial'}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+              {showUpgradeMessage && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className="text-sm text-blue-900">
+                    💡 Many professional cleaners upgrade to Pro after securing their first 3–5 regular clients.
+                  </p>
+                </div>
+              )}
+
+              {!showUpgradeMessage && (
+                <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+                  <p className="text-sm text-indigo-900">
+                    ✨ Pro cleaners typically earn more through repeat clients and priority matching.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Performance Dashboard Preview */}
+          <Card className="bg-gradient-to-br from-gray-50 to-slate-50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-2xl">
+                <BarChart3 className="w-8 h-8 text-slate-600" />
+                Your Professional Performance Dashboard Preview
+              </CardTitle>
+              <CardDescription>After setup you will be able to track:</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-4 gap-4">
+                <div className="p-4 bg-white rounded-lg border">
+                  <div className="text-2xl font-bold text-gray-900">0</div>
+                  <div className="text-sm text-gray-600">Jobs completed</div>
+                </div>
+                <div className="p-4 bg-white rounded-lg border">
+                  <div className="text-2xl font-bold text-gray-900">£0</div>
+                  <div className="text-sm text-gray-600">Earnings estimate</div>
+                </div>
+                <div className="p-4 bg-white rounded-lg border">
+                  <div className="text-2xl font-bold text-gray-900">—</div>
+                  <div className="text-sm text-gray-600">Rating score</div>
+                </div>
+                <div className="p-4 bg-white rounded-lg border">
+                  <div className="text-2xl font-bold text-gray-900">0%</div>
+                  <div className="text-sm text-gray-600">Repeat client rate</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Trust & Safety */}
+          <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-2xl">
+                <Shield className="w-8 h-8 text-green-600" />
+                Trust & Safety
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-green-600 mt-1" />
+                  <div>
+                    <div className="font-semibold">Verified host network</div>
+                    <div className="text-sm text-gray-600">All hosts are verified property owners</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-green-600 mt-1" />
+                  <div>
+                    <div className="font-semibold">Direct messaging only</div>
+                    <div className="text-sm text-gray-600">Communication stays on platform</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-green-600 mt-1" />
+                  <div>
+                    <div className="font-semibold">Transparent reviews</div>
+                    <div className="text-sm text-gray-600">Build your reputation with real feedback</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-green-600 mt-1" />
+                  <div>
+                    <div className="font-semibold">Professional conduct standards</div>
+                    <div className="text-sm text-gray-600">Guidelines protect both parties</div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Submit */}
+          <div className="text-center space-y-4">
+            <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
+              <p className="text-sm text-teal-900">
+                ✨ <strong>30-day free trial</strong> • No payment required right now • Cancel anytime
+              </p>
+            </div>
+            <Button 
+              type="submit" 
+              className="bg-teal-600 hover:bg-teal-700 text-lg px-12 py-6 h-auto"
+              disabled={loading}
+            >
+              {loading ? 'Creating Profile...' : '🚀 Save & Publish Professional Profile'}
+            </Button>
+          </div>
+        </form>
       </div>
     </div>
   );
