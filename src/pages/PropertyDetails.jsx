@@ -273,8 +273,10 @@ export default function PropertyDetails() {
       subtotal: subtotal,
       cleaning_fee: cleaningFee,
       total_amount: total,
-      booking_status: "pending",
+      booking_status: "awaiting_decision",
       booking_type: "request",
+      request_timestamp: new Date().toISOString(),
+      decision_deadline: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       guest_message: guestMessage,
       payment_link_id: crypto.randomUUID().slice(0, 8),
     });
