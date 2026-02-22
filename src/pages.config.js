@@ -48,6 +48,11 @@
  * The mainPage value must match a key in the PAGES object exactly.
  */
 import AboutUs from './pages/AboutUs';
+import CleanKeep from './pages/CleanKeep';
+import CleanerDashboard from './pages/CleanerDashboard';
+import CleanerMarketplace from './pages/CleanerMarketplace';
+import CleanerProfile from './pages/CleanerProfile';
+import CleanerSignup from './pages/CleanerSignup';
 import CreateProperty from './pages/CreateProperty';
 import EditProperty from './pages/EditProperty';
 import Home from './pages/Home';
@@ -61,16 +66,16 @@ import Pay from './pages/Pay';
 import PropertyDetails from './pages/PropertyDetails';
 import Search from './pages/Search';
 import Subscription from './pages/Subscription';
-import CleanerMarketplace from './pages/CleanerMarketplace';
-import CleanerProfile from './pages/CleanerProfile';
-import CleanerDashboard from './pages/CleanerDashboard';
-import CleanKeep from './pages/CleanKeep';
-import CleanerSignup from './pages/CleanerSignup';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "AboutUs": AboutUs,
+    "CleanKeep": CleanKeep,
+    "CleanerDashboard": CleanerDashboard,
+    "CleanerMarketplace": CleanerMarketplace,
+    "CleanerProfile": CleanerProfile,
+    "CleanerSignup": CleanerSignup,
     "CreateProperty": CreateProperty,
     "EditProperty": EditProperty,
     "Home": Home,
@@ -84,11 +89,6 @@ export const PAGES = {
     "PropertyDetails": PropertyDetails,
     "Search": Search,
     "Subscription": Subscription,
-    "CleanerMarketplace": CleanerMarketplace,
-    "CleanerProfile": CleanerProfile,
-    "CleanerDashboard": CleanerDashboard,
-    "CleanKeep": CleanKeep,
-    "CleanerSignup": CleanerSignup,
 }
 
 export const pagesConfig = {
