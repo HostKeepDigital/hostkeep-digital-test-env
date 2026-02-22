@@ -64,6 +64,8 @@ import Subscription from './pages/Subscription';
 import CleanerMarketplace from './pages/CleanerMarketplace';
 import CleanerProfile from './pages/CleanerProfile';
 import CleanerDashboard from './pages/CleanerDashboard';
+import CleanKeep from './pages/CleanKeep';
+import CleanerSignup from './pages/CleanerSignup';
 import __Layout from './Layout.jsx';
 
 
@@ -85,6 +87,8 @@ export const PAGES = {
     "CleanerMarketplace": CleanerMarketplace,
     "CleanerProfile": CleanerProfile,
     "CleanerDashboard": CleanerDashboard,
+    "CleanKeep": CleanKeep,
+    "CleanerSignup": CleanerSignup,
 }
 
 export const pagesConfig = {
