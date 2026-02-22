@@ -522,25 +522,7 @@ export default function CleanKeep() {
             </p>
           </div>
 
-          {/* Designed for UK Holiday Market */}
-          <Card className="bg-gradient-to-br from-blue-50 to-teal-50 border-2 border-teal-200">
-            <CardHeader>
-              <CardTitle className="text-2xl text-center">
-                Designed for the UK Holiday Market 🇬🇧
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-center">
-              <p className="text-lg text-gray-700 mb-4">Focused on:</p>
-              <div className="flex flex-wrap justify-center gap-3">
-                <Badge className="bg-blue-600">Coastal holiday homes</Badge>
-                <Badge className="bg-teal-600">Countryside stays</Badge>
-                <Badge className="bg-purple-600">Staycation hotspots</Badge>
-              </div>
-              <p className="text-gray-600 mt-6">
-                As HostKeep grows, so does your opportunity pipeline.
-              </p>
-            </CardContent>
-          </Card>
+
         </div>
       </section>
 
