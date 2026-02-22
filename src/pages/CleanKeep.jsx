@@ -77,13 +77,27 @@ export default function CleanKeep() {
               CleanKeep
             </h1>
             
-            <p className="text-xl md:text-2xl text-gray-700 font-medium max-w-3xl mx-auto mb-4">
-              The dedicated cleaner network inside HostKeep
+            <p className="text-xl text-gray-500 mb-8">
+              The Cleaner Network by HostKeep
             </p>
 
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
-              CleanKeep helps hosts find reliable cleaners and helps cleaners secure consistent holiday-let work — all in one place.
+            <div className="max-w-2xl mx-auto mb-8">
+              <div className="space-y-2 text-lg text-gray-700 font-medium">
+                <p>✓ Flexible holiday home cleaning work</p>
+                <p>✓ Direct contact with hosts</p>
+                <p>✓ No agency commissions</p>
+              </div>
+            </div>
+
+            <p className="text-base text-gray-600 max-w-2xl mx-auto leading-relaxed mb-8">
+              CleanKeep connects reliable cleaners with independent UK holiday home owners who need trusted, professional support.
             </p>
+
+            <Link to={createPageUrl('CleanerSignup')}>
+              <Button size="lg" className="bg-teal-600 hover:bg-teal-700 text-lg px-8 py-4">
+                Start Your 30-Day Free Trial
+              </Button>
+            </Link>
           </motion.div>
         </div>
       </section>
@@ -147,68 +161,408 @@ export default function CleanKeep() {
         </div>
       </section>
 
-      {/* What Is CleanKeep? */}
-      <section className="pb-20 px-4">
+      {/* Why CleanKeep Exists */}
+      <section className="py-16 px-4 bg-gray-50">
         <div className="max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <Card className="bg-white border-2 border-gray-100">
+          <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-6">
+            Why CleanKeep Exists
+          </h2>
+          <p className="text-lg text-center text-gray-600 mb-12">
+            Holiday-let cleaning isn't standard domestic cleaning.
+          </p>
+
+          <div className="grid md:grid-cols-2 gap-8 mb-12">
+            <Card>
               <CardHeader>
-                <CardTitle className="text-2xl text-center mb-2">What Is CleanKeep?</CardTitle>
+                <CardTitle className="text-xl">Hosts struggle to find:</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid md:grid-cols-2 gap-8">
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                      <Shield className="w-5 h-5 text-teal-600" />
-                      Built for Holiday Lets
-                    </h3>
-                    <ul className="space-y-3 text-gray-600">
-                      <li className="flex items-start gap-2">
-                        <CheckCircle className="w-5 h-5 text-teal-500 flex-shrink-0 mt-0.5" />
-                        <span>Cleaner availability synced with bookings</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <MessageSquare className="w-5 h-5 text-teal-500 flex-shrink-0 mt-0.5" />
-                        <span>Direct messaging</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Star className="w-5 h-5 text-teal-500 flex-shrink-0 mt-0.5" />
-                        <span>Transparent reviews</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <CheckCircle className="w-5 h-5 text-teal-500 flex-shrink-0 mt-0.5" />
-                        <span>No commission taken</span>
-                      </li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                      <TrendingUp className="w-5 h-5 text-blue-600" />
-                      Fair & Professional
-                    </h3>
-                    <ul className="space-y-3 text-gray-600">
-                      <li className="flex items-start gap-2">
-                        <CheckCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                        <span>Subscription-based</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <CheckCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                        <span>No race-to-the-bottom pricing</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Star className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                        <span>Merit-based reviews</span>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
+                <ul className="space-y-3 text-gray-700">
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                    Reliable cleaners
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                    Short-notice availability
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                    Professionals who understand holiday-let standards
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                    Someone they trust when they're away
+                  </li>
+                </ul>
               </CardContent>
             </Card>
-          </motion.div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">Cleaners struggle to find:</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3 text-gray-700">
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                    Consistent work
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                    Reliable hosts
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                    Affordable advertising
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                    A way to build a reputation
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="text-center">
+            <p className="text-lg text-gray-600 mb-4">
+              There has never been a simple, low-cost platform connecting the two.
+            </p>
+            <p className="text-2xl font-bold text-teal-600">
+              CleanKeep changes that.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* A Dedicated Cleaning Marketplace */}
+      <section className="py-16 px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+            A Dedicated Cleaning Marketplace Inside HostKeep
+          </h2>
+          <p className="text-lg text-gray-600 mb-8">
+            CleanKeep is fully integrated into the HostKeep platform — connecting you directly with active holiday home owners.
+          </p>
+
+          <Card className="text-left">
+            <CardHeader>
+              <CardTitle>For a simple monthly subscription, you get:</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="grid md:grid-cols-2 gap-3">
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-teal-500" />
+                  <span>Professional public profile</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-teal-500" />
+                  <span>Availability calendar</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-teal-500" />
+                  <span>Job notifications</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-teal-500" />
+                  <span>Direct messaging with hosts</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-teal-500" />
+                  <span>Reviews & ratings</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-teal-500" />
+                  <span>Full control over your pricing</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-teal-500" />
+                  <span>Repeat client management</span>
+                </li>
+              </ul>
+              <p className="text-center text-lg font-semibold text-gray-900 mt-6">
+                No middleman. No commission taken from your work.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Simple Transparent Pricing */}
+      <section className="py-16 px-4 bg-gradient-to-b from-blue-50 to-white">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12">
+            Simple, Transparent Pricing
+          </h2>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <Card className="border-2">
+              <CardHeader>
+                <CardTitle className="text-2xl">Basic</CardTitle>
+                <div className="text-4xl font-bold text-gray-900 mt-2">
+                  £5<span className="text-lg text-gray-500">/month</span>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-teal-500" />
+                    <span>Public cleaner profile</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-teal-500" />
+                    <span>Availability calendar</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-teal-500" />
+                    <span>Job notifications</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-teal-500" />
+                    <span>Messaging</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-teal-500" />
+                    <span>Reviews & ratings</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 border-teal-500 shadow-lg">
+              <CardHeader>
+                <CardTitle className="text-2xl flex items-center gap-2">
+                  Pro
+                  <Badge className="bg-teal-600">Popular</Badge>
+                </CardTitle>
+                <div className="text-4xl font-bold text-gray-900 mt-2">
+                  £10<span className="text-lg text-gray-500">/month</span>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-teal-500" />
+                    <span className="font-medium">Priority placement in search</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-teal-500" />
+                    <span className="font-medium">Auto-accept job option</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-teal-500" />
+                    <span className="font-medium">Repeat client management tools</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-teal-500" />
+                    <span className="font-medium">Earnings analytics</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-teal-500" />
+                    <span className="font-medium">"Verified Cleaner" badge</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+
+          <p className="text-center text-gray-600 mt-8">
+            No hidden fees. Cancel anytime.
+          </p>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="py-16 px-4">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12">
+            How It Works
+          </h2>
+
+          <div className="grid md:grid-cols-4 gap-8">
+            {[
+              {
+                step: "1",
+                title: "Create Your Profile",
+                description: "Add your bio, service area, rates, availability, and photos of past work."
+              },
+              {
+                step: "2",
+                title: "Get Found by Hosts",
+                description: "Hosts browse local cleaners directly through the Cleaner Marketplace."
+              },
+              {
+                step: "3",
+                title: "Accept Jobs",
+                description: "Receive notifications when bookings require cleaning."
+              },
+              {
+                step: "4",
+                title: "Build Your Reputation",
+                description: "Earn reviews and grow long-term client relationships."
+              }
+            ].map((item, idx) => (
+              <Card key={idx}>
+                <CardHeader>
+                  <div className="w-12 h-12 rounded-full bg-teal-600 text-white flex items-center justify-center text-2xl font-bold mb-3">
+                    {item.step}
+                  </div>
+                  <CardTitle className="text-lg">{item.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600 text-sm">{item.description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Additional Sections */}
+      <section className="py-16 px-4 bg-gray-50">
+        <div className="max-w-4xl mx-auto space-y-16">
+          {/* Cleaner Dashboard */}
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-gray-900 mb-6">Cleaner Dashboard</h2>
+            <p className="text-lg text-gray-600 mb-6">Your control centre includes:</p>
+            <div className="grid md:grid-cols-2 gap-4">
+              {[
+                "Availability calendar",
+                "Job requests & confirmations",
+                "Messaging system",
+                "Earnings tracking",
+                "Review management"
+              ].map((item, idx) => (
+                <div key={idx} className="flex items-center gap-2 p-4 bg-white rounded-lg">
+                  <CheckCircle className="w-5 h-5 text-teal-500" />
+                  <span className="text-gray-700">{item}</span>
+                </div>
+              ))}
+            </div>
+            <p className="text-gray-600 mt-6">
+              Pro members can enable automated booking after guest checkout.
+            </p>
+          </div>
+
+          {/* Built Into Growing Ecosystem */}
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-gray-900 mb-6">
+              Built Into a Growing Ecosystem
+            </h2>
+            <p className="text-lg text-gray-600 mb-6">
+              CleanKeep is part of the wider HostKeep platform connecting:
+            </p>
+            <div className="flex justify-center gap-8 mb-6">
+              <Badge className="bg-blue-600 text-lg py-2 px-6">Hosts</Badge>
+              <Badge className="bg-teal-600 text-lg py-2 px-6">Guests</Badge>
+              <Badge className="bg-purple-600 text-lg py-2 px-6">Cleaners</Badge>
+            </div>
+            <div className="text-left max-w-2xl mx-auto space-y-2 text-gray-700">
+              <p>→ More hosts → more bookings</p>
+              <p>→ More bookings → more cleaning demand</p>
+              <p>→ More cleaners → easier hosting → more hosts</p>
+            </div>
+            <p className="text-lg font-semibold text-teal-600 mt-6">
+              This creates a self-sustaining system that grows over time.
+            </p>
+          </div>
+
+          {/* Fair Merit-Based Review System */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl text-center">Fair, Merit-Based Review System</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Star className="w-5 h-5 text-amber-500" />
+                    <span>Hosts rate cleaners</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Star className="w-5 h-5 text-amber-500" />
+                    <span>Cleaners rate hosts</span>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-teal-500" />
+                    <span>Transparent feedback</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-teal-500" />
+                    <span>Top performers rise naturally</span>
+                  </div>
+                </div>
+              </div>
+              <p className="text-center text-gray-600 mt-6">
+                Quality work gets rewarded with more visibility and more jobs.
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Why Cleaners Choose CleanKeep */}
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-gray-900 mb-8">
+              Why Cleaners Choose CleanKeep
+            </h2>
+            <div className="grid md:grid-cols-2 gap-4">
+              {[
+                "Extremely low monthly cost",
+                "No commission on earnings",
+                "Direct working relationships",
+                "Repeat bookings",
+                "Flexible schedule",
+                "Professional positioning (not gig-economy style)"
+              ].map((item, idx) => (
+                <div key={idx} className="flex items-center gap-3 p-4 bg-white rounded-lg text-left">
+                  <CheckCircle className="w-6 h-6 text-teal-500 flex-shrink-0" />
+                  <span className="text-gray-700">{item}</span>
+                </div>
+              ))}
+            </div>
+            <p className="text-lg font-semibold text-teal-600 mt-8">
+              One additional cleaning job per month easily covers the subscription.
+            </p>
+          </div>
+
+          {/* Designed for UK Holiday Market */}
+          <Card className="bg-gradient-to-br from-blue-50 to-teal-50 border-2 border-teal-200">
+            <CardHeader>
+              <CardTitle className="text-2xl text-center">
+                Designed for the UK Holiday Market 🇬🇧
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-center">
+              <p className="text-lg text-gray-700 mb-4">Focused on:</p>
+              <div className="flex flex-wrap justify-center gap-3">
+                <Badge className="bg-blue-600">Coastal holiday homes</Badge>
+                <Badge className="bg-teal-600">Countryside stays</Badge>
+                <Badge className="bg-purple-600">Staycation hotspots</Badge>
+              </div>
+              <p className="text-gray-600 mt-6">
+                As HostKeep grows, so does your opportunity pipeline.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="py-20 px-4 bg-gradient-to-b from-teal-600 to-teal-700 text-white">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            Start Getting Consistent Cleaning Work
+          </h2>
+          <p className="text-xl mb-8 text-teal-100">
+            Join CleanKeep today and connect with trusted holiday home owners near you.
+          </p>
+          <Link to={createPageUrl('CleanerSignup')}>
+            <Button size="lg" className="bg-white text-teal-600 hover:bg-gray-100 text-lg px-8 py-4">
+              Start Free Trial
+            </Button>
+          </Link>
         </div>
       </section>
     </div>
