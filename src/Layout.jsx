@@ -166,9 +166,6 @@ export default function Layout({ children, currentPageName }) {
               <Link to={createPageUrl('Search')} className="text-gray-600 hover:text-gray-900 font-medium">
                 Explore
               </Link>
-              <Link to={createPageUrl('CleanKeep')} className="text-gray-600 hover:text-gray-900 font-medium">
-                CleanKeep
-              </Link>
               {isAuthenticated && (
                 <>
                   <Link to={createPageUrl('MyBookings')} className="text-gray-600 hover:text-gray-900 font-medium">
@@ -179,6 +176,9 @@ export default function Layout({ children, currentPageName }) {
                   </Link>
                 </>
               )}
+              <Link to={createPageUrl('CleanKeep')} className="text-gray-600 hover:text-gray-900 font-medium">
+                CleanKeep
+              </Link>
             </nav>
 
             <div className="flex items-center gap-3">
