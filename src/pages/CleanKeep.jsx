@@ -472,11 +472,11 @@ export default function CleanKeep() {
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <Star className="w-5 h-5 text-amber-500" />
+                    <Star className="w-5 h-5 text-teal-500" />
                     <span>Hosts rate cleaners</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Star className="w-5 h-5 text-amber-500" />
+                    <Star className="w-5 h-5 text-blue-500" />
                     <span>Cleaners rate hosts</span>
                   </div>
                 </div>
