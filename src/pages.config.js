@@ -67,6 +67,7 @@ import Pay from './pages/Pay';
 import PropertyDetails from './pages/PropertyDetails';
 import Search from './pages/Search';
 import Subscription from './pages/Subscription';
+import CleanerSubscriptionPay from './pages/CleanerSubscriptionPay';
 import __Layout from './Layout.jsx';
 
 
@@ -91,6 +92,7 @@ export const PAGES = {
     "PropertyDetails": PropertyDetails,
     "Search": Search,
     "Subscription": Subscription,
+    "CleanerSubscriptionPay": CleanerSubscriptionPay,
 }
 
 export const pagesConfig = {
