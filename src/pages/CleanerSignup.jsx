@@ -116,7 +116,7 @@ export default function CleanerSignup() {
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
             Start Your Cleaner Profile
           </h1>
-          <p className="text-gray-600">30-day free trial • No card required</p>
+          <p className="text-gray-600">30-day free trial • Card required</p>
         </div>
 
         <Card>
@@ -322,7 +322,7 @@ export default function CleanerSignup() {
                 </div>
 
                 <p className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
-                  ✨ Start with a 30-day free trial. No payment required now.
+                  ✨ Start with a 30-day free trial. After your trial ends, you'll be automatically enrolled in the plan you selected.
                 </p>
               </div>
 
