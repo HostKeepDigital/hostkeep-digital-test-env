@@ -90,15 +90,9 @@ export default function CleanKeep() {
               </div>
             </div>
 
-            <p className="text-base text-gray-600 max-w-2xl mx-auto leading-relaxed mb-8">
+            <p className="text-base text-gray-600 max-w-2xl mx-auto leading-relaxed">
               CleanKeep connects reliable cleaners with independent UK holiday home owners who need trusted, professional support.
             </p>
-
-            <Link to={createPageUrl('CleanerSignup')}>
-              <Button size="lg" className="bg-teal-600 hover:bg-teal-700 text-lg px-8 py-4">
-                Start Your 30-Day Free Trial
-              </Button>
-            </Link>
           </motion.div>
         </div>
       </section>
