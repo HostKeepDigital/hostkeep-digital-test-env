@@ -174,19 +174,19 @@ export default function CleanKeep() {
               <CardContent>
                 <ul className="space-y-3 text-gray-700">
                   <li className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                    <CheckCircle className="w-5 h-5 text-teal-500" />
                     Reliable cleaners
                   </li>
                   <li className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                    <CheckCircle className="w-5 h-5 text-teal-500" />
                     Short-notice availability
                   </li>
                   <li className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                    <CheckCircle className="w-5 h-5 text-teal-500" />
                     Professionals who understand holiday-let standards
                   </li>
                   <li className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                    <CheckCircle className="w-5 h-5 text-teal-500" />
                     Someone they trust when they're away
                   </li>
                 </ul>
@@ -200,19 +200,19 @@ export default function CleanKeep() {
               <CardContent>
                 <ul className="space-y-3 text-gray-700">
                   <li className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                    <CheckCircle className="w-5 h-5 text-blue-500" />
                     Consistent work
                   </li>
                   <li className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                    <CheckCircle className="w-5 h-5 text-blue-500" />
                     Reliable hosts
                   </li>
                   <li className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                    <CheckCircle className="w-5 h-5 text-blue-500" />
                     Affordable advertising
                   </li>
                   <li className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                    <CheckCircle className="w-5 h-5 text-blue-500" />
                     A way to build a reputation
                   </li>
                 </ul>
