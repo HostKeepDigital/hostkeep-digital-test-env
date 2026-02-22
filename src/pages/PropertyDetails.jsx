@@ -426,25 +426,6 @@ export default function PropertyDetails() {
                   </span>
                 )}
               </div>
-
-              {/* Host Info */}
-              {host && (
-                <div className="flex items-center gap-3 mt-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
-                  <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center flex-shrink-0">
-                    {host.profile_photo ? (
-                      <img src={host.profile_photo} alt={host.full_name} className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-white font-semibold text-lg">
-                        {host.full_name?.charAt(0)?.toUpperCase() || 'H'}
-                      </span>
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Hosted by</p>
-                    <p className="font-semibold text-gray-900">{host.full_name}</p>
-                  </div>
-                </div>
-              )}
             </div>
             <div className="flex gap-2">
               <Button variant="outline" size="icon" className="rounded-full">
@@ -455,6 +436,25 @@ export default function PropertyDetails() {
               </Button>
             </div>
           </div>
+
+          {/* Host Info */}
+          {host && (
+            <div className="flex items-center gap-3 mb-4 p-3 bg-gray-50 rounded-lg border border-gray-100">
+              <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center flex-shrink-0">
+                {host.profile_photo ? (
+                  <img src={host.profile_photo} alt={host.full_name} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-white font-semibold text-lg">
+                    {host.full_name?.charAt(0)?.toUpperCase() || 'H'}
+                  </span>
+                )}
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Hosted by</p>
+                <p className="font-semibold text-gray-900">{host.full_name}</p>
+              </div>
+            </div>
+          )}
 
           {/* Quick Info Badges */}
           <div className="flex flex-wrap gap-2">
