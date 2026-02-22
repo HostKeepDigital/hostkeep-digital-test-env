@@ -149,13 +149,13 @@ export default function CleanerSignup() {
   const showUpgradeMessage = formData.subscription_plan === 'basic';
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-teal-50 to-white py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white py-12 px-4">
       <div className="max-w-4xl mx-auto">
         {/* Hero Section */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 bg-white rounded-full shadow-sm border border-teal-100">
-            <Sparkles className="w-4 h-4 text-teal-600" />
-            <span className="text-sm font-medium text-teal-700">Join CleanKeep</span>
+          <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 bg-white rounded-full shadow-sm border border-blue-100">
+            <Sparkles className="w-4 h-4 text-blue-600" />
+            <span className="text-sm font-medium text-blue-700">Join CleanKeep</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3">
             Earn More Cleaning Holiday Homes<br />Across the UK
@@ -166,24 +166,24 @@ export default function CleanerSignup() {
           </p>
           <Button 
             onClick={() => document.getElementById('profile-section').scrollIntoView({ behavior: 'smooth' })}
-            className="bg-teal-600 hover:bg-teal-700 text-lg px-8 py-6 h-auto"
+            className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-6 h-auto"
           >
             Complete Your Profile — Start Free
           </Button>
         </div>
 
         {/* Why Choose CleanKeep */}
-        <Card className="mb-8 bg-gradient-to-br from-teal-50 to-blue-50 border-teal-200">
+        <Card className="mb-8 bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Star className="w-6 h-6 text-teal-600" />
+              <Star className="w-6 h-6 text-blue-600" />
               Why Professional Cleaners Choose CleanKeep
             </CardTitle>
           </CardHeader>
           <CardContent className="grid md:grid-cols-2 gap-4">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0">
-                <DollarSign className="w-5 h-5 text-teal-600" />
+              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                <DollarSign className="w-5 h-5 text-blue-600" />
               </div>
               <div>
                 <div className="font-semibold text-gray-900">Keep 100% of your earnings</div>
@@ -225,11 +225,11 @@ export default function CleanerSignup() {
           <Card id="profile-section">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-2xl">
-                <span className="w-8 h-8 rounded-full bg-teal-600 text-white flex items-center justify-center text-sm">👤</span>
+                <span className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm">👤</span>
                 Professional Profile
               </CardTitle>
               <CardDescription className="text-base">
-                Add what helps hosts trust you. <span className="font-semibold text-teal-600">2 Minute Setup</span>
+                Add what helps hosts trust you. <span className="font-semibold text-blue-600">2 Minute Setup</span>
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -312,7 +312,7 @@ export default function CleanerSignup() {
                         <img 
                           src={formData.profile_photo} 
                           alt="Profile" 
-                          className="w-20 h-20 rounded-full object-cover border-2 border-teal-200"
+                          className="w-20 h-20 rounded-full object-cover border-2 border-blue-200"
                         />
                       )}
                       <label className="cursor-pointer">
@@ -334,7 +334,7 @@ export default function CleanerSignup() {
                     <Label>Work Photos (Portfolio)</Label>
                     <div className="mt-1">
                       <label className="cursor-pointer block">
-                        <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center hover:border-teal-300 transition-colors">
+                        <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center hover:border-blue-300 transition-colors">
                           <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
                           <p className="text-sm text-gray-600">Upload before/after photos of your work</p>
                         </div>
@@ -708,7 +708,7 @@ export default function CleanerSignup() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
-                <label className={`cursor-pointer border-2 rounded-lg p-6 transition-all ${formData.subscription_plan === 'basic' ? 'border-teal-500 bg-teal-50' : 'border-gray-200'}`}>
+                <label className={`cursor-pointer border-2 rounded-lg p-6 transition-all ${formData.subscription_plan === 'basic' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
                   <input
                     type="radio"
                     name="subscription_plan"
@@ -876,14 +876,14 @@ export default function CleanerSignup() {
 
           {/* Submit */}
           <div className="text-center space-y-4">
-            <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
-              <p className="text-sm text-teal-900">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-blue-900">
                 ✨ <strong>30-day free trial</strong> • No payment required right now • Cancel anytime
               </p>
             </div>
             <Button 
               type="submit" 
-              className="bg-teal-600 hover:bg-teal-700 text-lg px-12 py-6 h-auto"
+              className="bg-blue-600 hover:bg-blue-700 text-lg px-12 py-6 h-auto"
               disabled={loading}
             >
               {loading ? 'Creating Profile...' : '🚀 Save & Publish Professional Profile'}

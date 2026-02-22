@@ -51,6 +51,7 @@ import AboutUs from './pages/AboutUs';
 import CleanKeep from './pages/CleanKeep';
 import CleanerDashboard from './pages/CleanerDashboard';
 import CleanerMarketplace from './pages/CleanerMarketplace';
+import CleanerPricing from './pages/CleanerPricing';
 import CleanerProfile from './pages/CleanerProfile';
 import CleanerSignup from './pages/CleanerSignup';
 import CreateProperty from './pages/CreateProperty';
@@ -66,7 +67,6 @@ import Pay from './pages/Pay';
 import PropertyDetails from './pages/PropertyDetails';
 import Search from './pages/Search';
 import Subscription from './pages/Subscription';
-import CleanerPricing from './pages/CleanerPricing';
 import __Layout from './Layout.jsx';
 
 
@@ -75,6 +75,7 @@ export const PAGES = {
     "CleanKeep": CleanKeep,
     "CleanerDashboard": CleanerDashboard,
     "CleanerMarketplace": CleanerMarketplace,
+    "CleanerPricing": CleanerPricing,
     "CleanerProfile": CleanerProfile,
     "CleanerSignup": CleanerSignup,
     "CreateProperty": CreateProperty,
@@ -90,7 +91,6 @@ export const PAGES = {
     "PropertyDetails": PropertyDetails,
     "Search": Search,
     "Subscription": Subscription,
-    "CleanerPricing": CleanerPricing,
 }
 
 export const pagesConfig = {
