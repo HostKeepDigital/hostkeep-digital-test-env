@@ -6,10 +6,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sparkles, Upload, MapPin } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Badge } from "@/components/ui/badge";
+import { Sparkles, Upload, MapPin, Calendar as CalendarIcon, Clock, X } from "lucide-react";
 import { toast } from "sonner";
 import { createPageUrl } from "@/utils";
 import { useNavigate } from "react-router-dom";
+import { format } from "date-fns";
 
 export default function CleanerSignup() {
   const navigate = useNavigate();
@@ -41,8 +44,53 @@ export default function CleanerSignup() {
     subscription_plan: "basic"
   });
 
+  const [availability, setAvailability] = useState([]);
+  const [selectedDates, setSelectedDates] = useState([]);
+  const [timeSlots, setTimeSlots] = useState([
+    { start: "09:00", end: "12:00" },
+    { start: "13:00", end: "17:00" }
+  ]);
+
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const addTimeSlot = () => {
+    setTimeSlots([...timeSlots, { start: "09:00", end: "17:00" }]);
+  };
+
+  const removeTimeSlot = (index) => {
+    setTimeSlots(timeSlots.filter((_, i) => i !== index));
+  };
+
+  const updateTimeSlot = (index, field, value) => {
+    const updated = [...timeSlots];
+    updated[index][field] = value;
+    setTimeSlots(updated);
+  };
+
+  const addAvailability = () => {
+    if (selectedDates.length === 0) {
+      toast.error('Please select at least one date');
+      return;
+    }
+    if (timeSlots.length === 0) {
+      toast.error('Please add at least one time slot');
+      return;
+    }
+
+    const newAvailability = selectedDates.map(date => ({
+      date: format(date, 'yyyy-MM-dd'),
+      timeSlots: [...timeSlots]
+    }));
+
+    setAvailability([...availability, ...newAvailability]);
+    setSelectedDates([]);
+    toast.success(`Added availability for ${selectedDates.length} date(s)`);
+  };
+
+  const removeAvailability = (index) => {
+    setAvailability(availability.filter((_, i) => i !== index));
   };
 
   const handlePhotoUpload = async (e) => {
@@ -77,7 +125,7 @@ export default function CleanerSignup() {
       const user = await base44.auth.me();
 
       // Create cleaner profile
-      await base44.entities.Cleaner.create({
+      const cleaner = await base44.entities.Cleaner.create({
         user_id: user.id,
         business_name: formData.business_name,
         bio: formData.bio,
@@ -95,6 +143,23 @@ export default function CleanerSignup() {
         subscription_status: "trial",
         subscription_expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       });
+
+      // Create availability records
+      if (availability.length > 0) {
+        await Promise.all(
+          availability.map(avail => 
+            base44.entities.CleanerAvailability.create({
+              cleaner_id: cleaner.id,
+              date: avail.date,
+              available: true,
+              time_slots: avail.timeSlots.map(slot => ({
+                time: slot.start,
+                available: true
+              }))
+            })
+          )
+        );
+      }
 
       toast.success('Welcome to CleanKeep! Your 30-day trial has started.');
       navigate(createPageUrl('CleanerDashboard'));
@@ -286,6 +351,124 @@ export default function CleanerSignup() {
                       placeholder="e.g., 15"
                     />
                   </div>
+                </div>
+              </div>
+
+              {/* Availability */}
+              <div className="space-y-4 pt-6 border-t">
+                <h3 className="font-semibold text-lg flex items-center gap-2">
+                  <CalendarIcon className="w-5 h-5 text-blue-600" />
+                  Availability (Optional)
+                </h3>
+                <p className="text-sm text-gray-600">Set your initial availability. You can update this anytime from your dashboard.</p>
+                
+                <div className="space-y-4">
+                  <div>
+                    <Label>Select Available Dates</Label>
+                    <div className="border rounded-lg p-4 bg-white">
+                      <Calendar
+                        mode="multiple"
+                        selected={selectedDates}
+                        onSelect={setSelectedDates}
+                        disabled={(date) => date < new Date()}
+                        className="rounded-md"
+                      />
+                    </div>
+                    {selectedDates.length > 0 && (
+                      <p className="text-sm text-gray-600 mt-2">
+                        {selectedDates.length} date(s) selected
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label>Time Windows</Label>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={addTimeSlot}
+                      >
+                        <Clock className="w-4 h-4 mr-1" />
+                        Add Time Slot
+                      </Button>
+                    </div>
+                    <div className="space-y-2">
+                      {timeSlots.map((slot, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <Input
+                            type="time"
+                            value={slot.start}
+                            onChange={(e) => updateTimeSlot(index, 'start', e.target.value)}
+                            className="flex-1"
+                          />
+                          <span className="text-gray-500">to</span>
+                          <Input
+                            type="time"
+                            value={slot.end}
+                            onChange={(e) => updateTimeSlot(index, 'end', e.target.value)}
+                            className="flex-1"
+                          />
+                          {timeSlots.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => removeTimeSlot(index)}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <Button 
+                    type="button"
+                    onClick={addAvailability}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Add Availability
+                  </Button>
+
+                  {availability.length > 0 && (
+                    <div className="space-y-2">
+                      <Label>Added Availability ({availability.length})</Label>
+                      <div className="space-y-2 max-h-48 overflow-y-auto">
+                        {availability.map((avail, index) => (
+                          <div 
+                            key={index} 
+                            className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200"
+                          >
+                            <div>
+                              <div className="font-medium text-sm">
+                                {format(new Date(avail.date), 'EEE, MMM d, yyyy')}
+                              </div>
+                              <div className="text-xs text-gray-600">
+                                {avail.timeSlots.map((slot, i) => (
+                                  <span key={i}>
+                                    {slot.start}–{slot.end}
+                                    {i < avail.timeSlots.length - 1 && ', '}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => removeAvailability(index)}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
