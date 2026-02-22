@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Calendar, MapPin, Star, MessageSquare, Loader2, Home
 } from "lucide-react";
-import { format, parseISO, isBefore, isAfter } from "date-fns";
+import { format, parseISO, isBefore, isAfter, differenceInDays } from "date-fns";
 import ReviewForm from "@/components/reviews/ReviewForm";
 
 export default function MyBookings() {
@@ -62,10 +62,11 @@ export default function MyBookings() {
 
   const today = new Date();
   const upcomingBookings = bookings.filter(b => 
-    ["pending", "confirmed"].includes(b.booking_status) && isAfter(parseISO(b.check_in), today)
+    ["awaiting_decision", "awaiting_payment", "confirmed"].includes(b.booking_status) && isAfter(parseISO(b.check_in), today)
   );
   const activeBookings = bookings.filter(b => 
-    b.booking_status === "checked_in"
+    b.booking_status === "checked_in" || 
+    (b.booking_status === "confirmed" && !isAfter(parseISO(b.check_in), today) && !isBefore(parseISO(b.check_out), today))
   );
   const pastBookings = bookings.filter(b => 
     b.booking_status === "completed" || 
@@ -80,10 +81,45 @@ export default function MyBookings() {
     );
   }
 
-  const BookingCard = ({ booking }) => {
+  const BookingCard = ({ booking, isUpcoming }) => {
     const property = getProperty(booking.property_id);
     const reviewed = hasReviewed(booking.id);
     const showReviewButton = canReview(booking);
+    
+    // Calculate days before check-in
+    const daysBeforeCheckIn = differenceInDays(parseISO(booking.check_in), today);
+    
+    // Determine cancellation button display
+    const getCancelButton = () => {
+      if (isUpcoming) {
+        // Upcoming bookings are always cancellable
+        return (
+          <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50">
+            Cancel Booking
+          </Button>
+        );
+      }
+      
+      // Active bookings logic
+      if (daysBeforeCheckIn <= 7) {
+        // No button within 7 days
+        return null;
+      } else if (daysBeforeCheckIn < 56) {
+        // Less than 56 days: show request button
+        return (
+          <Button variant="outline" size="sm" className="text-amber-600 border-amber-200 hover:bg-amber-50">
+            Request Host Cancel
+          </Button>
+        );
+      } else {
+        // More than 56 days: show cancel button
+        return (
+          <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50">
+            Cancel Booking
+          </Button>
+        );
+      }
+    };
 
     return (
       <motion.div
@@ -124,12 +160,13 @@ export default function MyBookings() {
                   <span className="font-semibold text-teal-600">£{booking.total_amount}</span>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Link to={createPageUrl("PropertyDetails") + `?id=${booking.property_id}`}>
                     <Button variant="outline" size="sm">
                       View Property
                     </Button>
                   </Link>
+                  {getCancelButton()}
                   {showReviewButton && (
                     <Button 
                       size="sm" 
@@ -186,7 +223,7 @@ export default function MyBookings() {
                 </div>
               ) : (
                 upcomingBookings.map(booking => (
-                  <BookingCard key={booking.id} booking={booking} />
+                  <BookingCard key={booking.id} booking={booking} isUpcoming={true} />
                 ))
               )}
             </TabsContent>
@@ -199,7 +236,7 @@ export default function MyBookings() {
                 </div>
               ) : (
                 activeBookings.map(booking => (
-                  <BookingCard key={booking.id} booking={booking} />
+                  <BookingCard key={booking.id} booking={booking} isUpcoming={false} />
                 ))
               )}
             </TabsContent>
