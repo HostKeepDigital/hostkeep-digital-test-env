@@ -304,7 +304,7 @@ export default function CleanKeep() {
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3 mb-2">
-                  <Calendar className="w-6 h-6 text-teal-600" />
+                  <Calendar className="w-6 h-6 text-blue-600" />
                   <h3 className="font-semibold text-lg">Availability calendar</h3>
                 </div>
               </CardContent>
@@ -312,7 +312,7 @@ export default function CleanKeep() {
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3 mb-2">
-                  <CheckCircle className="w-6 h-6 text-teal-600" />
+                  <CheckCircle className="w-6 h-6 text-blue-600" />
                   <h3 className="font-semibold text-lg">Job requests & confirmations</h3>
                 </div>
               </CardContent>
@@ -320,7 +320,7 @@ export default function CleanKeep() {
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3 mb-2">
-                  <MessageSquare className="w-6 h-6 text-teal-600" />
+                  <MessageSquare className="w-6 h-6 text-blue-600" />
                   <h3 className="font-semibold text-lg">Messaging system</h3>
                 </div>
               </CardContent>
@@ -328,7 +328,7 @@ export default function CleanKeep() {
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3 mb-2">
-                  <TrendingUp className="w-6 h-6 text-teal-600" />
+                  <TrendingUp className="w-6 h-6 text-blue-600" />
                   <h3 className="font-semibold text-lg">Earnings tracking</h3>
                 </div>
               </CardContent>
@@ -336,7 +336,7 @@ export default function CleanKeep() {
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3 mb-2">
-                  <Star className="w-6 h-6 text-teal-600" />
+                  <Star className="w-6 h-6 text-blue-600" />
                   <h3 className="font-semibold text-lg">Review management</h3>
                 </div>
               </CardContent>
@@ -458,19 +458,19 @@ export default function CleanKeep() {
           <div className="grid md:grid-cols-3 gap-6">
             <Card>
               <CardContent className="pt-6">
-                <Home className="w-10 h-10 text-teal-600 mx-auto mb-3" />
+                <Home className="w-10 h-10 text-blue-600 mx-auto mb-3" />
                 <p className="font-medium">Coastal holiday homes</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-6">
-                <MapPin className="w-10 h-10 text-teal-600 mx-auto mb-3" />
+                <MapPin className="w-10 h-10 text-blue-600 mx-auto mb-3" />
                 <p className="font-medium">Countryside stays</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-6">
-                <Star className="w-10 h-10 text-teal-600 mx-auto mb-3" />
+                <Star className="w-10 h-10 text-blue-600 mx-auto mb-3" />
                 <p className="font-medium">Staycation hotspots</p>
               </CardContent>
             </Card>
