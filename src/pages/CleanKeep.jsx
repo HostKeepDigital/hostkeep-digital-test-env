@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { getUserRoles, hasRole } from "@/components/utils/roleHelpers";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -11,6 +12,7 @@ import { Sparkles, Search, UserPlus, LayoutDashboard, ArrowRight, CheckCircle, S
 export default function CleanKeep() {
   const [user, setUser] = useState(null);
   const [cleanerProfile, setCleanerProfile] = useState(null);
+  const [userRoles, setUserRoles] = useState([]);
 
   useEffect(() => {
     base44.auth.me().then(async (u) => {
@@ -18,6 +20,11 @@ export default function CleanKeep() {
       // Check if user is a cleaner
       const profiles = await base44.entities.Cleaner.filter({ user_id: u.id });
       if (profiles[0]) setCleanerProfile(profiles[0]);
+      // Get user roles
+      if (u?.id) {
+        const roles = await getUserRoles(u.id);
+        setUserRoles(roles);
+      }
     }).catch(() => {});
   }, []);
   const options = [
@@ -100,8 +107,14 @@ export default function CleanKeep() {
       {/* The Three Pathways */}
       <section className="pb-16 px-4">
         <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-3 gap-6">
-            {options.map((option, idx) => {
+          <div className={`grid ${hasRole(userRoles, 'host') && !hasRole(userRoles, 'cleaner') ? 'md:grid-cols-2' : 'md:grid-cols-3'} gap-6`}>
+            {options.filter(option => {
+              // If user is a host (but not a cleaner), only show "Find a Cleaner" and "Join CleanKeep"
+              if (hasRole(userRoles, 'host') && !hasRole(userRoles, 'cleaner')) {
+                return option.title === "Find a Cleaner" || option.title === "Join CleanKeep";
+              }
+              return true;
+            }).map((option, idx) => {
               const shouldHighlight = 
                 (option.highlightForHost && user?.role !== 'cleaner') || 
                 (option.highlightForCleaner && cleanerProfile);

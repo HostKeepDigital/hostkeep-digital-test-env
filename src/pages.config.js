@@ -48,6 +48,7 @@
  * The mainPage value must match a key in the PAGES object exactly.
  */
 import AboutUs from './pages/AboutUs';
+import AdminVerifications from './pages/AdminVerifications';
 import BecomeCleaner from './pages/BecomeCleaner';
 import BecomeHost from './pages/BecomeHost';
 import CleanKeep from './pages/CleanKeep';
@@ -57,6 +58,7 @@ import CleanerPricing from './pages/CleanerPricing';
 import CleanerProfile from './pages/CleanerProfile';
 import CleanerSignup from './pages/CleanerSignup';
 import CleanerSubscriptionPay from './pages/CleanerSubscriptionPay';
+import CleanerVerification from './pages/CleanerVerification';
 import CreateProperty from './pages/CreateProperty';
 import EditProperty from './pages/EditProperty';
 import GuestProfile from './pages/GuestProfile';
@@ -66,19 +68,18 @@ import HostDashboard from './pages/HostDashboard';
 import HostMessages from './pages/HostMessages';
 import HostProperties from './pages/HostProperties';
 import HostSettings from './pages/HostSettings';
+import HostVerification from './pages/HostVerification';
 import MyBookings from './pages/MyBookings';
 import Pay from './pages/Pay';
 import PropertyDetails from './pages/PropertyDetails';
 import Search from './pages/Search';
 import Subscription from './pages/Subscription';
-import HostVerification from './pages/HostVerification';
-import CleanerVerification from './pages/CleanerVerification';
-import AdminVerifications from './pages/AdminVerifications';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "AboutUs": AboutUs,
+    "AdminVerifications": AdminVerifications,
     "BecomeCleaner": BecomeCleaner,
     "BecomeHost": BecomeHost,
     "CleanKeep": CleanKeep,
@@ -88,6 +89,7 @@ export const PAGES = {
     "CleanerProfile": CleanerProfile,
     "CleanerSignup": CleanerSignup,
     "CleanerSubscriptionPay": CleanerSubscriptionPay,
+    "CleanerVerification": CleanerVerification,
     "CreateProperty": CreateProperty,
     "EditProperty": EditProperty,
     "GuestProfile": GuestProfile,
@@ -97,14 +99,12 @@ export const PAGES = {
     "HostMessages": HostMessages,
     "HostProperties": HostProperties,
     "HostSettings": HostSettings,
+    "HostVerification": HostVerification,
     "MyBookings": MyBookings,
     "Pay": Pay,
     "PropertyDetails": PropertyDetails,
     "Search": Search,
     "Subscription": Subscription,
-    "HostVerification": HostVerification,
-    "CleanerVerification": CleanerVerification,
-    "AdminVerifications": AdminVerifications,
 }
 
 export const pagesConfig = {
