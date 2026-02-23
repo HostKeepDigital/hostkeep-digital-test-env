@@ -34,17 +34,29 @@ export default function Layout({ children, currentPageName }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    base44.auth.isAuthenticated().then(setIsAuthenticated);
+    let mounted = true;
+    
+    base44.auth.isAuthenticated().then((auth) => {
+      if (mounted) setIsAuthenticated(auth);
+    });
+    
     base44.auth.me().then(async (userData) => {
+      if (!mounted) return;
       setUser(userData);
       if (userData?.id) {
         const roles = await getUserRoles(userData.id);
-        setUserRoles(roles);
+        if (mounted) setUserRoles(roles);
       }
     }).catch(() => {
-      setUser(null);
-      setUserRoles([]);
+      if (mounted) {
+        setUser(null);
+        setUserRoles([]);
+      }
     });
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   // Scroll to top on route change
