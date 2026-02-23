@@ -11,10 +11,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Progress } from "@/components/ui/progress";
 import { 
   Home, MapPin, Image, PoundSterling, Calendar, FileText, 
-  ChevronLeft, ChevronRight, Upload, X, Check, Loader2
+  ChevronLeft, ChevronRight, Upload, X, Check, Loader2, Crown
 } from "lucide-react";
 import DayBasedBookingRules from "@/components/properties/DayBasedBookingRules";
 import PricingManager from "@/components/pricing/PricingManager";
@@ -50,6 +51,7 @@ export default function CreateProperty() {
   const [user, setUser] = useState(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [isUploading, setIsUploading] = useState(false);
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
 
   const [titleError, setTitleError] = useState("");
 
@@ -241,6 +243,13 @@ export default function CreateProperty() {
       setTimeout(() => {
         window.location.href = createPageUrl('Subscription');
       }, 1500);
+      return;
+    }
+
+    // Check if on basic plan and already has 1 property
+    const activeSub = subscriptions[0];
+    if (activeSub?.plan === 'basic' && activeSub?.max_properties === 1 && properties.length >= 1) {
+      setShowUpgradeDialog(true);
       return;
     }
     
@@ -661,6 +670,30 @@ export default function CreateProperty() {
           )}
         </div>
       </div>
+
+      {/* Upgrade Dialog */}
+      <AlertDialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Crown className="w-5 h-5 text-violet-600" />
+              Upgrade Your Plan
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-left space-y-2">
+              <p>You're currently on the <strong>Basic plan</strong>, which allows 1 property.</p>
+              <p>To add more properties, upgrade to <strong>Pro</strong> (up to 5 properties) or <strong>Premium</strong> (unlimited).</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction 
+              onClick={() => window.location.href = createPageUrl('Subscription')}
+              className="bg-violet-600 hover:bg-violet-700"
+            >
+              View Plans
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
