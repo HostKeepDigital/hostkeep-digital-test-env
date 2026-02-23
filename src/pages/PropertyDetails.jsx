@@ -55,6 +55,18 @@ export default function PropertyDetails() {
     base44.auth.me().then(setCurrentUser).catch(() => setCurrentUser(null));
   }, []);
 
+  // Prevent scrolling when image overlay is open
+  useEffect(() => {
+    if (showImageOverlay) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showImageOverlay]);
+
   // Check if check-in date is allowed based on booking rules
   const isDayAllowedForCheckIn = (date) => {
     // If day-based restrictions not enabled, allow all days
