@@ -48,6 +48,8 @@
  * The mainPage value must match a key in the PAGES object exactly.
  */
 import AboutUs from './pages/AboutUs';
+import BecomeCleaner from './pages/BecomeCleaner';
+import BecomeHost from './pages/BecomeHost';
 import CleanKeep from './pages/CleanKeep';
 import CleanerDashboard from './pages/CleanerDashboard';
 import CleanerMarketplace from './pages/CleanerMarketplace';
@@ -57,6 +59,8 @@ import CleanerSignup from './pages/CleanerSignup';
 import CleanerSubscriptionPay from './pages/CleanerSubscriptionPay';
 import CreateProperty from './pages/CreateProperty';
 import EditProperty from './pages/EditProperty';
+import GuestProfile from './pages/GuestProfile';
+import Home from './pages/Home';
 import HostBookings from './pages/HostBookings';
 import HostDashboard from './pages/HostDashboard';
 import HostMessages from './pages/HostMessages';
@@ -67,15 +71,13 @@ import Pay from './pages/Pay';
 import PropertyDetails from './pages/PropertyDetails';
 import Search from './pages/Search';
 import Subscription from './pages/Subscription';
-import GuestProfile from './pages/GuestProfile';
-import Home from './pages/Home';
-import BecomeHost from './pages/BecomeHost';
-import BecomeCleaner from './pages/BecomeCleaner';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "AboutUs": AboutUs,
+    "BecomeCleaner": BecomeCleaner,
+    "BecomeHost": BecomeHost,
     "CleanKeep": CleanKeep,
     "CleanerDashboard": CleanerDashboard,
     "CleanerMarketplace": CleanerMarketplace,
@@ -85,6 +87,8 @@ export const PAGES = {
     "CleanerSubscriptionPay": CleanerSubscriptionPay,
     "CreateProperty": CreateProperty,
     "EditProperty": EditProperty,
+    "GuestProfile": GuestProfile,
+    "Home": Home,
     "HostBookings": HostBookings,
     "HostDashboard": HostDashboard,
     "HostMessages": HostMessages,
@@ -95,10 +99,6 @@ export const PAGES = {
     "PropertyDetails": PropertyDetails,
     "Search": Search,
     "Subscription": Subscription,
-    "GuestProfile": GuestProfile,
-    "Home": Home,
-    "BecomeHost": BecomeHost,
-    "BecomeCleaner": BecomeCleaner,
 }
 
 export const pagesConfig = {

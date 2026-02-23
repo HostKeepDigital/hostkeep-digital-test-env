@@ -32,32 +32,8 @@ export default function BecomeHost() {
     });
   }, []);
 
-  const upgradeMutation = useMutation({
-    mutationFn: async () => {
-      if (!user?.id) throw new Error("Not authenticated");
-      
-      // Ensure guest role exists
-      if (!hasRole(userRoles, 'guest')) {
-        await addUserRole(user.id, 'guest');
-      }
-      
-      // Add host role
-      await addUserRole(user.id, 'host');
-    },
-    onSuccess: () => {
-      toast.success("You're now a host!");
-      setTimeout(() => {
-        window.location.href = createPageUrl('HostDashboard');
-      }, 500);
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    }
-  });
-
   const handleUpgrade = () => {
-    setIsUpgrading(true);
-    upgradeMutation.mutate();
+    navigate(createPageUrl('CreateProperty'));
   };
 
   const benefits = [
@@ -108,11 +84,10 @@ export default function BecomeHost() {
           <CardContent>
             <Button 
               onClick={handleUpgrade}
-              disabled={isUpgrading}
               size="lg"
               className="bg-teal-600 hover:bg-teal-700"
             >
-              {isUpgrading ? "Upgrading..." : "Become a Host Now"}
+              Become a Host Now
             </Button>
             <p className="text-sm text-gray-500 mt-4">
               Free to join • No setup fees • Start earning immediately

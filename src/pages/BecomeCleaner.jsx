@@ -32,32 +32,8 @@ export default function BecomeCleaner() {
     });
   }, []);
 
-  const upgradeMutation = useMutation({
-    mutationFn: async () => {
-      if (!user?.id) throw new Error("Not authenticated");
-      
-      // Ensure guest role exists
-      if (!hasRole(userRoles, 'guest')) {
-        await addUserRole(user.id, 'guest');
-      }
-      
-      // Add cleaner role
-      await addUserRole(user.id, 'cleaner');
-    },
-    onSuccess: () => {
-      toast.success("You're now a cleaner!");
-      setTimeout(() => {
-        window.location.href = createPageUrl('CleanerSignup');
-      }, 500);
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    }
-  });
-
   const handleUpgrade = () => {
-    setIsUpgrading(true);
-    upgradeMutation.mutate();
+    navigate(createPageUrl('CleanerSignup'));
   };
 
   const benefits = [
@@ -108,11 +84,10 @@ export default function BecomeCleaner() {
           <CardContent>
             <Button 
               onClick={handleUpgrade}
-              disabled={isUpgrading}
               size="lg"
               className="bg-blue-600 hover:bg-blue-700"
             >
-              {isUpgrading ? "Upgrading..." : "Become a Cleaner Now"}
+              Become a Cleaner Now
             </Button>
             <p className="text-sm text-gray-500 mt-4">
               Free to join • Complete your profile next • Start getting jobs
