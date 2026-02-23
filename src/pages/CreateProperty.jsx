@@ -225,10 +225,10 @@ export default function CreateProperty() {
   const canProceed = () => {
     switch (currentStep) {
       case 1: return formData.title.length >= 16 && formData.title.length <= 50 && !titleError && formData.property_type && formData.guest_capacity > 0;
-      case 2: return formData.location.street?.trim() && formData.location.town_city?.trim() && formData.location.postcode?.trim();
-      case 3: return formData.photos.length >= 5 && getDuplicatePhotos().length === 0;
-      case 4: return formData.nightly_rate > 0;
-      case 5: return formData.description.length >= 50;
+      case 2: return formData.description.length >= 50;
+      case 3: return formData.location.street?.trim() && formData.location.town_city?.trim() && formData.location.postcode?.trim();
+      case 4: return formData.photos.length >= 5 && getDuplicatePhotos().length === 0;
+      case 5: return formData.nightly_rate > 0;
       case 6: return true; // Booking rules are optional
       default: return true;
     }
