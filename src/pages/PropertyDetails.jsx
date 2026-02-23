@@ -34,6 +34,7 @@ export default function PropertyDetails() {
   const propertyId = urlParams.get('id');
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showImageOverlay, setShowImageOverlay] = useState(false);
   const [checkIn, setCheckIn] = useState("");
   const [nights, setNights] = useState("");
   const [guestData, setGuestData] = useState(() => {
@@ -303,12 +304,15 @@ export default function PropertyDetails() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24 md:pb-0">
-      {/* Professional Photo Gallery - Booking.com style */}
+      {/* Professional Photo Gallery - Upgraded */}
        <div className="bg-white">
          <div className="max-w-7xl mx-auto px-2 sm:px-4 py-3 md:py-6">
            {/* Mobile: Carousel */}
            <div className="md:hidden mb-4">
-             <div className="relative aspect-square overflow-hidden bg-gray-200 rounded-lg">
+             <div 
+               className="relative aspect-video overflow-hidden bg-gray-200 rounded-lg cursor-pointer"
+               onClick={() => setShowImageOverlay(true)}
+             >
                <img 
                  src={photos[currentImageIndex]} 
                  alt={property.title}
@@ -317,19 +321,28 @@ export default function PropertyDetails() {
                {photos.length > 1 && (
                  <>
                    <button
-                     onClick={() => setCurrentImageIndex(prev => prev === 0 ? photos.length - 1 : prev - 1)}
-                     className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-all"
+                     onClick={(e) => {
+                       e.stopPropagation();
+                       setCurrentImageIndex(prev => prev === 0 ? photos.length - 1 : prev - 1);
+                     }}
+                     className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-all"
                    >
                      <ChevronLeft className="w-5 h-5" />
                    </button>
                    <button
-                     onClick={() => setCurrentImageIndex(prev => prev === photos.length - 1 ? 0 : prev + 1)}
-                     className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 transition-all"
+                     onClick={(e) => {
+                       e.stopPropagation();
+                       setCurrentImageIndex(prev => prev === photos.length - 1 ? 0 : prev + 1);
+                     }}
+                     className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-all"
                    >
                      <ChevronRight className="w-5 h-5" />
                    </button>
                  </>
                )}
+               <div className="absolute bottom-3 left-3 bg-black/60 text-white px-3 py-1 rounded-full text-xs font-medium">
+                 {currentImageIndex + 1} / {photos.length}
+               </div>
              </div>
              <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
                {photos.map((photo, idx) => (
@@ -350,64 +363,137 @@ export default function PropertyDetails() {
              </div>
            </div>
 
-           {/* Desktop: Booking.com style - Main image top, thumbnails below */}
-           <div className="hidden md:block">
-             {/* Main Image */}
-             <div className="relative overflow-hidden bg-gray-300 rounded-lg mb-3 group h-96">
+           {/* Desktop: Enhanced Grid Layout */}
+           <div className="hidden md:grid md:grid-cols-4 gap-2 h-96">
+             {/* Main large image - 2x2 */}
+             <div 
+               className="col-span-2 row-span-2 overflow-hidden rounded-lg bg-gray-300 cursor-pointer group relative"
+               onClick={() => setShowImageOverlay(true)}
+             >
                <img 
-                 src={photos[currentImageIndex]} 
-                 alt={property.title}
-                 className="w-full h-full object-cover"
+                 src={photos[0]} 
+                 alt="Cover"
+                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                />
-               {photos.length > 1 && (
-                 <>
-                   <button
-                     onClick={() => setCurrentImageIndex(prev => prev === 0 ? photos.length - 1 : prev - 1)}
-                     className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/95 hover:bg-white rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
-                   >
-                     <ChevronLeft className="w-6 h-6" />
-                   </button>
-                   <button
-                     onClick={() => setCurrentImageIndex(prev => prev === photos.length - 1 ? 0 : prev + 1)}
-                     className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/95 hover:bg-white rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
-                   >
-                     <ChevronRight className="w-6 h-6" />
-                   </button>
-                 </>
-               )}
+               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
              </div>
 
-             {/* Thumbnails Grid - 5 columns */}
-             <div className="grid grid-cols-5 gap-2">
-               {photos.slice(0, 5).map((photo, idx) => (
-                 <button
-                   key={idx}
-                   onClick={() => setCurrentImageIndex(idx)}
-                   className={`relative overflow-hidden rounded-lg aspect-square transition-all cursor-pointer group ${
-                     idx === currentImageIndex 
-                       ? 'ring-2 ring-teal-600 ring-offset-0' 
-                       : 'hover:opacity-80'
-                   }`}
-                 >
-                   <img 
-                     src={photo} 
-                     alt={`View ${idx + 1}`}
-                     className="w-full h-full object-cover"
-                   />
-                 </button>
-               ))}
-               {photos.length > 5 && (
-                 <button 
-                   onClick={() => setCurrentImageIndex(5)}
-                   className="relative overflow-hidden rounded-lg aspect-square bg-gray-400 hover:bg-gray-500 transition-all flex items-center justify-center"
-                 >
-                   <span className="text-white font-semibold text-lg">+{photos.length - 5}</span>
-                 </button>
-               )}
-             </div>
+             {/* Top right grid */}
+             {photos[1] && (
+               <div 
+                 className="overflow-hidden rounded-lg bg-gray-300 cursor-pointer group relative"
+                 onClick={() => { setCurrentImageIndex(1); setShowImageOverlay(true); }}
+               >
+                 <img 
+                   src={photos[1]} 
+                   alt="Photo 2"
+                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                 />
+                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+               </div>
+             )}
+             {photos[2] && (
+               <div 
+                 className="overflow-hidden rounded-lg bg-gray-300 cursor-pointer group relative"
+                 onClick={() => { setCurrentImageIndex(2); setShowImageOverlay(true); }}
+               >
+                 <img 
+                   src={photos[2]} 
+                   alt="Photo 3"
+                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                 />
+                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+               </div>
+             )}
+
+             {/* Bottom right grid */}
+             {photos[3] && (
+               <div 
+                 className="overflow-hidden rounded-lg bg-gray-300 cursor-pointer group relative"
+                 onClick={() => { setCurrentImageIndex(3); setShowImageOverlay(true); }}
+               >
+                 <img 
+                   src={photos[3]} 
+                   alt="Photo 4"
+                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                 />
+                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+               </div>
+             )}
+             {photos[4] && (
+               <div 
+                 className="overflow-hidden rounded-lg bg-gray-300 cursor-pointer group relative"
+                 onClick={() => { setCurrentImageIndex(4); setShowImageOverlay(true); }}
+               >
+                 <img 
+                   src={photos[4]} 
+                   alt="Photo 5"
+                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                 />
+                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+               </div>
+             )}
+             {photos.length > 5 && (
+               <button 
+                 onClick={() => { setCurrentImageIndex(5); setShowImageOverlay(true); }}
+                 className="overflow-hidden rounded-lg bg-gray-400 hover:bg-gray-500 transition-colors flex items-center justify-center relative"
+               >
+                 <span className="text-white font-semibold text-lg">+{photos.length - 5}</span>
+               </button>
+             )}
            </div>
          </div>
        </div>
+
+       {/* Fullscreen Image Overlay Modal */}
+       {showImageOverlay && (
+         <motion.div
+           initial={{ opacity: 0 }}
+           animate={{ opacity: 1 }}
+           exit={{ opacity: 0 }}
+           className="fixed inset-0 z-50 bg-black flex items-center justify-center"
+           onClick={() => setShowImageOverlay(false)}
+         >
+           <div className="w-full h-full flex items-center justify-center relative" onClick={(e) => e.stopPropagation()}>
+             <img 
+               src={photos[currentImageIndex]} 
+               alt={`Photo ${currentImageIndex + 1}`}
+               className="max-h-screen max-w-screen object-contain"
+             />
+             
+             {/* Navigation Buttons */}
+             {photos.length > 1 && (
+               <>
+                 <button
+                   onClick={() => setCurrentImageIndex(prev => prev === 0 ? photos.length - 1 : prev - 1)}
+                   className="absolute left-4 top-1/2 -translate-y-1/2 w-14 h-14 bg-white/20 hover:bg-white/40 text-white rounded-full flex items-center justify-center transition-all"
+                 >
+                   <ChevronLeft className="w-8 h-8" />
+                 </button>
+                 <button
+                   onClick={() => setCurrentImageIndex(prev => prev === photos.length - 1 ? 0 : prev + 1)}
+                   className="absolute right-4 top-1/2 -translate-y-1/2 w-14 h-14 bg-white/20 hover:bg-white/40 text-white rounded-full flex items-center justify-center transition-all"
+                 >
+                   <ChevronRight className="w-8 h-8" />
+                 </button>
+               </>
+             )}
+
+             {/* Close Button */}
+             <button
+               onClick={() => setShowImageOverlay(false)}
+               className="absolute top-4 right-4 w-12 h-12 bg-white/20 hover:bg-white/40 text-white rounded-full flex items-center justify-center transition-all"
+             >
+               <X className="w-6 h-6" />
+             </button>
+
+             {/* Photo Counter */}
+             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white px-4 py-2 rounded-full text-sm font-medium">
+               {currentImageIndex + 1} / {photos.length}
+             </div>
+           </div>
+         </motion.div>
+       )}
 
       <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 md:py-8">
         {/* Header Section with Title & Quick Info */}
