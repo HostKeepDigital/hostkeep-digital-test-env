@@ -34,7 +34,7 @@ export default function CleanKeep() {
       description: "Browse local, vetted cleaners. Check reviews. Hire with confidence.",
       buttonText: "Browse Cleaners",
       route: "CleanerMarketplace",
-      isPrimary: true,
+      isPrimary: false,
       highlightForHost: true
     },
     {
@@ -113,6 +113,10 @@ export default function CleanKeep() {
             ? 'md:grid-cols-2' : 'md:grid-cols-3'
           } gap-6`}>
             {options.filter(option => {
+              // If user has cleaner role or cleaner profile, hide "Join CleanKeep"
+              if ((hasRole(userRoles, 'cleaner') || cleanerProfile) && option.title === "Join CleanKeep") {
+                return false;
+              }
               // If user is only a host (not a cleaner), show "Find a Cleaner" and "Join CleanKeep"
               if (hasRole(userRoles, 'host') && !hasRole(userRoles, 'cleaner')) {
                 return option.title === "Find a Cleaner" || option.title === "Join CleanKeep";
@@ -121,11 +125,11 @@ export default function CleanKeep() {
               if (hasRole(userRoles, 'cleaner') && !hasRole(userRoles, 'host')) {
                 return option.title !== "Find a Cleaner";
               }
-              // If user is both host and cleaner, show all buttons
+              // If user is both host and cleaner, show all buttons except "Join CleanKeep"
               return true;
             }).map((option, idx) => {
               const shouldHighlight = 
-                (option.highlightForHost && user?.role !== 'cleaner') || 
+                (option.highlightForHost && hasRole(userRoles, 'host')) || 
                 (option.highlightForCleaner && cleanerProfile);
               
               return (
@@ -134,22 +138,15 @@ export default function CleanKeep() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.1 }}
-                  className={option.isPrimary ? 'md:scale-105' : ''}
                 >
                   <Card className={`h-full hover:shadow-xl transition-all duration-300 border-2 group cursor-pointer ${
                     shouldHighlight 
-                      ? 'border-teal-500 bg-teal-50/50' 
-                      : option.isPrimary 
-                        ? 'hover:border-teal-400' 
-                        : 'hover:border-blue-300'
+                      ? 'border-blue-500 bg-blue-50/50' 
+                      : 'hover:border-blue-300'
                   }`}>
                     <CardHeader className="text-center pb-4">
-                      <div className={`mx-auto w-16 h-16 rounded-xl bg-gradient-to-br ${
-                        option.isPrimary ? 'from-teal-100 to-teal-200' : 'from-blue-100 to-blue-200'
-                      } flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                        <option.icon className={`w-8 h-8 ${
-                          option.isPrimary ? 'text-teal-600' : 'text-blue-600'
-                        }`} />
+                      <div className={`mx-auto w-16 h-16 rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                        <option.icon className="w-8 h-8 text-blue-600" />
                       </div>
                       <CardTitle className="text-lg mb-2">{option.title}</CardTitle>
                       <CardDescription className="text-sm">
@@ -158,11 +155,7 @@ export default function CleanKeep() {
                     </CardHeader>
                     <CardContent className="pt-2">
                       <Button 
-                        className={`w-full ${
-                          option.isPrimary 
-                            ? 'bg-teal-600 hover:bg-teal-700' 
-                            : 'bg-blue-600 hover:bg-blue-700'
-                        }`}
+                        className="w-full bg-blue-600 hover:bg-blue-700"
                         size="lg"
                         onClick={() => handleNavigation(option.route, option.requiresAuth)}
                       >
