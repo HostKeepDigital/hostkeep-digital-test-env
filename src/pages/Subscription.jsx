@@ -170,6 +170,9 @@ export default function Subscription() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription'] });
       toast.success("Subscription activated! You can now list your properties.");
+      setTimeout(() => {
+        window.location.href = createPageUrl('HostDashboard');
+      }, 1500);
     },
     onError: (error) => {
       toast.error("Failed to activate subscription. Please try again.");
