@@ -19,6 +19,7 @@ import {
 import DayBasedBookingRules from "@/components/properties/DayBasedBookingRules";
 import PricingManager from "@/components/pricing/PricingManager";
 import { toast } from "sonner";
+import { addUserRole, getUserRoles, hasRole } from "@/components/utils/roleHelpers";
 
 const STEPS = [
   { id: 1, title: "Basics", icon: Home, description: "Property type and details" },
@@ -118,10 +119,27 @@ export default function CreateProperty() {
   }, []);
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Property.create({ ...data, owner_id: user?.id }),
+    mutationFn: async (data) => {
+      const property = await base44.entities.Property.create({ ...data, owner_id: user?.id });
+      
+      // Add host role when property is created
+      if (user?.id) {
+        const roles = await getUserRoles(user.id);
+        if (!hasRole(roles, 'guest')) {
+          await addUserRole(user.id, 'guest');
+        }
+        if (!hasRole(roles, 'host')) {
+          await addUserRole(user.id, 'host');
+        }
+      }
+      
+      return property;
+    },
     onSuccess: (property) => {
-      toast.success("Property created successfully!");
-      window.location.href = createPageUrl('HostProperties');
+      toast.success("Property created successfully! You're now a host.");
+      setTimeout(() => {
+        window.location.href = createPageUrl('HostProperties');
+      }, 1000);
     },
   });
 
