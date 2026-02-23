@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner";
 import { createPageUrl } from "@/utils";
 import { useNavigate } from "react-router-dom";
+import { addUserRole, getUserRoles, hasRole } from "@/components/utils/roleHelpers";
 
 export default function CleanerSignup() {
   const navigate = useNavigate();
@@ -137,8 +138,21 @@ export default function CleanerSignup() {
         max_jobs_per_day: formData.max_jobs_per_day
       });
 
-      toast.success('Welcome to CleanKeep! Your 30-day trial has started.');
-      navigate(createPageUrl('CleanerDashboard'));
+      // Add cleaner role when profile is created
+      if (user?.id) {
+        const roles = await getUserRoles(user.id);
+        if (!hasRole(roles, 'guest')) {
+          await addUserRole(user.id, 'guest');
+        }
+        if (!hasRole(roles, 'cleaner')) {
+          await addUserRole(user.id, 'cleaner');
+        }
+      }
+
+      toast.success('Welcome to CleanKeep! Your 30-day trial has started. You\'re now a cleaner.');
+      setTimeout(() => {
+        window.location.href = createPageUrl('CleanerDashboard');
+      }, 1000);
     } catch (error) {
       toast.error(error.message || 'Failed to create profile');
     } finally {
