@@ -3,7 +3,7 @@ import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
 import { 
   Home, Search, Heart, User, Menu, X, Calendar, PoundSterling, 
-  MessageSquare, Settings, Building2, LogOut
+  MessageSquare, Settings, Building2, LogOut, Users
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
+import { getUserRoles, hasRole } from "@/components/utils/roleHelpers";
 
 // Pages without layout (guest facing / public)
 const PUBLIC_PAGES = ["Pay"];
@@ -27,12 +28,22 @@ const HOST_PAGES = ["HostDashboard", "HostBookings", "HostProperties", "HostMess
 
 export default function Layout({ children, currentPageName }) {
   const [user, setUser] = useState(null);
+  const [userRoles, setUserRoles] = useState([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     base44.auth.isAuthenticated().then(setIsAuthenticated);
-    base44.auth.me().then(setUser).catch(() => setUser(null));
+    base44.auth.me().then(async (userData) => {
+      setUser(userData);
+      if (userData?.id) {
+        const roles = await getUserRoles(userData.id);
+        setUserRoles(roles);
+      }
+    }).catch(() => {
+      setUser(null);
+      setUserRoles([]);
+    });
   }, []);
 
   // Scroll to top on route change
@@ -171,14 +182,18 @@ export default function Layout({ children, currentPageName }) {
                   <Link to={createPageUrl('MyBookings')} className="text-gray-600 hover:text-gray-900 font-medium">
                     My Stays
                   </Link>
-                  <Link to={createPageUrl('HostDashboard')} className="text-gray-600 hover:text-gray-900 font-medium">
-                    Host Dashboard
-                  </Link>
+                  {hasRole(userRoles, 'host') && (
+                    <Link to={createPageUrl('HostDashboard')} className="text-gray-600 hover:text-gray-900 font-medium">
+                      Host Dashboard
+                    </Link>
+                  )}
                 </>
               )}
-              <Link to={createPageUrl('CleanKeep')} className="text-gray-600 hover:text-gray-900 font-medium">
-                CleanKeep
-              </Link>
+              {(hasRole(userRoles, 'cleaner') || hasRole(userRoles, 'host') || hasRole(userRoles, 'admin')) && (
+                <Link to={createPageUrl('CleanKeep')} className="text-gray-600 hover:text-gray-900 font-medium">
+                  CleanKeep
+                </Link>
+              )}
             </nav>
 
             <div className="flex items-center gap-3">
@@ -201,11 +216,20 @@ export default function Layout({ children, currentPageName }) {
                         <Calendar className="w-4 h-4" /> My Stays
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to={createPageUrl('HostDashboard')} className="flex items-center gap-2">
-                        <Building2 className="w-4 h-4" /> Host Dashboard
-                      </Link>
-                    </DropdownMenuItem>
+                    {hasRole(userRoles, 'host') && (
+                      <DropdownMenuItem asChild>
+                        <Link to={createPageUrl('HostDashboard')} className="flex items-center gap-2">
+                          <Building2 className="w-4 h-4" /> Host Dashboard
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    {(hasRole(userRoles, 'cleaner') || hasRole(userRoles, 'host') || hasRole(userRoles, 'admin')) && (
+                      <DropdownMenuItem asChild>
+                        <Link to={createPageUrl('CleanKeep')} className="flex items-center gap-2">
+                          <Users className="w-4 h-4" /> CleanKeep
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem asChild>
                       <Link to={createPageUrl('HostSettings')} className="flex items-center gap-2">
                         <Settings className="w-4 h-4" /> Settings
