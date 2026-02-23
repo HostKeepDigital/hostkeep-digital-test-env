@@ -66,8 +66,6 @@ export default function CleanKeep() {
     }
   };
 
-  const isCleanerOnly = hasRole(userRoles, 'cleaner') && !hasRole(userRoles, 'host') && !hasRole(userRoles, 'admin');
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       {/* Hero Section */}
@@ -174,7 +172,6 @@ export default function CleanKeep() {
       </section>
 
       {/* Why CleanKeep Exists */}
-      {!isCleanerOnly && (
       <section className="py-16 px-4 bg-gray-50">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-6">
@@ -248,10 +245,8 @@ export default function CleanKeep() {
           </div>
         </div>
       </section>
-      )}
 
       {/* A Dedicated Cleaning Marketplace */}
-      {!isCleanerOnly && (
       <section className="py-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
@@ -303,10 +298,8 @@ export default function CleanKeep() {
           </Card>
         </div>
       </section>
-      )}
 
       {/* Simple Transparent Pricing */}
-      {!isCleanerOnly && (
       <section className="py-16 px-4 bg-gradient-to-b from-blue-50 to-white">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12">
@@ -389,10 +382,8 @@ export default function CleanKeep() {
           </p>
         </div>
       </section>
-      )}
 
       {/* How It Works */}
-      {!isCleanerOnly && (
       <section className="py-16 px-4">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12">
@@ -437,10 +428,8 @@ export default function CleanKeep() {
           </div>
         </div>
       </section>
-      )}
 
       {/* Additional Sections */}
-      {!isCleanerOnly && (
       <section className="py-16 px-4 bg-gray-50">
         <div className="max-w-4xl mx-auto space-y-16">
           {/* Cleaner Dashboard */}
@@ -551,10 +540,8 @@ export default function CleanKeep() {
 
         </div>
       </section>
-      )}
 
       {/* Final CTA */}
-      {!isCleanerOnly && (
       <section className="py-20 px-4 bg-gradient-to-b from-blue-600 to-blue-700 text-white">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -570,7 +557,6 @@ export default function CleanKeep() {
           </Link>
         </div>
       </section>
-      )}
     </div>
   );
 }
