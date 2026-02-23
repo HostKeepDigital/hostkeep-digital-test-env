@@ -22,6 +22,7 @@ import { format, parseISO, differenceInDays, addDays, isBefore } from "date-fns"
 import { toast } from "sonner";
 import ReviewList from "@/components/reviews/ReviewList";
 import BookingCalendar from "@/components/shared/BookingCalendar";
+import PropertyShareModal from "@/components/properties/PropertyShareModal";
 import { getAllowedNights } from "@/functions/getAllowedNights";
 
 const AMENITY_ICONS = {
@@ -521,9 +522,10 @@ export default function PropertyDetails() {
               <Button variant="outline" size="icon" className="rounded-full">
                 <Heart className="w-4 h-4" />
               </Button>
-              <Button variant="outline" size="icon" className="rounded-full">
-                <Share2 className="w-4 h-4" />
-              </Button>
+              <PropertyShareModal 
+                propertyTitle={property.title}
+                propertyUrl={window.location.href}
+              />
             </div>
           </div>
 
