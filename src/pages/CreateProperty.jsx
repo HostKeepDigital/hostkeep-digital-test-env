@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { 
   Home, MapPin, Image, PoundSterling, Calendar, FileText, 
   ChevronLeft, ChevronRight, Upload, X, Check, Loader2, MoreVertical
@@ -211,6 +212,33 @@ export default function CreateProperty() {
       photos: prev.photos.filter((_, i) => i !== index)
     }));
     setUploadedFileIdentifiers(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const setCoverPhoto = (idx) => {
+    const newPhotos = [...formData.photos];
+    [newPhotos[0], newPhotos[idx]] = [newPhotos[idx], newPhotos[0]];
+    setFormData(prev => ({ ...prev, photos: newPhotos }));
+  };
+
+  const handleDragStart = (e, idx) => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('photoIndex', idx.toString());
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e, targetIdx) => {
+    e.preventDefault();
+    const sourceIdx = parseInt(e.dataTransfer.getData('photoIndex'));
+    if (sourceIdx === targetIdx) return;
+
+    const newPhotos = [...formData.photos];
+    const [movedPhoto] = newPhotos.splice(sourceIdx, 1);
+    newPhotos.splice(targetIdx, 0, movedPhoto);
+    setFormData(prev => ({ ...prev, photos: newPhotos }));
   };
 
   const toggleAmenity = (amenity) => {
@@ -595,7 +623,7 @@ export default function CreateProperty() {
                                 alt={`Photo ${idx + 1}`}
                                 className="w-full h-full object-cover rounded-lg pointer-events-none"
                               />
-                              <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
                                     <button className="w-8 h-8 bg-black/70 text-white rounded flex items-center justify-center hover:bg-black/90 transition-colors">
@@ -613,12 +641,6 @@ export default function CreateProperty() {
                                     </DropdownMenuItem>
                                   </DropdownMenuContent>
                                 </DropdownMenu>
-                                <button
-                                  onClick={() => removePhoto(idx)}
-                                  className="w-8 h-8 bg-red-500 text-white rounded flex items-center justify-center hover:bg-red-600 transition-colors"
-                                >
-                                  <X className="w-4 h-4" />
-                                </button>
                               </div>
                               {idx === 0 && (
                                 <span className="absolute bottom-2 left-2 px-2 py-1 bg-black/70 text-white text-xs rounded">
