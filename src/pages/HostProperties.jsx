@@ -10,13 +10,14 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { 
   Plus, MoreVertical, Edit, Eye, Pause, Play, Trash2, 
-  MapPin, Users, Bed, Star, Home
+  MapPin, Users, Bed, Star, Home, Crown
 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function HostProperties() {
   const [user, setUser] = useState(null);
   const [deleteProperty, setDeleteProperty] = useState(null);
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -26,6 +27,15 @@ export default function HostProperties() {
   const { data: properties = [], isLoading } = useQuery({
     queryKey: ['host-properties', user?.id],
     queryFn: () => base44.entities.Property.filter({ owner_id: user?.id }),
+    enabled: !!user?.id,
+  });
+
+  const { data: subscription } = useQuery({
+    queryKey: ['subscription', user?.id],
+    queryFn: async () => {
+      const subs = await base44.entities.Subscription.filter({ user_id: user?.id });
+      return subs[0];
+    },
     enabled: !!user?.id,
   });
 
@@ -46,6 +56,16 @@ export default function HostProperties() {
     },
   });
 
+  const handleAddPropertyClick = (e) => {
+    // Check if on basic plan with 1 property already
+    if (subscription?.plan === 'basic' && subscription?.max_properties === 1 && properties.length >= 1) {
+      e.preventDefault();
+      setShowUpgradeDialog(true);
+    } else {
+      window.location.href = createPageUrl('CreateProperty');
+    }
+  };
+
   const toggleStatus = (property) => {
     const newStatus = property.status === 'published' ? 'paused' : 'published';
     updateMutation.mutate({ id: property.id, data: { status: newStatus } });
@@ -65,12 +85,13 @@ export default function HostProperties() {
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Your Properties</h1>
             <p className="text-gray-500">{properties.length} properties listed</p>
           </div>
-          <Link to={createPageUrl('CreateProperty')}>
-            <Button className="bg-teal-600 hover:bg-teal-700 gap-2">
-              <Plus className="w-4 h-4" />
-              Add Property
-            </Button>
-          </Link>
+          <Button 
+            onClick={handleAddPropertyClick}
+            className="bg-teal-600 hover:bg-teal-700 gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Add Property
+          </Button>
         </div>
 
         {properties.length === 0 ? (
@@ -203,6 +224,32 @@ export default function HostProperties() {
                 className="bg-rose-600 hover:bg-rose-700"
               >
                 Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Upgrade Dialog */}
+        <AlertDialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <Crown className="w-5 h-5 text-violet-600" />
+                Upgrade Required
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-left space-y-2">
+                <p>If you want to add more than one property, please see subscription upgrades.</p>
+                <p className="text-sm text-gray-600">
+                  Upgrade to <strong>Pro</strong> (up to 5 properties) or <strong>Premium</strong> (unlimited properties).
+                </p>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogAction 
+                onClick={() => window.location.href = createPageUrl('Subscription')}
+                className="bg-violet-600 hover:bg-violet-700"
+              >
+                View Subscription Plans
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
