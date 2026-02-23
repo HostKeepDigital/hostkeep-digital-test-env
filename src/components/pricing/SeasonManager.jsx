@@ -14,7 +14,6 @@ export default function SeasonManager({ seasons = [], onUpdate }) {
     start_date: "",
     end_date: "",
     nightly_rate: 100,
-    min_nights: 1,
     weekend_modifier: 0
   });
 
@@ -42,7 +41,6 @@ export default function SeasonManager({ seasons = [], onUpdate }) {
       start_date: season.start_date,
       end_date: season.end_date,
       nightly_rate: season.nightly_rate,
-      min_nights: season.min_nights,
       weekend_modifier: season.weekend_modifier || 0
     });
     setEditingSeason(season.id);
@@ -55,7 +53,6 @@ export default function SeasonManager({ seasons = [], onUpdate }) {
       start_date: "",
       end_date: "",
       nightly_rate: 100,
-      min_nights: 1,
       weekend_modifier: 0
     });
     setEditingSeason(null);
@@ -108,27 +105,15 @@ export default function SeasonManager({ seasons = [], onUpdate }) {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Nightly Rate (£)</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  value={formData.nightly_rate}
-                  onChange={(e) => setFormData({ ...formData, nightly_rate: parseInt(e.target.value) || 0 })}
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label>Min Nights</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  value={formData.min_nights}
-                  onChange={(e) => setFormData({ ...formData, min_nights: parseInt(e.target.value) || 1 })}
-                  className="mt-1"
-                />
-              </div>
+            <div>
+              <Label>Nightly Rate (£)</Label>
+              <Input
+                type="number"
+                min="1"
+                value={formData.nightly_rate}
+                onChange={(e) => setFormData({ ...formData, nightly_rate: parseInt(e.target.value) || 0 })}
+                className="mt-1"
+              />
             </div>
             <div>
               <Label>Weekend Modifier (%)</Label>
@@ -163,7 +148,6 @@ export default function SeasonManager({ seasons = [], onUpdate }) {
                   <div className="text-xs text-gray-500 mt-1">
                     {season.start_date} to {season.end_date} • £{season.nightly_rate}/night
                     {season.weekend_modifier > 0 && ` • +${season.weekend_modifier}% weekends`}
-                    {season.min_nights > 1 && ` • Min ${season.min_nights} nights`}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
