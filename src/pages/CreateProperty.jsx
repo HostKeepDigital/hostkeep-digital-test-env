@@ -601,6 +601,10 @@ export default function CreateProperty() {
                     </label>
                   </div>
 
+                  <p className="text-sm text-gray-500 mt-2">
+                    Users can rearrange images by dragging and dropping them into the desired order.
+                  </p>
+
                   {formData.photos.length < 5 && (
                     <p className="text-sm mt-2 text-red-500">
                       {formData.photos.length} / 5 photos uploaded (minimum 5 required)

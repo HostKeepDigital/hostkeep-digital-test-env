@@ -399,8 +399,12 @@ export default function EditProperty() {
                     <p className="text-gray-600 font-medium">{isUploading ? "Uploading..." : "Click to upload photos"}</p>
                   </label>
                 </div>
+                <p className="text-sm text-gray-500 mt-2">
+                  Users can rearrange images by dragging and dropping them into the desired order.
+                </p>
+
                 {formData.photos.length < 5 && (
-                  <p className="text-sm text-red-500">
+                  <p className="text-sm text-red-500 mt-2">
                     {formData.photos.length} / 5 photos uploaded (minimum 5 required)
                   </p>
                 )}
