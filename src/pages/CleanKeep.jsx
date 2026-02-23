@@ -108,8 +108,9 @@ export default function CleanKeep() {
       <section className="pb-16 px-4">
         <div className="max-w-6xl mx-auto">
           <div className={`grid ${
-            (hasRole(userRoles, 'host') && !hasRole(userRoles, 'cleaner')) || 
-            (hasRole(userRoles, 'cleaner') && !hasRole(userRoles, 'host'))
+            hasRole(userRoles, 'cleaner') && !hasRole(userRoles, 'host')
+            ? 'md:grid-cols-1 max-w-md mx-auto' 
+            : (hasRole(userRoles, 'host') && !hasRole(userRoles, 'cleaner'))
             ? 'md:grid-cols-2' : 'md:grid-cols-3'
           } gap-6`}>
             {options.filter(option => {
@@ -121,9 +122,9 @@ export default function CleanKeep() {
               if (hasRole(userRoles, 'host') && !hasRole(userRoles, 'cleaner')) {
                 return option.title === "Find a Cleaner" || option.title === "Join CleanKeep";
               }
-              // If user is only a cleaner (not a host), hide "Find a Cleaner"
+              // If user is only a cleaner (not a host), show only "Cleaner Dashboard"
               if (hasRole(userRoles, 'cleaner') && !hasRole(userRoles, 'host')) {
-                return option.title !== "Find a Cleaner";
+                return option.title === "Cleaner Dashboard";
               }
               // If user is both host and cleaner, show all buttons except "Join CleanKeep"
               return true;
