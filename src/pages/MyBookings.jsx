@@ -81,10 +81,10 @@ export default function MyBookings() {
     );
   }
 
-  const BookingCard = ({ booking, isUpcoming }) => {
+  const BookingCard = ({ booking, isUpcoming, isActive }) => {
     const property = getProperty(booking.property_id);
     const reviewed = hasReviewed(booking.id);
-    const showReviewButton = canReview(booking);
+    const showReviewButton = canReview(booking) && !isActive;
     
     // Calculate days before check-in
     const daysBeforeCheckIn = differenceInDays(parseISO(booking.check_in), today);
