@@ -49,6 +49,11 @@ export default function Pay() {
 
   const paymentMutation = useMutation({
     mutationFn: async (data) => {
+      if (testMode) {
+        // Test mode - just simulate success
+        return Promise.resolve();
+      }
+      
       await base44.entities.Payment.create({
         booking_id: booking.id,
         amount: data.amount,
@@ -68,7 +73,9 @@ export default function Pay() {
     },
     onSuccess: () => {
       setPaymentComplete(true);
-      queryClient.invalidateQueries({ queryKey: ['booking-payment'] });
+      if (!testMode) {
+        queryClient.invalidateQueries({ queryKey: ['booking-payment'] });
+      }
     },
   });
 
