@@ -454,7 +454,7 @@ export default function PropertyDetails() {
            initial={{ opacity: 0 }}
            animate={{ opacity: 1 }}
            exit={{ opacity: 0 }}
-           className="fixed inset-0 z-50 bg-black flex items-center justify-center"
+           className="fixed inset-0 z-50 bg-black flex items-center justify-center scrollbar-hide"
            onClick={() => setShowImageOverlay(false)}
          >
            <div className="w-full h-full flex items-center justify-center relative" onClick={(e) => e.stopPropagation()}>
