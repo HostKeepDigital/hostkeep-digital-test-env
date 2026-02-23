@@ -243,7 +243,7 @@ export default function CleanerSignup() {
                 Professional Profile
               </CardTitle>
               <CardDescription className="text-base">
-                Add what helps hosts trust you. <span className="font-semibold text-blue-600">2 Minute Setup</span>
+                Add what helps hosts trust you.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
