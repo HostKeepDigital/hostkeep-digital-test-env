@@ -94,7 +94,7 @@ export default function HostProperties() {
           </Button>
         </div>
 
-        {isLoading ? (
+        {!user || isLoading ? (
           <div className="text-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto"></div>
           </div>
