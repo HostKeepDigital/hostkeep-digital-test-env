@@ -113,33 +113,9 @@ export default function CreateProperty() {
   });
 
   useEffect(() => {
-    const checkSubscription = async () => {
-      try {
-        const userData = await base44.auth.me();
-        setUser(userData);
-        
-        // Check if user has an active subscription
-        const subscriptions = await base44.entities.Subscription.filter({ 
-          user_id: userData.id,
-          status: 'active'
-        });
-        
-        // Check if user has any existing properties
-        const properties = await base44.entities.Property.filter({ owner_id: userData.id });
-        
-        // If no active subscription and no existing properties, redirect to subscription page
-        if (subscriptions.length === 0 && properties.length === 0) {
-          toast.info("Please select a subscription plan to add your first property");
-          setTimeout(() => {
-            window.location.href = createPageUrl('Subscription');
-          }, 1500);
-        }
-      } catch (error) {
-        window.location.href = createPageUrl('Home');
-      }
-    };
-    
-    checkSubscription();
+    base44.auth.me().then(setUser).catch(() => {
+      window.location.href = createPageUrl('Home');
+    });
   }, []);
 
   const createMutation = useMutation({
@@ -250,7 +226,24 @@ export default function CreateProperty() {
     }
   };
 
-  const handleSubmit = (publish = false) => {
+  const handleSubmit = async (publish = false) => {
+    // Check subscription before creating property
+    const subscriptions = await base44.entities.Subscription.filter({ 
+      user_id: user.id,
+      status: 'active'
+    });
+    
+    const properties = await base44.entities.Property.filter({ owner_id: user.id });
+    
+    // If no active subscription and no existing properties, redirect to subscription
+    if (subscriptions.length === 0 && properties.length === 0) {
+      toast.info("Please select a subscription plan to continue");
+      setTimeout(() => {
+        window.location.href = createPageUrl('Subscription');
+      }, 1500);
+      return;
+    }
+    
     createMutation.mutate({
       ...formData,
       status: publish ? 'published' : 'draft'
