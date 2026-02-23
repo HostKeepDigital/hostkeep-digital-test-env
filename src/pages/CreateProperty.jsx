@@ -14,7 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { 
   Home, MapPin, Image, PoundSterling, Calendar, FileText, 
-  ChevronLeft, ChevronRight, Upload, X, Check, Loader2
+  ChevronLeft, ChevronRight, Upload, X, Check, Loader2, MoreVertical
 } from "lucide-react";
 import DayBasedBookingRules from "@/components/properties/DayBasedBookingRules";
 import PricingManager from "@/components/pricing/PricingManager";
@@ -582,25 +582,38 @@ export default function CreateProperty() {
                   {formData.photos.length > 0 && (
                     <div className="grid grid-cols-3 gap-4">
                       {formData.photos.map((photo, idx) => (
-                        <div key={idx} className="relative group aspect-square">
-                          <img
-                            src={photo}
-                            alt={`Photo ${idx + 1}`}
-                            className="w-full h-full object-cover rounded-lg"
-                          />
-                          <button
-                            onClick={() => removePhoto(idx)}
-                            className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                          {idx === 0 && (
-                            <span className="absolute bottom-2 left-2 px-2 py-1 bg-black/70 text-white text-xs rounded">
-                              Cover
-                            </span>
-                          )}
-                        </div>
-                      ))}
+                            <div key={idx} className="relative group aspect-square">
+                              <img
+                                src={photo}
+                                alt={`Photo ${idx + 1}`}
+                                className="w-full h-full object-cover rounded-lg"
+                              />
+                              <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  onClick={() => {
+                                    const newPhotos = [...formData.photos];
+                                    [newPhotos[0], newPhotos[idx]] = [newPhotos[idx], newPhotos[0]];
+                                    setFormData(prev => ({ ...prev, photos: newPhotos }));
+                                  }}
+                                  className="w-8 h-8 bg-black/70 text-white rounded flex items-center justify-center hover:bg-black/90 transition-colors"
+                                  title="Set as cover photo"
+                                >
+                                  <MoreVertical className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => removePhoto(idx)}
+                                  className="w-8 h-8 bg-red-500 text-white rounded flex items-center justify-center hover:bg-red-600 transition-colors"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+                              {idx === 0 && (
+                                <span className="absolute bottom-2 left-2 px-2 py-1 bg-black/70 text-white text-xs rounded">
+                                  Cover
+                                </span>
+                              )}
+                            </div>
+                          ))}
                     </div>
                   )}
                 </CardContent>
