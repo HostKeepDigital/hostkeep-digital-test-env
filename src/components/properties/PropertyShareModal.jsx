@@ -98,7 +98,7 @@ export default function PropertyShareModal({ propertyTitle, propertyUrl }) {
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-md p-0 overflow-hidden">
+        <DialogContent className="max-w-lg p-0 overflow-hidden max-h-[90vh] overflow-y-auto">
           <DialogHeader className="bg-gradient-to-r from-teal-50 to-teal-100 p-6 border-b">
             <DialogTitle className="text-xl">Share this property</DialogTitle>
             <p className="text-sm text-gray-600 mt-1">{propertyTitle}</p>
@@ -137,18 +137,18 @@ export default function PropertyShareModal({ propertyTitle, propertyUrl }) {
               <label className="text-sm font-semibold text-gray-900 block mb-3">
                 Share on Social Media
               </label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 {socialOptions.map((social) => {
                   const Icon = social.icon;
                   return (
                     <button
                       key={social.name}
                       onClick={() => handleSocialClick(social.url)}
-                      className={`${social.color} text-white rounded-lg py-2.5 flex items-center justify-center gap-2 transition-all hover:shadow-lg`}
+                      className={`${social.color} text-white rounded-lg py-2 px-2 flex flex-col items-center justify-center gap-1 transition-all hover:shadow-lg`}
                       aria-label={`Share on ${social.name}`}
                     >
                       <Icon className="w-4 h-4" />
-                      <span className="text-sm font-medium">{social.name}</span>
+                      <span className="text-xs font-medium">{social.name}</span>
                     </button>
                   );
                 })}
