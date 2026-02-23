@@ -113,9 +113,33 @@ export default function CreateProperty() {
   });
 
   useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {
-      window.location.href = createPageUrl('Home');
-    });
+    const checkSubscription = async () => {
+      try {
+        const userData = await base44.auth.me();
+        setUser(userData);
+        
+        // Check if user has an active subscription
+        const subscriptions = await base44.entities.Subscription.filter({ 
+          user_id: userData.id,
+          status: 'active'
+        });
+        
+        // Check if user has any existing properties
+        const properties = await base44.entities.Property.filter({ owner_id: userData.id });
+        
+        // If no active subscription and no existing properties, redirect to subscription page
+        if (subscriptions.length === 0 && properties.length === 0) {
+          toast.info("Please select a subscription plan to add your first property");
+          setTimeout(() => {
+            window.location.href = createPageUrl('Subscription');
+          }, 1500);
+        }
+      } catch (error) {
+        window.location.href = createPageUrl('Home');
+      }
+    };
+    
+    checkSubscription();
   }, []);
 
   const createMutation = useMutation({
