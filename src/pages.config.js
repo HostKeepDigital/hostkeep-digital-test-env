@@ -68,6 +68,8 @@ import Pay from './pages/Pay';
 import PropertyDetails from './pages/PropertyDetails';
 import Search from './pages/Search';
 import Subscription from './pages/Subscription';
+import HostGuests from './pages/HostGuests';
+import GuestProfile from './pages/GuestProfile';
 import __Layout from './Layout.jsx';
 
 
@@ -93,6 +95,8 @@ export const PAGES = {
     "PropertyDetails": PropertyDetails,
     "Search": Search,
     "Subscription": Subscription,
+    "HostGuests": HostGuests,
+    "GuestProfile": GuestProfile,
 }
 
 export const pagesConfig = {
