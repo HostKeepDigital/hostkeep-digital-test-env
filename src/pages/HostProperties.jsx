@@ -132,7 +132,7 @@ export default function HostProperties() {
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
-                            <Link to={createPageUrl('PropertyDetails') + `?id=${property.id}`} target="_blank">
+                            <Link to={createPageUrl('PropertyDetails') + `?id=${property.id}`}>
                               <Eye className="w-4 h-4 mr-2" /> Preview
                             </Link>
                           </DropdownMenuItem>
