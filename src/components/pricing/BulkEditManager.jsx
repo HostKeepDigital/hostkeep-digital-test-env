@@ -65,27 +65,15 @@ export default function BulkEditManager({ overrides = {}, onUpdate }) {
             />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label>Nightly Rate (£)</Label>
-            <Input
-              type="number"
-              min="1"
-              value={formData.rate}
-              onChange={(e) => setFormData({ ...formData, rate: parseInt(e.target.value) || 0 })}
-              className="mt-1"
-            />
-          </div>
-          <div>
-            <Label>Min Nights</Label>
-            <Input
-              type="number"
-              min="1"
-              value={formData.min_nights}
-              onChange={(e) => setFormData({ ...formData, min_nights: parseInt(e.target.value) || 1 })}
-              className="mt-1"
-            />
-          </div>
+        <div>
+          <Label>Nightly Rate (£)</Label>
+          <Input
+            type="number"
+            min="1"
+            value={formData.rate}
+            onChange={(e) => setFormData({ ...formData, rate: parseInt(e.target.value) || 0 })}
+            className="mt-1"
+          />
         </div>
         <Button onClick={handleBulkApply} className="w-full">
           Apply to Date Range

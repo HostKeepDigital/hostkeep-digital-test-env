@@ -200,26 +200,14 @@ export default function DateOverrideManager({ overrides = {}, onUpdate, selected
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Min Nights</Label>
-              <Input
-                type="number"
-                min="1"
-                value={formData.min_nights}
-                onChange={(e) => setFormData({ ...formData, min_nights: parseInt(e.target.value) || 1 })}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label>Note (Optional)</Label>
-              <Input
-                placeholder="e.g., New Year's Eve"
-                value={formData.note}
-                onChange={(e) => setFormData({ ...formData, note: e.target.value })}
-                className="mt-1"
-              />
-            </div>
+          <div>
+            <Label>Note (Optional)</Label>
+            <Input
+              placeholder="e.g., New Year's Eve"
+              value={formData.note}
+              onChange={(e) => setFormData({ ...formData, note: e.target.value })}
+              className="mt-1"
+            />
           </div>
           <Button onClick={handleAdd} className="w-full">
             <Plus className="w-4 h-4 mr-2" />
@@ -254,27 +242,15 @@ export default function DateOverrideManager({ overrides = {}, onUpdate, selected
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Nightly Rate (£)</Label>
-              <Input
-                type="number"
-                min="1"
-                value={bulkFormData.rate}
-                onChange={(e) => setBulkFormData({ ...bulkFormData, rate: parseInt(e.target.value) || 0 })}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label>Min Nights</Label>
-              <Input
-                type="number"
-                min="1"
-                value={bulkFormData.min_nights}
-                onChange={(e) => setBulkFormData({ ...bulkFormData, min_nights: parseInt(e.target.value) || 1 })}
-                className="mt-1"
-              />
-            </div>
+          <div>
+            <Label>Nightly Rate (£)</Label>
+            <Input
+              type="number"
+              min="1"
+              value={bulkFormData.rate}
+              onChange={(e) => setBulkFormData({ ...bulkFormData, rate: parseInt(e.target.value) || 0 })}
+              className="mt-1"
+            />
           </div>
           <Button onClick={handleBulkApply} className="w-full bg-teal-600 hover:bg-teal-700">
             Apply to Date Range
@@ -428,16 +404,7 @@ export default function DateOverrideManager({ overrides = {}, onUpdate, selected
                     className="mt-1"
                   />
                 </div>
-                <div>
-                  <Label>Min Nights</Label>
-                  <Input
-                    type="number"
-                    min="1"
-                    value={editingDate.min_nights}
-                    onChange={(e) => setEditingDate({ ...editingDate, min_nights: parseInt(e.target.value) || 1 })}
-                    className="mt-1"
-                  />
-                </div>
+
                 <div>
                   <Label>Note</Label>
                   <Input
