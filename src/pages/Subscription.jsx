@@ -1,14 +1,15 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Crown, Zap, Rocket, Loader2 } from "lucide-react";
+import { CheckCircle, Crown, Zap, Rocket, Loader2, X, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { format, addMonths } from "date-fns";
 import { createPageUrl } from "@/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const PLANS = [
   {
@@ -63,6 +64,8 @@ const PLANS = [
 
 export default function Subscription() {
   const [user, setUser] = useState(null);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -188,7 +191,9 @@ export default function Subscription() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription'] });
-      toast.success("Subscription cancelled");
+      toast.success("Subscription cancelled. Access will continue until end of billing period.");
+      setShowCancelDialog(false);
+      setCancelReason("");
     },
   });
 
@@ -289,10 +294,9 @@ export default function Subscription() {
                       <Button 
                         variant="outline" 
                         className="w-full"
-                        onClick={() => cancelMutation.mutate()}
-                        disabled={cancelMutation.isPending}
+                        disabled
                       >
-                        Cancel Subscription
+                        Currently Selected
                       </Button>
                     ) : (
                       <Button
@@ -320,6 +324,26 @@ export default function Subscription() {
           })}
         </div>
 
+        {subscription?.status === 'active' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="mt-8 text-center"
+          >
+            <p className="text-gray-600 mb-2">
+              Do you want to{' '}
+              <button 
+                onClick={() => setShowCancelDialog(true)}
+                className="text-red-600 hover:text-red-700 font-medium underline"
+              >
+                cancel your subscription
+              </button>
+              ?
+            </p>
+          </motion.div>
+        )}
+
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -345,6 +369,126 @@ export default function Subscription() {
           </div>
         </motion.div>
       </div>
+
+      {/* Cancel Subscription Dialog */}
+      <AnimatePresence>
+        {showCancelDialog && (
+          <>
+            {/* Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowCancelDialog(false)}
+              className="fixed inset-0 bg-black/50 z-50"
+            />
+            
+            {/* Dialog */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            >
+              <Card className="max-w-lg w-full relative">
+                <button
+                  onClick={() => setShowCancelDialog(false)}
+                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+
+                <CardHeader className="text-center pb-4">
+                  <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                    <AlertCircle className="w-8 h-8 text-red-600" />
+                  </div>
+                  <CardTitle className="text-2xl">Wait! Before You Go…</CardTitle>
+                  <CardDescription className="text-base mt-2">
+                    We're sorry to see you go 😢<br/>
+                    Before you cancel, you may want to consider pausing your subscription or switching to a lower plan.
+                  </CardDescription>
+                </CardHeader>
+
+                <CardContent className="space-y-6">
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <h4 className="font-semibold text-gray-900 mb-2">You will lose:</h4>
+                    <ul className="space-y-1 text-sm text-gray-700">
+                      <li className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                        Premium features
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                        Saved preferences
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                        Account benefits
+                      </li>
+                    </ul>
+                  </div>
+
+                  <p className="text-sm text-gray-600 text-center">
+                    Your access will continue until the end of your billing period.
+                  </p>
+
+                  <div className="space-y-3">
+                    <Button 
+                      className="w-full bg-teal-600 hover:bg-teal-700"
+                      onClick={() => setShowCancelDialog(false)}
+                    >
+                      Pause Subscription
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => setShowCancelDialog(false)}
+                    >
+                      Change Plan
+                    </Button>
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Why are you cancelling?
+                    </label>
+                    <Select value={cancelReason} onValueChange={setCancelReason}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a reason" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="too_expensive">Too expensive</SelectItem>
+                        <SelectItem value="not_using">Not using enough</SelectItem>
+                        <SelectItem value="missing_features">Missing features</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Button
+                    variant="ghost"
+                    className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
+                    onClick={() => {
+                      if (!cancelReason) {
+                        toast.error("Please select a reason before cancelling");
+                        return;
+                      }
+                      cancelMutation.mutate();
+                    }}
+                    disabled={cancelMutation.isPending}
+                  >
+                    {cancelMutation.isPending ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      "Continue to Cancel"
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
