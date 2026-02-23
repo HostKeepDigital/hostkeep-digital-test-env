@@ -91,7 +91,7 @@ export default function PropertyShareModal({ propertyTitle, propertyUrl }) {
             <p className="text-sm text-gray-600 mt-1">{propertyTitle}</p>
           </DialogHeader>
 
-          <div className="p-6 space-y-6 overflow-y-auto flex-1">
+          <div className="p-6 space-y-6 overflow-y-auto flex-1 scrollbar-hide">
             {/* Copy Link Section */}
             <div>
               <label className="text-sm font-semibold text-gray-900 block mb-3">
