@@ -71,6 +71,9 @@ import Pay from './pages/Pay';
 import PropertyDetails from './pages/PropertyDetails';
 import Search from './pages/Search';
 import Subscription from './pages/Subscription';
+import HostVerification from './pages/HostVerification';
+import CleanerVerification from './pages/CleanerVerification';
+import AdminVerifications from './pages/AdminVerifications';
 import __Layout from './Layout.jsx';
 
 
@@ -99,6 +102,9 @@ export const PAGES = {
     "PropertyDetails": PropertyDetails,
     "Search": Search,
     "Subscription": Subscription,
+    "HostVerification": HostVerification,
+    "CleanerVerification": CleanerVerification,
+    "AdminVerifications": AdminVerifications,
 }
 
 export const pagesConfig = {
