@@ -420,14 +420,7 @@ export default function PropertyDetails() {
                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
                </div>
              )}
-             {photos.length > 5 ? (
-               <button 
-                 onClick={() => { setCurrentImageIndex(5); setShowImageOverlay(true); }}
-                 className="overflow-hidden rounded-lg bg-gray-400 hover:bg-gray-500 transition-colors flex items-center justify-center relative"
-               >
-                 <span className="text-white font-semibold text-lg">+{photos.length - 5}</span>
-               </button>
-             ) : photos[4] && (
+             {photos[4] && (
                <div 
                  className="overflow-hidden rounded-lg bg-gray-300 cursor-pointer group relative"
                  onClick={() => { setCurrentImageIndex(4); setShowImageOverlay(true); }}
@@ -437,7 +430,17 @@ export default function PropertyDetails() {
                    alt="Photo 5"
                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                  />
-                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                 {photos.length > 5 && (
+                   <>
+                     <div className="absolute inset-0 bg-black/40" />
+                     <span className="absolute inset-0 flex items-center justify-center text-white font-semibold text-xl">
+                       +{photos.length - 5}
+                     </span>
+                   </>
+                 )}
+                 {photos.length <= 5 && (
+                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                 )}
                </div>
              )}
            </div>
