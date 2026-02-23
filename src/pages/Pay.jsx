@@ -14,6 +14,7 @@ import { toast } from "sonner";
 export default function Pay() {
   const urlParams = new URLSearchParams(window.location.search);
   const paymentLinkId = urlParams.get('id');
+  const testMode = urlParams.get('test') === 'true' || !paymentLinkId;
 
   const [paymentAmount, setPaymentAmount] = useState("");
   const [payerName, setPayerName] = useState("");
@@ -28,10 +29,23 @@ export default function Pay() {
   const { data: bookings = [], isLoading, error } = useQuery({
     queryKey: ['booking-payment', paymentLinkId],
     queryFn: () => base44.entities.Booking.filter({ payment_link_id: paymentLinkId }),
-    enabled: !!paymentLinkId,
+    enabled: !!paymentLinkId && !testMode,
   });
 
-  const booking = bookings[0];
+  // Test mode demo booking
+  const demoBooking = testMode ? {
+    id: 'test-booking',
+    guest_name: 'John Smith',
+    guest_email: 'john@example.com',
+    check_in: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    check_out: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    total_amount: 450.00,
+    amount_paid: 150.00,
+    payment_status: 'partial',
+    payment_link_id: 'TEST-DEMO'
+  } : null;
+
+  const booking = testMode ? demoBooking : bookings[0];
 
   const paymentMutation = useMutation({
     mutationFn: async (data) => {
