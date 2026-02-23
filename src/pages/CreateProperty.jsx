@@ -399,130 +399,8 @@ export default function CreateProperty() {
               </Card>
             )}
 
-            {/* Step 2: Location */}
+            {/* Step 2: Description */}
             {currentStep === 2 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Location</CardTitle>
-                  <CardDescription>Where is your property located?</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div>
-                    <Label>Street</Label>
-                    <Input
-                      value={formData.location.street}
-                      onChange={(e) => handleLocationChange("street", e.target.value)}
-                      placeholder="123 High Street"
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label>Locality/Village (Optional)</Label>
-                    <Input
-                      value={formData.location.locality}
-                      onChange={(e) => handleLocationChange("locality", e.target.value)}
-                      placeholder="Village name"
-                      className="mt-1"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Town/City</Label>
-                      <Input
-                        value={formData.location.town_city}
-                        onChange={(e) => handleLocationChange("town_city", e.target.value)}
-                        placeholder="London"
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label>Postcode</Label>
-                      <Input
-                        value={formData.location.postcode}
-                        onChange={(e) => handleLocationChange("postcode", e.target.value.toUpperCase())}
-                        placeholder="SW1A 1AA"
-                        className="mt-1"
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Step 3: Photos */}
-            {currentStep === 3 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Photos</CardTitle>
-                  <CardDescription>Upload at least 5 photos to showcase your property</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:border-teal-300 transition-colors">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handlePhotoUpload}
-                      className="hidden"
-                      id="photo-upload"
-                    />
-                    <label htmlFor="photo-upload" className="cursor-pointer">
-                      {isUploading ? (
-                        <Loader2 className="w-12 h-12 mx-auto mb-4 text-teal-600 animate-spin" />
-                      ) : (
-                        <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                      )}
-                      <p className="text-gray-600 font-medium">
-                        {isUploading ? "Uploading..." : "Click to upload photos"}
-                      </p>
-                      <p className="text-sm text-gray-400 mt-1">PNG, JPG up to 10MB each</p>
-                    </label>
-                  </div>
-
-                  {formData.photos.length < 5 && (
-                    <p className="text-sm mt-2 text-red-500">
-                      {formData.photos.length} / 5 photos uploaded (minimum 5 required)
-                    </p>
-                  )}
-
-                  {formData.photos.length > 0 && (
-                    <div className="grid grid-cols-3 gap-4">
-                      {formData.photos.map((photo, idx) => (
-                        <div key={idx} className="relative group aspect-square">
-                          <img
-                            src={photo}
-                            alt={`Photo ${idx + 1}`}
-                            className="w-full h-full object-cover rounded-lg"
-                          />
-                          <button
-                            onClick={() => removePhoto(idx)}
-                            className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                          {idx === 0 && (
-                            <span className="absolute bottom-2 left-2 px-2 py-1 bg-black/70 text-white text-xs rounded">
-                              Cover
-                            </span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Step 4: Pricing */}
-            {currentStep === 4 && (
-              <PricingManager
-                formData={formData}
-                onUpdate={(field, value) => handleChange(field, value)}
-              />
-            )}
-
-            {/* Step 5: Description */}
-            {currentStep === 5 && (
               <Card>
                 <CardHeader>
                   <CardTitle>Description & Amenities</CardTitle>
@@ -615,6 +493,128 @@ export default function CreateProperty() {
               </Card>
             )}
 
+            {/* Step 3: Location */}
+            {currentStep === 3 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Location</CardTitle>
+                  <CardDescription>Where is your property located?</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div>
+                    <Label>Street</Label>
+                    <Input
+                      value={formData.location.street}
+                      onChange={(e) => handleLocationChange("street", e.target.value)}
+                      placeholder="123 High Street"
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label>Locality/Village (Optional)</Label>
+                    <Input
+                      value={formData.location.locality}
+                      onChange={(e) => handleLocationChange("locality", e.target.value)}
+                      placeholder="Village name"
+                      className="mt-1"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Town/City</Label>
+                      <Input
+                        value={formData.location.town_city}
+                        onChange={(e) => handleLocationChange("town_city", e.target.value)}
+                        placeholder="London"
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label>Postcode</Label>
+                      <Input
+                        value={formData.location.postcode}
+                        onChange={(e) => handleLocationChange("postcode", e.target.value.toUpperCase())}
+                        placeholder="SW1A 1AA"
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Step 4: Photos */}
+            {currentStep === 4 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Photos</CardTitle>
+                  <CardDescription>Upload at least 5 photos to showcase your property</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:border-teal-300 transition-colors">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handlePhotoUpload}
+                      className="hidden"
+                      id="photo-upload"
+                    />
+                    <label htmlFor="photo-upload" className="cursor-pointer">
+                      {isUploading ? (
+                        <Loader2 className="w-12 h-12 mx-auto mb-4 text-teal-600 animate-spin" />
+                      ) : (
+                        <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                      )}
+                      <p className="text-gray-600 font-medium">
+                        {isUploading ? "Uploading..." : "Click to upload photos"}
+                      </p>
+                      <p className="text-sm text-gray-400 mt-1">PNG, JPG up to 10MB each</p>
+                    </label>
+                  </div>
+
+                  {formData.photos.length < 5 && (
+                    <p className="text-sm mt-2 text-red-500">
+                      {formData.photos.length} / 5 photos uploaded (minimum 5 required)
+                    </p>
+                  )}
+
+                  {formData.photos.length > 0 && (
+                    <div className="grid grid-cols-3 gap-4">
+                      {formData.photos.map((photo, idx) => (
+                        <div key={idx} className="relative group aspect-square">
+                          <img
+                            src={photo}
+                            alt={`Photo ${idx + 1}`}
+                            className="w-full h-full object-cover rounded-lg"
+                          />
+                          <button
+                            onClick={() => removePhoto(idx)}
+                            className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                          {idx === 0 && (
+                            <span className="absolute bottom-2 left-2 px-2 py-1 bg-black/70 text-white text-xs rounded">
+                              Cover
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Step 5: Pricing */}
+            {currentStep === 5 && (
+              <PricingManager
+                formData={formData}
+                onUpdate={(field, value) => handleChange(field, value)}
+              />
+            )}
+
             {/* Step 6: Booking Rules */}
             {currentStep === 6 && (
               <DayBasedBookingRules
@@ -633,15 +633,26 @@ export default function CreateProperty() {
 
         {/* Navigation */}
         <div className="flex items-center justify-between mt-8">
-          <Button
-            variant="outline"
-            onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
-            disabled={currentStep === 1}
-            className="gap-2"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Previous
-          </Button>
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
+              disabled={currentStep === 1}
+              className="gap-2"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Previous
+            </Button>
+            {currentStep > 1 && currentStep < STEPS.length && (
+              <Button
+                variant="outline"
+                onClick={() => handleSubmit(false)}
+                disabled={createMutation.isPending}
+              >
+                Save as Draft
+              </Button>
+            )}
+          </div>
 
           {currentStep < STEPS.length ? (
             <Button
