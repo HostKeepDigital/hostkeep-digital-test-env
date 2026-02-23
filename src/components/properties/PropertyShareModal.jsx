@@ -98,13 +98,13 @@ export default function PropertyShareModal({ propertyTitle, propertyUrl }) {
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-lg p-0 overflow-hidden max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-full max-w-xl p-0 overflow-hidden flex flex-col max-h-[95vh]">
           <DialogHeader className="bg-gradient-to-r from-teal-50 to-teal-100 p-6 border-b">
             <DialogTitle className="text-xl">Share this property</DialogTitle>
             <p className="text-sm text-gray-600 mt-1">{propertyTitle}</p>
           </DialogHeader>
 
-          <div className="p-6 space-y-6">
+          <div className="p-6 space-y-6 overflow-y-auto flex-1">
             {/* Copy Link Section */}
             <div>
               <label className="text-sm font-semibold text-gray-900 block mb-3">
