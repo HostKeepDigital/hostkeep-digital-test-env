@@ -236,7 +236,7 @@ export default function MyBookings() {
                 </div>
               ) : (
                 activeBookings.map(booking => (
-                  <BookingCard key={booking.id} booking={booking} isUpcoming={false} />
+                  <BookingCard key={booking.id} booking={booking} isUpcoming={false} isActive={true} />
                 ))
               )}
             </TabsContent>
