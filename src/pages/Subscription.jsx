@@ -115,6 +115,33 @@ export default function Subscription() {
           queryClient.invalidateQueries({ queryKey: ['subscription'] });
           toast.success("Subscription activated! You can now list your properties.");
           
+          // Check if there's a pending property draft
+          const pendingDraft = localStorage.getItem('pendingPropertyDraft');
+          if (pendingDraft) {
+            try {
+              const draftData = JSON.parse(pendingDraft);
+              const { publish, ...propertyData } = draftData;
+              
+              // Create the property
+              await base44.entities.Property.create({
+                ...propertyData,
+                status: publish ? 'published' : 'draft'
+              });
+              
+              // Clear the draft
+              localStorage.removeItem('pendingPropertyDraft');
+              
+              toast.success("Your property has been added!");
+              setTimeout(() => {
+                window.location.href = createPageUrl('HostProperties');
+              }, 1500);
+              return;
+            } catch (error) {
+              console.error('Failed to create property:', error);
+              toast.error("Subscription activated, but failed to create property. Please try again.");
+            }
+          }
+          
           // Clean up URL
           window.history.replaceState({}, '', createPageUrl('Subscription'));
         } catch (error) {
@@ -170,9 +197,37 @@ export default function Subscription() {
 
       return { plan };
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['subscription'] });
       toast.success("Subscription activated! You can now list your properties.");
+      
+      // Check if there's a pending property draft
+      const pendingDraft = localStorage.getItem('pendingPropertyDraft');
+      if (pendingDraft) {
+        try {
+          const draftData = JSON.parse(pendingDraft);
+          const { publish, ...propertyData } = draftData;
+          
+          // Create the property
+          await base44.entities.Property.create({
+            ...propertyData,
+            status: publish ? 'published' : 'draft'
+          });
+          
+          // Clear the draft
+          localStorage.removeItem('pendingPropertyDraft');
+          
+          toast.success("Your property has been added!");
+          setTimeout(() => {
+            window.location.href = createPageUrl('HostProperties');
+          }, 1500);
+          return;
+        } catch (error) {
+          console.error('Failed to create property:', error);
+          toast.error("Subscription activated, but failed to create property. Please try again.");
+        }
+      }
+      
       setTimeout(() => {
         window.location.href = createPageUrl('HostDashboard');
       }, 1500);

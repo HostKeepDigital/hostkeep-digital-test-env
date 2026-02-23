@@ -235,11 +235,18 @@ export default function CreateProperty() {
     
     const properties = await base44.entities.Property.filter({ owner_id: user.id });
     
-    // If no active subscription and no existing properties, redirect to subscription
+    // If no active subscription and no existing properties, save draft and redirect to subscription
     if (subscriptions.length === 0 && properties.length === 0) {
+      // Save property as draft locally before redirecting
+      localStorage.setItem('pendingPropertyDraft', JSON.stringify({
+        ...formData,
+        owner_id: user.id,
+        publish: publish
+      }));
+      
       toast.info("Please select a subscription plan to continue");
       setTimeout(() => {
-        window.location.href = createPageUrl('Subscription');
+        window.location.href = createPageUrl('Subscription') + '?from=createProperty';
       }, 1500);
       return;
     }

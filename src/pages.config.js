@@ -51,6 +51,7 @@ import AboutUs from './pages/AboutUs';
 import AdminVerifications from './pages/AdminVerifications';
 import BecomeCleaner from './pages/BecomeCleaner';
 import BecomeHost from './pages/BecomeHost';
+import CleanKeep from './pages/CleanKeep';
 import CleanerDashboard from './pages/CleanerDashboard';
 import CleanerMarketplace from './pages/CleanerMarketplace';
 import CleanerPricing from './pages/CleanerPricing';
@@ -73,7 +74,6 @@ import Pay from './pages/Pay';
 import PropertyDetails from './pages/PropertyDetails';
 import Search from './pages/Search';
 import Subscription from './pages/Subscription';
-import CleanKeep from './pages/CleanKeep';
 import __Layout from './Layout.jsx';
 
 
@@ -82,6 +82,7 @@ export const PAGES = {
     "AdminVerifications": AdminVerifications,
     "BecomeCleaner": BecomeCleaner,
     "BecomeHost": BecomeHost,
+    "CleanKeep": CleanKeep,
     "CleanerDashboard": CleanerDashboard,
     "CleanerMarketplace": CleanerMarketplace,
     "CleanerPricing": CleanerPricing,
@@ -104,7 +105,6 @@ export const PAGES = {
     "PropertyDetails": PropertyDetails,
     "Search": Search,
     "Subscription": Subscription,
-    "CleanKeep": CleanKeep,
 }
 
 export const pagesConfig = {
