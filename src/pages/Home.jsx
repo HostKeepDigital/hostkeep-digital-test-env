@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Search, MapPin, Calendar, Users, Star, Home as HomeIcon, 
-  CheckCircle, ArrowRight, Building2, Mountain, Waves, TreePine, Caravan
+  Search, MapPin, Calendar, Home as HomeIcon, 
+  CheckCircle, ArrowRight, Building2, PoundSterling, Sparkles, Star
 } from "lucide-react";
 import PropertyCard from "@/components/properties/PropertyCard";
 import GuestSelector from "@/components/search/GuestSelector";
@@ -27,7 +27,7 @@ export default function Home() {
 
   const handleSearch = () => {
     if (guestData.children > 0 && !guestData.isValid) {
-      return; // Don't search if child ages not filled
+      return;
     }
     const params = new URLSearchParams();
     if (searchLocation) params.set('location', searchLocation);
@@ -41,40 +41,101 @@ export default function Home() {
     window.location.href = createPageUrl('Search') + '?' + params.toString();
   };
 
-  const propertyTypes = [
-    { icon: TreePine, label: "Lodges", type: "lodges" },
-    { icon: HomeIcon, label: "Houses", type: "house" },
-    { icon: Mountain, label: "Chalets", type: "chalet" },
-    { icon: Caravan, label: "Caravans", type: "caravan" },
-    { icon: Waves, label: "Cabins", type: "cabin" },
-    { icon: Building2, label: "Bungalows", type: "bungalow" },
-    { icon: Building2, label: "Apartments", type: "apartment" },
-  ];
-
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero Section */}
+      {/* Hero Section with 3 Main CTAs */}
       <section className="relative bg-gradient-to-br from-teal-600 via-teal-700 to-emerald-800 overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=1920')] bg-cover bg-center opacity-20" />
-        <div className="relative max-w-7xl mx-auto px-4 py-20 md:py-32">
+        <div className="relative max-w-7xl mx-auto px-4 py-16 md:py-24">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center text-white mb-12"
           >
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              Find Your Perfect<br />Holiday Home
+              Your Holiday Home Marketplace
             </h1>
-            <p className="text-xl md:text-2xl text-teal-100 max-w-2xl mx-auto">
-              Book directly with owners. No hidden fees. Just unforgettable stays.
+            <p className="text-xl md:text-2xl text-teal-100 max-w-3xl mx-auto">
+              Book amazing stays. List your property. Earn as a cleaner.
             </p>
           </motion.div>
+
+          {/* 3 Main Conversion CTAs - Above the Fold */}
+          <div className="grid md:grid-cols-3 gap-6 mb-12 max-w-6xl mx-auto">
+            {/* CTA 1: Book a Stay */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="bg-white rounded-2xl p-8 text-center shadow-2xl hover:shadow-3xl transition-all group"
+            >
+              <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                <HomeIcon className="w-8 h-8 text-teal-600" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">Book a Stay</h3>
+              <p className="text-gray-600 mb-6">
+                Discover unique holiday homes and book directly with owners
+              </p>
+              <Link to={createPageUrl('Search')}>
+                <Button className="w-full bg-teal-600 hover:bg-teal-700" size="lg">
+                  Browse Properties
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
+            </motion.div>
+
+            {/* CTA 2: Become a Host */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-8 text-center shadow-2xl hover:shadow-3xl transition-all group relative overflow-hidden"
+            >
+              <Sparkles className="absolute top-4 right-4 w-6 h-6 text-white opacity-50" />
+              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                <Building2 className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-3">Become a Host</h3>
+              <p className="text-orange-100 mb-4">
+                List your property and earn up to <span className="font-bold text-white">£2,000/month</span>
+              </p>
+              <Link to={createPageUrl('BecomeHost')}>
+                <Button className="w-full bg-white text-orange-600 hover:bg-orange-50" size="lg">
+                  Start Earning
+                  <PoundSterling className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
+            </motion.div>
+
+            {/* CTA 3: Join CleanKeep */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-8 text-center shadow-2xl hover:shadow-3xl transition-all group relative overflow-hidden"
+            >
+              <Star className="absolute top-4 right-4 w-6 h-6 text-white opacity-50" />
+              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                <Sparkles className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-3">Join CleanKeep</h3>
+              <p className="text-blue-100 mb-4">
+                Flexible cleaning work. Earn <span className="font-bold text-white">£15-25/hour</span>
+              </p>
+              <Link to={createPageUrl('BecomeCleaner')}>
+                <Button className="w-full bg-white text-blue-600 hover:bg-blue-50" size="lg">
+                  Apply Now
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
+            </motion.div>
+          </div>
 
           {/* Search Box */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.4 }}
             className="bg-white rounded-2xl shadow-2xl p-4 md:p-6 max-w-4xl mx-auto"
           >
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -134,29 +195,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Property Types */}
-      <section className="max-w-7xl mx-auto px-4 py-16">
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8">Browse by property type</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-          {propertyTypes.map((type, idx) => (
-            <motion.div
-              key={type.type}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.1 }}
-            >
-              <Link 
-                to={createPageUrl('Search') + `?type=${type.type}`}
-                className="block p-6 bg-gray-50 rounded-2xl hover:bg-teal-50 hover:border-teal-200 border-2 border-transparent transition-all group"
-              >
-                <type.icon className="w-10 h-10 text-teal-600 mb-4 group-hover:scale-110 transition-transform" />
-                <h3 className="font-semibold text-gray-900">{type.label}</h3>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
       {/* Featured Properties */}
       <section className="bg-gray-50 py-16">
         <div className="max-w-7xl mx-auto px-4">
@@ -190,254 +228,69 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Host CTA Section */}
-      <section className="max-w-7xl mx-auto px-4 py-16">
-        <div className="bg-gradient-to-br from-teal-600 to-emerald-700 rounded-3xl overflow-hidden">
-          <div className="grid md:grid-cols-2 gap-8 items-center">
-            <div className="p-8 md:p-12 text-white">
-              <Badge className="bg-white/20 text-white border-0 mb-4">For Hosts</Badge>
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                List your property.<br />Keep 100% of bookings.
-              </h2>
-              <p className="text-teal-100 text-lg mb-6">
-                Pay one flat monthly fee. No commission on your bookings. Ever.
-              </p>
-              <ul className="space-y-3 mb-8">
-                {[
-                  "Direct payments to your account",
-                  "Full control over your listings",
-                  "Built-in messaging & calendar",
-                  "No hidden fees or surprises"
-                ].map((feature, idx) => (
-                  <li key={idx} className="flex items-center gap-3">
-                    <CheckCircle className="w-5 h-5 text-teal-300" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              <Link to={createPageUrl('HostDashboard')}>
-                <Button size="lg" className="bg-white text-teal-700 hover:bg-teal-50">
-                  Become a Host
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </Link>
-            </div>
-            <div className="hidden md:block h-full">
-              <img 
-                src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800" 
-                alt="Beautiful holiday home"
-                className="w-full h-full object-cover"
-              />
-            </div>
+      {/* Trust Indicators */}
+      <section className="py-16">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid md:grid-cols-4 gap-8 text-center">
+            {[
+              { number: "10,000+", label: "Happy Guests" },
+              { number: "500+", label: "Properties Listed" },
+              { number: "4.8★", label: "Average Rating" },
+              { number: "100%", label: "Direct Bookings" }
+            ].map((stat, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.1 }}
+              >
+                <div className="text-4xl font-bold text-teal-600 mb-2">{stat.number}</div>
+                <div className="text-gray-600">{stat.label}</div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Subscription Section */}
-      <section className="bg-gray-50 py-20">
+      {/* Why Choose HostKeep */}
+      <section className="bg-gray-50 py-16">
         <div className="max-w-7xl mx-auto px-4">
-          {/* FOR HOSTS */}
-          <div className="mb-20">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">For Hosts</h2>
-              <p className="text-xl text-gray-700 mb-6 max-w-3xl mx-auto">
-                List your property. Keep 100% of bookings. Pay one flat monthly fee. No commission on your bookings. Ever.
-              </p>
-              <ul className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 text-left max-w-4xl mx-auto mb-8">
-                {[
-                  "Direct payments to your account",
-                  "Full control over your listings",
-                  "Built-in messaging & calendar",
-                  "No hidden fees or surprises"
-                ].map((feature, idx) => (
-                  <li key={idx} className="flex items-center gap-2 text-gray-700">
-                    <CheckCircle className="w-5 h-5 text-teal-600 flex-shrink-0" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              <Link to={createPageUrl('HostDashboard')}>
-                <Button size="lg" className="bg-teal-600 hover:bg-teal-700 text-white mb-12">
-                  Become a Host
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </Link>
-            </div>
-
-            <div className="text-center mb-8">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Simple, Transparent Pricing</h3>
-              <p className="text-gray-600">Choose the plan that works for you. No commissions, no hidden fees.</p>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-              {[
-                { 
-                  name: "Basic", 
-                  price: "19", 
-                  properties: "1 property", 
-                  features: ["Calendar management", "Direct bookings", "Messaging"] 
-                },
-                { 
-                  name: "Pro", 
-                  price: "39", 
-                  properties: "Up to 5 properties", 
-                  features: ["Everything in Basic", "Priority support", "Analytics dashboard"], 
-                  popular: true 
-                },
-                { 
-                  name: "Premium", 
-                  price: "79", 
-                  properties: "Unlimited properties", 
-                  features: ["Everything in Pro", "Featured listings", "API access"] 
-                }
-              ].map((plan, idx) => (
-                <motion.div
-                  key={plan.name}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.1 }}
-                  className={`bg-white rounded-2xl p-8 border-2 ${plan.popular ? 'border-teal-500 shadow-xl' : 'border-gray-200'} relative hover:shadow-lg transition-shadow`}
-                >
-                  {plan.popular && (
-                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-teal-600 text-white">Most Popular</Badge>
-                  )}
-                  <h3 className="text-2xl font-bold text-gray-900 mb-3">{plan.name}</h3>
-                  <div className="mb-4">
-                    <span className="text-5xl font-bold text-gray-900">£{plan.price}</span>
-                    <span className="text-gray-500 text-lg">/month</span>
-                  </div>
-                  <p className="text-gray-600 font-medium mb-6">{plan.properties}</p>
-                  <ul className="space-y-3 text-gray-700 mb-8">
-                    {plan.features.map((f, i) => (
-                      <li key={i} className="flex items-start gap-3">
-                        <CheckCircle className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                        <span>{f}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Button 
-                    variant={plan.popular ? "default" : "outline"} 
-                    className={`w-full ${plan.popular ? 'bg-teal-600 hover:bg-teal-700' : ''}`}
-                    size="lg"
-                  >
-                    Get Started
-                  </Button>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-
-          {/* Divider */}
-          <div className="border-t border-gray-200 my-16"></div>
-
-          {/* FOR CLEANERS */}
-          <div>
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">For Cleaners</h2>
-              <p className="text-xl text-gray-700 mb-6 max-w-3xl mx-auto">
-                Join CleanKeep and connect directly with holiday home owners. Set your rates. Get consistent work. No commission taken from your earnings.
-              </p>
-              <ul className="grid md:grid-cols-2 lg:grid-cols-5 gap-4 text-left max-w-5xl mx-auto mb-8">
-                {[
-                  "Professional public profile",
-                  "Availability calendar",
-                  "Direct messaging with hosts",
-                  "Build your reputation with reviews",
-                  "Keep 100% of what you earn"
-                ].map((feature, idx) => (
-                  <li key={idx} className="flex items-start gap-2 text-gray-700">
-                    <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-sm">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="text-center mb-8">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Flexible, Low-Cost Membership</h3>
-              <p className="text-gray-600">Affordable monthly subscription. No commission. Cancel anytime.</p>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-              {[
-                { 
-                  name: "Basic", 
-                  price: "5", 
-                  features: [
-                    "Public cleaner profile",
-                    "Availability calendar",
-                    "Job notifications",
-                    "Messaging",
-                    "Reviews & ratings"
-                  ] 
-                },
-                { 
-                  name: "Pro", 
-                  price: "10", 
-                  features: [
-                    "Everything in Basic",
-                    "Priority placement in search",
-                    "Auto-accept job option",
-                    "Repeat client management",
-                    "Earnings analytics",
-                    '"Verified Cleaner" badge'
-                  ],
-                  popular: true 
-                }
-              ].map((plan, idx) => (
-                <motion.div
-                  key={plan.name}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.1 }}
-                  className={`bg-white rounded-2xl p-8 border-2 ${plan.popular ? 'border-blue-500 shadow-xl' : 'border-gray-200'} relative hover:shadow-lg transition-shadow`}
-                >
-                  {plan.popular && (
-                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white">Most Popular</Badge>
-                  )}
-                  <h3 className="text-2xl font-bold text-gray-900 mb-3">{plan.name}</h3>
-                  <div className="mb-6">
-                    <span className="text-5xl font-bold text-gray-900">£{plan.price}</span>
-                    <span className="text-gray-500 text-lg">/month</span>
-                  </div>
-                  <ul className="space-y-3 text-gray-700 mb-8">
-                    {plan.features.map((f, i) => (
-                      <li key={i} className="flex items-start gap-3">
-                        <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                        <span>{f}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Link to={createPageUrl('CleanerSignup')}>
-                    <Button 
-                      variant={plan.popular ? "default" : "outline"} 
-                      className={`w-full ${plan.popular ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
-                      size="lg"
-                    >
-                      Start Free Trial
-                    </Button>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
+          <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12">Why Choose HostKeep?</h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                icon: PoundSterling,
+                title: "Zero Commission",
+                description: "Hosts keep 100% of bookings. Cleaners keep 100% of earnings. Just a small monthly fee."
+              },
+              {
+                icon: CheckCircle,
+                title: "Direct Bookings",
+                description: "Connect directly with guests and hosts. No middleman. Full control over your business."
+              },
+              {
+                icon: Star,
+                title: "Build Your Reputation",
+                description: "Earn reviews and ratings. Build trust. Grow your hosting or cleaning business."
+              }
+            ].map((feature, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.1 }}
+                className="bg-white rounded-xl p-8 shadow-sm hover:shadow-md transition-shadow"
+              >
+                <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mb-4">
+                  <feature.icon className="w-6 h-6 text-teal-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
+                <p className="text-gray-600">{feature.description}</p>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-teal-500 flex items-center justify-center">
-              <HomeIcon className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold">HostKeep</span>
-          </div>
-          <p className="text-gray-400 text-sm">
-            © 2026 HostKeep. Book directly with holiday home owners.
-          </p>
-        </div>
-      </footer>
     </div>
   );
 }
