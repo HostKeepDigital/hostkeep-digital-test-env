@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Share2, X, Copy, Check, Mail, MessageCircle, QrCode,
-  Facebook, Linkedin, Send, Heart
+  Facebook, Send, Heart
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -13,8 +13,7 @@ export default function PropertyShareModal({ propertyTitle, propertyUrl }) {
   const [copied, setCopied] = useState(false);
   const [showQR, setShowQR] = useState(false);
   const [qrCode, setQrCode] = useState(null);
-  const [showEmbed, setShowEmbed] = useState(false);
-  const embedCodeRef = useRef(null);
+
 
   // Generate QR code when modal opens
   useEffect(() => {
@@ -35,13 +34,7 @@ export default function PropertyShareModal({ propertyTitle, propertyUrl }) {
     }
   };
 
-  const handleCopyEmbed = () => {
-    if (embedCodeRef.current) {
-      embedCodeRef.current.select();
-      navigator.clipboard.writeText(embedCodeRef.current.value);
-      toast.success("Embed code copied!");
-    }
-  };
+
 
   const socialOptions = [
     {
@@ -55,12 +48,6 @@ export default function PropertyShareModal({ propertyTitle, propertyUrl }) {
       icon: Send,
       url: `https://twitter.com/intent/tweet?url=${encodeURIComponent(propertyUrl)}&text=${encodeURIComponent(`Check out: ${propertyTitle}`)}`,
       color: "bg-black hover:bg-gray-800"
-    },
-    {
-      name: "LinkedIn",
-      icon: Linkedin,
-      url: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(propertyUrl)}`,
-      color: "bg-blue-700 hover:bg-blue-800"
     },
     {
       name: "WhatsApp",
@@ -212,43 +199,7 @@ export default function PropertyShareModal({ propertyTitle, propertyUrl }) {
               </AnimatePresence>
             </div>
 
-            {/* Embed Code Toggle */}
-            <div className="border-t pt-4">
-              <button
-                onClick={() => setShowEmbed(!showEmbed)}
-                className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-all"
-                aria-label="Toggle embed code"
-              >
-                <span className="text-sm font-medium text-gray-900">Embed on Website</span>
-                <span className="text-xs text-gray-500">{showEmbed ? 'Hide' : 'Show'}</span>
-              </button>
 
-              <AnimatePresence>
-                {showEmbed && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="mt-3 space-y-2"
-                  >
-                    <textarea
-                      ref={embedCodeRef}
-                      readOnly
-                      value={`<iframe src="${propertyUrl}" width="100%" height="600" frameborder="0" allow="clipboard-write" allowfullscreen></iframe>`}
-                      className="w-full h-20 p-2 text-xs bg-gray-900 text-green-400 font-mono rounded border border-gray-700 resize-none"
-                      aria-label="Embed code"
-                    />
-                    <button
-                      onClick={handleCopyEmbed}
-                      className="w-full px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg transition-all"
-                      aria-label="Copy embed code"
-                    >
-                      Copy Embed Code
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
           </div>
         </DialogContent>
       </Dialog>
