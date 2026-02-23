@@ -9,14 +9,16 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Home, PoundSterling, Calendar, MessageSquare, Settings, Plus, 
-  TrendingUp, Users, Star, Eye, ArrowRight, Bell
+  TrendingUp, Users, Star, Eye, ArrowRight, Bell, Crown
 } from "lucide-react";
 import StatsCard from "@/components/dashboard/StatsCard";
 import BookingCalendar from "@/components/dashboard/BookingCalendar";
 import { parseISO, isAfter, startOfMonth, endOfMonth, isWithinInterval, format } from "date-fns";
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 export default function HostDashboard() {
   const [user, setUser] = useState(null);
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
@@ -69,6 +71,16 @@ export default function HostDashboard() {
 
   const publishedProperties = properties.filter(p => p.status === 'published').length;
 
+  const handleAddPropertyClick = (e) => {
+    // Check if on basic plan with 1 property already
+    if (subscription?.plan === 'basic' && subscription?.max_properties === 1 && properties.length >= 1) {
+      e.preventDefault();
+      setShowUpgradeDialog(true);
+    } else {
+      window.location.href = createPageUrl('CreateProperty');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -87,12 +99,13 @@ export default function HostDashboard() {
                 {pendingBookings.length} pending
               </Badge>
             )}
-            <Link to={createPageUrl('CreateProperty')}>
-              <Button className="bg-teal-600 hover:bg-teal-700 gap-2">
-                <Plus className="w-4 h-4" />
-                Add Property
-              </Button>
-            </Link>
+            <Button 
+              onClick={handleAddPropertyClick}
+              className="bg-teal-600 hover:bg-teal-700 gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Add Property
+            </Button>
           </div>
         </div>
 
@@ -325,6 +338,32 @@ export default function HostDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Upgrade Dialog */}
+      <AlertDialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Crown className="w-5 h-5 text-violet-600" />
+              Upgrade Required
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-left space-y-2">
+              <p>If you want to add more than one property, please see subscription upgrades.</p>
+              <p className="text-sm text-gray-600">
+                Upgrade to <strong>Pro</strong> (up to 5 properties) or <strong>Premium</strong> (unlimited properties).
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction 
+              onClick={() => window.location.href = createPageUrl('Subscription')}
+              className="bg-violet-600 hover:bg-violet-700"
+            >
+              View Subscription Plans
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
