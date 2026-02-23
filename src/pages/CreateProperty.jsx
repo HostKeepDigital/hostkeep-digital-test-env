@@ -582,24 +582,37 @@ export default function CreateProperty() {
                   {formData.photos.length > 0 && (
                     <div className="grid grid-cols-3 gap-4">
                       {formData.photos.map((photo, idx) => (
-                            <div key={idx} className="relative group aspect-square">
+                            <div
+                              key={idx}
+                              className="relative group aspect-square cursor-move"
+                              draggable
+                              onDragStart={(e) => handleDragStart(e, idx)}
+                              onDragOver={handleDragOver}
+                              onDrop={(e) => handleDrop(e, idx)}
+                            >
                               <img
                                 src={photo}
                                 alt={`Photo ${idx + 1}`}
-                                className="w-full h-full object-cover rounded-lg"
+                                className="w-full h-full object-cover rounded-lg pointer-events-none"
                               />
                               <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button
-                                  onClick={() => {
-                                    const newPhotos = [...formData.photos];
-                                    [newPhotos[0], newPhotos[idx]] = [newPhotos[idx], newPhotos[0]];
-                                    setFormData(prev => ({ ...prev, photos: newPhotos }));
-                                  }}
-                                  className="w-8 h-8 bg-black/70 text-white rounded flex items-center justify-center hover:bg-black/90 transition-colors"
-                                  title="Set as cover photo"
-                                >
-                                  <MoreVertical className="w-4 h-4" />
-                                </button>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <button className="w-8 h-8 bg-black/70 text-white rounded flex items-center justify-center hover:bg-black/90 transition-colors">
+                                      <MoreVertical className="w-4 h-4" />
+                                    </button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    {idx !== 0 && (
+                                      <DropdownMenuItem onClick={() => setCoverPhoto(idx)}>
+                                        Make this Picture your cover
+                                      </DropdownMenuItem>
+                                    )}
+                                    <DropdownMenuItem onClick={() => removePhoto(idx)} className="text-red-600">
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
                                 <button
                                   onClick={() => removePhoto(idx)}
                                   className="w-8 h-8 bg-red-500 text-white rounded flex items-center justify-center hover:bg-red-600 transition-colors"
