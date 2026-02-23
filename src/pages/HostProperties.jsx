@@ -10,7 +10,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { 
   Plus, MoreVertical, Edit, Eye, Pause, Play, Trash2, 
-  MapPin, Users, Bed, Star, Home, Crown
+  MapPin, Users, Bed, Star, Home, Crown, X
 } from "lucide-react";
 import { toast } from "sonner";
 
