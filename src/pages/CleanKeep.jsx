@@ -107,12 +107,21 @@ export default function CleanKeep() {
       {/* The Three Pathways */}
       <section className="pb-16 px-4">
         <div className="max-w-6xl mx-auto">
-          <div className={`grid ${hasRole(userRoles, 'host') && !hasRole(userRoles, 'cleaner') ? 'md:grid-cols-2' : 'md:grid-cols-3'} gap-6`}>
+          <div className={`grid ${
+            (hasRole(userRoles, 'host') && !hasRole(userRoles, 'cleaner')) || 
+            (hasRole(userRoles, 'cleaner') && !hasRole(userRoles, 'host'))
+            ? 'md:grid-cols-2' : 'md:grid-cols-3'
+          } gap-6`}>
             {options.filter(option => {
-              // If user is a host (but not a cleaner), only show "Find a Cleaner" and "Join CleanKeep"
+              // If user is only a host (not a cleaner), show "Find a Cleaner" and "Join CleanKeep"
               if (hasRole(userRoles, 'host') && !hasRole(userRoles, 'cleaner')) {
                 return option.title === "Find a Cleaner" || option.title === "Join CleanKeep";
               }
+              // If user is only a cleaner (not a host), hide "Find a Cleaner"
+              if (hasRole(userRoles, 'cleaner') && !hasRole(userRoles, 'host')) {
+                return option.title !== "Find a Cleaner";
+              }
+              // If user is both host and cleaner, show all buttons
               return true;
             }).map((option, idx) => {
               const shouldHighlight = 
