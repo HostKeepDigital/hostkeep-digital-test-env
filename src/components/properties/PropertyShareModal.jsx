@@ -122,9 +122,9 @@ export default function PropertyShareModal({ propertyTitle, propertyUrl }) {
             {/* Social Sharing */}
             <div>
               <label className="text-sm font-semibold text-gray-900 block mb-3">
-                Share on Social Media
+                Share
               </label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 {socialOptions.map((social) => {
                   const Icon = social.icon;
                   return (
@@ -139,27 +139,23 @@ export default function PropertyShareModal({ propertyTitle, propertyUrl }) {
                     </button>
                   );
                 })}
+                <button
+                  onClick={handleEmailShare}
+                  className="flex flex-col items-center justify-center gap-1 py-2 px-2 bg-orange-50 hover:bg-orange-100 text-orange-700 rounded-lg border border-orange-200 transition-all"
+                  aria-label="Share via email"
+                >
+                  <Mail className="w-4 h-4" />
+                  <span className="text-xs font-medium">Email</span>
+                </button>
+                <button
+                  onClick={handleSMSShare}
+                  className="flex flex-col items-center justify-center gap-1 py-2 px-2 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg border border-purple-200 transition-all"
+                  aria-label="Share via SMS"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span className="text-xs font-medium">SMS</span>
+                </button>
               </div>
-            </div>
-
-            {/* Email & SMS */}
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={handleEmailShare}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-50 hover:bg-orange-100 text-orange-700 rounded-lg border border-orange-200 transition-all"
-                aria-label="Share via email"
-              >
-                <Mail className="w-4 h-4" />
-                <span className="text-sm font-medium">Email</span>
-              </button>
-              <button
-                onClick={handleSMSShare}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg border border-purple-200 transition-all"
-                aria-label="Share via SMS"
-              >
-                <MessageCircle className="w-4 h-4" />
-                <span className="text-sm font-medium">SMS</span>
-              </button>
             </div>
 
             {/* QR Code Toggle */}
