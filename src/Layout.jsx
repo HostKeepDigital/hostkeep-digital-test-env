@@ -19,6 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
 import { getUserRoles, hasRole } from "@/components/utils/roleHelpers";
+import RoleSwitcher from "@/components/RoleSwitcher";
 
 // Pages without layout (guest facing / public)
 const PUBLIC_PAGES = ["Pay"];
@@ -198,18 +199,20 @@ export default function Layout({ children, currentPageName }) {
 
             <div className="flex items-center gap-3">
               {isAuthenticated ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="gap-2">
-                      <Avatar className="w-8 h-8">
-                        <AvatarImage src={user?.profile_photo} />
-                        <AvatarFallback className="bg-teal-100 text-teal-600">
-                          {user?.full_name?.charAt(0)?.toUpperCase() || 'U'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="hidden sm:inline">{user?.full_name?.split(' ')[0] || 'Account'}</span>
-                    </Button>
-                  </DropdownMenuTrigger>
+                <>
+                  <RoleSwitcher userRoles={userRoles} />
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="gap-2">
+                        <Avatar className="w-8 h-8">
+                          <AvatarImage src={user?.profile_photo} />
+                          <AvatarFallback className="bg-teal-100 text-teal-600">
+                            {user?.full_name?.charAt(0)?.toUpperCase() || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="hidden sm:inline">{user?.full_name?.split(' ')[0] || 'Account'}</span>
+                      </Button>
+                    </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuItem asChild>
                       <Link to={createPageUrl('MyBookings')} className="flex items-center gap-2">
@@ -236,14 +239,35 @@ export default function Layout({ children, currentPageName }) {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
+                    {!hasRole(userRoles, 'host') && (
+                      <DropdownMenuItem asChild>
+                        <Link to={createPageUrl('BecomeHost')} className="flex items-center gap-2 text-teal-600">
+                          <Building2 className="w-4 h-4" /> Become a Host
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    {!hasRole(userRoles, 'cleaner') && (
+                      <DropdownMenuItem asChild>
+                        <Link to={createPageUrl('BecomeCleaner')} className="flex items-center gap-2 text-blue-600">
+                          <Users className="w-4 h-4" /> Become a Cleaner
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    {(!hasRole(userRoles, 'host') || !hasRole(userRoles, 'cleaner')) && (
+                      <DropdownMenuSeparator />
+                    )}
                     <DropdownMenuItem onClick={() => base44.auth.logout()} className="flex items-center gap-2">
                       <LogOut className="w-4 h-4" /> Log Out
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
+                </>
               ) : (
                 <>
-                  <Link to={createPageUrl('HostDashboard')}>
+                  <Link to={createPageUrl('GuestProfile')}>
+                    <Button variant="outline">Sign Up</Button>
+                  </Link>
+                  <Link to={createPageUrl('BecomeHost')}>
                     <Button variant="ghost">Become a Host</Button>
                   </Link>
                   <Button 

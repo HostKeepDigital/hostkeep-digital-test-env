@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { UserPlus, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { addUserRole } from "@/components/utils/roleHelpers";
 
 export default function GuestProfile() {
   const navigate = useNavigate();
@@ -34,7 +35,8 @@ export default function GuestProfile() {
         throw new Error("A guest with this email is already registered");
       }
 
-      return base44.entities.Guest.create({
+      // Create guest record
+      const guestRecord = await base44.entities.Guest.create({
         ...data,
         status: "standard",
         total_stays: 0,
@@ -42,6 +44,13 @@ export default function GuestProfile() {
         high_risk: false,
         deleted: false
       });
+
+      // Ensure user has guest role
+      if (user?.id) {
+        await addUserRole(user.id, 'guest');
+      }
+
+      return guestRecord;
     },
     onSuccess: () => {
       setIsComplete(true);

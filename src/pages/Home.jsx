@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
@@ -9,16 +9,31 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { 
   Search, MapPin, Calendar, Users, Star, Home as HomeIcon, 
-  CheckCircle, ArrowRight, Building2, Mountain, Waves, TreePine, Caravan
+  CheckCircle, ArrowRight, Building2, Mountain, Waves, TreePine, Caravan, Sparkles
 } from "lucide-react";
 import PropertyCard from "@/components/properties/PropertyCard";
 import GuestSelector from "@/components/search/GuestSelector";
+import { getUserRoles, hasRole } from "@/components/utils/roleHelpers";
 
 export default function Home() {
   const [searchLocation, setSearchLocation] = useState("");
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [guestData, setGuestData] = useState({ adults: 1, children: 0, childAges: [], isValid: true });
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
+  const [userRoles, setUserRoles] = useState([]);
+
+  useEffect(() => {
+    base44.auth.isAuthenticated().then(setIsAuthenticated);
+    base44.auth.me().then(async (userData) => {
+      setUser(userData);
+      if (userData?.id) {
+        const roles = await getUserRoles(userData.id);
+        setUserRoles(roles);
+      }
+    }).catch(() => {});
+  }, []);
 
   const { data: featuredProperties = [] } = useQuery({
     queryKey: ['featured-properties'],
@@ -215,12 +230,30 @@ export default function Home() {
                   </li>
                 ))}
               </ul>
-              <Link to={createPageUrl('HostDashboard')}>
-                <Button size="lg" className="bg-white text-teal-700 hover:bg-teal-50">
-                  Become a Host
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </Link>
+              {isAuthenticated ? (
+                hasRole(userRoles, 'host') ? (
+                  <Link to={createPageUrl('HostDashboard')}>
+                    <Button size="lg" className="bg-white text-teal-700 hover:bg-teal-50">
+                      Go to Host Dashboard
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </Link>
+                ) : (
+                  <Link to={createPageUrl('BecomeHost')}>
+                    <Button size="lg" className="bg-white text-teal-700 hover:bg-teal-50">
+                      Become a Host
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </Link>
+                )
+              ) : (
+                <Link to={createPageUrl('BecomeHost')}>
+                  <Button size="lg" className="bg-white text-teal-700 hover:bg-teal-50">
+                    Become a Host
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
+              )}
             </div>
             <div className="hidden md:block h-full">
               <img 
@@ -256,12 +289,30 @@ export default function Home() {
                   </li>
                 ))}
               </ul>
-              <Link to={createPageUrl('HostDashboard')}>
-                <Button size="lg" className="bg-teal-600 hover:bg-teal-700 text-white mb-12">
-                  Become a Host
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </Link>
+              {isAuthenticated ? (
+                hasRole(userRoles, 'host') ? (
+                  <Link to={createPageUrl('HostDashboard')}>
+                    <Button size="lg" className="bg-teal-600 hover:bg-teal-700 text-white mb-12">
+                      Go to Host Dashboard
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </Link>
+                ) : (
+                  <Link to={createPageUrl('BecomeHost')}>
+                    <Button size="lg" className="bg-teal-600 hover:bg-teal-700 text-white mb-12">
+                      Become a Host
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </Link>
+                )
+              ) : (
+                <Link to={createPageUrl('BecomeHost')}>
+                  <Button size="lg" className="bg-teal-600 hover:bg-teal-700 text-white mb-12">
+                    Become a Host
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
+              )}
             </div>
 
             <div className="text-center mb-8">
@@ -408,15 +459,39 @@ export default function Home() {
                       </li>
                     ))}
                   </ul>
-                  <Link to={createPageUrl('CleanerSignup')}>
-                    <Button 
-                      variant={plan.popular ? "default" : "outline"} 
-                      className={`w-full ${plan.popular ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
-                      size="lg"
-                    >
-                      Start Free Trial
-                    </Button>
-                  </Link>
+                  {isAuthenticated ? (
+                    hasRole(userRoles, 'cleaner') ? (
+                      <Link to={createPageUrl('CleanerDashboard')}>
+                        <Button 
+                          variant={plan.popular ? "default" : "outline"} 
+                          className={`w-full ${plan.popular ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
+                          size="lg"
+                        >
+                          Go to Dashboard
+                        </Button>
+                      </Link>
+                    ) : (
+                      <Link to={createPageUrl('BecomeCleaner')}>
+                        <Button 
+                          variant={plan.popular ? "default" : "outline"} 
+                          className={`w-full ${plan.popular ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
+                          size="lg"
+                        >
+                          Become a Cleaner
+                        </Button>
+                      </Link>
+                    )
+                  ) : (
+                    <Link to={createPageUrl('BecomeCleaner')}>
+                      <Button 
+                        variant={plan.popular ? "default" : "outline"} 
+                        className={`w-full ${plan.popular ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
+                        size="lg"
+                      >
+                        Start Free Trial
+                      </Button>
+                    </Link>
+                  )}
                 </motion.div>
               ))}
             </div>
