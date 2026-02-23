@@ -311,21 +311,27 @@ export default function HostDashboard() {
               <h3 className="font-semibold text-gray-900 mb-4">Subscription</h3>
               {subscription ? (
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-gray-600">Plan</span>
-                    <Badge className="capitalize">{subscription.plan}</Badge>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-gray-600">Plan</span>
+                      <Badge className="capitalize">{subscription.plan}</Badge>
+                    </div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-gray-600">Status</span>
+                      <Badge variant={subscription.status === 'active' ? 'default' : 'secondary'}>
+                        {subscription.status}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-gray-600">Properties</span>
+                      <span>{properties.length} / {subscription.max_properties || '∞'}</span>
+                    </div>
+                    {subscription.end_date && (
+                      <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+                        <span className="text-gray-600 text-sm">Renews</span>
+                        <span className="text-sm font-medium">{format(parseISO(subscription.end_date), 'MMM d, yyyy')}</span>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-gray-600">Status</span>
-                    <Badge variant={subscription.status === 'active' ? 'default' : 'secondary'}>
-                      {subscription.status}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Properties</span>
-                    <span>{properties.length} / {subscription.max_properties || '∞'}</span>
-                  </div>
-                </div>
               ) : (
                 <div className="text-center">
                   <p className="text-gray-500 mb-3">No active subscription</p>
