@@ -23,10 +23,10 @@ import { addUserRole, getUserRoles, hasRole } from "@/components/utils/roleHelpe
 
 const STEPS = [
   { id: 1, title: "Basics", icon: Home, description: "Property type and details" },
-  { id: 2, title: "Location", icon: MapPin, description: "Where is your property?" },
-  { id: 3, title: "Photos", icon: Image, description: "Show off your space" },
-  { id: 4, title: "Pricing", icon: PoundSterling, description: "Set your rates" },
-  { id: 5, title: "Description", icon: FileText, description: "Tell guests about your place" },
+  { id: 2, title: "Description", icon: FileText, description: "Tell guests about your place" },
+  { id: 3, title: "Location", icon: MapPin, description: "Where is your property?" },
+  { id: 4, title: "Photos", icon: Image, description: "Show off your space" },
+  { id: 5, title: "Pricing", icon: PoundSterling, description: "Set your rates" },
   { id: 6, title: "Booking Rules", icon: Calendar, description: "Day-based restrictions (optional)" },
 ];
 
