@@ -50,6 +50,7 @@ export default function CreateProperty() {
   const [user, setUser] = useState(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [isUploading, setIsUploading] = useState(false);
+  const formContentRef = useState(null);
 
   const [titleError, setTitleError] = useState("");
 
@@ -117,6 +118,13 @@ export default function CreateProperty() {
       window.location.href = createPageUrl('Home');
     });
   }, []);
+
+  useEffect(() => {
+    // Scroll to form content when step changes
+    if (formContentRef.current) {
+      formContentRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [currentStep]);
 
   const createMutation = useMutation({
     mutationFn: async (data) => {
@@ -305,7 +313,7 @@ export default function CreateProperty() {
       </div>
 
       {/* Form Content */}
-      <div className="max-w-2xl mx-auto px-4 py-8">
+      <div ref={formContentRef} className="max-w-2xl mx-auto px-4 py-8">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentStep}
