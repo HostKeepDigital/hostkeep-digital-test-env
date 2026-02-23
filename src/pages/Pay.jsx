@@ -112,7 +112,7 @@ export default function Pay() {
     );
   }
 
-  if (!booking) {
+  if (!booking && !testMode) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
         <Card className="w-full max-w-md text-center">
