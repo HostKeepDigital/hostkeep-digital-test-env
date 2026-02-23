@@ -94,7 +94,11 @@ export default function HostProperties() {
           </Button>
         </div>
 
-        {properties.length === 0 ? (
+        {isLoading ? (
+          <div className="text-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto"></div>
+          </div>
+        ) : properties.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
