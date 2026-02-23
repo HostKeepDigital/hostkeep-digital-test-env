@@ -223,10 +223,10 @@ export default function EditProperty() {
         <Tabs defaultValue="basics" className="space-y-6">
           <TabsList className="bg-white border border-gray-100">
             <TabsTrigger value="basics"><Home className="w-4 h-4 mr-2" /> Basics</TabsTrigger>
+            <TabsTrigger value="details"><FileText className="w-4 h-4 mr-2" /> Description</TabsTrigger>
             <TabsTrigger value="location"><MapPin className="w-4 h-4 mr-2" /> Location</TabsTrigger>
             <TabsTrigger value="photos"><Image className="w-4 h-4 mr-2" /> Photos</TabsTrigger>
             <TabsTrigger value="pricing"><PoundSterling className="w-4 h-4 mr-2" /> Pricing</TabsTrigger>
-            <TabsTrigger value="details"><FileText className="w-4 h-4 mr-2" /> Details</TabsTrigger>
             <TabsTrigger value="booking-rules"><Calendar className="w-4 h-4 mr-2" /> Booking Rules</TabsTrigger>
           </TabsList>
 
