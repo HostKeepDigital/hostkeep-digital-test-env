@@ -391,6 +391,14 @@ export default function Pay() {
           </Card>
         </motion.div>
 
+        {testMode && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+            <p className="text-sm text-blue-900">
+              ℹ️ <strong>Test Mode:</strong> This is a demo payment page. No actual payment will be processed.
+            </p>
+          </div>
+        )}
+        
         <p className="text-center text-sm text-gray-500">
           Need help? Contact the property owner directly.
         </p>
