@@ -233,7 +233,6 @@ export default function HostMessages() {
                 transition={{ type: "spring", bounce: 0, duration: 0.3 }}
                 className="flex-1 flex flex-col bg-gray-50 absolute md:relative z-20 h-full w-full"
               >
-              <>
                 {/* Header */}
                 <div className="bg-white border-b border-gray-100 p-4 flex justify-between items-center shadow-sm">
                   <div className="flex items-center gap-3">
