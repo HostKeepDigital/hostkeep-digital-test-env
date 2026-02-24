@@ -109,24 +109,6 @@ export default function PropertyDetails() {
     if (isWishlisted) {
       removeFromWishlistMutation.mutate();
     } else {
-      // Confetti burst
-      const rect = e.currentTarget.getBoundingClientRect();
-      const x = (rect.left + rect.width / 2) / window.innerWidth;
-      const y = (rect.top + rect.height / 2) / window.innerHeight;
-      
-      confetti({
-        origin: { x, y },
-        particleCount: 40,
-        spread: 60,
-        gravity: 0.8,
-        decay: 0.9,
-        colors: ['#FF0000', '#FF69B4', '#FFD700'],
-        disableForReducedMotion: true,
-        zIndex: 1000,
-        scalar: 0.8,
-        shapes: ['circle']
-      });
-      
       addToWishlistMutation.mutate();
     }
   };
