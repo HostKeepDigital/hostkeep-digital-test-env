@@ -1,11 +1,13 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
 import { 
   Home, Search, Heart, User, Menu, X, Calendar, PoundSterling, 
   MessageSquare, Settings, Building2, LogOut, Users, Shield
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, createContext } from "react";
+
+export const NavigationContext = createContext(null);
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import {
@@ -34,6 +36,15 @@ export default function Layout({ children, currentPageName }) {
   const [userRoles, setUserRoles] = useState([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [navBlocker, setNavBlocker] = useState(null);
+  const navigate = useNavigate();
+
+  const handleNavClick = (e, path) => {
+    if (navBlocker) {
+      e.preventDefault();
+      navBlocker(path);
+    }
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -88,7 +99,7 @@ export default function Layout({ children, currentPageName }) {
         {/* Desktop Sidebar */}
         <aside className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
           <div className="flex flex-col flex-grow bg-white border-r border-gray-100 pt-5 pb-4 overflow-y-auto">
-            <Link to={createPageUrl('Home')} className="flex items-center gap-3 px-6 mb-8">
+            <Link to={createPageUrl('Home')} onClick={(e) => handleNavClick(e, createPageUrl('Home'))} className="flex items-center gap-3 px-6 mb-8">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center">
                 <Home className="w-5 h-5 text-white" />
               </div>
@@ -102,6 +113,7 @@ export default function Layout({ children, currentPageName }) {
                   <Link
                     key={item.page}
                     to={createPageUrl(item.page)}
+                    onClick={(e) => handleNavClick(e, createPageUrl(item.page))}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                       isActive ? 'bg-teal-50 text-teal-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}
@@ -116,6 +128,7 @@ export default function Layout({ children, currentPageName }) {
             <div className="px-3 mt-auto">
               <Link
                 to={createPageUrl('Subscription')}
+                onClick={(e) => handleNavClick(e, createPageUrl('Subscription'))}
                 className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50"
               >
                 <PoundSterling className="w-5 h-5 text-gray-400" />
@@ -128,7 +141,7 @@ export default function Layout({ children, currentPageName }) {
         {/* Mobile Header for Host */}
         <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100">
           <div className="flex items-center justify-between px-4 py-3">
-            <Link to={createPageUrl('Home')} className="flex items-center gap-3">
+            <Link to={createPageUrl('Home')} onClick={(e) => handleNavClick(e, createPageUrl('Home'))} className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center">
                 <Home className="w-4 h-4 text-white" />
               </div>
@@ -152,7 +165,10 @@ export default function Layout({ children, currentPageName }) {
                     <Link
                       key={item.page}
                       to={createPageUrl(item.page)}
-                      onClick={() => setMobileMenuOpen(false)}
+                      onClick={(e) => {
+                        setMobileMenuOpen(false);
+                        handleNavClick(e, createPageUrl(item.page));
+                      }}
                       className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                         isActive ? 'bg-teal-50 text-teal-700' : 'text-gray-600 hover:bg-gray-50'
                       }`}
@@ -168,7 +184,9 @@ export default function Layout({ children, currentPageName }) {
         </div>
 
         <main className="lg:pl-64 pt-16 lg:pt-0">
-          {children}
+          <NavigationContext.Provider value={setNavBlocker}>
+            {children}
+          </NavigationContext.Provider>
         </main>
       </div>
     );
@@ -181,7 +199,7 @@ export default function Layout({ children, currentPageName }) {
       <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            <Link to={createPageUrl('Home')} className="flex items-center gap-3">
+            <Link to={createPageUrl('Home')} onClick={(e) => handleNavClick(e, createPageUrl('Home'))} className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center">
                 <Home className="w-4 h-4 text-white" />
               </div>
@@ -311,7 +329,9 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Main Content */}
       <main className="pt-16">
-        {children}
+        <NavigationContext.Provider value={setNavBlocker}>
+          {children}
+        </NavigationContext.Provider>
       </main>
 
       {/* Footer */}

@@ -18,6 +18,8 @@ import PricingManager from "@/components/pricing/PricingManager";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { isEqual } from "lodash";
+import { NavigationContext } from "../Layout";
+import { useContext } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const PROPERTY_TYPES = [
@@ -114,6 +116,7 @@ export default function EditProperty() {
   const navigate = useNavigate();
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
+  const setNavBlocker = useContext(NavigationContext);
 
   const changedFields = [];
   if (originalData && formData) {
@@ -124,6 +127,22 @@ export default function EditProperty() {
     });
   }
   const hasChanges = changedFields.length > 0;
+
+  useEffect(() => {
+    if (setNavBlocker) {
+      if (hasChanges) {
+        setNavBlocker(() => (path) => {
+          setPendingAction(() => () => navigate(path));
+          setShowUnsavedDialog(true);
+        });
+      } else {
+        setNavBlocker(null);
+      }
+    }
+    return () => {
+      if (setNavBlocker) setNavBlocker(null);
+    };
+  }, [hasChanges, setNavBlocker, navigate]);
 
   const formatFieldName = (field) => {
     const map = {
