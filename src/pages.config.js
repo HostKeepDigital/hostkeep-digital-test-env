@@ -70,11 +70,11 @@ import HostProperties from './pages/HostProperties';
 import HostSettings from './pages/HostSettings';
 import HostVerification from './pages/HostVerification';
 import MyBookings from './pages/MyBookings';
+import MyTrips from './pages/MyTrips';
 import Pay from './pages/Pay';
+import PropertyDetails from './pages/PropertyDetails';
 import Search from './pages/Search';
 import Subscription from './pages/Subscription';
-import PropertyDetails from './pages/PropertyDetails';
-import MyTrips from './pages/MyTrips';
 import __Layout from './Layout.jsx';
 
 
@@ -102,11 +102,11 @@ export const PAGES = {
     "HostSettings": HostSettings,
     "HostVerification": HostVerification,
     "MyBookings": MyBookings,
+    "MyTrips": MyTrips,
     "Pay": Pay,
+    "PropertyDetails": PropertyDetails,
     "Search": Search,
     "Subscription": Subscription,
-    "PropertyDetails": PropertyDetails,
-    "MyTrips": MyTrips,
 }
 
 export const pagesConfig = {

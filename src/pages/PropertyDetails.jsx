@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import confetti from "canvas-confetti";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
@@ -50,10 +52,84 @@ export default function PropertyDetails() {
   const [guestMessage, setGuestMessage] = useState("");
   const [showBookingDialog, setShowBookingDialog] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => setCurrentUser(null));
   }, []);
+
+  // Wishlist Logic
+  const { data: wishlistItems = [] } = useQuery({
+    queryKey: ['wishlist-properties', currentUser?.id],
+    queryFn: () => base44.entities.WishlistProperty.filter({ user_id: currentUser?.id }),
+    enabled: !!currentUser?.id,
+  });
+
+  const isWishlisted = wishlistItems.some(item => item.property_id === propertyId);
+  const wishlistItem = wishlistItems.find(item => item.property_id === propertyId);
+
+  const addToWishlistMutation = useMutation({
+    mutationFn: () => base44.entities.WishlistProperty.create({
+      user_id: currentUser.id,
+      property_id: propertyId
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['wishlist-properties']);
+      toast.success("This property has been added to your wishlist.", {
+        duration: 3000,
+        position: window.innerWidth < 768 ? "top-center" : "top-right"
+      });
+    },
+  });
+
+  const removeFromWishlistMutation = useMutation({
+    mutationFn: () => base44.entities.WishlistProperty.delete(wishlistItem.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['wishlist-properties']);
+      toast.success("Removed from your wishlist.", {
+        duration: 3000,
+      });
+    },
+  });
+
+  const handleToggleWishlist = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!currentUser) {
+       toast("Create an account to save properties to your wishlist.", {
+         action: {
+           label: "Login",
+           onClick: () => base44.auth.redirectToLogin()
+         }
+       });
+       return;
+    }
+
+    if (isWishlisted) {
+      removeFromWishlistMutation.mutate();
+    } else {
+      // Confetti burst
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = (rect.left + rect.width / 2) / window.innerWidth;
+      const y = (rect.top + rect.height / 2) / window.innerHeight;
+      
+      confetti({
+        origin: { x, y },
+        particleCount: 40,
+        spread: 60,
+        gravity: 0.8,
+        decay: 0.9,
+        colors: ['#FF0000', '#FF69B4', '#FFD700'],
+        disableForReducedMotion: true,
+        zIndex: 1000,
+        scalar: 0.8,
+        shapes: ['circle']
+      });
+      
+      addToWishlistMutation.mutate();
+    }
+  };
 
   // Prevent scrolling when image overlay is open
   useEffect(() => {
@@ -645,9 +721,37 @@ export default function PropertyDetails() {
             </div>
             <div className="flex flex-col gap-3">
               <div className="flex gap-2">
-                <Button variant="outline" size="icon" className="rounded-full">
-                  <Heart className="w-4 h-4" />
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <motion.button
+                        whileTap={{ scale: 0.9 }}
+                        onClick={handleToggleWishlist}
+                        className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all duration-300 ${
+                          isWishlisted 
+                            ? "bg-red-50 border-red-200 text-red-500 shadow-md" 
+                            : "bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:shadow-sm"
+                        }`}
+                      >
+                        <motion.div
+                          initial={false}
+                          animate={{ 
+                            scale: isWishlisted ? [1, 1.2, 1] : 1,
+                            color: isWishlisted ? "#ef4444" : "#4b5563"
+                          }}
+                          transition={{ duration: 0.4, type: "spring" }}
+                        >
+                          <Heart 
+                            className={`w-5 h-5 ${isWishlisted ? "fill-current" : ""}`} 
+                          />
+                        </motion.div>
+                      </motion.button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <PropertyShareModal 
                   propertyTitle={property.title}
                   propertyUrl={window.location.href}
