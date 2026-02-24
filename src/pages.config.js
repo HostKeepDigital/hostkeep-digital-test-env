@@ -69,6 +69,7 @@ import HostMessages from './pages/HostMessages';
 import HostProperties from './pages/HostProperties';
 import HostSettings from './pages/HostSettings';
 import HostVerification from './pages/HostVerification';
+import Index from './pages/Index';
 import MyBookings from './pages/MyBookings';
 import MyTrips from './pages/MyTrips';
 import Pay from './pages/Pay';
@@ -77,7 +78,6 @@ import Search from './pages/Search';
 import Subscription from './pages/Subscription';
 import GuestMessages from './pages/GuestMessages';
 import CleanerMessages from './pages/CleanerMessages';
-import index from './pages/index';
 import __Layout from './Layout.jsx';
 
 
@@ -104,6 +104,7 @@ export const PAGES = {
     "HostProperties": HostProperties,
     "HostSettings": HostSettings,
     "HostVerification": HostVerification,
+    "Index": Index,
     "MyBookings": MyBookings,
     "MyTrips": MyTrips,
     "Pay": Pay,
@@ -112,7 +113,6 @@ export const PAGES = {
     "Subscription": Subscription,
     "GuestMessages": GuestMessages,
     "CleanerMessages": CleanerMessages,
-    "index": index,
 }
 
 export const pagesConfig = {
