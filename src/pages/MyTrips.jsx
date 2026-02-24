@@ -59,7 +59,8 @@ export default function MyTrips() {
   const removeFromWishlistMutation = useMutation({
     mutationFn: (wishlistItemId) => base44.entities.WishlistProperty.delete(wishlistItemId),
     onSuccess: () => {
-      queryClient.invalidateQueries(['wishlist-properties']);
+      queryClient.invalidateQueries({ queryKey: ['wishlist-properties'] });
+      queryClient.invalidateQueries({ queryKey: ['wishlist-status'] });
     },
   });
 
