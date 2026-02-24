@@ -4,6 +4,8 @@ import { ChevronLeft, ChevronRight, Info, Edit, X, Calendar as CalendarIcon, Mes
 import { Button } from "@/components/ui/button";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isBefore, startOfDay, differenceInDays, startOfWeek, endOfWeek, parseISO, addMonths, subMonths } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useQueryClient } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -14,8 +16,10 @@ import { toast } from "sonner";
 
 export default function BookingCalendar({ bookings = [], properties = [] }) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const queryClient = useQueryClient();
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isBlocking, setIsBlocking] = useState(false);
   
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
   const [blockDates, setBlockDates] = useState({ start: "", end: "", reason: "", property_id: "" });
@@ -35,12 +39,42 @@ export default function BookingCalendar({ bookings = [], properties = [] }) {
   };
 
   const handleBlockDates = async () => {
-    if (!blockDates.start || !blockDates.end) {
-      toast.error("Please select start and end dates.");
+    if (!blockDates.property_id || !blockDates.start || !blockDates.end) {
+      toast.error("Please select property and dates.");
       return;
     }
-    toast.success("Dates blocked successfully (Simulated)");
-    setIsBlockModalOpen(false);
+    
+    if (isBefore(parseISO(blockDates.end), parseISO(blockDates.start))) {
+      toast.error("End date cannot be before start date.");
+      return;
+    }
+    
+    setIsBlocking(true);
+    try {
+      const prop = getProperty(blockDates.property_id);
+      
+      await base44.entities.Booking.create({
+        property_id: blockDates.property_id,
+        host_id: prop.owner_id,
+        guest_name: "Blocked Date",
+        guest_email: "blocked@system.com",
+        check_in: blockDates.start,
+        check_out: blockDates.end,
+        total_amount: 0,
+        booking_status: "blocked",
+        payment_status: "paid",
+        special_requests: blockDates.reason || "Manual Block"
+      });
+      
+      toast.success("Dates blocked successfully");
+      setIsBlockModalOpen(false);
+      setBlockDates({ start: "", end: "", reason: "", property_id: "" });
+      queryClient.invalidateQueries({ queryKey: ['host-bookings'] });
+    } catch (e) {
+      toast.error("Failed to block dates");
+    } finally {
+      setIsBlocking(false);
+    }
   };
   
   const getStatusColor = (status) => {
@@ -336,6 +370,19 @@ export default function BookingCalendar({ bookings = [], properties = [] }) {
               <DialogTitle>Block Calendar Dates</DialogTitle>
             </DialogHeader>
             <div className="space-y-5 py-4">
+              <div className="space-y-2">
+                <Label>Property</Label>
+                <Select value={blockDates.property_id} onValueChange={v => setBlockDates(p => ({...p, property_id: v}))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select property" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {properties.map(p => (
+                      <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Start Date</Label>
@@ -362,8 +409,10 @@ export default function BookingCalendar({ bookings = [], properties = [] }) {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsBlockModalOpen(false)}>Cancel</Button>
-              <Button onClick={handleBlockDates} className="bg-gray-900 text-white hover:bg-gray-800">Block Dates</Button>
+              <Button variant="outline" onClick={() => setIsBlockModalOpen(false)} disabled={isBlocking}>Cancel</Button>
+              <Button onClick={handleBlockDates} disabled={isBlocking} className="bg-gray-900 text-white hover:bg-gray-800">
+                {isBlocking ? 'Blocking...' : 'Block Dates'}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
