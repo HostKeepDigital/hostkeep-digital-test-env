@@ -614,52 +614,52 @@ export default function PropertyDetails() {
       <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 md:py-8">
         {/* Header Section with Title & Quick Info */}
         <div className="mb-4 md:mb-8">
-          <div className="mb-3 md:mb-4">
-            <h1 className="text-xl sm:text-2xl md:text-4xl font-bold text-gray-900 mb-2">{property.title}</h1>
-            <div className="flex flex-wrap items-center gap-2 md:gap-4 text-sm md:text-base text-gray-600">
-              <span className="flex items-center gap-1.5">
-                <MapPin className="w-4 h-4 text-teal-600" />
-                {property.location?.city || property.location?.town_city}, {property.location?.country || 'UK'}
-              </span>
-              {reviews.length > 0 && (
-                <span className="flex items-center gap-1 md:gap-1.5 px-2 md:px-3 py-1 bg-amber-50 rounded-full text-sm">
-                  <Star className="w-3 h-3 md:w-4 md:h-4 fill-amber-400 text-amber-400" />
-                  <span className="font-semibold text-gray-900">{averageRating}</span>
-                  <span className="text-gray-600">({reviews.length})</span>
+          <div className="flex items-start justify-between gap-2 md:gap-4 mb-3 md:mb-4">
+            <div className="flex-1">
+              <h1 className="text-xl sm:text-2xl md:text-4xl font-bold text-gray-900 mb-2">{property.title}</h1>
+              <div className="flex flex-wrap items-center gap-2 md:gap-4 text-sm md:text-base text-gray-600">
+                <span className="flex items-center gap-1.5">
+                  <MapPin className="w-4 h-4 text-teal-600" />
+                  {property.location?.city || property.location?.town_city}, {property.location?.country || 'UK'}
                 </span>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex gap-2">
-              <Button variant="outline" size="icon" className="rounded-full">
-                <Heart className="w-4 h-4" />
-              </Button>
-              <PropertyShareModal 
-                propertyTitle={property.title}
-                propertyUrl={window.location.href}
-              />
-            </div>
-          </div>
-
-          {host && (
-            <div className="flex items-center gap-3 mt-4 p-3 bg-gray-50 rounded-lg">
-              <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center flex-shrink-0">
-                {host.profile_photo ? (
-                  <img src={host.profile_photo} alt={host.full_name} className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-white font-semibold text-lg">
-                    {host.full_name?.charAt(0)?.toUpperCase() || 'H'}
+                {reviews.length > 0 && (
+                  <span className="flex items-center gap-1 md:gap-1.5 px-2 md:px-3 py-1 bg-amber-50 rounded-full text-sm">
+                    <Star className="w-3 h-3 md:w-4 md:h-4 fill-amber-400 text-amber-400" />
+                    <span className="font-semibold text-gray-900">{averageRating}</span>
+                    <span className="text-gray-600">({reviews.length})</span>
                   </span>
                 )}
               </div>
-              <div>
-                <p className="text-xs text-gray-500">Hosted by</p>
-                <p className="font-semibold text-gray-900">{host.full_name}</p>
-              </div>
             </div>
-          )}
+            <div className="flex flex-col gap-3">
+              <div className="flex gap-2">
+                <Button variant="outline" size="icon" className="rounded-full">
+                  <Heart className="w-4 h-4" />
+                </Button>
+                <PropertyShareModal 
+                  propertyTitle={property.title}
+                  propertyUrl={window.location.href}
+                />
+              </div>
+              {host && (
+                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center flex-shrink-0">
+                    {host.profile_photo ? (
+                      <img src={host.profile_photo} alt={host.full_name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-white font-semibold text-lg">
+                        {host.full_name?.charAt(0)?.toUpperCase() || 'H'}
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Hosted by</p>
+                    <p className="font-semibold text-gray-900">{host.full_name}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* Quick Info Badges */}
           <div className="flex flex-wrap gap-2">
