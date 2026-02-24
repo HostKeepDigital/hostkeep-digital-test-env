@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
@@ -51,6 +52,7 @@ export default function PropertyDetails() {
   const [guestMessage, setGuestMessage] = useState("");
   const [showBookingDialog, setShowBookingDialog] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => setCurrentUser(null));
@@ -127,6 +129,76 @@ export default function PropertyDetails() {
     queryFn: () => base44.entities.Booking.filter({ property_id: propertyId, booking_status: 'confirmed' }),
     enabled: !!propertyId,
   });
+
+  const { data: wishlistStatus, refetch: refetchWishlist } = useQuery({
+    queryKey: ['wishlist-status', propertyId, currentUser?.id],
+    queryFn: async () => {
+      if (!currentUser?.id) return false;
+      const res = await base44.entities.WishlistProperty.filter({ property_id: propertyId, user_id: currentUser.id });
+      return res.length > 0 ? res[0] : null;
+    },
+    enabled: !!propertyId && !!currentUser?.id,
+  });
+
+  const toggleWishlistMutation = useMutation({
+    mutationFn: async (currentWishlistEntry) => {
+      if (!currentUser) {
+        return;
+      }
+      
+      if (currentWishlistEntry) {
+        await base44.entities.WishlistProperty.delete(currentWishlistEntry.id);
+        return { action: 'removed' };
+      } else {
+        await base44.entities.WishlistProperty.create({
+          property_id: propertyId,
+          user_id: currentUser.id
+        });
+        return { action: 'added' };
+      }
+    },
+    onSuccess: (data) => {
+      if (!data) return;
+      refetchWishlist();
+      queryClient.invalidateQueries({ queryKey: ['wishlist-properties'] });
+      queryClient.invalidateQueries({ queryKey: ['wishlist-status'] });
+      
+      if (data.action === 'added') {
+        toast.success("This property has been added to your wishlist.");
+      } else {
+        toast.success("Removed from your wishlist.");
+      }
+    }
+  });
+
+  const handleWishlistClick = (e) => {
+    if (!currentUser) {
+      toast.info("Create an account to save properties to your wishlist.");
+      setTimeout(() => base44.auth.redirectToLogin(), 1500);
+      return;
+    }
+
+    const isAdding = !wishlistStatus;
+    
+    toggleWishlistMutation.mutate(wishlistStatus);
+    
+    if (isAdding) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = (rect.left + rect.width / 2) / window.innerWidth;
+      const y = (rect.top + rect.height / 2) / window.innerHeight;
+      
+      confetti({
+        particleCount: 40,
+        spread: 60,
+        colors: ['#ef4444', '#f472b6', '#fcd34d'],
+        origin: { x, y },
+        disableForReducedMotion: true,
+        ticks: 150,
+        gravity: 0.8,
+        scalar: 0.8
+      });
+    }
+  };
 
   // Get booked dates for this specific property
   const getBookedDates = () => {
