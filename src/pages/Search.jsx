@@ -31,7 +31,7 @@ export default function Search() {
   const [filters, setFilters] = useState({
     location: urlParams.get('location') || "",
     checkIn: urlParams.get('checkIn') || "",
-    duration: urlParams.get('duration') || "1",
+    duration: urlParams.get('duration') || "",
     adults: parseInt(urlParams.get('adults')) || 1,
     children: parseInt(urlParams.get('children')) || 0,
     childAges: parseChildAges(),
@@ -238,7 +238,13 @@ export default function Search() {
             <div className="w-44">
               <BookingCalendar
                 value={filters.checkIn}
-                onSelect={(date) => handleFilterChange("checkIn", date ? format(date, "yyyy-MM-dd") : "")}
+                onSelect={(date) => {
+                  setFilters(prev => ({
+                    ...prev,
+                    checkIn: date ? format(date, "yyyy-MM-dd") : "",
+                    duration: ""
+                  }));
+                }}
                 placeholder="Trip Start"
                 className="h-11 bg-white"
                 numberOfMonths={1}
@@ -246,7 +252,7 @@ export default function Search() {
             </div>
             <Select value={filters.duration} onValueChange={(v) => handleFilterChange("duration", v)}>
               <SelectTrigger className="w-40 h-11 bg-white">
-                <SelectValue placeholder="Duration" />
+                <SelectValue placeholder="Trip Duration" />
               </SelectTrigger>
               <SelectContent>
                 {[...Array(28)].map((_, i) => (
@@ -383,7 +389,7 @@ export default function Search() {
                     onClick={() => setFilters({
                       location: "",
                       checkIn: "",
-                      duration: "1",
+                      duration: "",
                       adults: 1,
                       children: 0,
                       childAges: [],
