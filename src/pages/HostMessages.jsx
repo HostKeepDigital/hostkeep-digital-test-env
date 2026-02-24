@@ -6,14 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageSquare, Send, User, Search, Loader2 } from "lucide-react";
+import { MessageSquare, Send, User, Search, Loader2, Plus } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import NewMessageModal from "@/components/messaging/NewMessageModal";
 
 export default function HostMessages() {
   const [user, setUser] = useState(null);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [newMessage, setNewMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [showMessageModal, setShowMessageModal] = useState(false);
   const messagesEndRef = useRef(null);
   const queryClient = useQueryClient();
 
@@ -124,7 +126,14 @@ export default function HostMessages() {
         <div className="flex h-[calc(100vh-120px)]">
           {/* Conversation List */}
           <div className="w-80 border-r border-gray-100 bg-white flex flex-col">
-            <div className="p-4 border-b border-gray-100">
+            <div className="p-4 border-b border-gray-100 space-y-4">
+              <Button 
+                onClick={() => setShowMessageModal(true)} 
+                className="w-full bg-teal-600 hover:bg-teal-700 gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                New message
+              </Button>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
@@ -268,6 +277,12 @@ export default function HostMessages() {
           </div>
         </div>
       </div>
+
+      <NewMessageModal 
+        isOpen={showMessageModal} 
+        onClose={() => setShowMessageModal(false)} 
+        hostId={user?.id}
+      />
     </div>
   );
 }
