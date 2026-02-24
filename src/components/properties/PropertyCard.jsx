@@ -98,29 +98,31 @@ export default function PropertyCard({ property, onSave, isAvailable = true }) {
               <Badge className="bg-gray-900/90 text-white border-0 py-1.5 px-3 shadow-lg font-medium">Not available for selected dates</Badge>
             </div>
           )}
-          <button
-            onClick={handleToggleWishlist}
-            className="absolute top-3 right-3 bg-white/90 hover:bg-white p-2 rounded-full transition-colors"
-          >
-            <Heart className={`w-5 h-5 ${isWishlisted ? 'text-red-500 fill-red-500' : 'text-gray-600'}`} />
-          </button>
           {property.featured && (
-            <Badge className="absolute top-3 left-3 bg-amber-500 border-0">Featured</Badge>
+            <Badge className="absolute top-3 left-3 bg-amber-500 border-0 shadow-sm z-20">Featured</Badge>
           )}
-          {(property.pets_allowed || property.children_allowed) && (
-            <div className="absolute top-3 right-3 flex gap-1">
-              {property.pets_allowed && (
-                <Badge variant="secondary" className="bg-white/90 text-xs border-0">
-                  Pet-friendly
-                </Badge>
-              )}
-              {property.children_allowed && (
-                <Badge variant="secondary" className="bg-white/90 text-xs border-0">
-                  Family
-                </Badge>
-              )}
-            </div>
-          )}
+          <div className="absolute top-3 right-3 flex flex-col items-end gap-2 z-20">
+            {(property.pets_allowed || property.children_allowed) && (
+              <div className="flex flex-wrap justify-end gap-1">
+                {property.pets_allowed && (
+                  <Badge variant="secondary" className="bg-white/90 text-xs border-0 shadow-sm">
+                    Pet-friendly
+                  </Badge>
+                )}
+                {property.children_allowed && (
+                  <Badge variant="secondary" className="bg-white/90 text-xs border-0 shadow-sm">
+                    Family
+                  </Badge>
+                )}
+              </div>
+            )}
+            <button
+              onClick={handleToggleWishlist}
+              className="bg-white/90 hover:bg-white p-2 rounded-full transition-colors shadow-sm"
+            >
+              <Heart className={`w-5 h-5 ${isWishlisted ? 'text-red-500 fill-red-500' : 'text-gray-600'}`} />
+            </button>
+          </div>
         </div>
         
         <div className="p-4">
