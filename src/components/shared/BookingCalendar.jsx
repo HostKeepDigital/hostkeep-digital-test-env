@@ -55,10 +55,7 @@ export default function BookingCalendar({
                 <div className="w-3 h-3 rounded bg-red-100 border border-red-200"></div>
                 <span>Booked</span>
               </div>
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded bg-teal-600"></div>
-                <span>Selected</span>
-              </div>
+
             </div>
           )}
         </PopoverContent>
