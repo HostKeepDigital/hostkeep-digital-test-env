@@ -27,6 +27,8 @@ const PUBLIC_PAGES = ["Pay"];
 // Host dashboard pages
 const HOST_PAGES = ["HostDashboard", "HostBookings", "HostProperties", "HostMessages", "HostSettings", "CreateProperty", "EditProperty", "Subscription"];
 
+const GUEST_PAGES = ["Home", "Search", "PropertyDetails", "MyTrips", "GuestMessages", "GuestProfile", "BecomeHost", "BecomeCleaner"];
+
 export default function Layout({ children, currentPageName }) {
   const [user, setUser] = useState(null);
   const [userRoles, setUserRoles] = useState([]);
@@ -229,6 +231,11 @@ export default function Layout({ children, currentPageName }) {
                     <DropdownMenuItem asChild>
                       <Link to={createPageUrl('MyTrips')} className="flex items-center gap-2">
                         <Calendar className="w-4 h-4" /> My Trips
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to={createPageUrl('GuestMessages')} className="flex items-center gap-2">
+                        <MessageSquare className="w-4 h-4" /> Messages
                       </Link>
                     </DropdownMenuItem>
                     {hasRole(userRoles, 'host') && (

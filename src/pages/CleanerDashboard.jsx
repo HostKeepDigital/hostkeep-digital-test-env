@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
   Sparkles, Calendar, Clock, TrendingUp, Star, 
-  CheckCircle, AlertCircle, Loader2, Crown, DollarSign
+  CheckCircle, AlertCircle, Loader2, Crown, DollarSign, MessageSquare
 } from "lucide-react";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
@@ -178,7 +178,17 @@ export default function CleanerDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="grid md:grid-cols-4 gap-6 mb-8">
+          <Link to={createPageUrl('CleanerMessages')}>
+            <Card className="hover:shadow-lg transition-all cursor-pointer h-full">
+              <CardContent className="p-6">
+                <MessageSquare className="w-8 h-8 text-indigo-600 mb-3" />
+                <h3 className="font-semibold text-lg text-gray-900 mb-1">Messages</h3>
+                <p className="text-sm text-gray-600">Chat with hosts about your jobs</p>
+              </CardContent>
+            </Card>
+          </Link>
+
           <Link to={createPageUrl('CleanerJobs')}>
             <Card className="hover:shadow-lg transition-all cursor-pointer">
               <CardContent className="p-6">
