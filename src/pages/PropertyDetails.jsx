@@ -262,7 +262,67 @@ export default function PropertyDetails() {
 
   const numNights = nights ? parseInt(nights) : 0;
   const checkOut = checkIn && numNights ? format(addDays(parseISO(checkIn), numNights), "yyyy-MM-dd") : "";
-  const subtotal = numNights * (property?.nightly_rate || 0);
+  
+  // Calculate nightly rate with seasonal pricing
+  const calculateNightlyRate = (dateString) => {
+    if (!dateString || !property) return property?.nightly_rate || 0;
+    
+    const pricingSettings = property.pricing_settings;
+    if (!pricingSettings) return property.nightly_rate || 0;
+    
+    const date = parseISO(dateString);
+    const dateKey = format(date, "yyyy-MM-dd");
+    const dayOfWeek = date.getDay(); // 0=Sunday, 6=Saturday
+    const isWeekend = dayOfWeek === 5 || dayOfWeek === 6 || dayOfWeek === 0; // Fri, Sat, Sun
+    
+    // Priority 1: Date override
+    if (pricingSettings.date_overrides?.[dateKey]?.rate) {
+      return pricingSettings.date_overrides[dateKey].rate;
+    }
+    
+    // Priority 2: Seasonal rate
+    if (pricingSettings.seasons?.length > 0) {
+      for (const season of pricingSettings.seasons) {
+        const seasonStart = parseISO(season.start_date);
+        const seasonEnd = parseISO(season.end_date);
+        if (date >= seasonStart && date <= seasonEnd) {
+          let rate = season.nightly_rate || property.nightly_rate;
+          // Apply weekend modifier if set
+          if (isWeekend && season.weekend_modifier) {
+            rate = rate * (1 + season.weekend_modifier / 100);
+          }
+          // Apply rounding if set
+          if (pricingSettings.price_rounding) {
+            rate = Math.round(rate / pricingSettings.price_rounding) * pricingSettings.price_rounding;
+          }
+          return rate;
+        }
+      }
+    }
+    
+    // Priority 3: Weekday/Weekend rates
+    if (isWeekend && pricingSettings.weekend_rate) {
+      return pricingSettings.weekend_rate;
+    }
+    if (!isWeekend && pricingSettings.weekday_rate) {
+      return pricingSettings.weekday_rate;
+    }
+    
+    // Default: base rate
+    return pricingSettings.base_rate || property.nightly_rate || 0;
+  };
+  
+  // Calculate total for all nights
+  const subtotal = (() => {
+    if (!checkIn || numNights === 0) return 0;
+    let total = 0;
+    for (let i = 0; i < numNights; i++) {
+      const nightDate = format(addDays(parseISO(checkIn), i), "yyyy-MM-dd");
+      total += calculateNightlyRate(nightDate);
+    }
+    return total;
+  })();
+  
   const cleaningFee = property?.cleaning_fee || 0;
   const total = subtotal + cleaningFee;
 
