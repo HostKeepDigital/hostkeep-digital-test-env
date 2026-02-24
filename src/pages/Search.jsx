@@ -11,6 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Search as SearchIcon, MapPin, Calendar, Users, SlidersHorizontal, X } from "lucide-react";
 import PropertyCard from "@/components/properties/PropertyCard";
 import { format, parseISO, addDays } from "date-fns";
+import BookingCalendar from "@/components/shared/BookingCalendar";
 
 const AMENITIES = [
   "WiFi", "Pool", "Parking", "Air Conditioning", "Kitchen", "Washing Machine",
@@ -234,13 +235,15 @@ export default function Search() {
                 className="pl-10 h-11"
               />
             </div>
-            <Input
-              type="date"
-              value={filters.checkIn}
-              onChange={(e) => handleFilterChange("checkIn", e.target.value)}
-              className="w-40 h-11 bg-white"
-              placeholder="Check in"
-            />
+            <div className="w-44">
+              <BookingCalendar
+                value={filters.checkIn}
+                onSelect={(date) => handleFilterChange("checkIn", date ? format(date, "yyyy-MM-dd") : "")}
+                placeholder="Check in"
+                className="h-11 bg-white"
+                numberOfMonths={1}
+              />
+            </div>
             <Select value={filters.duration} onValueChange={(v) => handleFilterChange("duration", v)}>
               <SelectTrigger className="w-40 h-11 bg-white">
                 <SelectValue placeholder="Duration" />

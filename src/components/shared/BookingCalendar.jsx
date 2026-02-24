@@ -12,7 +12,8 @@ export default function BookingCalendar({
   disabled,
   placeholder = "Select date",
   bookedDates = [],
-  numberOfMonths = 2
+  numberOfMonths = 2,
+  className = ""
 }) {
   const [open, setOpen] = useState(false);
 
@@ -26,7 +27,7 @@ export default function BookingCalendar({
       {label && <label className="text-xs mb-1 block">{label}</label>}
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button variant="outline" className="w-full justify-start text-left font-normal">
+          <Button variant="outline" className={`w-full justify-start text-left font-normal ${className}`}>
             <Calendar className="mr-2 h-4 w-4 text-gray-400" />
             {value ? format(typeof value === 'string' ? parseISO(value) : value, "MMM d, yyyy") : placeholder}
           </Button>
