@@ -15,10 +15,12 @@ import StatsCard from "@/components/dashboard/StatsCard";
 import BookingCalendar from "@/components/dashboard/BookingCalendar";
 import { parseISO, isAfter, startOfMonth, endOfMonth, isWithinInterval, format } from "date-fns";
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import NewMessageModal from "@/components/messaging/NewMessageModal";
 
 export default function HostDashboard() {
   const [user, setUser] = useState(null);
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+  const [showMessageModal, setShowMessageModal] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
@@ -275,7 +277,9 @@ export default function HostDashboard() {
               animate={{ opacity: 1, y: 0 }}
               className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"
             >
-              <h3 className="font-semibold text-gray-900 mb-4">Quick Actions</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-gray-900">Quick Actions</h3>
+              </div>
               <div className="space-y-2">
                 <Link to={createPageUrl('HostBookings')} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors">
                   <Calendar className="w-5 h-5 text-teal-600" />
@@ -284,13 +288,23 @@ export default function HostDashboard() {
                     <Badge className="ml-auto bg-amber-100 text-amber-700">{pendingBookings.length}</Badge>
                   )}
                 </Link>
-                <Link to={createPageUrl('HostMessages')} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors">
-                  <MessageSquare className="w-5 h-5 text-teal-600" />
-                  <span className="text-gray-700">Messages</span>
-                  {messages.length > 0 && (
-                    <Badge className="ml-auto bg-teal-100 text-teal-700">{messages.length}</Badge>
-                  )}
-                </Link>
+                <div className="flex items-center gap-2">
+                  <Link to={createPageUrl('HostMessages')} className="flex-1 flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors">
+                    <MessageSquare className="w-5 h-5 text-teal-600" />
+                    <span className="text-gray-700">Messages</span>
+                    {messages.length > 0 && (
+                      <Badge className="ml-auto bg-teal-100 text-teal-700">{messages.length}</Badge>
+                    )}
+                  </Link>
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={() => setShowMessageModal(true)}
+                    className="rounded-xl hover:bg-teal-50"
+                  >
+                    <Plus className="w-5 h-5 text-teal-600" />
+                  </Button>
+                </div>
                 <Link to={createPageUrl('HostProperties')} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors">
                   <Home className="w-5 h-5 text-teal-600" />
                   <span className="text-gray-700">Properties</span>
@@ -381,6 +395,13 @@ export default function HostDashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* New Message Modal */}
+      <NewMessageModal 
+        isOpen={showMessageModal} 
+        onClose={() => setShowMessageModal(false)} 
+        hostId={user?.id}
+      />
     </div>
   );
 }
