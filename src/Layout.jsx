@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
 import { 
@@ -28,15 +28,6 @@ const PUBLIC_PAGES = ["Pay"];
 const HOST_PAGES = ["HostDashboard", "HostBookings", "HostProperties", "HostMessages", "HostSettings", "CreateProperty", "EditProperty", "Subscription"];
 
 export default function Layout({ children, currentPageName }) {
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  useEffect(() => {
-    if (location.pathname === '/') {
-      navigate(createPageUrl('Home'), { replace: true });
-    }
-  }, [location.pathname, navigate]);
-
   const [user, setUser] = useState(null);
   const [userRoles, setUserRoles] = useState([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
