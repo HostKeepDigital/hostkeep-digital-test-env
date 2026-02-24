@@ -28,9 +28,15 @@ export default function MyTrips() {
 
   // Fetch bookings
   const { data: bookings = [], isLoading: bookingsLoading } = useQuery({
-    queryKey: ['guest-bookings', user?.email],
-    queryFn: () => base44.entities.Booking.filter({ guest_email: user?.email }),
-    enabled: !!user?.email,
+    queryKey: ['guest-bookings', user?.email, user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const byEmail = user.email ? await base44.entities.Booking.filter({ guest_email: user.email }, "-created_date", 100) : [];
+      const byId = user.id ? await base44.entities.Booking.filter({ guest_id: user.id }, "-created_date", 100) : [];
+      const all = [...byEmail, ...byId];
+      return Array.from(new Map(all.map(b => [b.id, b])).values());
+    },
+    enabled: !!user,
   });
 
   // Fetch wishlisted properties
@@ -47,8 +53,14 @@ export default function MyTrips() {
   ];
   
   const { data: properties = [] } = useQuery({
-    queryKey: ['properties-for-trips'],
-    queryFn: () => base44.entities.Property.list(),
+    queryKey: ['properties-for-trips', propertyIds.join(',')],
+    queryFn: async () => {
+      const uniqueIds = [...new Set(propertyIds)];
+      if (uniqueIds.length === 0) return [];
+      const propertyPromises = uniqueIds.map(id => base44.entities.Property.filter({ id }));
+      const results = await Promise.all(propertyPromises);
+      return results.map(r => r[0]).filter(Boolean);
+    },
     enabled: propertyIds.length > 0,
   });
 

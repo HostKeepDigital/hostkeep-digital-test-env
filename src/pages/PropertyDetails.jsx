@@ -450,6 +450,7 @@ export default function PropertyDetails() {
     bookingMutation.mutate({
       property_id: propertyId,
       host_id: property.owner_id,
+      guest_id: currentUser?.id,
       guest_name: guestName,
       guest_email: guestEmail,
       guest_phone: guestPhone,
