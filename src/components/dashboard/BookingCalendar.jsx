@@ -18,7 +18,7 @@ export default function BookingCalendar({ bookings = [], properties = [] }) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
-  const [blockDates, setBlockDates] = useState({ start: "", end: "", reason: "" });
+  const [blockDates, setBlockDates] = useState({ start: "", end: "", reason: "", property_id: "" });
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
