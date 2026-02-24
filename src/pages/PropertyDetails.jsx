@@ -617,7 +617,7 @@ export default function PropertyDetails() {
           <div className="flex items-start justify-between gap-2 md:gap-4 mb-3 md:mb-4">
             <div className="flex-1">
               <h1 className="text-xl sm:text-2xl md:text-4xl font-bold text-gray-900 mb-2">{property.title}</h1>
-              <div className="flex flex-wrap items-center gap-2 md:gap-4 text-sm md:text-base text-gray-600">
+              <div className="flex flex-wrap items-center gap-2 md:gap-4 text-sm md:text-base text-gray-600 mb-3">
                 <span className="flex items-center gap-1.5">
                   <MapPin className="w-4 h-4 text-teal-600" />
                   {property.location?.city || property.location?.town_city}, {property.location?.country || 'UK'}
@@ -629,6 +629,18 @@ export default function PropertyDetails() {
                     <span className="text-gray-600">({reviews.length})</span>
                   </span>
                 )}
+              </div>
+              {/* Quick Info Badges */}
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-0 text-xs">
+                  <Users className="w-3 h-3 mr-1" /> {property.guest_capacity} guests
+                </Badge>
+                <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-0 text-xs">
+                  <Bed className="w-3 h-3 mr-1" /> {property.bedrooms} beds
+                </Badge>
+                <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-0 text-xs">
+                  <Bath className="w-3 h-3 mr-1" /> {property.bathrooms} baths
+                </Badge>
               </div>
             </div>
             <div className="flex flex-col gap-3">
@@ -659,19 +671,6 @@ export default function PropertyDetails() {
                 </div>
               )}
             </div>
-          </div>
-
-          {/* Quick Info Badges */}
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-0 text-xs">
-              <Users className="w-3 h-3 mr-1" /> {property.guest_capacity} guests
-            </Badge>
-            <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-0 text-xs">
-              <Bed className="w-3 h-3 mr-1" /> {property.bedrooms} beds
-            </Badge>
-            <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-0 text-xs">
-              <Bath className="w-3 h-3 mr-1" /> {property.bathrooms} baths
-            </Badge>
           </div>
         </div>
 
