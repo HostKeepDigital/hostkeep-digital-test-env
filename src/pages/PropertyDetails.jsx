@@ -312,6 +312,27 @@ export default function PropertyDetails() {
     return pricingSettings.base_rate || property.nightly_rate || 0;
   };
   
+  // Calculate lowest rate for current month
+  const getLowestMonthlyRate = () => {
+    if (!property) return property?.nightly_rate || 0;
+    
+    const today = new Date();
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    
+    let lowestRate = Infinity;
+    for (let d = new Date(startOfMonth); d <= endOfMonth; d.setDate(d.getDate() + 1)) {
+      const rate = calculateNightlyRate(format(d, "yyyy-MM-dd"));
+      if (rate < lowestRate) {
+        lowestRate = rate;
+      }
+    }
+    
+    return lowestRate === Infinity ? (property?.nightly_rate || 0) : lowestRate;
+  };
+  
+  const displayStartingRate = getLowestMonthlyRate();
+  
   // Calculate total for all nights
   const subtotal = (() => {
     if (!checkIn || numNights === 0) return 0;
@@ -322,6 +343,8 @@ export default function PropertyDetails() {
     }
     return total;
   })();
+  
+  const averageNightlyRate = numNights > 0 ? Math.round(subtotal / numNights) : displayStartingRate;
   
   const cleaningFee = property?.cleaning_fee || 0;
   const total = subtotal + cleaningFee;
@@ -782,7 +805,7 @@ export default function PropertyDetails() {
                 <div className="border-b border-gray-100 pb-3">
                   <p className="text-gray-600 text-xs mb-0.5">Starting from</p>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold text-gray-900">£{property.nightly_rate}</span>
+                    <span className="text-3xl font-bold text-gray-900">£{displayStartingRate}</span>
                     <span className="text-gray-500 text-xs">per night</span>
                   </div>
                 </div>
@@ -837,7 +860,7 @@ export default function PropertyDetails() {
                 {numNights > 0 && (
                   <div className="space-y-1.5 py-3 border-t border-gray-100">
                     <div className="flex justify-between text-sm text-gray-600">
-                      <span>£{property.nightly_rate} × {numNights} {numNights === 1 ? 'night' : 'nights'}</span>
+                      <span>£{averageNightlyRate} avg × {numNights} {numNights === 1 ? 'night' : 'nights'}</span>
                       <span>£{subtotal}</span>
                     </div>
                     {cleaningFee > 0 && (
@@ -930,7 +953,7 @@ export default function PropertyDetails() {
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-xs text-gray-500">From</p>
-            <span className="text-2xl font-bold text-gray-900">£{property.nightly_rate}</span>
+            <span className="text-2xl font-bold text-gray-900">£{displayStartingRate}</span>
           </div>
           <Dialog open={showBookingDialog} onOpenChange={setShowBookingDialog}>
             <DialogTrigger asChild>
@@ -1026,7 +1049,7 @@ export default function PropertyDetails() {
                 {numNights > 0 && (
                   <div className="bg-gray-50 rounded-lg p-4 space-y-2 border border-gray-200">
                     <div className="flex justify-between text-sm">
-                      <span>£{property.nightly_rate} × {numNights}</span>
+                      <span>£{averageNightlyRate} avg × {numNights}</span>
                       <span>£{subtotal}</span>
                     </div>
                     {cleaningFee > 0 && (
