@@ -1145,7 +1145,10 @@ export default function PropertyDetails() {
                   <BookingCalendar
                     label="Trip Start"
                     value={checkIn}
-                    onSelect={(date) => setCheckIn(date ? format(date, "yyyy-MM-dd") : "")}
+                    onSelect={(date) => {
+                      setCheckIn(date ? format(date, "yyyy-MM-dd") : "");
+                      setNights("");
+                    }}
                     disabled={(date) => 
                       isBefore(date, new Date()) || 
                       isDateBooked(date) || 
@@ -1159,7 +1162,7 @@ export default function PropertyDetails() {
                     <Label className="text-xs font-medium text-gray-900 mb-1 block">Duration</Label>
                     <Select value={nights} onValueChange={(value) => setNights(value)} disabled={!checkIn}>
                       <SelectTrigger className="h-11 border-gray-200">
-                        <SelectValue placeholder="Select duration" />
+                        <SelectValue placeholder="Trip Duration" />
                       </SelectTrigger>
                       <SelectContent>
                         {allowedNights.map(night => (
@@ -1289,7 +1292,10 @@ export default function PropertyDetails() {
                   <BookingCalendar
                     label="Trip Start"
                     value={checkIn}
-                    onSelect={(date) => setCheckIn(date ? format(date, "yyyy-MM-dd") : "")}
+                    onSelect={(date) => {
+                      setCheckIn(date ? format(date, "yyyy-MM-dd") : "");
+                      setNights("");
+                    }}
                     disabled={(date) => 
                       isBefore(date, new Date()) || 
                       isDateBooked(date) || 
@@ -1302,7 +1308,7 @@ export default function PropertyDetails() {
                     <Label className="text-sm font-medium">Duration</Label>
                     <Select value={nights} onValueChange={(value) => setNights(value)} disabled={!checkIn}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select nights" />
+                        <SelectValue placeholder="Trip Duration" />
                       </SelectTrigger>
                       <SelectContent>
                         {allowedNights.map(night => (
