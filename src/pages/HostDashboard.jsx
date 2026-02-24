@@ -316,6 +316,10 @@ export default function HostDashboard() {
                       <Badge className="capitalize">{subscription.plan}</Badge>
                     </div>
                     <div className="flex items-center justify-between mb-2">
+                      <span className="text-gray-600">Cost</span>
+                      <span className="font-medium">£{subscription.price_monthly}/month</span>
+                    </div>
+                    <div className="flex items-center justify-between mb-2">
                       <span className="text-gray-600">Status</span>
                       <Badge variant={subscription.status === 'active' ? 'default' : 'secondary'}>
                         {subscription.status}
