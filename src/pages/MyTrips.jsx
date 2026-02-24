@@ -12,11 +12,14 @@ import {
 } from "lucide-react";
 import { format, parseISO, isBefore, isAfter } from "date-fns";
 import ReviewForm from "@/components/reviews/ReviewForm";
+import RaiseQuestionModal from "@/components/messaging/RaiseQuestionModal";
 import { Card, CardContent } from "@/components/ui/card";
+import { MessageSquare } from "lucide-react";
 
 export default function MyTrips() {
   const [user, setUser] = useState(null);
   const [reviewBooking, setReviewBooking] = useState(null);
+  const [questionBooking, setQuestionBooking] = useState(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -249,6 +252,13 @@ export default function MyTrips() {
                       Manage Booking
                     </Button>
                   </Link>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setQuestionBooking(booking)}
+                  >
+                    <MessageSquare className="w-4 h-4 mr-1" /> Message Host
+                  </Button>
                   {showReviewButton && (
                     <Button 
                       size="sm" 
@@ -332,6 +342,15 @@ export default function MyTrips() {
             )}
           </TabsContent>
         </Tabs>
+
+        {questionBooking && (
+          <RaiseQuestionModal
+            isOpen={!!questionBooking}
+            onClose={() => setQuestionBooking(null)}
+            booking={questionBooking}
+            guestUser={user}
+          />
+        )}
 
         {/* Review Form Dialog */}
         {reviewBooking && (
