@@ -16,7 +16,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import DayBasedBookingRules from "@/components/properties/DayBasedBookingRules";
 import PricingManager from "@/components/pricing/PricingManager";
 import { toast } from "sonner";
-import { Link, useBlocker } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { isEqual } from "lodash";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -111,11 +111,18 @@ export default function EditProperty() {
     },
   });
 
+  const navigate = useNavigate();
   const hasChanges = originalData && formData && !isEqual(formData, originalData);
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) =>
-      hasChanges && currentLocation.pathname !== nextLocation.pathname
-  );
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+
+  const handleBackClick = (e) => {
+    e.preventDefault();
+    if (hasChanges) {
+      setShowUnsavedDialog(true);
+    } else {
+      navigate(createPageUrl('HostProperties'));
+    }
+  };
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -263,11 +270,7 @@ export default function EditProperty() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <Dialog open={blocker.state === "blocked"} onOpenChange={(open) => {
-        if (!open && blocker.state === "blocked") {
-          blocker.reset();
-        }
-      }}>
+      <Dialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Unsaved Changes</DialogTitle>
@@ -276,10 +279,16 @@ export default function EditProperty() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => blocker.proceed()}>
+            <Button variant="outline" onClick={() => {
+              setShowUnsavedDialog(false);
+              navigate(createPageUrl('HostProperties'));
+            }}>
               Discard
             </Button>
-            <Button onClick={() => handleSave(() => blocker.proceed())}>
+            <Button onClick={() => handleSave(() => {
+              setShowUnsavedDialog(false);
+              navigate(createPageUrl('HostProperties'));
+            })}>
               Save Changes
             </Button>
           </DialogFooter>
@@ -289,11 +298,9 @@ export default function EditProperty() {
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link to={createPageUrl('HostProperties')}>
-                <Button variant="ghost" size="icon">
-                  <ArrowLeft className="w-5 h-5" />
-                </Button>
-              </Link>
+              <Button variant="ghost" size="icon" onClick={handleBackClick}>
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
               <div>
                 <h1 className="text-xl font-bold text-gray-900">Edit Property</h1>
                 <p className="text-sm text-gray-500">{formData.title}</p>
