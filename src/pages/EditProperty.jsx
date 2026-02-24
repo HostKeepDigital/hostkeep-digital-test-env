@@ -54,7 +54,7 @@ export default function EditProperty() {
   });
 
   useEffect(() => {
-    if (property) {
+    if (property && !originalData) {
       const initial = {
         title: property.title || "",
         property_type: property.property_type || "house",
@@ -100,8 +100,9 @@ export default function EditProperty() {
 
   const updateMutation = useMutation({
     mutationFn: (data) => base44.entities.Property.update(propertyId, data),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       toast.success("Property updated successfully!");
+      setOriginalData(prev => ({ ...prev, ...variables }));
       queryClient.invalidateQueries({ queryKey: ['property', propertyId] });
     },
   });
