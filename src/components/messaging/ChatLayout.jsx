@@ -14,7 +14,20 @@ export default function ChatLayout({ role = "host" }) {
     base44.auth.me().then(setUser).catch(() => {});
   }, []);
 
-  // Real-time subscription to messages
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!user?.id) return;
+    const unsubscribe = base44.entities.Message.subscribe((event) => {
+      if (event.type === 'create' || event.type === 'update') {
+        if (event.data.sender_id === user.id || event.data.receiver_id === user.id) {
+          queryClient.invalidateQueries({ queryKey: ['messages'] });
+        }
+      }
+    });
+    return unsubscribe;
+  }, [user?.id, queryClient]);
+
   // Fetch Messages and Group into Conversations
   const { data: messages = [], isLoading } = useQuery({
     queryKey: ['messages', user?.id],
