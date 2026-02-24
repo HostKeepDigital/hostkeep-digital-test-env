@@ -344,7 +344,38 @@ export default function PropertyDetails() {
     return total;
   })();
   
-  const averageNightlyRate = numNights > 0 ? Math.round(subtotal / numNights) : displayStartingRate;
+  // Group consecutive nights by rate for breakdown
+  const getPriceBreakdown = () => {
+    if (!checkIn || numNights === 0) return [];
+    
+    const breakdown = [];
+    let currentRate = null;
+    let currentCount = 0;
+    
+    for (let i = 0; i < numNights; i++) {
+      const nightDate = format(addDays(parseISO(checkIn), i), "yyyy-MM-dd");
+      const rate = calculateNightlyRate(nightDate);
+      
+      if (rate === currentRate) {
+        currentCount++;
+      } else {
+        if (currentRate !== null) {
+          breakdown.push({ rate: currentRate, nights: currentCount });
+        }
+        currentRate = rate;
+        currentCount = 1;
+      }
+    }
+    
+    // Add the last group
+    if (currentRate !== null) {
+      breakdown.push({ rate: currentRate, nights: currentCount });
+    }
+    
+    return breakdown;
+  };
+  
+  const priceBreakdown = getPriceBreakdown();
   
   const cleaningFee = property?.cleaning_fee || 0;
   const total = subtotal + cleaningFee;
@@ -859,10 +890,12 @@ export default function PropertyDetails() {
                 {/* Price Breakdown */}
                 {numNights > 0 && (
                   <div className="space-y-1.5 py-3 border-t border-gray-100">
-                    <div className="flex justify-between text-sm text-gray-600">
-                      <span>£{averageNightlyRate} avg × {numNights} {numNights === 1 ? 'night' : 'nights'}</span>
-                      <span>£{subtotal}</span>
-                    </div>
+                    {priceBreakdown.map((item, idx) => (
+                      <div key={idx} className="flex justify-between text-sm text-gray-600">
+                        <span>{item.nights} × £{item.rate} per night</span>
+                        <span>£{item.nights * item.rate}</span>
+                      </div>
+                    ))}
                     {cleaningFee > 0 && (
                       <div className="flex justify-between text-sm text-gray-600">
                         <span>Cleaning fee</span>
@@ -1048,10 +1081,12 @@ export default function PropertyDetails() {
                 </div>
                 {numNights > 0 && (
                   <div className="bg-gray-50 rounded-lg p-4 space-y-2 border border-gray-200">
-                    <div className="flex justify-between text-sm">
-                      <span>£{averageNightlyRate} avg × {numNights}</span>
-                      <span>£{subtotal}</span>
-                    </div>
+                    {priceBreakdown.map((item, idx) => (
+                      <div key={idx} className="flex justify-between text-sm">
+                        <span>{item.nights} × £{item.rate} per night</span>
+                        <span>£{item.nights * item.rate}</span>
+                      </div>
+                    ))}
                     {cleaningFee > 0 && (
                       <div className="flex justify-between text-sm">
                         <span>Cleaning fee</span>
