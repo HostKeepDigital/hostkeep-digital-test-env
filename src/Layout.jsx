@@ -28,6 +28,15 @@ const PUBLIC_PAGES = ["Pay"];
 const HOST_PAGES = ["HostDashboard", "HostBookings", "HostProperties", "HostMessages", "HostSettings", "CreateProperty", "EditProperty", "Subscription"];
 
 export default function Layout({ children, currentPageName }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.pathname === '/') {
+      navigate(createPageUrl('Home'), { replace: true });
+    }
+  }, [location.pathname, navigate]);
+
   const [user, setUser] = useState(null);
   const [userRoles, setUserRoles] = useState([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
