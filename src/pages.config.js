@@ -75,6 +75,7 @@ import Pay from './pages/Pay';
 import PropertyDetails from './pages/PropertyDetails';
 import Search from './pages/Search';
 import Subscription from './pages/Subscription';
+import Index from './pages/Index';
 import __Layout from './Layout.jsx';
 
 
@@ -107,6 +108,7 @@ export const PAGES = {
     "PropertyDetails": PropertyDetails,
     "Search": Search,
     "Subscription": Subscription,
+    "Index": Index,
 }
 
 export const pagesConfig = {
