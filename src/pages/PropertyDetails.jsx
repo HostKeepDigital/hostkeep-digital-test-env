@@ -1016,10 +1016,15 @@ export default function PropertyDetails() {
                       <span>£{total}</span>
                     </div>
                     {depositAmount > 0 && (
-                      <div className="flex justify-between text-sm font-semibold text-teal-700 pt-1">
-                        <span>Deposit due now</span>
-                        <span>£{depositAmount}</span>
-                      </div>
+                      <>
+                        <div className="flex justify-between text-sm font-semibold text-teal-700 pt-1">
+                          <span>Deposit</span>
+                          <span>£{depositAmount}</span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                          Upon acceptance of your booking, a deposit will be due within 48 hours to secure your reservation.
+                        </p>
+                      </>
                     )}
                   </div>
                 )}
@@ -1219,10 +1224,15 @@ export default function PropertyDetails() {
                       <span>£{total}</span>
                     </div>
                     {depositAmount > 0 && (
-                      <div className="flex justify-between text-sm font-semibold text-teal-700 pt-1 border-t border-gray-100">
-                        <span>Deposit due now</span>
-                        <span>£{depositAmount}</span>
-                      </div>
+                      <>
+                        <div className="flex justify-between text-sm font-semibold text-teal-700 pt-1 border-t border-gray-100">
+                          <span>Deposit</span>
+                          <span>£{depositAmount}</span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                          Upon acceptance of your booking, a deposit will be due within 48 hours to secure your reservation.
+                        </p>
+                      </>
                     )}
                   </div>
                 )}
