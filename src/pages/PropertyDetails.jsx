@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,7 +20,6 @@ import {
 } from "lucide-react";
 import { format, parseISO, differenceInDays, addDays, isBefore } from "date-fns";
 import { toast } from "sonner";
-import confetti from "canvas-confetti";
 import ReviewList from "@/components/reviews/ReviewList";
 import BookingCalendar from "@/components/shared/BookingCalendar";
 import PropertyShareModal from "@/components/properties/PropertyShareModal";
@@ -34,7 +33,6 @@ const AMENITY_ICONS = {
 export default function PropertyDetails() {
   const urlParams = new URLSearchParams(window.location.search);
   const propertyId = urlParams.get('id');
-  const queryClient = useQueryClient();
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showImageOverlay, setShowImageOverlay] = useState(false);
@@ -52,7 +50,6 @@ export default function PropertyDetails() {
   const [guestMessage, setGuestMessage] = useState("");
   const [showBookingDialog, setShowBookingDialog] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-  const [isWishlistAnimating, setIsWishlistAnimating] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => setCurrentUser(null));
@@ -129,67 +126,6 @@ export default function PropertyDetails() {
     queryFn: () => base44.entities.Booking.filter({ property_id: propertyId, booking_status: 'confirmed' }),
     enabled: !!propertyId,
   });
-
-  // Fetch wishlist status
-  const { data: wishlistItems = [] } = useQuery({
-    queryKey: ['wishlist-properties', currentUser?.id],
-    queryFn: () => base44.entities.WishlistProperty.filter({ user_id: currentUser?.id }),
-    enabled: !!currentUser?.id,
-  });
-
-  const isWishlisted = wishlistItems.some(item => item.property_id === propertyId);
-  const wishlistItem = wishlistItems.find(item => item.property_id === propertyId);
-
-  // Add to wishlist mutation
-  const addToWishlistMutation = useMutation({
-    mutationFn: () => base44.entities.WishlistProperty.create({
-      user_id: currentUser.id,
-      property_id: propertyId
-    }),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['wishlist-properties']);
-      
-      // Confetti animation
-      confetti({
-        particleCount: 50,
-        angle: 60,
-        spread: 55,
-        origin: { x: 0.9, y: 0.2 },
-        colors: ['#ef4444', '#ec4899', '#f59e0b'],
-        startVelocity: 30,
-        gravity: 0.8,
-        scalar: 0.8,
-      });
-      
-      toast.success("This property has been added to your wishlist.");
-      setIsWishlistAnimating(false);
-    },
-  });
-
-  // Remove from wishlist mutation
-  const removeFromWishlistMutation = useMutation({
-    mutationFn: () => base44.entities.WishlistProperty.delete(wishlistItem.id),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['wishlist-properties']);
-      toast.success("Removed from your wishlist.");
-      setIsWishlistAnimating(false);
-    },
-  });
-
-  const handleWishlistToggle = () => {
-    if (!currentUser) {
-      base44.auth.redirectToLogin();
-      return;
-    }
-
-    setIsWishlistAnimating(true);
-    
-    if (isWishlisted) {
-      removeFromWishlistMutation.mutate();
-    } else {
-      addToWishlistMutation.mutate();
-    }
-  };
 
   // Get booked dates for this specific property
   const getBookedDates = () => {
@@ -709,39 +645,9 @@ export default function PropertyDetails() {
             </div>
             <div className="flex flex-col gap-3">
               <div className="flex gap-2">
-                <motion.div
-                  whileTap={{ scale: 0.9 }}
-                  animate={isWishlistAnimating ? { scale: [1, 1.2, 1] } : {}}
-                  transition={{ duration: 0.3 }}
-                >
-                  <Button 
-                    variant="outline" 
-                    size="icon" 
-                    className="rounded-full shadow-md hover:shadow-lg transition-shadow group relative"
-                    onClick={handleWishlistToggle}
-                    disabled={isWishlistAnimating}
-                    title={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-                  >
-                    <Heart 
-                      className={`w-4 h-4 transition-all duration-300 ${
-                        isWishlisted 
-                          ? 'text-red-500 fill-red-500' 
-                          : 'text-gray-600 group-hover:text-red-400'
-                      }`} 
-                    />
-                    <AnimatePresence>
-                      {isWishlisted && (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: [0, 1.5, 0] }}
-                          exit={{ scale: 0 }}
-                          transition={{ duration: 0.6 }}
-                          className="absolute inset-0 bg-red-100 rounded-full opacity-50 pointer-events-none"
-                        />
-                      )}
-                    </AnimatePresence>
-                  </Button>
-                </motion.div>
+                <Button variant="outline" size="icon" className="rounded-full">
+                  <Heart className="w-4 h-4" />
+                </Button>
                 <PropertyShareModal 
                   propertyTitle={property.title}
                   propertyUrl={window.location.href}
