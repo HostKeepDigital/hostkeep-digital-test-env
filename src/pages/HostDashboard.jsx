@@ -266,7 +266,7 @@ export default function HostDashboard() {
             </motion.div>
 
             {/* Calendar */}
-            <BookingCalendar bookings={bookings} />
+            <BookingCalendar bookings={bookings} properties={properties} />
           </div>
 
           {/* Sidebar */}
