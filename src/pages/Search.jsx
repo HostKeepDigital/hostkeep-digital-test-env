@@ -239,7 +239,7 @@ export default function Search() {
               <BookingCalendar
                 value={filters.checkIn}
                 onSelect={(date) => handleFilterChange("checkIn", date ? format(date, "yyyy-MM-dd") : "")}
-                placeholder="Check in"
+                placeholder="Trip Start"
                 className="h-11 bg-white"
                 numberOfMonths={1}
               />

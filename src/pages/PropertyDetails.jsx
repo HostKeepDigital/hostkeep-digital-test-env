@@ -1143,7 +1143,7 @@ export default function PropertyDetails() {
                 {/* Booking Inputs */}
                 <div className="space-y-3">
                   <BookingCalendar
-                    label="Check-in"
+                    label="Trip Start"
                     value={checkIn}
                     onSelect={(date) => setCheckIn(date ? format(date, "yyyy-MM-dd") : "")}
                     disabled={(date) => 
@@ -1287,7 +1287,7 @@ export default function PropertyDetails() {
               <div className="space-y-4 mt-4">
                 <div className="space-y-3">
                   <BookingCalendar
-                    label="Check-in"
+                    label="Trip Start"
                     value={checkIn}
                     onSelect={(date) => setCheckIn(date ? format(date, "yyyy-MM-dd") : "")}
                     disabled={(date) => 
