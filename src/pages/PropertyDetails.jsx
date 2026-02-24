@@ -344,35 +344,22 @@ export default function PropertyDetails() {
     return total;
   })();
   
-  // Group consecutive nights by rate for breakdown
+  // Group nights by same rate value for breakdown
   const getPriceBreakdown = () => {
     if (!checkIn || numNights === 0) return [];
     
-    const breakdown = [];
-    let currentRate = null;
-    let currentCount = 0;
+    const rateCount = {};
     
     for (let i = 0; i < numNights; i++) {
       const nightDate = format(addDays(parseISO(checkIn), i), "yyyy-MM-dd");
       const rate = calculateNightlyRate(nightDate);
       
-      if (rate === currentRate) {
-        currentCount++;
-      } else {
-        if (currentRate !== null) {
-          breakdown.push({ rate: currentRate, nights: currentCount });
-        }
-        currentRate = rate;
-        currentCount = 1;
-      }
+      rateCount[rate] = (rateCount[rate] || 0) + 1;
     }
     
-    // Add the last group
-    if (currentRate !== null) {
-      breakdown.push({ rate: currentRate, nights: currentCount });
-    }
-    
-    return breakdown;
+    return Object.entries(rateCount)
+      .map(([rate, nights]) => ({ rate: Number(rate), nights }))
+      .sort((a, b) => a.rate - b.rate);
   };
   
   const priceBreakdown = getPriceBreakdown();
