@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
@@ -17,6 +17,7 @@ import DayBasedBookingRules from "@/components/properties/DayBasedBookingRules";
 import PricingManager from "@/components/pricing/PricingManager";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
+import { isEqual } from "lodash";
 
 const PROPERTY_TYPES = [
   { value: "house", label: "House" },
@@ -36,9 +37,11 @@ const AMENITIES = [
 export default function EditProperty() {
   const urlParams = new URLSearchParams(window.location.search);
   const propertyId = urlParams.get('id');
+  const queryClient = useQueryClient();
   
   const [isUploading, setIsUploading] = useState(false);
   const [formData, setFormData] = useState(null);
+  const [originalData, setOriginalData] = useState(null);
   const [uploadedFileIdentifiers, setUploadedFileIdentifiers] = useState([]);
 
   const { data: property, isLoading } = useQuery({
@@ -52,7 +55,7 @@ export default function EditProperty() {
 
   useEffect(() => {
     if (property) {
-      setFormData({
+      const initial = {
         title: property.title || "",
         property_type: property.property_type || "house",
         guest_capacity: property.guest_capacity || 4,
@@ -89,7 +92,9 @@ export default function EditProperty() {
           date_overrides: {}
         },
         status: property.status || "draft",
-      });
+      };
+      setFormData(initial);
+      setOriginalData(initial);
     }
   }, [property]);
 
@@ -97,6 +102,7 @@ export default function EditProperty() {
     mutationFn: (data) => base44.entities.Property.update(propertyId, data),
     onSuccess: () => {
       toast.success("Property updated successfully!");
+      queryClient.invalidateQueries({ queryKey: ['property', propertyId] });
     },
   });
 
@@ -205,7 +211,22 @@ export default function EditProperty() {
       toast.error("Please remove duplicate photos before saving");
       return;
     }
-    updateMutation.mutate(formData);
+    
+    const changedData = {};
+    if (originalData) {
+      Object.keys(formData).forEach(key => {
+        if (!isEqual(formData[key], originalData[key])) {
+          changedData[key] = formData[key];
+        }
+      });
+    }
+
+    if (Object.keys(changedData).length === 0) {
+      toast.info("No changes to save");
+      return;
+    }
+
+    updateMutation.mutate(changedData);
   };
 
   if (isLoading || !formData) {
