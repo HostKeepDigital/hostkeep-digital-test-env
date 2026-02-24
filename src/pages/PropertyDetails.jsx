@@ -825,6 +825,11 @@ export default function PropertyDetails() {
                     <span className="text-3xl font-bold text-gray-900">£{displayStartingRate}</span>
                     <span className="text-gray-500 text-xs">per night</span>
                   </div>
+                  {checkIn && (
+                    <p className="text-gray-500 text-xs mt-1">
+                      per night for your {format(parseISO(checkIn), "MMMM")} stay
+                    </p>
+                  )}
                 </div>
 
                 {/* Booking Inputs */}
