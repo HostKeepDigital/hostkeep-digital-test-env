@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Search as SearchIcon, MapPin, Calendar, Users, SlidersHorizontal, X } from "lucide-react";
 import PropertyCard from "@/components/properties/PropertyCard";
+import { format, parseISO, addDays } from "date-fns";
 
 const AMENITIES = [
   "WiFi", "Pool", "Parking", "Air Conditioning", "Kitchen", "Washing Machine",
@@ -29,7 +30,7 @@ export default function Search() {
   const [filters, setFilters] = useState({
     location: urlParams.get('location') || "",
     checkIn: urlParams.get('checkIn') || "",
-    checkOut: urlParams.get('checkOut') || "",
+    duration: urlParams.get('duration') || "1",
     adults: parseInt(urlParams.get('adults')) || 1,
     children: parseInt(urlParams.get('children')) || 0,
     childAges: parseChildAges(),
@@ -58,6 +59,15 @@ export default function Search() {
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: activeBookings = [] } = useQuery({
+    queryKey: ['active-bookings'],
+    queryFn: async () => {
+      const bookings = await base44.entities.Booking.list();
+      return bookings.filter(b => ['confirmed', 'blocked', 'checked_in', 'awaiting_decision', 'awaiting_payment'].includes(b.booking_status));
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   // Calculate ratings for properties
   const propertyRatings = reviews.reduce((acc, review) => {
     if (!acc[review.property_id]) {
@@ -68,7 +78,25 @@ export default function Search() {
     return acc;
   }, {});
 
-  const filteredProperties = allProperties.filter(property => {
+  const filteredProperties = allProperties.map(property => {
+    let isAvailable = true;
+    if (filters.checkIn && filters.duration) {
+      const requestedCheckIn = parseISO(filters.checkIn);
+      const requestedCheckOut = addDays(requestedCheckIn, parseInt(filters.duration));
+      
+      const propertyBookings = activeBookings.filter(b => b.property_id === property.id);
+      
+      const hasConflict = propertyBookings.some(b => {
+        if (!b.check_in || !b.check_out) return false;
+        const bCheckIn = parseISO(b.check_in);
+        const bCheckOut = parseISO(b.check_out);
+        return requestedCheckIn < bCheckOut && requestedCheckOut > bCheckIn;
+      });
+      
+      if (hasConflict) isAvailable = false;
+    }
+    return { ...property, isAvailable };
+  }).filter(property => {
     // Location filter
     if (filters.location) {
       const searchTerm = filters.location.toLowerCase();
@@ -142,6 +170,10 @@ export default function Search() {
   });
 
   const sortedProperties = [...filteredProperties].sort((a, b) => {
+    if (a.isAvailable !== b.isAvailable) {
+      return a.isAvailable ? -1 : 1;
+    }
+
     const aRating = propertyRatings[a.id] 
       ? propertyRatings[a.id].total / propertyRatings[a.id].count 
       : 0;
@@ -206,16 +238,19 @@ export default function Search() {
               type="date"
               value={filters.checkIn}
               onChange={(e) => handleFilterChange("checkIn", e.target.value)}
-              className="w-40 h-11"
+              className="w-40 h-11 bg-white"
               placeholder="Check in"
             />
-            <Input
-              type="date"
-              value={filters.checkOut}
-              onChange={(e) => handleFilterChange("checkOut", e.target.value)}
-              className="w-40 h-11"
-              placeholder="Check out"
-            />
+            <Select value={filters.duration} onValueChange={(v) => handleFilterChange("duration", v)}>
+              <SelectTrigger className="w-40 h-11 bg-white">
+                <SelectValue placeholder="Duration" />
+              </SelectTrigger>
+              <SelectContent>
+                {[...Array(28)].map((_, i) => (
+                  <SelectItem key={i+1} value={(i+1).toString()}>{i+1} night{i+1 !== 1 ? 's' : ''}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg h-11">
               <Users className="w-5 h-5 text-gray-400" />
               <span className="text-sm text-gray-700">
@@ -345,7 +380,7 @@ export default function Search() {
                     onClick={() => setFilters({
                       location: "",
                       checkIn: "",
-                      checkOut: "",
+                      duration: "1",
                       adults: 1,
                       children: 0,
                       childAges: [],
@@ -477,7 +512,7 @@ export default function Search() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
               >
-                <PropertyCard property={property} />
+                <PropertyCard property={property} isAvailable={property.isAvailable} />
               </motion.div>
             ))}
           </div>

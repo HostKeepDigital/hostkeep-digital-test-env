@@ -14,7 +14,7 @@ const AMENITY_ICONS = {
   "Kitchen": ChefHat,
 };
 
-export default function PropertyCard({ property, onSave }) {
+export default function PropertyCard({ property, onSave, isAvailable = true }) {
   const [user, setUser] = useState(null);
   const queryClient = useQueryClient();
   const mainPhoto = property.photos?.[0] || "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600";
@@ -84,8 +84,8 @@ export default function PropertyCard({ property, onSave }) {
   return (
     <Link to={createPageUrl('PropertyDetails') + `?id=${property.id}`}>
       <motion.div
-        whileHover={{ y: -4 }}
-        className="bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow"
+        whileHover={isAvailable ? { y: -4 } : {}}
+        className={`bg-white rounded-2xl overflow-hidden border border-gray-100 transition-shadow ${!isAvailable ? 'opacity-75 grayscale-[0.2]' : 'hover:shadow-lg'}`}
       >
         <div className="relative aspect-[4/3]">
           <img 
@@ -93,6 +93,11 @@ export default function PropertyCard({ property, onSave }) {
             alt={property.title}
             className="w-full h-full object-cover"
           />
+          {!isAvailable && (
+            <div className="absolute inset-0 bg-white/30 backdrop-blur-[1px] flex items-center justify-center z-10">
+              <Badge className="bg-gray-900/90 text-white border-0 py-1.5 px-3 shadow-lg font-medium">Not available for selected dates</Badge>
+            </div>
+          )}
           <button
             onClick={handleToggleWishlist}
             className="absolute top-3 right-3 bg-white/90 hover:bg-white p-2 rounded-full transition-colors"
