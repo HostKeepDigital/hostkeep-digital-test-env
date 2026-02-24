@@ -312,13 +312,13 @@ export default function PropertyDetails() {
     return pricingSettings.base_rate || property.nightly_rate || 0;
   };
   
-  // Calculate lowest rate for current month
-  const getLowestMonthlyRate = () => {
+  // Calculate lowest rate for a given month (defaults to current month)
+  const getLowestMonthlyRate = (dateString = null) => {
     if (!property) return property?.nightly_rate || 0;
     
-    const today = new Date();
-    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    const referenceDate = dateString ? parseISO(dateString) : new Date();
+    const startOfMonth = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 1);
+    const endOfMonth = new Date(referenceDate.getFullYear(), referenceDate.getMonth() + 1, 0);
     
     let lowestRate = Infinity;
     for (let d = new Date(startOfMonth); d <= endOfMonth; d.setDate(d.getDate() + 1)) {
@@ -331,7 +331,7 @@ export default function PropertyDetails() {
     return lowestRate === Infinity ? (property?.nightly_rate || 0) : lowestRate;
   };
   
-  const displayStartingRate = getLowestMonthlyRate();
+  const displayStartingRate = getLowestMonthlyRate(checkIn);
   
   // Calculate total for all nights
   const subtotal = (() => {
