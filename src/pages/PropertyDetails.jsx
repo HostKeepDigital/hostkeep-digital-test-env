@@ -438,7 +438,16 @@ export default function PropertyDetails() {
   const priceBreakdown = getPriceBreakdown();
   
   const cleaningFee = property?.cleaning_fee || 0;
+  const securityDeposit = property?.security_deposit || 0;
   const total = subtotal + cleaningFee;
+
+  const depositAmount = (() => {
+    if (!property?.deposit_enabled || !property?.deposit_value) return 0;
+    if (property.deposit_type === 'percentage') {
+      return Number(((total * property.deposit_value) / 100).toFixed(2));
+    }
+    return property.deposit_value;
+  })();
 
   const handleBooking = () => {
     if (!checkIn || !checkOut || !guestName || !guestEmail) {
@@ -461,7 +470,10 @@ export default function PropertyDetails() {
       nights: numNights,
       subtotal: subtotal,
       cleaning_fee: cleaningFee,
+      security_deposit: securityDeposit,
       total_amount: total,
+      deposit_amount: depositAmount,
+      remaining_balance: total - depositAmount,
       booking_status: "awaiting_decision",
       booking_type: "request",
       request_timestamp: new Date().toISOString(),
@@ -990,10 +1002,22 @@ export default function PropertyDetails() {
                         <span>£{cleaningFee}</span>
                       </div>
                     )}
+                    {securityDeposit > 0 && (
+                      <div className="flex justify-between text-sm text-gray-600">
+                        <span>Security deposit (refundable)</span>
+                        <span>£{securityDeposit}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-lg font-bold text-gray-900 pt-2 border-t border-gray-100">
                       <span>Total</span>
                       <span>£{total}</span>
                     </div>
+                    {depositAmount > 0 && (
+                      <div className="flex justify-between text-sm font-semibold text-teal-700 pt-1">
+                        <span>Deposit due now</span>
+                        <span>£{depositAmount}</span>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -1181,10 +1205,22 @@ export default function PropertyDetails() {
                         <span>£{cleaningFee}</span>
                       </div>
                     )}
+                    {securityDeposit > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span>Security deposit (refundable)</span>
+                        <span>£{securityDeposit}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between font-bold pt-2 border-t text-gray-900">
                       <span>Total</span>
                       <span>£{total}</span>
                     </div>
+                    {depositAmount > 0 && (
+                      <div className="flex justify-between text-sm font-semibold text-teal-700 pt-1 border-t border-gray-100">
+                        <span>Deposit due now</span>
+                        <span>£{depositAmount}</span>
+                      </div>
+                    )}
                   </div>
                 )}
                 <Button 
