@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { format, parseISO, differenceInDays, addDays, isBefore } from "date-fns";
 import { toast } from "sonner";
+import confetti from "canvas-confetti";
 import ReviewList from "@/components/reviews/ReviewList";
 import BookingCalendar from "@/components/shared/BookingCalendar";
 import PropertyShareModal from "@/components/properties/PropertyShareModal";
