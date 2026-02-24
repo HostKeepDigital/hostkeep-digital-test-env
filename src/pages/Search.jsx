@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Search as SearchIcon, MapPin, Calendar, Users, SlidersHorizontal, X } from "lucide-react";
 import PropertyCard from "@/components/properties/PropertyCard";
@@ -250,16 +251,29 @@ export default function Search() {
                 numberOfMonths={1}
               />
             </div>
-            <Select value={filters.duration} onValueChange={(v) => handleFilterChange("duration", v)}>
-              <SelectTrigger className="w-40 h-11 bg-white">
-                <SelectValue placeholder="Trip Duration" />
-              </SelectTrigger>
-              <SelectContent>
-                {[...Array(28)].map((_, i) => (
-                  <SelectItem key={i+1} value={(i+1).toString()}>{i+1} night{i+1 !== 1 ? 's' : ''}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="w-40" {...(!filters.checkIn ? { tabIndex: 0 } : {})}>
+                    <Select disabled={!filters.checkIn} value={filters.duration} onValueChange={(v) => handleFilterChange("duration", v)}>
+                      <SelectTrigger className={`w-full h-11 bg-white ${!filters.checkIn ? "opacity-50 pointer-events-none" : ""}`}>
+                        <SelectValue placeholder="Trip Duration" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[...Array(28)].map((_, i) => (
+                          <SelectItem key={i+1} value={(i+1).toString()}>{i+1} night{i+1 !== 1 ? 's' : ''}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </TooltipTrigger>
+                {!filters.checkIn && (
+                  <TooltipContent>
+                    <p>Select your trip start date</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
             <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg h-11">
               <Users className="w-5 h-5 text-gray-400" />
               <span className="text-sm text-gray-700">
