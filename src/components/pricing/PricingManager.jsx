@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 
-export default function PricingManager({ formData, onUpdate }) {
+export default function PricingManager({ formData, onUpdate, onPromptSave }) {
   const [selectedDate, setSelectedDate] = useState(null);
   const [depositError, setDepositError] = useState("");
   const [activeSection, setActiveSection] = useState("base"); // base, seasons, overrides
@@ -101,7 +101,12 @@ export default function PricingManager({ formData, onUpdate }) {
             </div>
             <Switch
               checked={formData.deposit_enabled || false}
-              onCheckedChange={(checked) => onUpdate("deposit_enabled", checked)}
+              onCheckedChange={(checked) => {
+                onUpdate("deposit_enabled", checked);
+                if (!checked && formData.deposit_value) {
+                  if (onPromptSave) onPromptSave();
+                }
+              }}
             />
           </div>
 

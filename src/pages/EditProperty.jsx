@@ -112,16 +112,65 @@ export default function EditProperty() {
   });
 
   const navigate = useNavigate();
-  const hasChanges = originalData && formData && !isEqual(formData, originalData);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
+
+  const changedFields = [];
+  if (originalData && formData) {
+    Object.keys(formData).forEach(key => {
+      if (!isEqual(formData[key], originalData[key])) {
+        changedFields.push(key);
+      }
+    });
+  }
+  const hasChanges = changedFields.length > 0;
+
+  const formatFieldName = (field) => {
+    const map = {
+      title: "Property Title",
+      property_type: "Property Type",
+      guest_capacity: "Guest Capacity",
+      bedrooms: "Bedrooms",
+      bathrooms: "Bathrooms",
+      location: "Location",
+      photos: "Photos",
+      nightly_rate: "Nightly Rate",
+      cleaning_fee: "Cleaning Fee",
+      security_deposit: "Security Deposit",
+      minimum_stay: "Minimum Stay",
+      deposit_enabled: "Booking Deposit Enabled",
+      deposit_type: "Booking Deposit Type",
+      deposit_value: "Booking Deposit Amount",
+      description: "Description",
+      amenities: "Amenities",
+      house_rules: "House Rules",
+      pets_allowed: "Pets Allowed",
+      smoking_allowed: "Smoking Allowed",
+      children_allowed: "Children Allowed",
+      minimum_child_age: "Minimum Child Age",
+      check_in_time: "Check-in Time",
+      check_out_time: "Check-out Time",
+      day_based_restrictions_enabled: "Day-based Restrictions",
+      booking_rules: "Booking Rules",
+      pricing_settings: "Pricing Settings",
+      status: "Status"
+    };
+    return map[field] || field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
 
   const handleBackClick = (e) => {
     e.preventDefault();
     if (hasChanges) {
+      setPendingAction(() => () => navigate(createPageUrl('HostProperties')));
       setShowUnsavedDialog(true);
     } else {
       navigate(createPageUrl('HostProperties'));
     }
+  };
+
+  const handlePromptSave = () => {
+    setPendingAction(null);
+    setShowUnsavedDialog(true);
   };
 
   const handleChange = (field, value) => {
@@ -234,6 +283,8 @@ export default function EditProperty() {
     if (currentFormData.deposit_enabled && (!currentFormData.deposit_value || currentFormData.deposit_value === 0)) {
       currentFormData.deposit_enabled = false;
       currentFormData.deposit_value = null;
+    } else if (!currentFormData.deposit_enabled) {
+      currentFormData.deposit_value = null;
     }
 
     const changedData = {};
@@ -274,20 +325,27 @@ export default function EditProperty() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Unsaved Changes</DialogTitle>
-            <DialogDescription>
-              You have unsaved changes. Do you want to save them before leaving?
-            </DialogDescription>
+            <div className="text-sm text-gray-500 mt-2">
+              <p>You have the following unsaved changes:</p>
+              <ul className="list-disc pl-5 mt-2 mb-4 text-gray-700 font-medium">
+                {changedFields.map(field => (
+                  <li key={field}>{formatFieldName(field)}</li>
+                ))}
+              </ul>
+              <p>{pendingAction ? "Do you want to save them before leaving?" : "Do you want to save these changes now?"}</p>
+            </div>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => {
+              setFormData(originalData);
               setShowUnsavedDialog(false);
-              navigate(createPageUrl('HostProperties'));
+              if (pendingAction) pendingAction();
             }}>
               Discard
             </Button>
             <Button onClick={() => handleSave(() => {
               setShowUnsavedDialog(false);
-              navigate(createPageUrl('HostProperties'));
+              if (pendingAction) pendingAction();
             })}>
               Save Changes
             </Button>
@@ -527,6 +585,7 @@ export default function EditProperty() {
             <PricingManager
               formData={formData}
               onUpdate={(field, value) => handleChange(field, value)}
+              onPromptSave={handlePromptSave}
             />
           </TabsContent>
 
