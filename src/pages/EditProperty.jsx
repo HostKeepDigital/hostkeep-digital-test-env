@@ -16,8 +16,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import DayBasedBookingRules from "@/components/properties/DayBasedBookingRules";
 import PricingManager from "@/components/pricing/PricingManager";
 import { toast } from "sonner";
-import { Link } from "react-router-dom";
+import { Link, useBlocker } from "react-router-dom";
 import { isEqual } from "lodash";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const PROPERTY_TYPES = [
   { value: "house", label: "House" },
@@ -72,6 +73,9 @@ export default function EditProperty() {
         cleaning_fee: property.cleaning_fee || 0,
         security_deposit: property.security_deposit || 0,
         minimum_stay: property.minimum_stay || 1,
+        deposit_enabled: property.deposit_enabled || false,
+        deposit_type: property.deposit_type || "percentage",
+        deposit_value: property.deposit_value || null,
         description: property.description || "",
         amenities: property.amenities || [],
         house_rules: property.house_rules || "",
@@ -106,6 +110,12 @@ export default function EditProperty() {
       queryClient.invalidateQueries({ queryKey: ['property', propertyId] });
     },
   });
+
+  const hasChanges = originalData && formData && !isEqual(formData, originalData);
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      hasChanges && currentLocation.pathname !== nextLocation.pathname
+  );
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -203,7 +213,7 @@ export default function EditProperty() {
     }));
   };
 
-  const handleSave = () => {
+  const handleSave = async (proceed) => {
     if (formData.photos.length < 5) {
       toast.error("Please upload at least 5 photos before saving");
       return;
@@ -213,21 +223,34 @@ export default function EditProperty() {
       return;
     }
     
+    let currentFormData = { ...formData };
+    if (currentFormData.deposit_enabled && (!currentFormData.deposit_value || currentFormData.deposit_value === 0)) {
+      currentFormData.deposit_enabled = false;
+      currentFormData.deposit_value = null;
+    }
+
     const changedData = {};
     if (originalData) {
-      Object.keys(formData).forEach(key => {
-        if (!isEqual(formData[key], originalData[key])) {
-          changedData[key] = formData[key];
+      Object.keys(currentFormData).forEach(key => {
+        if (!isEqual(currentFormData[key], originalData[key])) {
+          changedData[key] = currentFormData[key];
         }
       });
     }
 
     if (Object.keys(changedData).length === 0) {
       toast.info("No changes to save");
+      if (typeof proceed === 'function') proceed();
       return;
     }
 
-    updateMutation.mutate(changedData);
+    try {
+      await updateMutation.mutateAsync(changedData);
+      setFormData(currentFormData);
+      if (typeof proceed === 'function') proceed();
+    } catch (e) {
+      toast.error("Failed to save changes");
+    }
   };
 
   if (isLoading || !formData) {
@@ -240,6 +263,28 @@ export default function EditProperty() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
+      <Dialog open={blocker.state === "blocked"} onOpenChange={(open) => {
+        if (!open && blocker.state === "blocked") {
+          blocker.reset();
+        }
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Unsaved Changes</DialogTitle>
+            <DialogDescription>
+              You have unsaved changes. Do you want to save them before leaving?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => blocker.proceed()}>
+              Discard
+            </Button>
+            <Button onClick={() => handleSave(() => blocker.proceed())}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <div className="bg-white border-b border-gray-100 sticky top-0 z-40">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
