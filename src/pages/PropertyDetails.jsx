@@ -718,9 +718,37 @@ export default function PropertyDetails() {
             </div>
             <div className="flex flex-col gap-3">
               <div className="flex gap-2">
-                <Button variant="outline" size="icon" className="rounded-full">
-                  <Heart className="w-4 h-4" />
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        className={`rounded-full shadow-sm transition-all ${wishlistStatus ? 'border-red-100 bg-red-50 hover:bg-red-100' : 'hover:bg-gray-100'}`}
+                        onClick={handleWishlistClick}
+                        disabled={toggleWishlistMutation.isPending}
+                      >
+                        <motion.div
+                          animate={{ 
+                            scale: wishlistStatus ? [1, 1.2, 1] : 1,
+                          }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <Heart 
+                            className={`w-5 h-5 transition-colors duration-300 ${
+                              wishlistStatus 
+                                ? 'fill-red-500 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]' 
+                                : 'text-gray-600'
+                            }`} 
+                          />
+                        </motion.div>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{wishlistStatus ? 'Remove from Wishlist' : 'Add to Wishlist'}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <PropertyShareModal 
                   propertyTitle={property.title}
                   propertyUrl={window.location.href}
