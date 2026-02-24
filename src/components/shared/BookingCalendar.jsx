@@ -47,6 +47,7 @@ export default function BookingCalendar({
             }}
             className="rounded-md border"
             numberOfMonths={numberOfMonths}
+            showOutsideDays={false}
           />
           {bookedDates.length > 0 && (
             <div className="p-3 border-t flex items-center gap-4 text-xs text-gray-500">
