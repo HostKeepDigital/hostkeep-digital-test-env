@@ -15,8 +15,6 @@ export default function ChatLayout({ role = "host" }) {
   }, []);
 
   // Real-time subscription to messages
-  const queryClient = base44.queryClient; // Assuming exposed or useQueryClient hook inside components
-
   // Fetch Messages and Group into Conversations
   const { data: messages = [], isLoading } = useQuery({
     queryKey: ['messages', user?.id],
