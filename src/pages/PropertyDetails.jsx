@@ -126,7 +126,10 @@ export default function PropertyDetails() {
 
   const { data: propertyBookings = [] } = useQuery({
     queryKey: ['property-bookings', propertyId],
-    queryFn: () => base44.entities.Booking.filter({ property_id: propertyId, booking_status: 'confirmed' }),
+    queryFn: async () => {
+      const bookings = await base44.entities.Booking.filter({ property_id: propertyId });
+      return bookings.filter(b => ['confirmed', 'blocked', 'checked_in'].includes(b.booking_status));
+    },
     enabled: !!propertyId,
   });
 
