@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Home, Calendar, User, Mail, CreditCard, CheckCircle2, AlertCircle, Loader2, Building2, Copy, Check } from "lucide-react";
 import { format, parseISO, differenceInDays } from "date-fns";
 import { toast } from "sonner";
+import { createPageUrl } from "@/utils";
 
 export default function Pay() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -399,9 +400,15 @@ export default function Pay() {
           </div>
         )}
         
-        <p className="text-center text-sm text-gray-500">
-          Need help? Contact the property owner directly.
-        </p>
+        <div className="text-center space-y-4">
+          <p className="text-sm text-gray-500">
+            Need help? Contact the property owner directly.
+          </p>
+          <a href={createPageUrl("Home")} className="inline-flex items-center text-sm font-medium text-teal-600 hover:text-teal-700">
+            <Home className="w-4 h-4 mr-2" />
+            Return to Home
+          </a>
+        </div>
       </div>
     </div>
   );
