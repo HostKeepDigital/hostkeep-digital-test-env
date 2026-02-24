@@ -33,33 +33,33 @@ export default function PropertyCard({ property, onSave }) {
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: savedProperties = [] } = useQuery({
-    queryKey: ['saved-properties', user?.id],
-    queryFn: () => base44.entities.SavedProperty.filter({ user_id: user?.id }),
+  const { data: wishlistProperties = [] } = useQuery({
+    queryKey: ['wishlist-properties', user?.id],
+    queryFn: () => base44.entities.WishlistProperty.filter({ user_id: user?.id }),
     enabled: !!user?.id,
   });
 
-  const isSaved = savedProperties.some(sp => sp.property_id === property.id);
-  const savedItem = savedProperties.find(sp => sp.property_id === property.id);
+  const isWishlisted = wishlistProperties.some(wp => wp.property_id === property.id);
+  const wishlistItem = wishlistProperties.find(wp => wp.property_id === property.id);
 
-  const saveMutation = useMutation({
-    mutationFn: () => base44.entities.SavedProperty.create({
+  const addToWishlistMutation = useMutation({
+    mutationFn: () => base44.entities.WishlistProperty.create({
       user_id: user.id,
       property_id: property.id
     }),
     onSuccess: () => {
-      queryClient.invalidateQueries(['saved-properties']);
+      queryClient.invalidateQueries(['wishlist-properties']);
     },
   });
 
-  const unsaveMutation = useMutation({
-    mutationFn: () => base44.entities.SavedProperty.delete(savedItem.id),
+  const removeFromWishlistMutation = useMutation({
+    mutationFn: () => base44.entities.WishlistProperty.delete(wishlistItem.id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['saved-properties']);
+      queryClient.invalidateQueries(['wishlist-properties']);
     },
   });
 
-  const handleToggleSave = (e) => {
+  const handleToggleWishlist = (e) => {
     e.preventDefault();
     e.stopPropagation();
     
@@ -68,10 +68,10 @@ export default function PropertyCard({ property, onSave }) {
       return;
     }
 
-    if (isSaved) {
-      unsaveMutation.mutate();
+    if (isWishlisted) {
+      removeFromWishlistMutation.mutate();
     } else {
-      saveMutation.mutate();
+      addToWishlistMutation.mutate();
     }
   };
 
@@ -94,10 +94,10 @@ export default function PropertyCard({ property, onSave }) {
             className="w-full h-full object-cover"
           />
           <button
-            onClick={handleToggleSave}
+            onClick={handleToggleWishlist}
             className="absolute top-3 right-3 bg-white/90 hover:bg-white p-2 rounded-full transition-colors"
           >
-            <Heart className={`w-5 h-5 ${isSaved ? 'text-red-500 fill-red-500' : 'text-gray-600'}`} />
+            <Heart className={`w-5 h-5 ${isWishlisted ? 'text-red-500 fill-red-500' : 'text-gray-600'}`} />
           </button>
           {property.featured && (
             <Badge className="absolute top-3 left-3 bg-amber-500 border-0">Featured</Badge>

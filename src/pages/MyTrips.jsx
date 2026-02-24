@@ -30,17 +30,17 @@ export default function MyTrips() {
     enabled: !!user?.email,
   });
 
-  // Fetch saved properties
-  const { data: savedItems = [], isLoading: savedLoading } = useQuery({
-    queryKey: ['saved-properties', user?.id],
-    queryFn: () => base44.entities.SavedProperty.filter({ user_id: user?.id }),
+  // Fetch wishlisted properties
+  const { data: wishlistItems = [], isLoading: wishlistLoading } = useQuery({
+    queryKey: ['wishlist-properties', user?.id],
+    queryFn: () => base44.entities.WishlistProperty.filter({ user_id: user?.id }),
     enabled: !!user?.id,
   });
 
   // Fetch all relevant properties
   const propertyIds = [
     ...bookings.map(b => b.property_id),
-    ...savedItems.map(s => s.property_id)
+    ...wishlistItems.map(s => s.property_id)
   ];
   
   const { data: properties = [] } = useQuery({
@@ -55,11 +55,11 @@ export default function MyTrips() {
     enabled: !!user?.id,
   });
 
-  // Unsave mutation
-  const unsaveMutation = useMutation({
-    mutationFn: (savedItemId) => base44.entities.SavedProperty.delete(savedItemId),
+  // Remove from wishlist mutation
+  const removeFromWishlistMutation = useMutation({
+    mutationFn: (wishlistItemId) => base44.entities.WishlistProperty.delete(wishlistItemId),
     onSuccess: () => {
-      queryClient.invalidateQueries(['saved-properties']);
+      queryClient.invalidateQueries(['wishlist-properties']);
     },
   });
 
@@ -115,9 +115,9 @@ export default function MyTrips() {
     && (isAfter(parseISO(b.check_in), today) || b.booking_status === "checked_in")
   ).length;
 
-  const defaultTab = upcomingCount > 0 ? "bookings" : (savedItems.length > 0 ? "saved" : "bookings");
+  const defaultTab = upcomingCount > 0 ? "bookings" : (wishlistItems.length > 0 ? "wishlist" : "bookings");
 
-  const isLoading = bookingsLoading || savedLoading;
+  const isLoading = bookingsLoading || wishlistLoading;
 
   if (isLoading) {
     return (
@@ -127,8 +127,8 @@ export default function MyTrips() {
     );
   }
 
-  const SavedPropertyCard = ({ savedItem }) => {
-    const property = getProperty(savedItem.property_id);
+  const WishlistPropertyCard = ({ wishlistItem }) => {
+    const property = getProperty(wishlistItem.property_id);
     if (!property) return null;
 
     return (
@@ -149,7 +149,7 @@ export default function MyTrips() {
                 <button
                   onClick={(e) => {
                     e.preventDefault();
-                    unsaveMutation.mutate(savedItem.id);
+                    removeFromWishlistMutation.mutate(wishlistItem.id);
                   }}
                   className="absolute top-3 right-3 bg-white/90 hover:bg-white p-2 rounded-full transition-colors"
                 >
@@ -276,7 +276,7 @@ export default function MyTrips() {
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">My Trips</h1>
-          <p className="text-gray-500">View your bookings and saved properties</p>
+          <p className="text-gray-500">View your bookings and wishlisted properties</p>
         </div>
 
         <Tabs defaultValue={defaultTab} className="space-y-6">
@@ -284,8 +284,8 @@ export default function MyTrips() {
             <TabsTrigger value="bookings" className="data-[state=active]:bg-teal-50 data-[state=active]:text-teal-700">
               Bookings ({bookings.length})
             </TabsTrigger>
-            <TabsTrigger value="saved" className="data-[state=active]:bg-teal-50 data-[state=active]:text-teal-700">
-              Saved ({savedItems.length})
+            <TabsTrigger value="wishlist" className="data-[state=active]:bg-teal-50 data-[state=active]:text-teal-700">
+              Wishlist ({wishlistItems.length})
             </TabsTrigger>
           </TabsList>
 
@@ -310,23 +310,23 @@ export default function MyTrips() {
             )}
           </TabsContent>
 
-          <TabsContent value="saved" className="space-y-4">
-            {savedItems.length === 0 ? (
+          <TabsContent value="wishlist" className="space-y-4">
+            {wishlistItems.length === 0 ? (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="text-center py-16 bg-white rounded-xl border border-gray-100"
               >
                 <Heart className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">You haven't saved any properties yet.</h3>
-                <p className="text-gray-500 mb-6">Save properties you love to easily find them later</p>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">You haven't wishlisted any properties yet.</h3>
+                <p className="text-gray-500 mb-6">Wishlist properties you love to easily find them later</p>
                 <Link to={createPageUrl("Search")}>
                   <Button className="bg-teal-600 hover:bg-teal-700">Browse Properties</Button>
                 </Link>
               </motion.div>
             ) : (
-              savedItems.map(savedItem => (
-                <SavedPropertyCard key={savedItem.id} savedItem={savedItem} />
+              wishlistItems.map(wishlistItem => (
+                <WishlistPropertyCard key={wishlistItem.id} wishlistItem={wishlistItem} />
               ))
             )}
           </TabsContent>
