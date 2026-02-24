@@ -14,8 +14,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
-  Star, MapPin, Users, Bed, Bath, Calendar, CheckCircle, X,
+  Star, MapPin, Users, Bed, Bath, Calendar, CheckCircle, X, AlertCircle,
   Wifi, Car, Wind, Waves, ChefHat, Tv, Flame, TreeDeciduous,
   Heart, Share2, ChevronLeft, ChevronRight, MessageSquare, Loader2
 } from "lucide-react";
@@ -52,6 +53,10 @@ export default function PropertyDetails() {
   const [guestMessage, setGuestMessage] = useState("");
   const [showBookingDialog, setShowBookingDialog] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [agreedHouseRules, setAgreedHouseRules] = useState(false);
+  const [agreedCancellation, setAgreedCancellation] = useState(false);
+  const [agreedTerms, setAgreedTerms] = useState(false);
+  const [errors, setErrors] = useState({});
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -460,12 +465,44 @@ export default function PropertyDetails() {
     return property.deposit_value;
   })();
 
-  const handleBooking = () => {
-    if (!checkIn || !checkOut || !guestName || !guestEmail) {
-      toast.error("Please fill in all required fields");
+  const handleBooking = async () => {
+    const newErrors = {};
+    if (!guestName.trim()) newErrors.guestName = "Full name is required";
+    if (!guestEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail)) newErrors.guestEmail = "Valid email is required";
+    if (guestPhone && !/^\+?[0-9\s\-()]{7,15}$/.test(guestPhone)) newErrors.guestPhone = "Invalid phone format";
+    if (!agreedHouseRules) newErrors.agreedHouseRules = "Required";
+    if (!agreedCancellation) newErrors.agreedCancellation = "Required";
+    if (!agreedTerms) newErrors.agreedTerms = "Required";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
+    setErrors({});
     
+    try {
+      const existingBookings = await base44.entities.Booking.filter({ property_id: propertyId });
+      const conflicting = existingBookings.filter(b => ['confirmed', 'blocked', 'checked_in', 'awaiting_decision', 'awaiting_payment'].includes(b.booking_status));
+      
+      const newCheckIn = parseISO(checkIn);
+      const newCheckOut = parseISO(checkOut);
+      
+      const hasConflict = conflicting.some(b => {
+        if (!b.check_in || !b.check_out) return false;
+        const bCheckIn = parseISO(b.check_in);
+        const bCheckOut = parseISO(b.check_out);
+        return newCheckIn < bCheckOut && bCheckIn < newCheckOut;
+      });
+
+      if (hasConflict) {
+        toast.error("Sorry, these dates are no longer available. Please select different dates.");
+        queryClient.invalidateQueries({ queryKey: ['property-bookings'] });
+        return;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
     const totalGuests = guestData.adults + guestData.childrenAges.length;
     bookingMutation.mutate({
       property_id: propertyId,
@@ -493,6 +530,140 @@ export default function PropertyDetails() {
       payment_link_id: crypto.randomUUID().slice(0, 8),
     });
   };
+
+  const getStayDatesUI = () => {
+    if (!checkIn || !checkOut) return null;
+    const checkInFormatted = format(parseISO(checkIn), "MMM d, yyyy");
+    const checkOutFormatted = format(parseISO(checkOut), "MMM d, yyyy");
+    const inTime = property?.check_in_time || "15:00";
+    const outTime = property?.check_out_time || "10:00";
+    
+    const formatTime = (timeStr) => {
+      if (!timeStr) return "";
+      const [h, m] = timeStr.split(':');
+      let hour = parseInt(h);
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      hour = hour % 12 || 12;
+      return `${hour}:${m} ${ampm}`;
+    };
+
+    return (
+      <div className="bg-gray-50 p-3 rounded-lg border border-gray-200 my-3 text-sm">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-gray-500">Check-in:</span>
+          <span className="font-medium text-gray-900">{checkInFormatted} – {formatTime(inTime)}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-gray-500">Check-out:</span>
+          <span className="font-medium text-gray-900">{checkOutFormatted} – {formatTime(outTime)}</span>
+        </div>
+      </div>
+    );
+  };
+
+  const getPriceBreakdownUI = () => {
+    if (!checkIn || numNights === 0) return null;
+    const remainingBalance = total - depositAmount;
+    const balanceDueDate = format(addDays(parseISO(checkIn), -14), "MMM d, yyyy");
+
+    return (
+      <div className="space-y-2 py-3 border-t border-gray-100">
+        {priceBreakdown.map((item, idx) => (
+          <div key={idx} className="flex justify-between text-sm text-gray-600">
+            <span>{item.nights} × £{item.rate.toFixed(2)} per night</span>
+            <span>£{(item.nights * item.rate).toFixed(2)}</span>
+          </div>
+        ))}
+        {cleaningFee > 0 && (
+          <div className="flex justify-between text-sm text-gray-600">
+            <span>Cleaning fee</span>
+            <span>£{cleaningFee.toFixed(2)}</span>
+          </div>
+        )}
+        {securityDeposit > 0 && (
+          <div className="flex justify-between text-sm text-gray-600">
+            <span>Security deposit (refundable)</span>
+            <span>£{securityDeposit.toFixed(2)}</span>
+          </div>
+        )}
+        <div className="flex justify-between text-lg font-bold text-gray-900 pt-2 border-t border-gray-100">
+          <span>Total</span>
+          <span>£{total.toFixed(2)}</span>
+        </div>
+        {depositAmount > 0 ? (
+          <>
+            <div className="flex justify-between text-sm font-semibold text-teal-700 pt-2 border-t border-gray-100 mt-2">
+              <span>Deposit Due Now</span>
+              <span>£{depositAmount.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-sm text-gray-600 pt-1">
+              <span>Remaining Balance</span>
+              <span>£{remainingBalance.toFixed(2)}</span>
+            </div>
+            <div className="text-xs text-gray-500 mt-1">
+              Balance due by {balanceDueDate} (14 days before check-in)
+            </div>
+          </>
+        ) : (
+          <div className="flex justify-between text-sm font-semibold text-teal-700 pt-2 border-t border-gray-100 mt-2">
+            <span>Amount Due Now</span>
+            <span>£{total.toFixed(2)}</span>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const getAcknowledgementsUI = () => (
+    <div className="space-y-3 mt-4 pt-4 border-t border-gray-100">
+      <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 mb-4">
+        <h4 className="font-semibold text-blue-900 text-sm mb-1">Cancellation Policy</h4>
+        <p className="text-sm text-blue-800">
+          Cancel up to 14 days before check-in for a full refund. 
+          After that, the deposit is non-refundable.
+        </p>
+      </div>
+      <div className="flex items-start space-x-2">
+        <Checkbox 
+          id="rules" 
+          checked={agreedHouseRules} 
+          onCheckedChange={(checked) => { setAgreedHouseRules(checked); setErrors(prev => ({...prev, agreedHouseRules: null})) }} 
+        />
+        <div className="grid gap-1.5 leading-none">
+          <label htmlFor="rules" className="text-sm font-medium leading-none cursor-pointer">
+            I agree to the house rules
+          </label>
+          {errors.agreedHouseRules && <p className="text-xs text-red-500">{errors.agreedHouseRules}</p>}
+        </div>
+      </div>
+      <div className="flex items-start space-x-2">
+        <Checkbox 
+          id="cancellation" 
+          checked={agreedCancellation} 
+          onCheckedChange={(checked) => { setAgreedCancellation(checked); setErrors(prev => ({...prev, agreedCancellation: null})) }} 
+        />
+        <div className="grid gap-1.5 leading-none">
+          <label htmlFor="cancellation" className="text-sm font-medium leading-none cursor-pointer">
+            I agree to the cancellation policy
+          </label>
+          {errors.agreedCancellation && <p className="text-xs text-red-500">{errors.agreedCancellation}</p>}
+        </div>
+      </div>
+      <div className="flex items-start space-x-2">
+        <Checkbox 
+          id="terms" 
+          checked={agreedTerms} 
+          onCheckedChange={(checked) => { setAgreedTerms(checked); setErrors(prev => ({...prev, agreedTerms: null})) }} 
+        />
+        <div className="grid gap-1.5 leading-none">
+          <label htmlFor="terms" className="text-sm font-medium leading-none cursor-pointer">
+            I agree to the terms & conditions
+          </label>
+          {errors.agreedTerms && <p className="text-xs text-red-500">{errors.agreedTerms}</p>}
+        </div>
+      </div>
+    </div>
+  );
 
   if (isLoading) {
     return (
@@ -998,44 +1169,8 @@ export default function PropertyDetails() {
                   </div>
                 </div>
 
-                {/* Price Breakdown */}
-                {numNights > 0 && (
-                  <div className="space-y-1.5 py-3 border-t border-gray-100">
-                    {priceBreakdown.map((item, idx) => (
-                      <div key={idx} className="flex justify-between text-sm text-gray-600">
-                        <span>{item.nights} × £{item.rate} per night</span>
-                        <span>£{item.nights * item.rate}</span>
-                      </div>
-                    ))}
-                    {cleaningFee > 0 && (
-                      <div className="flex justify-between text-sm text-gray-600">
-                        <span>Cleaning fee</span>
-                        <span>£{cleaningFee}</span>
-                      </div>
-                    )}
-                    {securityDeposit > 0 && (
-                      <div className="flex justify-between text-sm text-gray-600">
-                        <span>Security deposit (refundable)</span>
-                        <span>£{securityDeposit}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between text-lg font-bold text-gray-900 pt-2 border-t border-gray-100">
-                      <span>Total</span>
-                      <span>£{total}</span>
-                    </div>
-                    {depositAmount > 0 && (
-                      <>
-                        <div className="flex justify-between text-sm font-semibold text-teal-700 pt-1">
-                          <span>Deposit</span>
-                          <span>£{depositAmount}</span>
-                        </div>
-                        <p className="text-xs text-gray-500 mt-2">
-                          Upon acceptance of your booking, a deposit will be due within 48 hours to secure your reservation.
-                        </p>
-                      </>
-                    )}
-                  </div>
-                )}
+                {getStayDatesUI()}
+                {getPriceBreakdownUI()}
 
                 {/* CTA Button */}
                 <Dialog open={showBookingDialog} onOpenChange={setShowBookingDialog}>
@@ -1053,29 +1188,32 @@ export default function PropertyDetails() {
                         <Label className="font-medium">Full Name *</Label>
                         <Input
                           value={guestName}
-                          onChange={(e) => setGuestName(e.target.value)}
+                          onChange={(e) => { setGuestName(e.target.value); setErrors(prev => ({...prev, guestName: null})) }}
                           placeholder="John Smith"
-                          className="mt-1"
+                          className={`mt-1 ${errors.guestName ? 'border-red-500' : ''}`}
                         />
+                        {errors.guestName && <p className="text-xs text-red-500 mt-1">{errors.guestName}</p>}
                       </div>
                       <div>
                         <Label className="font-medium">Email *</Label>
                         <Input
                           type="email"
                           value={guestEmail}
-                          onChange={(e) => setGuestEmail(e.target.value)}
+                          onChange={(e) => { setGuestEmail(e.target.value); setErrors(prev => ({...prev, guestEmail: null})) }}
                           placeholder="john@example.com"
-                          className="mt-1"
+                          className={`mt-1 ${errors.guestEmail ? 'border-red-500' : ''}`}
                         />
+                        {errors.guestEmail && <p className="text-xs text-red-500 mt-1">{errors.guestEmail}</p>}
                       </div>
                       <div>
                         <Label className="font-medium">Phone</Label>
                         <Input
                           value={guestPhone}
-                          onChange={(e) => setGuestPhone(e.target.value)}
+                          onChange={(e) => { setGuestPhone(e.target.value); setErrors(prev => ({...prev, guestPhone: null})) }}
                           placeholder="+44 7123 456789"
-                          className="mt-1"
+                          className={`mt-1 ${errors.guestPhone ? 'border-red-500' : ''}`}
                         />
+                        {errors.guestPhone && <p className="text-xs text-red-500 mt-1">{errors.guestPhone}</p>}
                       </div>
                       <div>
                         <Label className="font-medium">Message to host</Label>
@@ -1087,13 +1225,16 @@ export default function PropertyDetails() {
                           className="mt-1"
                         />
                       </div>
+                      
+                      {getAcknowledgementsUI()}
+
                       <Button 
-                        className="w-full h-11 bg-teal-600 hover:bg-teal-700 text-white font-semibold"
+                        className="w-full h-11 bg-teal-600 hover:bg-teal-700 text-white font-semibold mt-4"
                         onClick={handleBooking}
                         disabled={bookingMutation.isPending}
                       >
                         {bookingMutation.isPending ? (
-                          <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sending...</>
+                          <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...</>
                         ) : (
                           "Confirm Booking Request"
                         )}
@@ -1168,34 +1309,38 @@ export default function PropertyDetails() {
                     )}
                   </div>
                 </div>
+                {getStayDatesUI()}
                 <Separator />
                 <div>
                   <Label className="font-medium">Full Name *</Label>
                   <Input
                     value={guestName}
-                    onChange={(e) => setGuestName(e.target.value)}
+                    onChange={(e) => { setGuestName(e.target.value); setErrors(prev => ({...prev, guestName: null})) }}
                     placeholder="Full name"
-                    className="mt-1"
+                    className={`mt-1 ${errors.guestName ? 'border-red-500' : ''}`}
                   />
+                  {errors.guestName && <p className="text-xs text-red-500 mt-1">{errors.guestName}</p>}
                 </div>
                 <div>
                   <Label className="font-medium">Email *</Label>
                   <Input
                     type="email"
                     value={guestEmail}
-                    onChange={(e) => setGuestEmail(e.target.value)}
+                    onChange={(e) => { setGuestEmail(e.target.value); setErrors(prev => ({...prev, guestEmail: null})) }}
                     placeholder="Email"
-                    className="mt-1"
+                    className={`mt-1 ${errors.guestEmail ? 'border-red-500' : ''}`}
                   />
+                  {errors.guestEmail && <p className="text-xs text-red-500 mt-1">{errors.guestEmail}</p>}
                 </div>
                 <div>
                   <Label className="font-medium">Phone</Label>
                   <Input
                     value={guestPhone}
-                    onChange={(e) => setGuestPhone(e.target.value)}
+                    onChange={(e) => { setGuestPhone(e.target.value); setErrors(prev => ({...prev, guestPhone: null})) }}
                     placeholder="Phone"
-                    className="mt-1"
+                    className={`mt-1 ${errors.guestPhone ? 'border-red-500' : ''}`}
                   />
+                  {errors.guestPhone && <p className="text-xs text-red-500 mt-1">{errors.guestPhone}</p>}
                 </div>
                 <div>
                   <Label className="font-medium">Message</Label>
@@ -1207,49 +1352,21 @@ export default function PropertyDetails() {
                     className="mt-1"
                   />
                 </div>
-                {numNights > 0 && (
-                  <div className="bg-gray-50 rounded-lg p-4 space-y-2 border border-gray-200">
-                    {priceBreakdown.map((item, idx) => (
-                      <div key={idx} className="flex justify-between text-sm">
-                        <span>{item.nights} × £{item.rate} per night</span>
-                        <span>£{item.nights * item.rate}</span>
-                      </div>
-                    ))}
-                    {cleaningFee > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span>Cleaning fee</span>
-                        <span>£{cleaningFee}</span>
-                      </div>
-                    )}
-                    {securityDeposit > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span>Security deposit (refundable)</span>
-                        <span>£{securityDeposit}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between font-bold pt-2 border-t text-gray-900">
-                      <span>Total</span>
-                      <span>£{total}</span>
-                    </div>
-                    {depositAmount > 0 && (
-                      <>
-                        <div className="flex justify-between text-sm font-semibold text-teal-700 pt-1 border-t border-gray-100">
-                          <span>Deposit</span>
-                          <span>£{depositAmount}</span>
-                        </div>
-                        <p className="text-xs text-gray-500 mt-2">
-                          Upon acceptance of your booking, a deposit will be due within 48 hours to secure your reservation.
-                        </p>
-                      </>
-                    )}
-                  </div>
-                )}
+                
+                <div className="bg-gray-50 rounded-lg px-3 py-1 border border-gray-200 mt-4">
+                  {getPriceBreakdownUI()}
+                </div>
+
+                {getAcknowledgementsUI()}
+
                 <Button 
-                  className="w-full h-11 bg-teal-600 hover:bg-teal-700 text-white font-semibold"
+                  className="w-full h-11 bg-teal-600 hover:bg-teal-700 text-white font-semibold mt-4"
                   onClick={handleBooking}
                   disabled={bookingMutation.isPending || !checkIn || !nights}
                 >
-                  {bookingMutation.isPending ? "Sending..." : "Confirm Booking"}
+                  {bookingMutation.isPending ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...</>
+                  ) : "Confirm Booking Request"}
                 </Button>
               </div>
             </DialogContent>
