@@ -3,8 +3,9 @@ import { createPageUrl } from "@/utils";
 import { Badge } from "@/components/ui/badge";
 import { Star, MapPin, Users, Bed, Heart, Wifi, Car, Waves, ChefHat } from "lucide-react";
 import { motion } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { useState, useEffect } from "react";
 
 const AMENITY_ICONS = {
   "WiFi": Wifi,
@@ -14,7 +15,13 @@ const AMENITY_ICONS = {
 };
 
 export default function PropertyCard({ property, onSave }) {
+  const [user, setUser] = useState(null);
+  const queryClient = useQueryClient();
   const mainPhoto = property.photos?.[0] || "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600";
+
+  useEffect(() => {
+    base44.auth.me().then(setUser).catch(() => {});
+  }, []);
 
   const { data: reviews = [] } = useQuery({
     queryKey: ['property-reviews', property.id],
@@ -25,6 +32,48 @@ export default function PropertyCard({ property, onSave }) {
     }),
     staleTime: 5 * 60 * 1000,
   });
+
+  const { data: savedProperties = [] } = useQuery({
+    queryKey: ['saved-properties', user?.id],
+    queryFn: () => base44.entities.SavedProperty.filter({ user_id: user?.id }),
+    enabled: !!user?.id,
+  });
+
+  const isSaved = savedProperties.some(sp => sp.property_id === property.id);
+  const savedItem = savedProperties.find(sp => sp.property_id === property.id);
+
+  const saveMutation = useMutation({
+    mutationFn: () => base44.entities.SavedProperty.create({
+      user_id: user.id,
+      property_id: property.id
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['saved-properties']);
+    },
+  });
+
+  const unsaveMutation = useMutation({
+    mutationFn: () => base44.entities.SavedProperty.delete(savedItem.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['saved-properties']);
+    },
+  });
+
+  const handleToggleSave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!user) {
+      base44.auth.redirectToLogin();
+      return;
+    }
+
+    if (isSaved) {
+      unsaveMutation.mutate();
+    } else {
+      saveMutation.mutate();
+    }
+  };
 
   const averageRating = reviews.length > 0
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
@@ -44,6 +93,12 @@ export default function PropertyCard({ property, onSave }) {
             alt={property.title}
             className="w-full h-full object-cover"
           />
+          <button
+            onClick={handleToggleSave}
+            className="absolute top-3 right-3 bg-white/90 hover:bg-white p-2 rounded-full transition-colors"
+          >
+            <Heart className={`w-5 h-5 ${isSaved ? 'text-red-500 fill-red-500' : 'text-gray-600'}`} />
+          </button>
           {property.featured && (
             <Badge className="absolute top-3 left-3 bg-amber-500 border-0">Featured</Badge>
           )}
