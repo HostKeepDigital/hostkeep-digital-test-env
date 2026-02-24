@@ -128,7 +128,7 @@ export default function PropertyDetails() {
     queryKey: ['property-bookings', propertyId],
     queryFn: async () => {
       const bookings = await base44.entities.Booking.filter({ property_id: propertyId });
-      return bookings.filter(b => ['confirmed', 'blocked', 'checked_in'].includes(b.booking_status));
+      return bookings.filter(b => ['confirmed', 'blocked', 'checked_in', 'awaiting_decision', 'awaiting_payment'].includes(b.booking_status));
     },
     enabled: !!propertyId,
   });
@@ -211,7 +211,7 @@ export default function PropertyDetails() {
         const checkInDate = parseISO(booking.check_in);
         const checkOutDate = parseISO(booking.check_out);
         let current = checkInDate;
-        while (isBefore(current, checkOutDate) || current.getTime() === checkOutDate.getTime()) {
+        while (isBefore(current, checkOutDate)) {
           bookedDates.push(new Date(current));
           current = addDays(current, 1);
         }
@@ -243,83 +243,91 @@ export default function PropertyDetails() {
     const checkInDayName = dayNames[checkInDate.getDay()];
     const checkInRule = property.booking_rules[checkInDayName];
 
+    let result = [];
+
     // If no rule for this day or rule is disabled, use full range
     if (!checkInRule || checkInRule.enabled === false) {
-      const result = Array.from({ length: max - min + 1 }, (_, i) => min + i);
-      return { allowedNights: result, minNights: min, maxNights: max, displayMin: min, displayMax: max };
-    }
+      result = Array.from({ length: max - min + 1 }, (_, i) => min + i);
+    } else {
+      const allowedSet = new Set();
+      const ruleType = checkInRule?.rule_type || 'any';
 
-    const allowedSet = new Set();
-    const ruleType = checkInRule?.rule_type || 'any';
-
-    // Priority A: Fixed Days (rule_type === "fixed")
-    if (ruleType === 'fixed' && checkInRule?.fixed_values?.length > 0) {
-      checkInRule.fixed_values.forEach(val => {
-        if (typeof val === 'number' && val > 0 && val <= max) {
-          allowedSet.add(val);
-        }
-      });
-      if (allowedSet.size > 0) {
-        const result = Array.from(allowedSet).sort((a, b) => a - b);
-        return { allowedNights: result, minNights: min, maxNights: max, displayMin: result[0], displayMax: result[result.length - 1] };
-      }
-    }
-
-    // Priority B: Fixed AND Multiples (rule_type === "fixed_or_multiples")
-    if (ruleType === 'fixed_or_multiples') {
-      const fixedVals = checkInRule?.fixed_values || [];
-      const multipliers = checkInRule?.multiple_of || [];
-      
-      // Add fixed values
-      fixedVals.forEach(val => {
-        if (typeof val === 'number' && val > 0 && val <= max) {
-          allowedSet.add(val);
-        }
-      });
-      
-      // Add multiples
-      if (Array.isArray(multipliers)) {
-        multipliers.forEach(mult => {
-          if (typeof mult === 'number' && mult > 0) {
-            for (let i = 1; i * mult <= max; i++) {
-              allowedSet.add(i * mult);
-            }
+      // Priority A: Fixed Days (rule_type === "fixed")
+      if (ruleType === 'fixed' && checkInRule?.fixed_values?.length > 0) {
+        checkInRule.fixed_values.forEach(val => {
+          if (typeof val === 'number' && val > 0 && val <= max) {
+            allowedSet.add(val);
           }
         });
       }
+      // Priority B: Fixed AND Multiples (rule_type === "fixed_or_multiples")
+      else if (ruleType === 'fixed_or_multiples') {
+        const fixedVals = checkInRule?.fixed_values || [];
+        const multipliers = checkInRule?.multiple_of || [];
+        
+        fixedVals.forEach(val => {
+          if (typeof val === 'number' && val > 0 && val <= max) allowedSet.add(val);
+        });
+        
+        if (Array.isArray(multipliers)) {
+          multipliers.forEach(mult => {
+            if (typeof mult === 'number' && mult > 0) {
+              for (let i = 1; i * mult <= max; i++) allowedSet.add(i * mult);
+            }
+          });
+        }
+      }
+      // Priority C: Only Multiples (rule_type === "multiples")
+      else if (ruleType === 'multiples' && checkInRule?.multiple_of) {
+        const multipliers = checkInRule.multiple_of;
+        if (Array.isArray(multipliers)) {
+          multipliers.forEach(mult => {
+            if (typeof mult === 'number' && mult > 0) {
+              for (let i = 1; i * mult <= max; i++) allowedSet.add(i * mult);
+            }
+          });
+        }
+      }
       
       if (allowedSet.size > 0) {
-        const result = Array.from(allowedSet).sort((a, b) => a - b);
-        return { allowedNights: result, minNights: min, maxNights: max, displayMin: result[0], displayMax: result[result.length - 1] };
+        result = Array.from(allowedSet).sort((a, b) => a - b);
+      } else {
+        // Priority D: Any (default range from min_days to max)
+        const dayMin = checkInRule?.min_days || min;
+        for (let i = dayMin; i <= max; i++) {
+          allowedSet.add(i);
+        }
+        result = Array.from(allowedSet).sort((a, b) => a - b);
       }
     }
 
-    // Priority C: Only Multiples (rule_type === "multiples")
-    if (ruleType === 'multiples' && checkInRule?.multiple_of) {
-      const multipliers = checkInRule.multiple_of;
-      if (Array.isArray(multipliers)) {
-        multipliers.forEach(mult => {
-          if (typeof mult === 'number' && mult > 0) {
-            for (let i = 1; i * mult <= max; i++) {
-              allowedSet.add(i * mult);
-            }
-          }
-        });
-      }
-      if (allowedSet.size > 0) {
-        const result = Array.from(allowedSet).sort((a, b) => a - b);
-        return { allowedNights: result, minNights: min, maxNights: max, displayMin: result[0], displayMax: result[result.length - 1] };
-      }
+    // Filter out nights that overlap with existing bookings
+    let maxAllowedNightsByBookings = max;
+    
+    const nextBookings = propertyBookings
+      .filter(b => b.check_in)
+      .map(b => parseISO(b.check_in))
+      .filter(d => d > checkInDate)
+      .sort((a, b) => a.getTime() - b.getTime());
+      
+    if (nextBookings.length > 0) {
+      const nextBookingCheckIn = nextBookings[0];
+      maxAllowedNightsByBookings = differenceInDays(nextBookingCheckIn, checkInDate);
     }
 
-    // Priority D: Any (default range from min_days to max)
-    const dayMin = checkInRule?.min_days || min;
-    for (let i = dayMin; i <= max; i++) {
-      allowedSet.add(i);
+    const filteredResult = result.filter(n => n <= maxAllowedNightsByBookings);
+
+    if (filteredResult.length === 0) {
+      return { allowedNights: [], minNights: min, maxNights: max, displayMin: 0, displayMax: 0 };
     }
 
-    const result = Array.from(allowedSet).sort((a, b) => a - b);
-    return { allowedNights: result, minNights: min, maxNights: max, displayMin: result[0], displayMax: result[result.length - 1] };
+    return { 
+      allowedNights: filteredResult, 
+      minNights: min, 
+      maxNights: max, 
+      displayMin: filteredResult[0], 
+      displayMax: filteredResult[filteredResult.length - 1] 
+    };
   })();
 
   const bookingMutation = useMutation({
