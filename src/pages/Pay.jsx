@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Navigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
@@ -15,7 +16,11 @@ import { createPageUrl } from "@/utils";
 export default function Pay() {
   const urlParams = new URLSearchParams(window.location.search);
   const paymentLinkId = urlParams.get('id');
-  const testMode = urlParams.get('test') === 'true' || !paymentLinkId;
+  const testMode = urlParams.get('test') === 'true';
+
+  if (!paymentLinkId && !testMode) {
+    return <Navigate to={createPageUrl("Home")} replace />;
+  }
 
   const [paymentAmount, setPaymentAmount] = useState("");
   const [payerName, setPayerName] = useState("");

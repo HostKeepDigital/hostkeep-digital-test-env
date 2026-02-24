@@ -54,6 +54,7 @@ import BecomeHost from './pages/BecomeHost';
 import CleanKeep from './pages/CleanKeep';
 import CleanerDashboard from './pages/CleanerDashboard';
 import CleanerMarketplace from './pages/CleanerMarketplace';
+import CleanerMessages from './pages/CleanerMessages';
 import CleanerPricing from './pages/CleanerPricing';
 import CleanerProfile from './pages/CleanerProfile';
 import CleanerSignup from './pages/CleanerSignup';
@@ -61,6 +62,7 @@ import CleanerSubscriptionPay from './pages/CleanerSubscriptionPay';
 import CleanerVerification from './pages/CleanerVerification';
 import CreateProperty from './pages/CreateProperty';
 import EditProperty from './pages/EditProperty';
+import GuestMessages from './pages/GuestMessages';
 import GuestProfile from './pages/GuestProfile';
 import Home from './pages/Home';
 import HostBookings from './pages/HostBookings';
@@ -69,15 +71,13 @@ import HostMessages from './pages/HostMessages';
 import HostProperties from './pages/HostProperties';
 import HostSettings from './pages/HostSettings';
 import HostVerification from './pages/HostVerification';
+import Index from './pages/Index';
 import MyBookings from './pages/MyBookings';
 import MyTrips from './pages/MyTrips';
 import Pay from './pages/Pay';
 import PropertyDetails from './pages/PropertyDetails';
 import Search from './pages/Search';
 import Subscription from './pages/Subscription';
-import GuestMessages from './pages/GuestMessages';
-import CleanerMessages from './pages/CleanerMessages';
-import Index from './pages/Index';
 import __Layout from './Layout.jsx';
 
 
@@ -89,6 +89,7 @@ export const PAGES = {
     "CleanKeep": CleanKeep,
     "CleanerDashboard": CleanerDashboard,
     "CleanerMarketplace": CleanerMarketplace,
+    "CleanerMessages": CleanerMessages,
     "CleanerPricing": CleanerPricing,
     "CleanerProfile": CleanerProfile,
     "CleanerSignup": CleanerSignup,
@@ -96,6 +97,7 @@ export const PAGES = {
     "CleanerVerification": CleanerVerification,
     "CreateProperty": CreateProperty,
     "EditProperty": EditProperty,
+    "GuestMessages": GuestMessages,
     "GuestProfile": GuestProfile,
     "Home": Home,
     "HostBookings": HostBookings,
@@ -104,15 +106,13 @@ export const PAGES = {
     "HostProperties": HostProperties,
     "HostSettings": HostSettings,
     "HostVerification": HostVerification,
+    "Index": Index,
     "MyBookings": MyBookings,
     "MyTrips": MyTrips,
     "Pay": Pay,
     "PropertyDetails": PropertyDetails,
     "Search": Search,
     "Subscription": Subscription,
-    "GuestMessages": GuestMessages,
-    "CleanerMessages": CleanerMessages,
-    "Index": Index,
 }
 
 export const pagesConfig = {
