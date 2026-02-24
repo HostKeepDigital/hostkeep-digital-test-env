@@ -3,7 +3,7 @@ import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
 import { 
   Home, Search, Heart, User, Menu, X, Calendar, PoundSterling, 
-  MessageSquare, Settings, Building2, LogOut, Users
+  MessageSquare, Settings, Building2, LogOut, Users, Shield
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -249,6 +249,13 @@ export default function Layout({ children, currentPageName }) {
                       <DropdownMenuItem asChild>
                         <Link to={createPageUrl('CleanKeep')} className="flex items-center gap-2">
                           <Users className="w-4 h-4" /> CleanKeep
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    {hasRole(userRoles, 'admin') && (
+                      <DropdownMenuItem asChild>
+                        <Link to={createPageUrl('AdminVerifications')} className="flex items-center gap-2 text-rose-600">
+                          <Shield className="w-4 h-4" /> Admin Panel
                         </Link>
                       </DropdownMenuItem>
                     )}
