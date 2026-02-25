@@ -392,9 +392,6 @@ export default function HostDashboard() {
                     );
                   })}
                 </div>
-                <Link to={createPageUrl('HostCancellationPolicies')} className="text-teal-600 hover:text-teal-700 text-sm font-medium flex items-center gap-1">
-                  Edit Policies <ArrowRight className="w-4 h-4" />
-                </Link>
               </motion.div>
             )}
 
