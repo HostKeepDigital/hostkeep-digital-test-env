@@ -110,109 +110,114 @@ export default function Search() {
 
       if (isAvailable && property.day_based_restrictions_enabled && property.booking_rules) {
         const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-        let allowedCheckInDays = [];
-        
-        dayNames.forEach(day => {
-          if (property.booking_rules[day] && property.booking_rules[day].enabled !== false) {
-            allowedCheckInDays.push(day);
-          }
-        });
+        const today = new Date();
+        today.setHours(0,0,0,0);
 
-        const reqDayName = dayNames[getDay(requestedCheckIn)];
-        const reqDayRule = property.booking_rules[reqDayName];
-        
-        let checkInRestricted = false;
-        let suggestedCheckIn = null;
-        let checkInWelcomeMessage = null;
-        let durationRestricted = false;
-        let availableDurations = [];
-
-        // 1. Check check-in day restriction
-        if (!reqDayRule || reqDayRule.enabled === false) {
-          isAvailable = false;
-          checkInRestricted = true;
+        const getValidDurationsForDate = (date) => {
+          const rule = property.booking_rules[dayNames[getDay(date)]];
+          if (!rule || rule.enabled === false) return [];
+          const ruleType = rule.rule_type || 'any';
+          const allowedVals = new Set();
           
-          const capitalizedDays = allowedCheckInDays.map(d => d.charAt(0).toUpperCase() + d.slice(1));
-          let daysString = "";
-          if (capitalizedDays.length > 1) {
-            const lastDay = capitalizedDays.pop();
-            daysString = capitalizedDays.join(', ') + ' and ' + lastDay;
-          } else {
-            daysString = capitalizedDays[0] || "";
-          }
-            
-          checkInWelcomeMessage = `This property welcomes check-ins on: ${daysString}.`;
-
-          // Find nearest valid date within +/- 3 days
-          const offsets = [1, -1, 2, -2, 3, -3];
-          for (const offset of offsets) {
-            const testDate = addDays(requestedCheckIn, offset);
-            const today = new Date();
-            today.setHours(0,0,0,0);
-            if (testDate < today) continue;
-
-            const testDayName = dayNames[getDay(testDate)];
-            const testDayRule = property.booking_rules[testDayName];
-            
-            if (testDayRule && testDayRule.enabled !== false) {
-              const conflict = checkBookingConflict(testDate, requestedDuration);
-              if (!conflict) {
-                suggestedCheckIn = testDate;
-                break;
-              }
-            }
-          }
-        }
-
-        // 2. Check duration restriction (on the requested check-in or suggested check-in)
-        const dateToCheck = suggestedCheckIn || requestedCheckIn;
-        const dayRuleToCheck = property.booking_rules[dayNames[getDay(dateToCheck)]];
-        
-        if (dayRuleToCheck && dayRuleToCheck.enabled !== false) {
-          const ruleType = dayRuleToCheck.rule_type || 'any';
-          if (ruleType === 'fixed_or_multiples') {
-            const allowedVals = new Set();
-            if (dayRuleToCheck.fixed_values) dayRuleToCheck.fixed_values.forEach(v => allowedVals.add(v));
-            if (dayRuleToCheck.multiple_of) {
-              dayRuleToCheck.multiple_of.forEach(m => {
-                for (let i=1; i*m <= 28; i++) allowedVals.add(i*m);
+          if (ruleType === 'fixed_or_multiples' || ruleType === 'fixed' || ruleType === 'multiples') {
+            if (rule.fixed_values) rule.fixed_values.forEach(v => allowedVals.add(v));
+            if (rule.multiple_of) {
+              const multiples = Array.isArray(rule.multiple_of) ? rule.multiple_of : [rule.multiple_of];
+              multiples.forEach(m => {
+                if (typeof m === 'number' && m > 0) {
+                  for (let i=1; i*m <= 28; i++) allowedVals.add(i*m);
+                }
               });
             }
-            
-            if (allowedVals.size > 0 && !allowedVals.has(requestedDuration)) {
-              if (!checkInRestricted && isAvailable) {
-                 isAvailable = false;
-              }
-              durationRestricted = true;
-              availableDurations = Array.from(allowedVals)
-                .filter(dur => !checkBookingConflict(dateToCheck, dur))
-                .sort((a, b) => a - b)
-                .slice(0, 3);
-            }
+            return Array.from(allowedVals);
           } else {
-            const minStay = property.minimum_stay || 1;
-            if (requestedDuration < minStay) {
-              if (!checkInRestricted && isAvailable) {
-                 isAvailable = false;
-              }
-              durationRestricted = true;
-              availableDurations = [minStay, minStay + 1, minStay + 2]
-                .filter(dur => !checkBookingConflict(dateToCheck, dur));
-            }
+            const minStay = rule.min_days || property.minimum_stay || 1;
+            const maxStay = rule.max_days || 28;
+            for(let i=minStay; i<=maxStay; i++) allowedVals.add(i);
+            return Array.from(allowedVals);
           }
-        }
+        };
 
-        if (checkInRestricted || durationRestricted) {
-          suggestion = {
-            checkInRestricted,
-            checkInWelcomeMessage,
-            suggestedCheckIn: suggestedCheckIn ? format(suggestedCheckIn, 'yyyy-MM-dd') : null,
-            suggestedCheckInFormatted: suggestedCheckIn ? format(suggestedCheckIn, 'EEEE do') : null,
-            durationRestricted,
-            availableDurations,
-            targetCheckIn: suggestedCheckIn ? format(suggestedCheckIn, 'yyyy-MM-dd') : filters.checkIn 
-          };
-          unavailableReason = null;
+        const reqValidDurations = getValidDurationsForDate(requestedCheckIn);
+        const isReqCheckInValid = reqValidDurations.length > 0;
+        const isReqDurationValid = reqValidDurations.includes(requestedDuration);
+
+        if (!isReqCheckInValid || !isReqDurationValid) {
+            isAvailable = false;
+            unavailableReason = "Not available for selected dates";
+            
+            if (isReqCheckInValid && !isReqDurationValid) {
+                // Case 1: Check-in valid, duration invalid
+                const closestDurations = reqValidDurations
+                    .filter(dur => !checkBookingConflict(requestedCheckIn, dur))
+                    .sort((a, b) => Math.abs(a - requestedDuration) - Math.abs(b - requestedDuration))
+                    .slice(0, 2);
+                
+                if (closestDurations.length > 0) {
+                    suggestion = {
+                        message: `This property requires specific stay durations. Try one of these options:`,
+                        options: closestDurations.map(dur => ({
+                            checkIn: format(requestedCheckIn, 'yyyy-MM-dd'),
+                            duration: dur,
+                            label: `${dur} nights`
+                        }))
+                    };
+                }
+            } 
+            else if (!isReqCheckInValid) {
+                // Case 2 & 3: Check-in invalid
+                const offsets = [1, -1, 2, -2, 3, -3];
+                const options = [];
+                
+                for (const offset of offsets) {
+                    const testDate = addDays(requestedCheckIn, offset);
+                    if (testDate < today) continue;
+                    
+                    const validDurs = getValidDurationsForDate(testDate);
+                    if (validDurs.length === 0) continue;
+
+                    let bestDuration = null;
+                    if (validDurs.includes(requestedDuration) && !checkBookingConflict(testDate, requestedDuration)) {
+                        bestDuration = requestedDuration;
+                    } else {
+                        const availableValidDurs = validDurs.filter(dur => !checkBookingConflict(testDate, dur));
+                        if (availableValidDurs.length > 0) {
+                            availableValidDurs.sort((a, b) => Math.abs(a - requestedDuration) - Math.abs(b - requestedDuration));
+                            bestDuration = availableValidDurs[0];
+                        }
+                    }
+
+                    if (bestDuration !== null) {
+                        options.push({
+                            checkIn: format(testDate, 'yyyy-MM-dd'),
+                            duration: bestDuration,
+                            label: `${format(testDate, 'EEEE do')} for ${bestDuration} nights`,
+                            offset: Math.abs(offset)
+                        });
+                    }
+                }
+
+                options.sort((a, b) => a.offset - b.offset);
+
+                let allowedCheckInDays = [];
+                dayNames.forEach(day => {
+                    const rule = property.booking_rules[day];
+                    if (rule && rule.enabled !== false) allowedCheckInDays.push(day);
+                });
+                const capitalizedDays = allowedCheckInDays.map(d => d.charAt(0).toUpperCase() + d.slice(1));
+                let daysString = capitalizedDays.length > 1 
+                  ? capitalizedDays.slice(0, -1).join(', ') + ' and ' + capitalizedDays[capitalizedDays.length - 1]
+                  : capitalizedDays[0] || "";
+
+                if (options.length > 0) {
+                    suggestion = {
+                        message: `This property welcomes check-ins on ${daysString}. Here are the closest available options:`,
+                        options: options.slice(0, 4)
+                    };
+                }
+            }
+            
+            if (suggestion) unavailableReason = null;
         }
       }
     }

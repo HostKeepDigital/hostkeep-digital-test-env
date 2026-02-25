@@ -191,36 +191,22 @@ export default function PropertyCard({ property, onSave, isAvailable = true, una
 
         {property.suggestion && !isAvailable && (
           <div className="bg-amber-50 border-t border-amber-100 p-3 text-xs text-amber-900 mt-auto">
-            {property.suggestion.checkInRestricted && (
-              <div className={property.suggestion.durationRestricted && property.suggestion.availableDurations?.length > 0 ? "mb-3" : ""}>
-                <p className="font-medium mb-1.5">{property.suggestion.checkInWelcomeMessage}</p>
-                {property.suggestion.suggestedCheckIn && (
-                  <button 
-                    onClick={(e) => handleSuggestionClick(e, property.suggestion.suggestedCheckIn, null)}
-                    className="inline-flex items-center gap-1 bg-amber-100 hover:bg-amber-200 text-amber-900 px-2 py-1.5 rounded font-medium transition-colors text-left leading-tight"
-                  >
-                    Next available check-in: {property.suggestion.suggestedCheckInFormatted}
-                  </button>
-                )}
-              </div>
-            )}
-            
-            {property.suggestion.durationRestricted && property.suggestion.availableDurations?.length > 0 && (
-              <div>
-                <p className="font-medium mb-2 leading-tight">If you'd like to book this property, please adjust your trip duration using one of the available options below.</p>
+             <p className="font-medium mb-2 leading-tight">{property.suggestion.message}</p>
+             {property.suggestion.options && property.suggestion.options.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
-                  {property.suggestion.availableDurations.map(dur => (
+                  {property.suggestion.options.map((opt, idx) => (
                     <button
-                      key={dur}
-                      onClick={(e) => handleSuggestionClick(e, property.suggestion.targetCheckIn, dur)}
-                      className="bg-white border border-amber-200 hover:bg-amber-50 text-amber-900 px-2 py-1 rounded shadow-sm font-medium transition-colors"
+                      key={idx}
+                      onClick={(e) => handleSuggestionClick(e, opt.checkIn, opt.duration)}
+                      className="bg-white border border-amber-200 hover:bg-amber-50 text-amber-900 px-2 py-1.5 rounded shadow-sm font-medium transition-colors text-left"
                     >
-                      {dur} nights
+                      {opt.label}
                     </button>
                   ))}
                 </div>
-              </div>
-            )}
+             ) : (
+                <p className="text-amber-700/80">No available dates within ±3 days.</p>
+             )}
           </div>
         )}
       </motion.div>
