@@ -631,13 +631,21 @@ export default function PropertyDetails() {
     );
   };
 
+  const { data: cancellationPolicy, isLoading: policyLoading } = useQuery({
+    queryKey: ['cancellation-policy', property?.cancellation_policy_id],
+    queryFn: () => {
+      if (!property?.cancellation_policy_id) return null;
+      return base44.entities.CancellationPolicy.filter({ id: property.cancellation_policy_id }).then(results => results[0]);
+    },
+    enabled: !!property?.cancellation_policy_id,
+  });
+
   const getAcknowledgementsUI = () => (
     <div className="space-y-3 mt-4 pt-4 border-t border-gray-100">
       <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 mb-4">
         <h4 className="font-semibold text-blue-900 text-sm mb-1">Cancellation Policy</h4>
         <p className="text-sm text-blue-800">
-          Cancel up to 14 days before check-in for a full refund. 
-          After that, the deposit is non-refundable.
+          {policyLoading ? "Loading policy..." : (cancellationPolicy?.description || "Cancellation policy details not available.")}
         </p>
       </div>
       <div className="flex items-start space-x-2">
