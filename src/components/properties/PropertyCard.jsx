@@ -15,7 +15,22 @@ const AMENITY_ICONS = {
 };
 
 export default function PropertyCard({ property, onSave, isAvailable = true, unavailableReason }) {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
+
+  const handleSuggestionClick = (e, targetCheckIn, targetDuration) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const params = new URLSearchParams(window.location.search);
+    if (targetCheckIn) params.set('checkIn', targetCheckIn);
+    if (targetDuration) params.set('duration', targetDuration.toString());
+    
+    const url = createPageUrl('PropertyDetails') + `?id=${property.id}&${params.toString()}`;
+    navigate(url);
+  };
+  
+  const isCompletelyUnavailable = !isAvailable && !property.suggestion;
   const queryClient = useQueryClient();
   const mainPhoto = property.photos?.[0] || "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600";
 
