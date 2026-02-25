@@ -89,6 +89,7 @@ import Subscription from './pages/Subscription';
 import TermsAndConditions from './pages/TermsAndConditions';
 import CleanerTerms from './pages/CleanerTerms';
 import GuestTerms from './pages/GuestTerms';
+import Accessibility from './pages/Accessibility';
 import __Layout from './Layout.jsx';
 
 
@@ -135,6 +136,7 @@ export const PAGES = {
     "TermsAndConditions": TermsAndConditions,
     "CleanerTerms": CleanerTerms,
     "GuestTerms": GuestTerms,
+    "Accessibility": Accessibility,
 }
 
 export const pagesConfig = {
