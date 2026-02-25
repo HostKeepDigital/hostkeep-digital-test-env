@@ -80,7 +80,7 @@ export default function PropertyListingCard({
           <Link to={createPageUrl('EditProperty') + `?id=${property.id}&tab=pricing`}>
             <Button size="icon" variant="secondary" className="h-10 w-10 rounded-xl shadow-md bg-white/95 hover:bg-white text-gray-700"><PoundSterling className="w-4 h-4" /></Button>
           </Link>
-          <Link to={createPageUrl('EditProperty') + `?id=${property.id}&tab=booking`}>
+          <Link to={createPageUrl('EditProperty') + `?id=${property.id}&tab=booking-rules`}>
             <Button size="icon" variant="secondary" className="h-10 w-10 rounded-xl shadow-md bg-white/95 hover:bg-white text-gray-700"><Calendar className="w-4 h-4" /></Button>
           </Link>
         </div>
