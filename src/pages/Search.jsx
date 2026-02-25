@@ -156,11 +156,24 @@ export default function Search() {
             
             if (isReqCheckInValid && !isReqDurationValid && requestedDuration) {
                 // Case 1: Check-in valid, duration invalid
-                const closestDurations = reqValidDurations
-                    .filter(dur => !checkBookingConflict(requestedCheckIn, dur))
-                    .sort((a, b) => Math.abs(a - requestedDuration) - Math.abs(b - requestedDuration))
-                    .slice(0, 2);
+                const validWithoutConflict = reqValidDurations.filter(dur => !checkBookingConflict(requestedCheckIn, dur));
                 
+                // Find closest smaller and closest larger durations
+                const smallerDurations = validWithoutConflict.filter(d => d < requestedDuration).sort((a, b) => b - a);
+                const largerDurations = validWithoutConflict.filter(d => d > requestedDuration).sort((a, b) => a - b);
+                
+                const closestDurations = [];
+                if (smallerDurations.length > 0) closestDurations.push(smallerDurations[0]);
+                if (largerDurations.length > 0) closestDurations.push(largerDurations[0]);
+
+                // If we don't have one below and one above, just take the two closest ones overall
+                if (closestDurations.length < 2) {
+                    const fallbackDurations = validWithoutConflict
+                        .sort((a, b) => Math.abs(a - requestedDuration) - Math.abs(b - requestedDuration))
+                        .slice(0, 2);
+                    closestDurations.splice(0, closestDurations.length, ...fallbackDurations);
+                }
+
                 if (closestDurations.length > 0) {
                     suggestion = {
                         message: `This property requires specific stay durations. Try one of these options:`,
