@@ -60,7 +60,9 @@ import CleanerProfile from './pages/CleanerProfile';
 import CleanerSignup from './pages/CleanerSignup';
 import CleanerSubscriptionPay from './pages/CleanerSubscriptionPay';
 import CleanerVerification from './pages/CleanerVerification';
+import CookiePolicy from './pages/CookiePolicy';
 import CreateProperty from './pages/CreateProperty';
+import DisputePolicy from './pages/DisputePolicy';
 import EditProperty from './pages/EditProperty';
 import GuestMessages from './pages/GuestMessages';
 import GuestProfile from './pages/GuestProfile';
@@ -71,23 +73,22 @@ import HostDashboard from './pages/HostDashboard';
 import HostMessages from './pages/HostMessages';
 import HostProperties from './pages/HostProperties';
 import HostSettings from './pages/HostSettings';
+import HostTerms from './pages/HostTerms';
 import HostVerification from './pages/HostVerification';
 import Index from './pages/Index';
+import LegalCentre from './pages/LegalCentre';
 import MyBookings from './pages/MyBookings';
 import MyTrips from './pages/MyTrips';
 import Pay from './pages/Pay';
+import PaymentPolicy from './pages/PaymentPolicy';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 import PropertyDetails from './pages/PropertyDetails';
+import RefundPolicy from './pages/RefundPolicy';
 import Search from './pages/Search';
 import Subscription from './pages/Subscription';
-import LegalCentre from './pages/LegalCentre';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import CookiePolicy from './pages/CookiePolicy';
-import PaymentPolicy from './pages/PaymentPolicy';
-import RefundPolicy from './pages/RefundPolicy';
 import TermsAndConditions from './pages/TermsAndConditions';
-import DisputePolicy from './pages/DisputePolicy';
-import HostTerms from './pages/HostTerms';
 import CleanerTerms from './pages/CleanerTerms';
+import GuestTerms from './pages/GuestTerms';
 import __Layout from './Layout.jsx';
 
 
@@ -105,7 +106,9 @@ export const PAGES = {
     "CleanerSignup": CleanerSignup,
     "CleanerSubscriptionPay": CleanerSubscriptionPay,
     "CleanerVerification": CleanerVerification,
+    "CookiePolicy": CookiePolicy,
     "CreateProperty": CreateProperty,
+    "DisputePolicy": DisputePolicy,
     "EditProperty": EditProperty,
     "GuestMessages": GuestMessages,
     "GuestProfile": GuestProfile,
@@ -116,23 +119,22 @@ export const PAGES = {
     "HostMessages": HostMessages,
     "HostProperties": HostProperties,
     "HostSettings": HostSettings,
+    "HostTerms": HostTerms,
     "HostVerification": HostVerification,
     "Index": Index,
+    "LegalCentre": LegalCentre,
     "MyBookings": MyBookings,
     "MyTrips": MyTrips,
     "Pay": Pay,
+    "PaymentPolicy": PaymentPolicy,
+    "PrivacyPolicy": PrivacyPolicy,
     "PropertyDetails": PropertyDetails,
+    "RefundPolicy": RefundPolicy,
     "Search": Search,
     "Subscription": Subscription,
-    "LegalCentre": LegalCentre,
-    "PrivacyPolicy": PrivacyPolicy,
-    "CookiePolicy": CookiePolicy,
-    "PaymentPolicy": PaymentPolicy,
-    "RefundPolicy": RefundPolicy,
     "TermsAndConditions": TermsAndConditions,
-    "DisputePolicy": DisputePolicy,
-    "HostTerms": HostTerms,
     "CleanerTerms": CleanerTerms,
+    "GuestTerms": GuestTerms,
 }
 
 export const pagesConfig = {
