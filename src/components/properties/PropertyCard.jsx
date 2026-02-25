@@ -96,10 +96,16 @@ export default function PropertyCard({ property, onSave, isAvailable = true, una
   const topAmenities = property.amenities?.slice(0, 4).filter(a => AMENITY_ICONS[a]) || [];
   
   return (
-    <Link to={createPageUrl('PropertyDetails') + `?id=${property.id}`}>
+    <Link 
+      to={createPageUrl('PropertyDetails') + `?id=${property.id}`}
+      onClick={(e) => {
+        if (!isAvailable) e.preventDefault();
+      }}
+      className={!isAvailable ? "cursor-default block h-full" : "block h-full"}
+    >
       <motion.div
-        whileHover={!isCompletelyUnavailable ? { y: -4 } : {}}
-        className={`bg-white rounded-2xl overflow-hidden flex flex-col h-full border border-gray-100 transition-shadow ${isCompletelyUnavailable ? 'opacity-75 grayscale-[0.2]' : 'hover:shadow-lg'}`}
+        whileHover={isAvailable ? { y: -4 } : {}}
+        className={`bg-white rounded-2xl overflow-hidden flex flex-col h-full border border-gray-100 transition-shadow ${!isAvailable ? 'bg-gray-50' : 'hover:shadow-lg'}`}
       >
         <div className="relative aspect-[4/3]">
           <img 
