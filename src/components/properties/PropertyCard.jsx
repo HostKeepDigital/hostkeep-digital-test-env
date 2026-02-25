@@ -99,8 +99,8 @@ export default function PropertyCard({ property, onSave, isAvailable = true, una
   return (
     <Link to={createPageUrl('PropertyDetails') + `?id=${property.id}`}>
       <motion.div
-        whileHover={isAvailable ? { y: -4 } : {}}
-        className={`bg-white rounded-2xl overflow-hidden border border-gray-100 transition-shadow ${!isAvailable ? 'opacity-75 grayscale-[0.2]' : 'hover:shadow-lg'}`}
+        whileHover={!isCompletelyUnavailable ? { y: -4 } : {}}
+        className={`bg-white rounded-2xl overflow-hidden flex flex-col h-full border border-gray-100 transition-shadow ${isCompletelyUnavailable ? 'opacity-75 grayscale-[0.2]' : 'hover:shadow-lg'}`}
       >
         <div className="relative aspect-[4/3]">
           <img 
@@ -108,7 +108,7 @@ export default function PropertyCard({ property, onSave, isAvailable = true, una
             alt={property.title}
             className="w-full h-full object-cover"
           />
-          {!isAvailable && (
+          {!isAvailable && !property.suggestion && (
             <div className="absolute inset-0 bg-white/30 backdrop-blur-[1px] flex items-center justify-center z-10 p-2">
               <Badge className="bg-gray-900/90 text-white border-0 py-1.5 px-3 shadow-lg font-medium text-center whitespace-normal max-w-full">
                 {unavailableReason || "Not available"}
