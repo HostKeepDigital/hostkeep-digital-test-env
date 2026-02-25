@@ -84,23 +84,136 @@ export default function Search() {
   const filteredProperties = allProperties.map(property => {
     let isAvailable = true;
     let unavailableReason = null;
+    let suggestion = null;
     
     if (filters.checkIn && filters.duration) {
       const requestedCheckIn = parseISO(filters.checkIn);
-      const requestedCheckOut = addDays(requestedCheckIn, parseInt(filters.duration));
+      const requestedDuration = parseInt(filters.duration);
+      const requestedCheckOut = addDays(requestedCheckIn, requestedDuration);
       
       const propertyBookings = activeBookings.filter(b => b.property_id === property.id);
       
-      const hasConflict = propertyBookings.some(b => {
-        if (!b.check_in || !b.check_out) return false;
-        const bCheckIn = parseISO(b.check_in);
-        const bCheckOut = parseISO(b.check_out);
-        return requestedCheckIn < bCheckOut && requestedCheckOut > bCheckIn;
-      });
+      const checkBookingConflict = (checkInDate, duration) => {
+        const coDate = addDays(checkInDate, duration);
+        return propertyBookings.some(b => {
+          if (!b.check_in || !b.check_out) return false;
+          return checkInDate < parseISO(b.check_out) && coDate > parseISO(b.check_in);
+        });
+      };
+
+      const hasConflict = checkBookingConflict(requestedCheckIn, requestedDuration);
       
       if (hasConflict) {
         isAvailable = false;
         unavailableReason = "Not available for selected dates";
+      }
+
+      if (isAvailable && property.day_based_restrictions_enabled && property.booking_rules) {
+        const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        let allowedCheckInDays = [];
+        
+        dayNames.forEach(day => {
+          if (property.booking_rules[day] && property.booking_rules[day].enabled !== false) {
+            allowedCheckInDays.push(day);
+          }
+        });
+
+        const reqDayName = dayNames[getDay(requestedCheckIn)];
+        const reqDayRule = property.booking_rules[reqDayName];
+        
+        let checkInRestricted = false;
+        let suggestedCheckIn = null;
+        let checkInWelcomeMessage = null;
+        let durationRestricted = false;
+        let availableDurations = [];
+
+        // 1. Check check-in day restriction
+        if (!reqDayRule || reqDayRule.enabled === false) {
+          isAvailable = false;
+          checkInRestricted = true;
+          
+          const capitalizedDays = allowedCheckInDays.map(d => d.charAt(0).toUpperCase() + d.slice(1));
+          let daysString = "";
+          if (capitalizedDays.length > 1) {
+            const lastDay = capitalizedDays.pop();
+            daysString = capitalizedDays.join(', ') + ' and ' + lastDay;
+          } else {
+            daysString = capitalizedDays[0] || "";
+          }
+            
+          checkInWelcomeMessage = `This property welcomes check-ins on: ${daysString}.`;
+
+          // Find nearest valid date within +/- 3 days
+          const offsets = [1, -1, 2, -2, 3, -3];
+          for (const offset of offsets) {
+            const testDate = addDays(requestedCheckIn, offset);
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            if (testDate < today) continue;
+
+            const testDayName = dayNames[getDay(testDate)];
+            const testDayRule = property.booking_rules[testDayName];
+            
+            if (testDayRule && testDayRule.enabled !== false) {
+              const conflict = checkBookingConflict(testDate, requestedDuration);
+              if (!conflict) {
+                suggestedCheckIn = testDate;
+                break;
+              }
+            }
+          }
+        }
+
+        // 2. Check duration restriction (on the requested check-in or suggested check-in)
+        const dateToCheck = suggestedCheckIn || requestedCheckIn;
+        const dayRuleToCheck = property.booking_rules[dayNames[getDay(dateToCheck)]];
+        
+        if (dayRuleToCheck && dayRuleToCheck.enabled !== false) {
+          const ruleType = dayRuleToCheck.rule_type || 'any';
+          if (ruleType === 'fixed_or_multiples') {
+            const allowedVals = new Set();
+            if (dayRuleToCheck.fixed_values) dayRuleToCheck.fixed_values.forEach(v => allowedVals.add(v));
+            if (dayRuleToCheck.multiple_of) {
+              dayRuleToCheck.multiple_of.forEach(m => {
+                for (let i=1; i*m <= 28; i++) allowedVals.add(i*m);
+              });
+            }
+            
+            if (allowedVals.size > 0 && !allowedVals.has(requestedDuration)) {
+              if (!checkInRestricted && isAvailable) {
+                 isAvailable = false;
+              }
+              durationRestricted = true;
+              availableDurations = Array.from(allowedVals)
+                .filter(dur => !checkBookingConflict(dateToCheck, dur))
+                .sort((a, b) => a - b)
+                .slice(0, 3);
+            }
+          } else {
+            const minStay = property.minimum_stay || 1;
+            if (requestedDuration < minStay) {
+              if (!checkInRestricted && isAvailable) {
+                 isAvailable = false;
+              }
+              durationRestricted = true;
+              availableDurations = [minStay, minStay + 1, minStay + 2]
+                .filter(dur => !checkBookingConflict(dateToCheck, dur));
+            }
+          }
+        }
+
+        if (checkInRestricted || durationRestricted) {
+          suggestion = {
+            checkInRestricted,
+            checkInWelcomeMessage,
+            suggestedCheckIn: suggestedCheckIn ? format(suggestedCheckIn, 'yyyy-MM-dd') : null,
+            suggestedCheckInFormatted: suggestedCheckIn ? format(suggestedCheckIn, 'EEEE do') : null,
+            durationRestricted,
+            availableDurations,
+            targetCheckIn: suggestedCheckIn ? format(suggestedCheckIn, 'yyyy-MM-dd') : filters.checkIn 
+          };
+          unavailableReason = null;
+        }
       }
     }
 
@@ -108,22 +221,25 @@ export default function Search() {
     if (isAvailable && totalGuests > property.guest_capacity) {
       isAvailable = false;
       unavailableReason = `Maximum occupancy is ${property.guest_capacity} guests`;
+      suggestion = null;
     }
 
     if (isAvailable && filters.children > 0) {
       if (property.children_allowed === false) {
         isAvailable = false;
         unavailableReason = "This property does not accept children";
+        suggestion = null;
       } else if (property.minimum_child_age != null && property.minimum_child_age > 0) {
         const hasUnderageChild = filters.childAges.some(age => age < property.minimum_child_age);
         if (hasUnderageChild) {
           isAvailable = false;
           unavailableReason = "This property does not accept children under the minimum age requirement.";
+          suggestion = null;
         }
       }
     }
 
-    return { ...property, isAvailable, unavailableReason };
+    return { ...property, isAvailable, unavailableReason, suggestion };
   }).filter(property => {
     // Location filter
     if (filters.location) {
