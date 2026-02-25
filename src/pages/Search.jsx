@@ -13,6 +13,7 @@ import { Search as SearchIcon, MapPin, Calendar, Users, SlidersHorizontal, X } f
 import PropertyCard from "@/components/properties/PropertyCard";
 import { format, parseISO, addDays } from "date-fns";
 import BookingCalendar from "@/components/shared/BookingCalendar";
+import GuestSelector from "@/components/search/GuestSelector";
 
 const AMENITIES = [
   "WiFi", "Pool", "Parking", "Air Conditioning", "Kitchen", "Washing Machine",
