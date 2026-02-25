@@ -40,6 +40,7 @@ const AMENITIES = [
 export default function EditProperty() {
   const urlParams = new URLSearchParams(window.location.search);
   const propertyId = urlParams.get('id');
+  const defaultTab = urlParams.get('tab') || 'basics';
   const queryClient = useQueryClient();
   
   const [isUploading, setIsUploading] = useState(false);
@@ -400,7 +401,7 @@ export default function EditProperty() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <Tabs defaultValue="basics" className="space-y-6">
+        <Tabs defaultValue={defaultTab} className="space-y-6">
           <TabsList className="bg-white border border-gray-100">
             <TabsTrigger value="basics"><Home className="w-4 h-4 mr-2" /> Basics</TabsTrigger>
             <TabsTrigger value="details"><FileText className="w-4 h-4 mr-2" /> Description</TabsTrigger>
