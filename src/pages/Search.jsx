@@ -242,8 +242,12 @@ export default function Search() {
                         if (validDurs.length > 0) {
                             dur = validDurs.reduce((prev, curr) => Math.abs(curr - requestedDuration) < Math.abs(prev - requestedDuration) ? curr : prev);
                             label += ` - ${dur} night${dur > 1 ? 's' : ''}`;
+                        } else {
+                            // If user requested a duration but this date supports none (due to restrictions or conflicts), skip it
+                            return;
                         }
                     }
+                    
                     options.push({
                         checkIn: format(date, 'yyyy-MM-dd'),
                         duration: dur,

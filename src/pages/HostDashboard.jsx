@@ -9,8 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Home, PoundSterling, Calendar, MessageSquare, Settings, Plus, 
-  TrendingUp, Users, Star, Eye, ArrowRight, Bell, Crown, X
+  TrendingUp, Users, Star, Eye, ArrowRight, Bell, Crown, X, AlertTriangle
 } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import StatsCard from "@/components/dashboard/StatsCard";
 import BookingCalendar from "@/components/dashboard/BookingCalendar";
 import { parseISO, isAfter, startOfMonth, endOfMonth, isWithinInterval, format } from "date-fns";
@@ -73,6 +74,29 @@ export default function HostDashboard() {
 
   const publishedProperties = properties.filter(p => p.status === 'published').length;
 
+  // Check for properties with "dead days" (enabled but no valid duration config)
+  const propertiesWithDeadDays = properties.map(p => {
+    if (!p.day_based_restrictions_enabled || !p.booking_rules) return null;
+    const deadDays = Object.entries(p.booking_rules)
+      .filter(([day, rule]) => {
+        if (!rule.enabled) return false;
+        const type = rule.rule_type || 'any';
+        if (['fixed', 'fixed_or_multiples', 'multiples'].includes(type)) {
+           const hasFixed = rule.fixed_values && Array.isArray(rule.fixed_values) && rule.fixed_values.length > 0;
+           const hasMultiples = rule.multiple_of && (Array.isArray(rule.multiple_of) ? rule.multiple_of.some(m=>m>0) : rule.multiple_of > 0);
+           
+           if (type === 'fixed') return !hasFixed;
+           if (type === 'multiples') return !hasMultiples;
+           return !(hasFixed || hasMultiples);
+        }
+        return false;
+      })
+      .map(([day]) => day.charAt(0).toUpperCase() + day.slice(1));
+    
+    if (deadDays.length > 0) return { title: p.title, id: p.id, deadDays };
+    return null;
+  }).filter(Boolean);
+
   const handleAddPropertyClick = (e) => {
     // Check if on basic plan with 1 property already
     if (subscription?.plan === 'basic' && subscription?.max_properties === 1 && properties.length >= 1) {
@@ -110,6 +134,24 @@ export default function HostDashboard() {
             </Button>
           </div>
         </div>
+
+        {/* Config Warnings */}
+        {propertiesWithDeadDays.length > 0 && (
+          <div className="mb-8 space-y-4">
+            {propertiesWithDeadDays.map(item => (
+              <Alert key={item.id} variant="destructive" className="bg-red-50 border-red-200 text-red-800">
+                <AlertTriangle className="h-4 w-4 text-red-600" />
+                <AlertTitle className="text-red-900">Configuration Error: {item.title}</AlertTitle>
+                <AlertDescription className="text-red-800">
+                  The following days are enabled for check-in but have no valid duration settings (no fixed values set): 
+                  <span className="font-semibold"> {item.deadDays.join(', ')}</span>. 
+                  These days will be unbookable. 
+                  <Link to={createPageUrl('EditProperty') + `?id=${item.id}`} className="underline ml-2">Fix now</Link>
+                </AlertDescription>
+              </Alert>
+            ))}
+          </div>
+        )}
 
         {/* Subscription Banner */}
         {(!subscription || subscription.status === 'trial') && (
