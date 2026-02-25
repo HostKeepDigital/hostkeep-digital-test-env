@@ -14,11 +14,15 @@ import {
 import PropertyCard from "@/components/properties/PropertyCard";
 import GuestSelector from "@/components/search/GuestSelector";
 import { getUserRoles, hasRole } from "@/components/utils/roleHelpers";
+import BookingCalendar from "@/components/shared/BookingCalendar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { format } from "date-fns";
 
 export default function Home() {
   const [searchLocation, setSearchLocation] = useState("");
   const [checkIn, setCheckIn] = useState("");
-  const [checkOut, setCheckOut] = useState("");
+  const [duration, setDuration] = useState("");
   const [guestData, setGuestData] = useState({ adults: 1, children: 0, childAges: [], isValid: true });
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
@@ -47,7 +51,7 @@ export default function Home() {
     const params = new URLSearchParams();
     if (searchLocation) params.set('location', searchLocation);
     if (checkIn) params.set('checkIn', checkIn);
-    if (checkOut) params.set('checkOut', checkOut);
+    if (duration) params.set('duration', duration);
     params.set('adults', guestData.adults);
     params.set('children', guestData.children);
     if (guestData.childAges.length > 0) {
@@ -106,28 +110,43 @@ export default function Home() {
                 </div>
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1 block">Check in</label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <Input
-                    type="date"
-                    value={checkIn}
-                    onChange={(e) => setCheckIn(e.target.value)}
-                    className="pl-10 h-12 border-gray-200"
-                  />
-                </div>
+                <label className="text-xs font-medium text-gray-500 mb-1 block">Trip start</label>
+                <BookingCalendar
+                  value={checkIn}
+                  onSelect={(date) => {
+                    setCheckIn(date ? format(date, "yyyy-MM-dd") : "");
+                    setDuration("");
+                  }}
+                  placeholder="Select date"
+                  className="h-12 bg-white w-full border-gray-200"
+                  numberOfMonths={1}
+                />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1 block">Check out</label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <Input
-                    type="date"
-                    value={checkOut}
-                    onChange={(e) => setCheckOut(e.target.value)}
-                    className="pl-10 h-12 border-gray-200"
-                  />
-                </div>
+                <label className="text-xs font-medium text-gray-500 mb-1 block">Duration</label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="w-full" {...(!checkIn ? { tabIndex: 0 } : {})}>
+                        <Select disabled={!checkIn} value={duration} onValueChange={setDuration}>
+                          <SelectTrigger className={`w-full h-12 bg-white border-gray-200 ${!checkIn ? "opacity-50 pointer-events-none" : ""}`}>
+                            <SelectValue placeholder="Select duration" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {[...Array(28)].map((_, i) => (
+                              <SelectItem key={i+1} value={(i+1).toString()}>{i+1} night{i+1 !== 1 ? 's' : ''}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </TooltipTrigger>
+                    {!checkIn && (
+                      <TooltipContent>
+                        <p>Select your trip start date</p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
               </div>
               <div>
                 <label className="text-xs font-medium text-gray-500 mb-1 block">Guests</label>
