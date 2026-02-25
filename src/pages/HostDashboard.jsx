@@ -393,6 +393,13 @@ export default function HostDashboard() {
                         <span className="text-sm font-medium">{format(parseISO(subscription.end_date), 'MMM d, yyyy')}</span>
                       </div>
                     )}
+                    {subscription.status === 'cancelled' && (
+                      <Link to={createPageUrl('Subscription')} className="block mt-4">
+                        <Button className="w-full bg-teal-600 hover:bg-teal-700 text-white">
+                          Resubscribe
+                        </Button>
+                      </Link>
+                    )}
                   </div>
               ) : (
                 <div className="text-center">
