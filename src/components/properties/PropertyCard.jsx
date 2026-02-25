@@ -142,7 +142,7 @@ export default function PropertyCard({ property, onSave, isAvailable = true, una
           </div>
         </div>
         
-        <div className="p-4">
+        <div className="p-4 flex-1 flex flex-col">
           <div className="flex items-start justify-between mb-2">
             <div>
               <h3 className="font-semibold text-gray-900 line-clamp-1">{property.title}</h3>
