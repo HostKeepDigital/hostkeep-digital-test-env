@@ -183,11 +183,46 @@ export default function PropertyCard({ property, onSave, isAvailable = true, una
             </div>
           )}
           
-          <div className="flex items-baseline gap-1">
+          <div className="flex items-baseline gap-1 mt-auto pt-2">
             <span className="text-xl font-bold text-gray-900">£{property.nightly_rate}</span>
             <span className="text-gray-500 text-sm">/ night</span>
           </div>
         </div>
+
+        {property.suggestion && !isAvailable && (
+          <div className="bg-amber-50 border-t border-amber-100 p-3 text-xs text-amber-900 mt-auto">
+            {property.suggestion.checkInRestricted && (
+              <div className={property.suggestion.durationRestricted && property.suggestion.availableDurations?.length > 0 ? "mb-3" : ""}>
+                <p className="font-medium mb-1.5">{property.suggestion.checkInWelcomeMessage}</p>
+                {property.suggestion.suggestedCheckIn && (
+                  <button 
+                    onClick={(e) => handleSuggestionClick(e, property.suggestion.suggestedCheckIn, null)}
+                    className="inline-flex items-center gap-1 bg-amber-100 hover:bg-amber-200 text-amber-900 px-2 py-1.5 rounded font-medium transition-colors text-left leading-tight"
+                  >
+                    Next available check-in: {property.suggestion.suggestedCheckInFormatted}
+                  </button>
+                )}
+              </div>
+            )}
+            
+            {property.suggestion.durationRestricted && property.suggestion.availableDurations?.length > 0 && (
+              <div>
+                <p className="font-medium mb-2 leading-tight">If you'd like to book this property, please adjust your trip duration using one of the available options below.</p>
+                <div className="flex flex-wrap gap-2">
+                  {property.suggestion.availableDurations.map(dur => (
+                    <button
+                      key={dur}
+                      onClick={(e) => handleSuggestionClick(e, property.suggestion.targetCheckIn, dur)}
+                      className="bg-white border border-amber-200 hover:bg-amber-50 text-amber-900 px-2 py-1 rounded shadow-sm font-medium transition-colors"
+                    >
+                      {dur} nights
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </motion.div>
     </Link>
   );
