@@ -95,7 +95,7 @@ export default function PropertyListingCard({
               <p className="text-sm text-rose-700 mt-1">
                 You have {missingCleaners.length} upcoming check-in{missingCleaners.length > 1 ? 's' : ''} without an assigned cleaner.
               </p>
-              <Link to={createPageUrl('CleanKeep')} className="inline-flex items-center gap-1 text-sm font-semibold text-rose-700 hover:text-rose-800 mt-2">
+              <Link to={createPageUrl('CleanKeep')} className="inline-flex items-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-700 mt-2">
                 Go to CleanKeep <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
