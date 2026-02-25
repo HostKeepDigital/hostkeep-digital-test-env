@@ -15,7 +15,7 @@ const PLANS = [
   {
     id: "basic",
     name: "Basic",
-    price: 19,
+    price: 25,
     icon: Zap,
     color: "teal",
     max_properties: 1,
@@ -30,7 +30,7 @@ const PLANS = [
   {
     id: "pro",
     name: "Pro",
-    price: 39,
+    price: 49,
     icon: Crown,
     color: "violet",
     max_properties: 5,
