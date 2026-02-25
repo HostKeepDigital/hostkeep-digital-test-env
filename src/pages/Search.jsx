@@ -187,46 +187,95 @@ export default function Search() {
             } 
             else if (!isReqCheckInValid) {
                 // Case 2 & 3: Check-in invalid
-                const offsets = [1, -1, 2, -2, 3, -3];
                 const options = [];
-                
-                for (const offset of offsets) {
-                    const testDate = addDays(requestedCheckIn, offset);
-                    if (testDate < today) continue;
-                    
-                    const validDurs = getValidDurationsForDate(testDate);
-                    if (validDurs.length === 0) continue;
 
-                    let bestDuration = null;
-                    if (requestedDuration) {
-                        if (validDurs.includes(requestedDuration) && !checkBookingConflict(testDate, requestedDuration)) {
-                            bestDuration = requestedDuration;
-                        } else {
-                            const availableValidDurs = validDurs.filter(dur => !checkBookingConflict(testDate, dur));
-                            if (availableValidDurs.length > 0) {
-                                availableValidDurs.sort((a, b) => Math.abs(a - requestedDuration) - Math.abs(b - requestedDuration));
-                                bestDuration = availableValidDurs[0];
-                            }
+                const getBestDurationForDate = (date) => {
+                     const validDurs = getValidDurationsForDate(date);
+                     if (validDurs.length === 0) return null;
+                     
+                     if (requestedDuration) {
+                        if (validDurs.includes(requestedDuration) && !checkBookingConflict(date, requestedDuration)) {
+                            return requestedDuration;
                         }
-                    } else {
-                        const availableValidDurs = validDurs.filter(dur => !checkBookingConflict(testDate, dur));
+                        const availableValidDurs = validDurs.filter(dur => !checkBookingConflict(date, dur));
+                        if (availableValidDurs.length > 0) {
+                             availableValidDurs.sort((a, b) => Math.abs(a - requestedDuration) - Math.abs(b - requestedDuration));
+                             return availableValidDurs[0];
+                        }
+                     } else {
+                        const availableValidDurs = validDurs.filter(dur => !checkBookingConflict(date, dur));
                         if (availableValidDurs.length > 0) {
                             availableValidDurs.sort((a, b) => a - b);
-                            bestDuration = availableValidDurs[0];
+                            return availableValidDurs[0];
                         }
-                    }
+                     }
+                     return null;
+                };
 
-                    if (bestDuration !== null) {
-                        options.push({
-                            checkIn: format(testDate, 'yyyy-MM-dd'),
-                            duration: bestDuration,
-                            label: `${format(testDate, 'EEEE do')} for ${bestDuration} nights`,
-                            offset: Math.abs(offset)
-                        });
+                // Find closest previous valid date
+                let prevDate = null;
+                for (let i = 1; i <= 14; i++) {
+                    const testDate = addDays(requestedCheckIn, -i);
+                    if (testDate < today) break;
+                    const bestDur = getBestDurationForDate(testDate);
+                    if (bestDur) {
+                        prevDate = { date: testDate, duration: bestDur, offset: i };
+                        break; 
                     }
                 }
 
-                options.sort((a, b) => a.offset - b.offset);
+                // Find closest next valid date
+                let nextDate = null;
+                for (let i = 1; i <= 14; i++) {
+                    const testDate = addDays(requestedCheckIn, i);
+                    const bestDur = getBestDurationForDate(testDate);
+                    if (bestDur) {
+                         nextDate = { date: testDate, duration: bestDur, offset: i };
+                         break;
+                    }
+                }
+
+                if (prevDate) {
+                     options.push({
+                        checkIn: format(prevDate.date, 'yyyy-MM-dd'),
+                        duration: prevDate.duration,
+                        label: `${format(prevDate.date, 'EEEE do')} for ${prevDate.duration} nights`,
+                        offset: prevDate.offset
+                    });
+                }
+                
+                if (nextDate) {
+                     options.push({
+                        checkIn: format(nextDate.date, 'yyyy-MM-dd'),
+                        duration: nextDate.duration,
+                        label: `${format(nextDate.date, 'EEEE do')} for ${nextDate.duration} nights`,
+                        offset: nextDate.offset
+                    });
+                }
+
+                // If we only found one, try to find the next closest in that direction to have 2 options
+                if (options.length < 2) {
+                    const direction = prevDate ? -1 : 1;
+                    const startOffset = prevDate ? prevDate.offset + 1 : (nextDate ? nextDate.offset + 1 : 1);
+                    
+                    for (let i = startOffset; i <= 14; i++) {
+                        const testDate = addDays(requestedCheckIn, i * direction);
+                        if (direction === -1 && testDate < today) break;
+                        
+                        const bestDur = getBestDurationForDate(testDate);
+                        if (bestDur) {
+                             options.push({
+                                checkIn: format(testDate, 'yyyy-MM-dd'),
+                                duration: bestDur,
+                                label: `${format(testDate, 'EEEE do')} for ${bestDur} nights`,
+                                offset: i
+                            });
+                            if (options.length >= 2) break;
+                        }
+                    }
+                }
+                
+                options.sort((a, b) => new Date(a.checkIn) - new Date(b.checkIn));
 
                 let allowedCheckInDays = [];
                 dayNames.forEach(day => {
