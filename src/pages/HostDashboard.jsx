@@ -355,6 +355,10 @@ export default function HostDashboard() {
                   <Settings className="w-5 h-5 text-teal-600" />
                   <span className="text-gray-700">Settings</span>
                 </Link>
+                <Link to={createPageUrl('HostCancellationPolicies')} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors">
+                  <ShieldAlert className="w-5 h-5 text-teal-600" />
+                  <span className="text-gray-700">Cancellation Policies</span>
+                </Link>
               </div>
             </motion.div>
 
