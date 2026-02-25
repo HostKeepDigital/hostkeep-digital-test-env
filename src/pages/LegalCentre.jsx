@@ -53,6 +53,13 @@ export default function LegalCentre() {
               </div>
             </section>
 
+            <section className="bg-blue-50 rounded-xl p-8 border border-blue-200 shadow-sm mb-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">About CleanKeep</h2>
+              <p className="text-gray-700">
+                CleanKeep is the cleaner-facing section of the HostKeep Platform. It is a brand layer only and not a separate legal entity. All services, terms, and legal obligations related to CleanKeep are governed by the same legal documents and operate under HostKeep Digital Ltd.
+              </p>
+            </section>
+
             <section className="bg-white rounded-xl p-8 border border-gray-100 shadow-sm mb-8">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Updates to Legal Documents</h2>
               <p className="text-gray-700 mb-4">HostKeep may update these documents from time to time to reflect:</p>
