@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useState, useEffect } from "react";
+import { format, parseISO } from "date-fns";
 
 const AMENITY_ICONS = {
   "WiFi": Wifi,
@@ -197,6 +198,17 @@ export default function PropertyCard({ property, onSave, isAvailable = true, una
         {property.suggestion && !isAvailable && (
           <div className="bg-amber-50 border-t border-amber-100 p-3 text-xs text-amber-900 mt-auto">
              <p className="font-medium mb-2 leading-tight">{property.suggestion.message}</p>
+             
+             {property.suggestion.conflictDates && (
+                <p className="font-semibold text-amber-800 mb-2">
+                    {format(parseISO(property.suggestion.conflictDates.start), "MMM do")} - {format(parseISO(property.suggestion.conflictDates.end), "MMM do, yyyy")}
+                </p>
+             )}
+
+             {property.suggestion.suggestionLabel && (
+                <p className="font-medium mt-3 mb-2 leading-tight text-amber-800/90">{property.suggestion.suggestionLabel}</p>
+             )}
+
              {property.suggestion.options && property.suggestion.options.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {property.suggestion.options.map((opt, idx) => (

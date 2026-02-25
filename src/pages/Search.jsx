@@ -102,13 +102,21 @@ export default function Search() {
       };
 
       let hasConflict = false;
+      let conflictingBooking = null;
+
       if (requestedDuration) {
-          hasConflict = checkBookingConflict(requestedCheckIn, requestedDuration);
+          const coDate = addDays(requestedCheckIn, requestedDuration);
+          conflictingBooking = propertyBookings.find(b => {
+            if (!b.check_in || !b.check_out) return false;
+            return requestedCheckIn < parseISO(b.check_out) && coDate > parseISO(b.check_in);
+          });
+          hasConflict = !!conflictingBooking;
       } else {
-          hasConflict = propertyBookings.some(b => {
+          conflictingBooking = propertyBookings.find(b => {
               if (!b.check_in || !b.check_out) return false;
               return requestedCheckIn >= parseISO(b.check_in) && requestedCheckIn < parseISO(b.check_out);
           });
+          hasConflict = !!conflictingBooking;
       }
       
       if (hasConflict) {
@@ -248,8 +256,13 @@ export default function Search() {
                 if (options.length > 0) {
                     suggestion = {
                         message: hasConflict 
-                            ? "This property is already booked for these dates. The closest available dates are:"
-                            : "Check-in is not available on this specific day. The closest valid check-in dates are:",
+                            ? "This property is already booked for these dates."
+                            : "Check-in is not available on this specific day.",
+                        conflictDates: hasConflict && conflictingBooking ? {
+                            start: conflictingBooking.check_in,
+                            end: conflictingBooking.check_out
+                        } : null,
+                        suggestionLabel: "The closest available start dates are:",
                         options: options
                     };
                 }
