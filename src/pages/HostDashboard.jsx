@@ -54,6 +54,11 @@ export default function HostDashboard() {
     enabled: !!user?.id,
   });
 
+  const { data: cancellationPolicies = [] } = useQuery({
+    queryKey: ['cancellation-policies'],
+    queryFn: () => base44.entities.CancellationPolicy.list(),
+  });
+
   const today = new Date();
   const monthStart = startOfMonth(today);
   const monthEnd = endOfMonth(today);
@@ -357,6 +362,41 @@ export default function HostDashboard() {
                 </Link>
               </div>
             </motion.div>
+
+            {/* Cancellation Policies */}
+            {properties.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-4"
+              >
+                <h3 className="font-semibold text-gray-900">Cancellation Policies</h3>
+                <div className="space-y-3 max-h-64 overflow-y-auto">
+                  {properties.map(property => {
+                    const policy = cancellationPolicies.find(p => p.id === property.cancellation_policy_id);
+                    return (
+                      <div key={property.id} className="p-3 rounded-lg bg-gray-50 border border-gray-100">
+                        <p className="text-sm font-medium text-gray-900 mb-1">{property.title}</p>
+                        {policy ? (
+                          <>
+                            <p className="text-sm font-semibold text-teal-700 mb-1">{policy.policy_name}</p>
+                            <p className="text-xs text-gray-600 mb-2">{policy.description}</p>
+                            {policy.policy_name === "Super Strict" && (
+                              <p className="text-xs font-medium text-rose-600">⚠️ This policy may reduce booking conversions.</p>
+                            )}
+                          </>
+                        ) : (
+                          <p className="text-xs text-gray-500 italic">No policy assigned</p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <Link to={createPageUrl('HostCancellationPolicies')} className="text-teal-600 hover:text-teal-700 text-sm font-medium flex items-center gap-1">
+                  Edit Policies <ArrowRight className="w-4 h-4" />
+                </Link>
+              </motion.div>
+            )}
 
             {/* Subscription Status */}
             <motion.div
