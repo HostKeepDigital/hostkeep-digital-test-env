@@ -86,6 +86,7 @@ import PaymentPolicy from './pages/PaymentPolicy';
 import RefundPolicy from './pages/RefundPolicy';
 import TermsAndConditions from './pages/TermsAndConditions';
 import DisputePolicy from './pages/DisputePolicy';
+import HostTerms from './pages/HostTerms';
 import __Layout from './Layout.jsx';
 
 
@@ -129,6 +130,7 @@ export const PAGES = {
     "RefundPolicy": RefundPolicy,
     "TermsAndConditions": TermsAndConditions,
     "DisputePolicy": DisputePolicy,
+    "HostTerms": HostTerms,
 }
 
 export const pagesConfig = {
