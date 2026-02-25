@@ -39,8 +39,21 @@ export default function PropertyDetails() {
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showImageOverlay, setShowImageOverlay] = useState(false);
-  const [checkIn, setCheckIn] = useState(urlParams.get('checkIn') || "");
-  const [nights, setNights] = useState(urlParams.get('duration') || "");
+  
+  const [checkIn, setCheckIn] = useState(() => {
+    const dateParam = urlParams.get('checkIn');
+    if (!dateParam) return "";
+    const date = parseISO(dateParam);
+    return !isNaN(date.getTime()) ? dateParam : "";
+  });
+
+  const [nights, setNights] = useState(() => {
+    const durParam = urlParams.get('duration');
+    if (!durParam) return "";
+    const dur = parseInt(durParam);
+    return !isNaN(dur) && dur > 0 ? durParam : "";
+  });
+
   const [guestData, setGuestData] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     const adults = parseInt(params.get('adults')) || 1;
