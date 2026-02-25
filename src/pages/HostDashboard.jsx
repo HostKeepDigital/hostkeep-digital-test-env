@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Home, PoundSterling, Calendar, MessageSquare, Settings, Plus, 
-  TrendingUp, Users, Star, Eye, ArrowRight, Bell, Crown, X, AlertTriangle
+  TrendingUp, Users, Star, Eye, ArrowRight, Bell, Crown, X, AlertTriangle, ShieldAlert
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import StatsCard from "@/components/dashboard/StatsCard";
