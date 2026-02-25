@@ -247,7 +247,9 @@ export default function Search() {
 
                 if (options.length > 0) {
                     suggestion = {
-                        message: "That day isn’t available. The closest available start dates are:",
+                        message: hasConflict 
+                            ? "This property is already booked for these dates. The closest available dates are:"
+                            : "Check-in is not available on this specific day. The closest valid check-in dates are:",
                         options: options
                     };
                 }
