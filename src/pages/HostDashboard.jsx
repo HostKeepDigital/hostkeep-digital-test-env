@@ -387,7 +387,9 @@ export default function HostDashboard() {
                     </div>
                     {subscription.end_date && (
                       <div className="flex items-center justify-between pt-2 border-t border-gray-200">
-                        <span className="text-gray-600 text-sm">Renews</span>
+                        <span className="text-gray-600 text-sm">
+                          {subscription.status === 'cancelled' ? 'Expires on' : 'Renews'}
+                        </span>
                         <span className="text-sm font-medium">{format(parseISO(subscription.end_date), 'MMM d, yyyy')}</span>
                       </div>
                     )}

@@ -75,9 +75,9 @@ import Index from './pages/Index';
 import MyBookings from './pages/MyBookings';
 import MyTrips from './pages/MyTrips';
 import Pay from './pages/Pay';
-import Subscription from './pages/Subscription';
 import PropertyDetails from './pages/PropertyDetails';
 import Search from './pages/Search';
+import Subscription from './pages/Subscription';
 import __Layout from './Layout.jsx';
 
 
@@ -110,9 +110,9 @@ export const PAGES = {
     "MyBookings": MyBookings,
     "MyTrips": MyTrips,
     "Pay": Pay,
-    "Subscription": Subscription,
     "PropertyDetails": PropertyDetails,
     "Search": Search,
+    "Subscription": Subscription,
 }
 
 export const pagesConfig = {
