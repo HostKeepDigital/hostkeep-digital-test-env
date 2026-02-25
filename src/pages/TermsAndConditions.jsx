@@ -163,8 +163,15 @@ export default function TermsAndConditions() {
                   <p className="text-gray-700">
                     5.4 Subscription fees are non-refundable except as expressly stated in the Refund Policy.
                   </p>
-                </div>
-              </section>
+
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-3">5.5 Cooling-Off Waiver (Consumer Contracts Regulations 2013)</h3>
+                    <p className="text-gray-700">
+                      By subscribing and requesting immediate access to the Platform's digital services, you acknowledge and agree that you waive your right to a 14-day cooling-off period under the Consumer Contracts Regulations 2013. You confirm that you understand this waiver means you cannot cancel your subscription and claim a refund after requesting immediate access, even within 14 days of purchase.
+                    </p>
+                  </div>
+                  </div>
+                  </section>
 
               {/* 6. Payment Processing */}
               <section className="bg-white rounded-xl p-8 border border-gray-100">
