@@ -186,111 +186,69 @@ export default function Search() {
                 }
             } 
             else if (!isReqCheckInValid) {
-                // Case 2 & 3: Check-in invalid
+                // Case 2: Check-in invalid (Start Date Validation)
                 const options = [];
 
-                const getBestDurationForDate = (date) => {
-                     const validDurs = getValidDurationsForDate(date);
-                     if (validDurs.length === 0) return null;
-                     
-                     if (requestedDuration) {
-                        if (validDurs.includes(requestedDuration) && !checkBookingConflict(date, requestedDuration)) {
-                            return requestedDuration;
-                        }
-                        const availableValidDurs = validDurs.filter(dur => !checkBookingConflict(date, dur));
-                        if (availableValidDurs.length > 0) {
-                             availableValidDurs.sort((a, b) => Math.abs(a - requestedDuration) - Math.abs(b - requestedDuration));
-                             return availableValidDurs[0];
-                        }
-                     } else {
-                        const availableValidDurs = validDurs.filter(dur => !checkBookingConflict(date, dur));
-                        if (availableValidDurs.length > 0) {
-                            availableValidDurs.sort((a, b) => a - b);
-                            return availableValidDurs[0];
-                        }
-                     }
-                     return null;
+                // Helper to check if a specific date is blocked by an existing booking
+                // Does NOT check duration/end date, only if the start date itself is occupied
+                const isDateBlocked = (date) => {
+                    return propertyBookings.some(b => {
+                        if (!b.check_in || !b.check_out) return false;
+                        // Check if date falls within [check_in, check_out)
+                        return date >= parseISO(b.check_in) && date < parseISO(b.check_out);
+                    });
                 };
 
-                // Find closest previous valid date
+                const isValidCheckInDate = (date) => {
+                    if (isDateBlocked(date)) return false;
+                    const validDurs = getValidDurationsForDate(date);
+                    return validDurs.length > 0;
+                };
+
+                // Find nearest available day before
                 let prevDate = null;
                 for (let i = 1; i <= 14; i++) {
                     const testDate = addDays(requestedCheckIn, -i);
                     if (testDate < today) break;
-                    const bestDur = getBestDurationForDate(testDate);
-                    if (bestDur) {
-                        prevDate = { date: testDate, duration: bestDur, offset: i };
+                    if (isValidCheckInDate(testDate)) {
+                        prevDate = testDate;
                         break; 
                     }
                 }
 
-                // Find closest next valid date
+                // Find nearest available day after
                 let nextDate = null;
                 for (let i = 1; i <= 14; i++) {
                     const testDate = addDays(requestedCheckIn, i);
-                    const bestDur = getBestDurationForDate(testDate);
-                    if (bestDur) {
-                         nextDate = { date: testDate, duration: bestDur, offset: i };
+                    if (isValidCheckInDate(testDate)) {
+                         nextDate = testDate;
                          break;
                     }
                 }
 
                 if (prevDate) {
                      options.push({
-                        checkIn: format(prevDate.date, 'yyyy-MM-dd'),
-                        duration: prevDate.duration,
-                        label: `${format(prevDate.date, 'EEEE do')} for ${prevDate.duration} nights`,
-                        offset: prevDate.offset
+                        checkIn: format(prevDate, 'yyyy-MM-dd'),
+                        label: format(prevDate, 'EEEE do'),
+                        // No duration
                     });
                 }
                 
                 if (nextDate) {
                      options.push({
-                        checkIn: format(nextDate.date, 'yyyy-MM-dd'),
-                        duration: nextDate.duration,
-                        label: `${format(nextDate.date, 'EEEE do')} for ${nextDate.duration} nights`,
-                        offset: nextDate.offset
+                        checkIn: format(nextDate, 'yyyy-MM-dd'),
+                        label: format(nextDate, 'EEEE do'),
+                        // No duration
                     });
                 }
-
-                // If we only found one, try to find the next closest in that direction to have 2 options
-                if (options.length < 2) {
-                    const direction = prevDate ? -1 : 1;
-                    const startOffset = prevDate ? prevDate.offset + 1 : (nextDate ? nextDate.offset + 1 : 1);
-                    
-                    for (let i = startOffset; i <= 14; i++) {
-                        const testDate = addDays(requestedCheckIn, i * direction);
-                        if (direction === -1 && testDate < today) break;
-                        
-                        const bestDur = getBestDurationForDate(testDate);
-                        if (bestDur) {
-                             options.push({
-                                checkIn: format(testDate, 'yyyy-MM-dd'),
-                                duration: bestDur,
-                                label: `${format(testDate, 'EEEE do')} for ${bestDur} nights`,
-                                offset: i
-                            });
-                            if (options.length >= 2) break;
-                        }
-                    }
-                }
                 
+                // Sort by date
                 options.sort((a, b) => new Date(a.checkIn) - new Date(b.checkIn));
-
-                let allowedCheckInDays = [];
-                dayNames.forEach(day => {
-                    const rule = property.booking_rules[day];
-                    if (rule && rule.enabled !== false) allowedCheckInDays.push(day);
-                });
-                const capitalizedDays = allowedCheckInDays.map(d => d.charAt(0).toUpperCase() + d.slice(1));
-                let daysString = capitalizedDays.length > 1 
-                  ? capitalizedDays.slice(0, -1).join(', ') + ' and ' + capitalizedDays[capitalizedDays.length - 1]
-                  : capitalizedDays[0] || "";
 
                 if (options.length > 0) {
                     suggestion = {
-                        message: `This property welcomes check-ins on ${daysString}. Here are the closest available options:`,
-                        options: options.slice(0, 4)
+                        message: "That day isn’t available. The closest available start dates are:",
+                        options: options
                     };
                 }
             }
