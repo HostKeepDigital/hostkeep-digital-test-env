@@ -11,7 +11,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Search as SearchIcon, MapPin, Calendar, Users, SlidersHorizontal, X } from "lucide-react";
 import PropertyCard from "@/components/properties/PropertyCard";
-import { format, parseISO, addDays } from "date-fns";
+import { format, parseISO, addDays, getDay } from "date-fns";
 import BookingCalendar from "@/components/shared/BookingCalendar";
 import GuestSelector from "@/components/search/GuestSelector";
 
