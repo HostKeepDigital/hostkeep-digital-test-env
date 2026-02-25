@@ -54,6 +54,11 @@ export default function CreateProperty() {
   const formContentRef = useState(null);
   const queryClient = useQueryClient();
 
+  const { data: policies } = useQuery({
+    queryKey: ['cancellation-policies'],
+    queryFn: () => base44.entities.CancellationPolicy.list()
+  });
+
   const [titleError, setTitleError] = useState("");
 
   const validateTitle = (value) => {
@@ -104,6 +109,8 @@ export default function CreateProperty() {
     check_out_time: "10:00",
     day_based_restrictions_enabled: false,
     booking_rules: {},
+    cancellation_policy_id: "",
+    cleaning_fee_refundable: true,
     pricing_settings: {
       base_rate: 100,
       price_rounding: null,

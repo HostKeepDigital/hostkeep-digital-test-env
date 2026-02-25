@@ -78,6 +78,7 @@ import Pay from './pages/Pay';
 import PropertyDetails from './pages/PropertyDetails';
 import Search from './pages/Search';
 import Subscription from './pages/Subscription';
+import HostCancellationPolicies from './pages/HostCancellationPolicies';
 import __Layout from './Layout.jsx';
 
 
@@ -113,6 +114,7 @@ export const PAGES = {
     "PropertyDetails": PropertyDetails,
     "Search": Search,
     "Subscription": Subscription,
+    "HostCancellationPolicies": HostCancellationPolicies,
 }
 
 export const pagesConfig = {
