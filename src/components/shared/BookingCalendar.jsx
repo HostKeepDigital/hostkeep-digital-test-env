@@ -3,7 +3,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "lucide-react";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, addDays, startOfDay } from "date-fns";
 
 export default function BookingCalendar({
   label,
@@ -37,8 +37,11 @@ export default function BookingCalendar({
             mode="single"
             selected={value ? (typeof value === 'string' ? parseISO(value) : value) : undefined}
             onSelect={handleSelect}
-            disabled={disabled}
-            fromDate={new Date()}
+            disabled={[
+              { before: startOfDay(addDays(new Date(), 1)) },
+              ...(Array.isArray(disabled) ? disabled : disabled ? [disabled] : [])
+            ]}
+            fromDate={startOfDay(addDays(new Date(), 1))}
             modifiers={{ booked: bookedDates }}
             modifiersStyles={{
               booked: { 
