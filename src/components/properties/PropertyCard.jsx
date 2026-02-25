@@ -15,34 +15,19 @@ const AMENITY_ICONS = {
   "Kitchen": ChefHat,
 };
 
-export default function PropertyCard({ property, onSave, isAvailable = true, unavailableReason, filters = {} }) {
+export default function PropertyCard({ property, onSave, isAvailable = true, unavailableReason }) {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
-
-  const getCardUrl = () => {
-    const params = new URLSearchParams();
-    params.set('id', property.id);
-    if (filters?.checkIn) params.set('checkIn', filters.checkIn);
-    if (filters?.duration) params.set('duration', filters.duration);
-    if (filters?.adults) params.set('adults', filters.adults.toString());
-    if (filters?.children) params.set('children', filters.children.toString());
-    if (filters?.childAges?.length > 0) params.set('childrenAges', filters.childAges.join(','));
-    return createPageUrl('PropertyDetails') + `?${params.toString()}`;
-  };
 
   const handleSuggestionClick = (e, targetCheckIn, targetDuration) => {
     e.preventDefault();
     e.stopPropagation();
     
-    const params = new URLSearchParams();
-    params.set('id', property.id);
+    const params = new URLSearchParams(window.location.search);
     if (targetCheckIn) params.set('checkIn', targetCheckIn);
     if (targetDuration) params.set('duration', targetDuration.toString());
-    if (filters?.adults) params.set('adults', filters.adults.toString());
-    if (filters?.children) params.set('children', filters.children.toString());
-    if (filters?.childAges?.length > 0) params.set('childrenAges', filters.childAges.join(','));
     
-    const url = createPageUrl('PropertyDetails') + `?${params.toString()}`;
+    const url = createPageUrl('PropertyDetails') + `?id=${property.id}&${params.toString()}`;
     navigate(url);
   };
   
@@ -113,7 +98,7 @@ export default function PropertyCard({ property, onSave, isAvailable = true, una
   
   return (
     <Link 
-      to={getCardUrl()}
+      to={createPageUrl('PropertyDetails') + `?id=${property.id}`}
       onClick={(e) => {
         if (!isAvailable) e.preventDefault();
       }}
