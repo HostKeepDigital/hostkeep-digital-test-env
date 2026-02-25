@@ -30,7 +30,6 @@ export default function PropertyCard({ property, onSave, isAvailable = true, una
     navigate(url);
   };
   
-  const isCompletelyUnavailable = !isAvailable && !property.suggestion;
   const queryClient = useQueryClient();
   const mainPhoto = property.photos?.[0] || "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600";
 
