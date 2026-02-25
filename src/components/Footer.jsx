@@ -16,19 +16,22 @@ export default function Footer() {
           </div>
           
           <div className="flex flex-wrap justify-center gap-6 text-sm">
-            <Link to={createPageUrl("Home")} className="hover:text-white transition-colors">
+             <Link to={createPageUrl("Home")} className="hover:text-white transition-colors">
               Home
-            </Link>
-            <Link to={createPageUrl("Search")} className="hover:text-white transition-colors">
+             </Link>
+             <Link to={createPageUrl("Search")} className="hover:text-white transition-colors">
               Browse Properties
-            </Link>
-            <Link to={createPageUrl("AboutUs")} className="hover:text-white transition-colors">
+             </Link>
+             <Link to={createPageUrl("AboutUs")} className="hover:text-white transition-colors">
               About Us
-            </Link>
-            <Link to={createPageUrl("Subscription")} className="hover:text-white transition-colors">
+             </Link>
+             <Link to={createPageUrl("Subscription")} className="hover:text-white transition-colors">
               Pricing
-            </Link>
-          </div>
+             </Link>
+             <Link to={createPageUrl("LegalCentre")} className="hover:text-white transition-colors">
+              Legal
+             </Link>
+           </div>
           
           <p className="text-sm">
             © {new Date().getFullYear()} HostKeep. All rights reserved.
