@@ -85,6 +85,7 @@ import CookiePolicy from './pages/CookiePolicy';
 import PaymentPolicy from './pages/PaymentPolicy';
 import RefundPolicy from './pages/RefundPolicy';
 import TermsAndConditions from './pages/TermsAndConditions';
+import DisputePolicy from './pages/DisputePolicy';
 import __Layout from './Layout.jsx';
 
 
@@ -127,6 +128,7 @@ export const PAGES = {
     "PaymentPolicy": PaymentPolicy,
     "RefundPolicy": RefundPolicy,
     "TermsAndConditions": TermsAndConditions,
+    "DisputePolicy": DisputePolicy,
 }
 
 export const pagesConfig = {
