@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Home, PoundSterling, Calendar, MessageSquare, Settings, Plus, 
-  TrendingUp, Users, Star, Eye, ArrowRight, Bell, Crown, X, AlertTriangle, ShieldAlert
+  TrendingUp, Users, Star, Eye, ArrowRight, Bell, Crown, X, AlertTriangle
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import StatsCard from "@/components/dashboard/StatsCard";
@@ -354,10 +354,6 @@ export default function HostDashboard() {
                 <Link to={createPageUrl('HostSettings')} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors">
                   <Settings className="w-5 h-5 text-teal-600" />
                   <span className="text-gray-700">Settings</span>
-                </Link>
-                <Link to={createPageUrl('HostCancellationPolicies')} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors">
-                  <ShieldAlert className="w-5 h-5 text-teal-600" />
-                  <span className="text-gray-700">Cancellation Policies</span>
                 </Link>
               </div>
             </motion.div>
