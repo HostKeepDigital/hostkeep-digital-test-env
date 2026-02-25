@@ -234,21 +234,25 @@ export default function Search() {
                     }
                 }
 
-                if (prevDate) {
-                     options.push({
-                        checkIn: format(prevDate, 'yyyy-MM-dd'),
-                        label: format(prevDate, 'EEEE do MMM yyyy'),
-                        // No duration
+                const addOptionForDate = (date) => {
+                    let dur = null;
+                    let label = format(date, 'EEEE do MMM yyyy');
+                    if (requestedDuration) {
+                        const validDurs = getValidDurationsForDate(date).filter(d => !checkBookingConflict(date, d));
+                        if (validDurs.length > 0) {
+                            dur = validDurs.reduce((prev, curr) => Math.abs(curr - requestedDuration) < Math.abs(prev - requestedDuration) ? curr : prev);
+                            label += ` - ${dur} night${dur > 1 ? 's' : ''}`;
+                        }
+                    }
+                    options.push({
+                        checkIn: format(date, 'yyyy-MM-dd'),
+                        duration: dur,
+                        label: label
                     });
-                }
-                
-                if (nextDate) {
-                     options.push({
-                        checkIn: format(nextDate, 'yyyy-MM-dd'),
-                        label: format(nextDate, 'EEEE do MMM yyyy'),
-                        // No duration
-                    });
-                }
+                };
+
+                if (prevDate) addOptionForDate(prevDate);
+                if (nextDate) addOptionForDate(nextDate);
                 
                 // Sort by date
                 options.sort((a, b) => new Date(a.checkIn) - new Date(b.checkIn));
