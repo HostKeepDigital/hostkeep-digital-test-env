@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Badge } from "@/components/ui/badge";
 import { Star, MapPin, Users, Bed, Heart, Wifi, Car, Waves, ChefHat } from "lucide-react";
