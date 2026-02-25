@@ -237,15 +237,20 @@ export default function Search() {
                 const addOptionForDate = (date) => {
                     let dur = null;
                     let label = format(date, 'EEEE do MMM yyyy');
+
+                    // Check if there are ANY valid durations for this date that don't conflict with existing bookings
+                    const validDurs = getValidDurationsForDate(date);
+                    const bookableDurs = validDurs.filter(d => !checkBookingConflict(date, d));
+                    
+                    if (bookableDurs.length === 0) {
+                        // No valid duration available for this date that doesn't conflict
+                        return;
+                    }
+
                     if (requestedDuration) {
-                        const validDurs = getValidDurationsForDate(date).filter(d => !checkBookingConflict(date, d));
-                        if (validDurs.length > 0) {
-                            dur = validDurs.reduce((prev, curr) => Math.abs(curr - requestedDuration) < Math.abs(prev - requestedDuration) ? curr : prev);
-                            label += ` - ${dur} night${dur > 1 ? 's' : ''}`;
-                        } else {
-                            // If user requested a duration but this date supports none (due to restrictions or conflicts), skip it
-                            return;
-                        }
+                        // Find closest valid duration
+                        dur = bookableDurs.reduce((prev, curr) => Math.abs(curr - requestedDuration) < Math.abs(prev - requestedDuration) ? curr : prev);
+                        label += ` - ${dur} night${dur > 1 ? 's' : ''}`;
                     }
                     
                     options.push({
