@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Info, Edit, X, Calendar as CalendarIcon, MessageSquare, CreditCard, CheckCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, Info, Edit, X, Calendar as CalendarIcon, MessageSquare, CreditCard, CheckCircle, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isBefore, startOfDay, differenceInDays, startOfWeek, endOfWeek, parseISO, addMonths, subMonths } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -171,6 +171,24 @@ export default function BookingCalendar({ bookings = [], properties = [] }) {
     );
   };
 
+  const getDeadPropertiesForDate = (date) => {
+    const dayName = format(date, 'EEEE').toLowerCase();
+    return properties.filter(p => {
+      if (!p.day_based_restrictions_enabled || !p.booking_rules) return false;
+      const rule = p.booking_rules[dayName];
+      if (!rule || !rule.enabled) return false;
+      const type = rule.rule_type || 'any';
+      if (['fixed', 'fixed_or_multiples', 'multiples'].includes(type)) {
+         const hasFixed = rule.fixed_values && Array.isArray(rule.fixed_values) && rule.fixed_values.length > 0;
+         const hasMultiples = rule.multiple_of && (Array.isArray(rule.multiple_of) ? rule.multiple_of.some(m=>m>0) : rule.multiple_of > 0);
+         if (type === 'fixed') return !hasFixed;
+         if (type === 'multiples') return !hasMultiples;
+         return !(hasFixed || hasMultiples);
+      }
+      return false;
+    });
+  };
+
   const weeks = [];
   let currentWeek = [];
   days.forEach((day) => {
@@ -273,6 +291,7 @@ export default function BookingCalendar({ bookings = [], properties = [] }) {
                   {week.map(day => {
                     const isCurrentMonth = day.getMonth() === currentMonth.getMonth();
                     const isToday = isSameDay(day, new Date());
+                    const deadProps = getDeadPropertiesForDate(day);
                     
                     return (
                       <div 
@@ -283,8 +302,28 @@ export default function BookingCalendar({ bookings = [], properties = [] }) {
                           ${isToday ? 'bg-teal-50/20' : ''}
                         `}
                       >
-                        <div className={`text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full ${isToday ? 'text-white bg-teal-600' : 'text-gray-600'}`}>
-                          {format(day, "d")}
+                        <div className="flex justify-between items-start">
+                          <div className={`text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full ${isToday ? 'text-white bg-teal-600' : 'text-gray-600'}`}>
+                            {format(day, "d")}
+                          </div>
+                          {deadProps.length > 0 && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="cursor-help">
+                                  <AlertTriangle className="w-3.5 h-3.5 text-red-500 opacity-70 hover:opacity-100" />
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <div className="space-y-1">
+                                  <p className="font-semibold text-red-600 text-xs">Unbookable Configuration</p>
+                                  <p className="text-[10px] text-gray-500">No valid durations for:</p>
+                                  <ul className="list-disc pl-3 text-[10px] text-gray-600">
+                                    {deadProps.map(p => <li key={p.id}>{p.title}</li>)}
+                                  </ul>
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
                         </div>
                       </div>
                     );
