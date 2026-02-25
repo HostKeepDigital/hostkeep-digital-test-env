@@ -230,12 +230,9 @@ export default function PropertyCard({ property, onSave, isAvailable = true, una
                     <button
                       key={idx}
                       onClick={(e) => handleSuggestionClick(e, opt.checkIn, opt.duration)}
-                      className="bg-white border border-amber-200 hover:bg-amber-50 text-amber-900 px-3 py-2 rounded shadow-sm font-medium transition-colors text-left text-xs"
+                      className="bg-white border border-amber-200 hover:bg-amber-50 text-amber-900 px-2 py-1.5 rounded shadow-sm font-medium transition-colors text-left"
                     >
-                      <span className="block mb-0.5">{format(parseISO(opt.checkIn), "EEE do MMM yyyy")}</span>
-                      {opt.duration && (
-                        <span className="block text-amber-800/80">{opt.duration} nights</span>
-                      )}
+                      {opt.label}
                     </button>
                   ))}
                 </div>
