@@ -86,14 +86,14 @@ export default function Search() {
     let unavailableReason = null;
     let suggestion = null;
     
-    if (filters.checkIn && filters.duration) {
+    if (filters.checkIn) {
       const requestedCheckIn = parseISO(filters.checkIn);
-      const requestedDuration = parseInt(filters.duration);
-      const requestedCheckOut = addDays(requestedCheckIn, requestedDuration);
+      const requestedDuration = filters.duration ? parseInt(filters.duration) : null;
       
       const propertyBookings = activeBookings.filter(b => b.property_id === property.id);
       
       const checkBookingConflict = (checkInDate, duration) => {
+        if (!duration) return false;
         const coDate = addDays(checkInDate, duration);
         return propertyBookings.some(b => {
           if (!b.check_in || !b.check_out) return false;
@@ -101,7 +101,15 @@ export default function Search() {
         });
       };
 
-      const hasConflict = checkBookingConflict(requestedCheckIn, requestedDuration);
+      let hasConflict = false;
+      if (requestedDuration) {
+          hasConflict = checkBookingConflict(requestedCheckIn, requestedDuration);
+      } else {
+          hasConflict = propertyBookings.some(b => {
+              if (!b.check_in || !b.check_out) return false;
+              return requestedCheckIn >= parseISO(b.check_in) && requestedCheckIn < parseISO(b.check_out);
+          });
+      }
       
       if (hasConflict) {
         isAvailable = false;
@@ -140,13 +148,13 @@ export default function Search() {
 
         const reqValidDurations = getValidDurationsForDate(requestedCheckIn);
         const isReqCheckInValid = reqValidDurations.length > 0;
-        const isReqDurationValid = reqValidDurations.includes(requestedDuration);
+        const isReqDurationValid = requestedDuration ? reqValidDurations.includes(requestedDuration) : true;
 
         if (!isReqCheckInValid || !isReqDurationValid) {
             isAvailable = false;
             unavailableReason = "Not available for selected dates";
             
-            if (isReqCheckInValid && !isReqDurationValid) {
+            if (isReqCheckInValid && !isReqDurationValid && requestedDuration) {
                 // Case 1: Check-in valid, duration invalid
                 const closestDurations = reqValidDurations
                     .filter(dur => !checkBookingConflict(requestedCheckIn, dur))
@@ -177,12 +185,20 @@ export default function Search() {
                     if (validDurs.length === 0) continue;
 
                     let bestDuration = null;
-                    if (validDurs.includes(requestedDuration) && !checkBookingConflict(testDate, requestedDuration)) {
-                        bestDuration = requestedDuration;
+                    if (requestedDuration) {
+                        if (validDurs.includes(requestedDuration) && !checkBookingConflict(testDate, requestedDuration)) {
+                            bestDuration = requestedDuration;
+                        } else {
+                            const availableValidDurs = validDurs.filter(dur => !checkBookingConflict(testDate, dur));
+                            if (availableValidDurs.length > 0) {
+                                availableValidDurs.sort((a, b) => Math.abs(a - requestedDuration) - Math.abs(b - requestedDuration));
+                                bestDuration = availableValidDurs[0];
+                            }
+                        }
                     } else {
                         const availableValidDurs = validDurs.filter(dur => !checkBookingConflict(testDate, dur));
                         if (availableValidDurs.length > 0) {
-                            availableValidDurs.sort((a, b) => Math.abs(a - requestedDuration) - Math.abs(b - requestedDuration));
+                            availableValidDurs.sort((a, b) => a - b);
                             bestDuration = availableValidDurs[0];
                         }
                     }
