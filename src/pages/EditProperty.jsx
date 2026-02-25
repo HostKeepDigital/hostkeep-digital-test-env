@@ -48,6 +48,11 @@ export default function EditProperty() {
   const [originalData, setOriginalData] = useState(null);
   const [uploadedFileIdentifiers, setUploadedFileIdentifiers] = useState([]);
 
+  const { data: policies } = useQuery({
+    queryKey: ['cancellation-policies'],
+    queryFn: () => base44.entities.CancellationPolicy.list()
+  });
+
   const { data: property, isLoading } = useQuery({
     queryKey: ['property', propertyId],
     queryFn: async () => {
@@ -90,6 +95,8 @@ export default function EditProperty() {
         check_out_time: property.check_out_time || "10:00",
         day_based_restrictions_enabled: property.day_based_restrictions_enabled || false,
         booking_rules: property.booking_rules || {},
+        cancellation_policy_id: property.cancellation_policy_id || "",
+        cleaning_fee_refundable: property.cleaning_fee_refundable !== false,
         pricing_settings: property.pricing_settings || {
           base_rate: property.nightly_rate || 100,
           price_rounding: null,
@@ -173,6 +180,8 @@ export default function EditProperty() {
       check_out_time: "Check-out Time",
       day_based_restrictions_enabled: "Day-based Restrictions",
       booking_rules: "Booking Rules",
+      cancellation_policy_id: "Cancellation Policy",
+      cleaning_fee_refundable: "Cleaning Fee Refundable",
       pricing_settings: "Pricing Settings",
       status: "Status"
     };
@@ -689,16 +698,68 @@ export default function EditProperty() {
           </TabsContent>
 
           <TabsContent value="booking-rules">
-            <DayBasedBookingRules
-              value={{
-                enabled: formData.day_based_restrictions_enabled,
-                rules: formData.booking_rules
-              }}
-              onChange={(data) => {
-                handleChange("day_based_restrictions_enabled", data.enabled);
-                handleChange("booking_rules", data.rules);
-              }}
-            />
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Cancellation Policy</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div>
+                    <Label>Policy Type</Label>
+                    <Select 
+                      value={formData.cancellation_policy_id} 
+                      onValueChange={(val) => {
+                        const policy = policies?.find(p => p.id === val);
+                        const isStrict = policy?.policy_name?.includes("Strict");
+                        setFormData(prev => ({
+                          ...prev,
+                          cancellation_policy_id: val,
+                          cleaning_fee_refundable: !isStrict
+                        }));
+                      }}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select a policy..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {policies?.map(p => (
+                          <SelectItem key={p.id} value={p.id}>{p.policy_name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {formData.cancellation_policy_id && (
+                      <div className="mt-3 p-4 bg-gray-50 rounded-lg text-sm text-gray-700">
+                        {policies?.find(p => p.id === formData.cancellation_policy_id)?.description}
+                      </div>
+                    )}
+                    {policies?.find(p => p.id === formData.cancellation_policy_id)?.policy_name === "Super Strict" && (
+                      <div className="mt-2 text-sm text-rose-600 font-medium">
+                        Warning: This policy may reduce booking conversions.
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Checkbox 
+                      checked={formData.cleaning_fee_refundable} 
+                      onCheckedChange={(val) => handleChange("cleaning_fee_refundable", val)}
+                      id="clean-refund-edit"
+                    />
+                    <Label htmlFor="clean-refund-edit" className="font-normal cursor-pointer">Refund cleaning fee if guest cancels before check-in</Label>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <DayBasedBookingRules
+                value={{
+                  enabled: formData.day_based_restrictions_enabled,
+                  rules: formData.booking_rules
+                }}
+                onChange={(data) => {
+                  handleChange("day_based_restrictions_enabled", data.enabled);
+                  handleChange("booking_rules", data.rules);
+                }}
+              />
+            </div>
           </TabsContent>
         </Tabs>
       </div>

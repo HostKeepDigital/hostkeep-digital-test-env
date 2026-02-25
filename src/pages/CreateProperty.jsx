@@ -266,7 +266,7 @@ export default function CreateProperty() {
       case 3: return formData.location.street?.trim() && formData.location.town_city?.trim() && formData.location.postcode?.trim();
       case 4: return formData.photos.length >= 5 && getDuplicatePhotos().length === 0;
       case 5: return formData.nightly_rate > 0;
-      case 6: return true; // Booking rules are optional
+      case 6: return !!formData.cancellation_policy_id; // Cancellation policy is required
       default: return true;
     }
   };
@@ -678,16 +678,69 @@ export default function CreateProperty() {
 
             {/* Step 6: Booking Rules */}
             {currentStep === 6 && (
-              <DayBasedBookingRules
-                value={{
-                  enabled: formData.day_based_restrictions_enabled,
-                  rules: formData.booking_rules
-                }}
-                onChange={(data) => {
-                  handleChange("day_based_restrictions_enabled", data.enabled);
-                  handleChange("booking_rules", data.rules);
-                }}
-              />
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Cancellation Policy</CardTitle>
+                    <CardDescription>Select the cancellation policy for this property.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div>
+                      <Label>Policy Type</Label>
+                      <Select 
+                        value={formData.cancellation_policy_id} 
+                        onValueChange={(val) => {
+                          const policy = policies?.find(p => p.id === val);
+                          const isStrict = policy?.policy_name?.includes("Strict");
+                          setFormData(prev => ({
+                            ...prev,
+                            cancellation_policy_id: val,
+                            cleaning_fee_refundable: !isStrict
+                          }));
+                        }}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue placeholder="Select a policy..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {policies?.map(p => (
+                            <SelectItem key={p.id} value={p.id}>{p.policy_name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {formData.cancellation_policy_id && (
+                        <div className="mt-3 p-4 bg-gray-50 rounded-lg text-sm text-gray-700">
+                          {policies?.find(p => p.id === formData.cancellation_policy_id)?.description}
+                        </div>
+                      )}
+                      {policies?.find(p => p.id === formData.cancellation_policy_id)?.policy_name === "Super Strict" && (
+                        <div className="mt-2 text-sm text-rose-600 font-medium">
+                          Warning: This policy may reduce booking conversions.
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Checkbox 
+                        checked={formData.cleaning_fee_refundable} 
+                        onCheckedChange={(val) => handleChange("cleaning_fee_refundable", val)}
+                        id="clean-refund-new"
+                      />
+                      <Label htmlFor="clean-refund-new" className="font-normal cursor-pointer">Refund cleaning fee if guest cancels before check-in</Label>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <DayBasedBookingRules
+                  value={{
+                    enabled: formData.day_based_restrictions_enabled,
+                    rules: formData.booking_rules
+                  }}
+                  onChange={(data) => {
+                    handleChange("day_based_restrictions_enabled", data.enabled);
+                    handleChange("booking_rules", data.rules);
+                  }}
+                />
+              </div>
             )}
           </motion.div>
         </AnimatePresence>

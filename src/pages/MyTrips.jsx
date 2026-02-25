@@ -15,11 +15,13 @@ import ReviewForm from "@/components/reviews/ReviewForm";
 import RaiseQuestionModal from "@/components/messaging/RaiseQuestionModal";
 import { Card, CardContent } from "@/components/ui/card";
 import { MessageSquare } from "lucide-react";
+import CancelBookingModal from "@/components/bookings/CancelBookingModal";
 
 export default function MyTrips() {
   const [user, setUser] = useState(null);
   const [reviewBooking, setReviewBooking] = useState(null);
   const [questionBooking, setQuestionBooking] = useState(null);
+  const [cancelBooking, setCancelBooking] = useState(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -218,6 +220,7 @@ export default function MyTrips() {
     const property = getProperty(booking.property_id);
     const reviewed = hasReviewed(booking.id);
     const showReviewButton = canReview(booking);
+    const canCancel = ["awaiting_decision", "awaiting_payment", "confirmed"].includes(booking.booking_status);
 
     return (
       <motion.div
@@ -259,6 +262,16 @@ export default function MyTrips() {
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap">
+                  {canCancel && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setCancelBooking(booking)}
+                      className="text-rose-600 border-rose-200 hover:bg-rose-50"
+                    >
+                      Cancel
+                    </Button>
+                  )}
                   <Link to={createPageUrl("PropertyDetails") + `?id=${booking.property_id}`}>
                     <Button variant="outline" size="sm">
                       Manage Booking
@@ -373,6 +386,15 @@ export default function MyTrips() {
             reviewType="guest_to_host"
             reviewerName={user?.full_name}
             reviewerId={user?.id}
+          />
+        )}
+
+        {cancelBooking && (
+          <CancelBookingModal
+            booking={cancelBooking}
+            open={!!cancelBooking}
+            onOpenChange={(open) => !open && setCancelBooking(null)}
+            user={user}
           />
         )}
       </div>

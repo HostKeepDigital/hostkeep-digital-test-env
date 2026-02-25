@@ -91,6 +91,7 @@ export default function Layout({ children, currentPageName }) {
       { name: "Properties", icon: Building2, page: "HostProperties" },
       { name: "Bookings", icon: Calendar, page: "HostBookings" },
       { name: "Messages", icon: MessageSquare, page: "HostMessages" },
+      { name: "Cancellation Policies", icon: Shield, page: "HostCancellationPolicies" },
       { name: "Settings", icon: Settings, page: "HostSettings" },
     ];
 
