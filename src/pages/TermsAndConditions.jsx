@@ -306,8 +306,18 @@ export default function TermsAndConditions() {
                   <p className="text-gray-700">
                     9.3 HostKeep may suspend or terminate accounts for serious or repeated breaches.
                   </p>
-                </div>
-              </section>
+
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-3">9.4 User Content Licence</h3>
+                    <p className="text-gray-700">
+                      By uploading, posting, or submitting content to the Platform (including but not limited to property listings, photographs, descriptions, messages, and reviews), Users grant HostKeep a non-exclusive, worldwide, royalty-free, perpetual licence to host, display, reproduce, distribute, and use such content solely for the purpose of operating, maintaining, promoting, and improving the Platform.
+                    </p>
+                    <p className="text-gray-700 mt-3">
+                      Users retain ownership of their content and may request removal at any time, subject to legal retention requirements.
+                    </p>
+                  </div>
+                  </div>
+                  </section>
 
               {/* 10. Liability Exclusions */}
               <section className="bg-white rounded-xl p-8 border border-gray-100">
