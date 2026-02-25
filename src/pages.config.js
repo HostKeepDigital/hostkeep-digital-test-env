@@ -80,6 +80,7 @@ import PropertyDetails from './pages/PropertyDetails';
 import Search from './pages/Search';
 import Subscription from './pages/Subscription';
 import LegalCentre from './pages/LegalCentre';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 import __Layout from './Layout.jsx';
 
 
@@ -117,6 +118,7 @@ export const PAGES = {
     "Search": Search,
     "Subscription": Subscription,
     "LegalCentre": LegalCentre,
+    "PrivacyPolicy": PrivacyPolicy,
 }
 
 export const pagesConfig = {
