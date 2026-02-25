@@ -116,7 +116,7 @@ export default function Search() {
         unavailableReason = "Not available for selected dates";
       }
 
-      if (isAvailable && property.day_based_restrictions_enabled && property.booking_rules) {
+      if (property.day_based_restrictions_enabled && property.booking_rules) {
         const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
         const today = new Date();
         today.setHours(0,0,0,0);
@@ -150,11 +150,11 @@ export default function Search() {
         const isReqCheckInValid = reqValidDurations.length > 0;
         const isReqDurationValid = requestedDuration ? reqValidDurations.includes(requestedDuration) : true;
 
-        if (!isReqCheckInValid || !isReqDurationValid) {
+        if (!isAvailable || !isReqCheckInValid || !isReqDurationValid) {
             isAvailable = false;
-            unavailableReason = "Not available for selected dates";
+            if (!unavailableReason) unavailableReason = "Not available for selected dates";
             
-            if (isReqCheckInValid && !isReqDurationValid && requestedDuration) {
+            if (isReqCheckInValid && !isReqDurationValid && requestedDuration && !hasConflict) {
                 // Case 1: Check-in valid, duration invalid
                 const validWithoutConflict = reqValidDurations.filter(dur => !checkBookingConflict(requestedCheckIn, dur));
                 
@@ -185,8 +185,8 @@ export default function Search() {
                     };
                 }
             } 
-            else if (!isReqCheckInValid) {
-                // Case 2: Check-in invalid (Start Date Validation)
+            else {
+                // Case 2: Check-in invalid or Booked (Start Date Validation)
                 const options = [];
 
                 // Helper to check if a specific date is blocked by an existing booking

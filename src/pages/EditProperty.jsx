@@ -110,6 +110,7 @@ export default function EditProperty() {
       toast.success("Property updated successfully!");
       setOriginalData(prev => ({ ...prev, ...variables }));
       queryClient.invalidateQueries({ queryKey: ['property', propertyId] });
+      queryClient.invalidateQueries({ queryKey: ['properties'] });
     },
   });
 

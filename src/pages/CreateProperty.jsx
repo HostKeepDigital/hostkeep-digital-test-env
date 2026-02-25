@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -52,6 +52,7 @@ export default function CreateProperty() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isUploading, setIsUploading] = useState(false);
   const formContentRef = useState(null);
+  const queryClient = useQueryClient();
 
   const [titleError, setTitleError] = useState("");
 
@@ -145,6 +146,7 @@ export default function CreateProperty() {
       return property;
     },
     onSuccess: (property) => {
+      queryClient.invalidateQueries({ queryKey: ['properties'] });
       toast.success("Property created successfully! You're now a host.");
       setTimeout(() => {
         window.location.href = createPageUrl('HostProperties');
