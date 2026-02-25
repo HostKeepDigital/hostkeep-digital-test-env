@@ -81,6 +81,7 @@ import Search from './pages/Search';
 import Subscription from './pages/Subscription';
 import LegalCentre from './pages/LegalCentre';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import CookiePolicy from './pages/CookiePolicy';
 import __Layout from './Layout.jsx';
 
 
@@ -119,6 +120,7 @@ export const PAGES = {
     "Subscription": Subscription,
     "LegalCentre": LegalCentre,
     "PrivacyPolicy": PrivacyPolicy,
+    "CookiePolicy": CookiePolicy,
 }
 
 export const pagesConfig = {
