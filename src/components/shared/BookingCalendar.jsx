@@ -38,6 +38,7 @@ export default function BookingCalendar({
             selected={value ? (typeof value === 'string' ? parseISO(value) : value) : undefined}
             onSelect={handleSelect}
             disabled={disabled}
+            fromDate={new Date()}
             modifiers={{ booked: bookedDates }}
             modifiersStyles={{
               booked: { 
