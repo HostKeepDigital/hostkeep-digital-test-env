@@ -210,7 +210,7 @@ export default function PropertyCard({ property, onSave, isAvailable = true, una
                   ))}
                 </div>
              ) : (
-                <p className="text-amber-700/80">No available dates within ±3 days.</p>
+                <p className="text-amber-700/80">No available dates nearby.</p>
              )}
           </div>
         )}
