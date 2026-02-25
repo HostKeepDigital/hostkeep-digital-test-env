@@ -107,7 +107,7 @@ export default function PropertyCard({ property, onSave, isAvailable = true, una
         whileHover={isAvailable ? { y: -4 } : {}}
         className={`bg-white rounded-2xl overflow-hidden flex flex-col h-full border border-gray-100 transition-shadow ${!isAvailable ? 'bg-gray-50' : 'hover:shadow-lg'}`}
       >
-        <div className="relative aspect-[4/3]">
+        <div className={`relative aspect-[4/3] ${!isAvailable ? 'grayscale opacity-75' : ''}`}>
           <img 
             src={mainPhoto} 
             alt={property.title}
