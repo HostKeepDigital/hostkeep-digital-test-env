@@ -83,6 +83,8 @@ export default function Search() {
 
   const filteredProperties = allProperties.map(property => {
     let isAvailable = true;
+    let unavailableReason = null;
+    
     if (filters.checkIn && filters.duration) {
       const requestedCheckIn = parseISO(filters.checkIn);
       const requestedCheckOut = addDays(requestedCheckIn, parseInt(filters.duration));
@@ -96,9 +98,32 @@ export default function Search() {
         return requestedCheckIn < bCheckOut && requestedCheckOut > bCheckIn;
       });
       
-      if (hasConflict) isAvailable = false;
+      if (hasConflict) {
+        isAvailable = false;
+        unavailableReason = "Not available for selected dates";
+      }
     }
-    return { ...property, isAvailable };
+
+    const totalGuests = filters.adults + filters.children;
+    if (isAvailable && totalGuests > property.guest_capacity) {
+      isAvailable = false;
+      unavailableReason = `Maximum occupancy is ${property.guest_capacity} guests`;
+    }
+
+    if (isAvailable && filters.children > 0) {
+      if (property.children_allowed === false) {
+        isAvailable = false;
+        unavailableReason = "This property does not accept children";
+      } else if (property.minimum_child_age != null && property.minimum_child_age > 0) {
+        const hasUnderageChild = filters.childAges.some(age => age < property.minimum_child_age);
+        if (hasUnderageChild) {
+          isAvailable = false;
+          unavailableReason = "This property does not accept children under the minimum age requirement.";
+        }
+      }
+    }
+
+    return { ...property, isAvailable, unavailableReason };
   }).filter(property => {
     // Location filter
     if (filters.location) {
@@ -114,12 +139,6 @@ export default function Search() {
 
     // Property type filter
     if (filters.type !== "all" && property.property_type !== filters.type) {
-      return false;
-    }
-
-    // Guest capacity filter
-    const totalGuests = filters.adults + filters.children;
-    if (totalGuests > property.guest_capacity) {
       return false;
     }
 
@@ -153,20 +172,6 @@ export default function Search() {
     }
     if (filters.childrenAllowed && !property.children_allowed) {
       return false;
-    }
-
-    // Children age restrictions
-    if (filters.children > 0) {
-      if (property.children_allowed === false) {
-        return false;
-      }
-      if (property.minimum_child_age != null && property.minimum_child_age > 0) {
-        for (const age of filters.childAges) {
-          if (age < property.minimum_child_age) {
-            return false;
-          }
-        }
-      }
     }
 
     return true;
@@ -275,12 +280,24 @@ export default function Search() {
                 )}
               </Tooltip>
             </TooltipProvider>
-            <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg h-11">
-              <Users className="w-5 h-5 text-gray-400" />
-              <span className="text-sm text-gray-700">
-                {filters.adults} adult{filters.adults !== 1 ? 's' : ''}
-                {filters.children > 0 && `, ${filters.children} child${filters.children !== 1 ? 'ren' : ''}`}
-              </span>
+            <div className="w-64">
+              <GuestSelector 
+                value={{
+                  adults: filters.adults,
+                  children: filters.children,
+                  childAges: filters.childAges
+                }}
+                onChange={(val) => {
+                  if (val.isValid) {
+                    setFilters(prev => ({
+                      ...prev,
+                      adults: val.adults,
+                      children: val.children,
+                      childAges: val.childAges
+                    }));
+                  }
+                }}
+              />
             </div>
             
             <Sheet>
@@ -536,7 +553,7 @@ export default function Search() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
               >
-                <PropertyCard property={property} isAvailable={property.isAvailable} />
+                <PropertyCard property={property} isAvailable={property.isAvailable} unavailableReason={property.unavailableReason} />
               </motion.div>
             ))}
           </div>
