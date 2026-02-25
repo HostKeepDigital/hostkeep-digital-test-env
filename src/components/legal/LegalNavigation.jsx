@@ -12,6 +12,7 @@ const legalPages = [
   { name: "Host Terms", page: "HostTerms" },
   { name: "Cleaner Terms", page: "CleanerTerms" },
   { name: "Guest Terms", page: "GuestTerms" },
+  { name: "Accessibility Statement", page: "Accessibility" },
 ];
 
 export default function LegalNavigation({ currentPage }) {
