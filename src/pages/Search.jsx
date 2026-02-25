@@ -725,7 +725,7 @@ export default function Search() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
               >
-                <PropertyCard property={property} isAvailable={property.isAvailable} unavailableReason={property.unavailableReason} />
+                <PropertyCard property={property} isAvailable={property.isAvailable} unavailableReason={property.unavailableReason} filters={filters} />
               </motion.div>
             ))}
           </div>
