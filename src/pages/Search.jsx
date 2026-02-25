@@ -237,7 +237,7 @@ export default function Search() {
                 if (prevDate) {
                      options.push({
                         checkIn: format(prevDate, 'yyyy-MM-dd'),
-                        label: format(prevDate, 'EEEE do'),
+                        label: format(prevDate, 'EEEE do MMM yyyy'),
                         // No duration
                     });
                 }
@@ -245,7 +245,7 @@ export default function Search() {
                 if (nextDate) {
                      options.push({
                         checkIn: format(nextDate, 'yyyy-MM-dd'),
-                        label: format(nextDate, 'EEEE do'),
+                        label: format(nextDate, 'EEEE do MMM yyyy'),
                         // No duration
                     });
                 }
