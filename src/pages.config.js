@@ -84,6 +84,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import CookiePolicy from './pages/CookiePolicy';
 import PaymentPolicy from './pages/PaymentPolicy';
 import RefundPolicy from './pages/RefundPolicy';
+import TermsAndConditions from './pages/TermsAndConditions';
 import __Layout from './Layout.jsx';
 
 
@@ -125,6 +126,7 @@ export const PAGES = {
     "CookiePolicy": CookiePolicy,
     "PaymentPolicy": PaymentPolicy,
     "RefundPolicy": RefundPolicy,
+    "TermsAndConditions": TermsAndConditions,
 }
 
 export const pagesConfig = {
