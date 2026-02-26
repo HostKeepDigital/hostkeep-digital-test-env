@@ -343,13 +343,13 @@ export default function Home() {
               {[
                 { 
                   name: "Basic", 
-                  price: "19", 
+                  price: "25", 
                   properties: "1 property", 
                   features: ["Calendar management", "Direct bookings", "Messaging"] 
                 },
                 { 
                   name: "Pro", 
-                  price: "39", 
+                  price: "49", 
                   properties: "Up to 5 properties", 
                   features: ["Everything in Basic", "Priority support", "Analytics dashboard"], 
                   popular: true 
