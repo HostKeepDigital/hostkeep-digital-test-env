@@ -94,7 +94,7 @@ export default function BookingCalendar({ bookings = [], properties = [] }) {
     
     return (
       <Sheet open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-        <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto">
+        <SheetContent className="w-full sm:w-[400px] overflow-y-auto">
           <SheetHeader className="mb-6">
             <div className="flex justify-between items-start">
               <div className="text-left">
