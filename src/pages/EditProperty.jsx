@@ -117,10 +117,11 @@ export default function EditProperty() {
       
       // Set selected location if property has location_id
       if (property.location_id) {
-        const locData = await base44.entities.UKLocation.filter({ id: property.location_id });
-        if (locData.length > 0) {
-          setSelectedLocation(locData[0]);
-        }
+        base44.entities.UKLocation.filter({ id: property.location_id }).then(locData => {
+          if (locData.length > 0) {
+            setSelectedLocation(locData[0]);
+          }
+        }).catch(err => console.error('Failed to load location:', err));
       }
     }
   }, [property]);
