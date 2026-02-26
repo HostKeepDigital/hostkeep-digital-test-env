@@ -308,6 +308,10 @@ export default function EditProperty() {
       toast.error("Please remove duplicate photos before saving");
       return;
     }
+    if (!formData.cancellation_policy_id) {
+      toast.error("Please select a cancellation policy before saving");
+      return;
+    }
     
     let currentFormData = { ...formData };
     if (currentFormData.deposit_enabled && (!currentFormData.deposit_value || currentFormData.deposit_value === 0)) {
@@ -396,7 +400,7 @@ export default function EditProperty() {
             </div>
             <Button 
               onClick={handleSave}
-              disabled={updateMutation.isPending || formData.photos.length < 5 || getDuplicatePhotos().length > 0}
+              disabled={updateMutation.isPending || formData.photos.length < 5 || getDuplicatePhotos().length > 0 || !formData.cancellation_policy_id}
               className="bg-teal-600 hover:bg-teal-700"
             >
               {updateMutation.isPending ? (
@@ -705,7 +709,7 @@ export default function EditProperty() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div>
-                    <Label>Policy Type</Label>
+                    <Label>Policy Type <span className="text-red-500">*</span></Label>
                     <Select 
                       value={formData.cancellation_policy_id} 
                       onValueChange={(val) => {
@@ -718,7 +722,7 @@ export default function EditProperty() {
                         }));
                       }}
                     >
-                      <SelectTrigger className="mt-1">
+                      <SelectTrigger className={`mt-1 ${!formData.cancellation_policy_id ? 'border-red-300' : ''}`}>
                         <SelectValue placeholder="Select a policy..." />
                       </SelectTrigger>
                       <SelectContent>
@@ -727,6 +731,9 @@ export default function EditProperty() {
                         ))}
                       </SelectContent>
                     </Select>
+                    {!formData.cancellation_policy_id && (
+                      <p className="text-sm text-red-500 mt-1">Cancellation policy is required</p>
+                    )}
                     {formData.cancellation_policy_id && (
                       <div className="mt-3 p-4 bg-gray-50 rounded-lg text-sm text-gray-700">
                         {policies?.find(p => p.id === formData.cancellation_policy_id)?.description}

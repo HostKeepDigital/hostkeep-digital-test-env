@@ -686,7 +686,7 @@ export default function CreateProperty() {
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div>
-                      <Label>Policy Type</Label>
+                      <Label>Policy Type <span className="text-red-500">*</span></Label>
                       <Select 
                         value={formData.cancellation_policy_id} 
                         onValueChange={(val) => {
@@ -699,7 +699,7 @@ export default function CreateProperty() {
                           }));
                         }}
                       >
-                        <SelectTrigger className="mt-1">
+                        <SelectTrigger className={`mt-1 ${!formData.cancellation_policy_id ? 'border-red-300' : ''}`}>
                           <SelectValue placeholder="Select a policy..." />
                         </SelectTrigger>
                         <SelectContent>
@@ -708,6 +708,9 @@ export default function CreateProperty() {
                           ))}
                         </SelectContent>
                       </Select>
+                      {!formData.cancellation_policy_id && (
+                        <p className="text-sm text-red-500 mt-1">Cancellation policy is required</p>
+                      )}
                       {formData.cancellation_policy_id && (
                         <div className="mt-3 p-4 bg-gray-50 rounded-lg text-sm text-gray-700">
                           {policies?.find(p => p.id === formData.cancellation_policy_id)?.description}
