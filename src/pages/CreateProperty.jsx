@@ -54,7 +54,8 @@ export default function CreateProperty() {
   const [user, setUser] = useState(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [isUploading, setIsUploading] = useState(false);
-  const formContentRef = useState(null);
+  const { useRef } = require('react');
+  const formContentRef = useRef(null);
   const queryClient = useQueryClient();
 
   const { data: policies } = useQuery({
