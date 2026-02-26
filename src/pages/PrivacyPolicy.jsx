@@ -27,6 +27,9 @@ export default function PrivacyPolicy() {
         
         <div className="flex-1 px-4 py-12 md:px-8">
           <div className="max-w-3xl mx-auto">
+            <div className="lg:hidden mb-4">
+              <LegalBackButton />
+            </div>
             {hasBookingParams && (
               <Link to={`${createPageUrl('PropertyDetails')}${bookingParams}`}>
                 <Button variant="outline" className="mb-6">

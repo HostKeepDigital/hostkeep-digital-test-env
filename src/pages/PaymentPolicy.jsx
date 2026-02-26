@@ -11,6 +11,9 @@ export default function PaymentPolicy() {
         
         <div className="flex-1 px-4 py-12 md:px-8">
           <div className="max-w-3xl mx-auto">
+            <div className="lg:hidden mb-4">
+              <LegalBackButton />
+            </div>
             <p className="text-sm text-gray-500 mb-2">Last Updated: February 2026</p>
             <h1 className="text-4xl font-bold text-gray-900 mb-8">Payment Policy</h1>
 
