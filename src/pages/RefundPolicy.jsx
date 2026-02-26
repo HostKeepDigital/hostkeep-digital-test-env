@@ -84,7 +84,7 @@ export default function RefundPolicy() {
 
                   <div>
                     <p className="text-gray-700 mb-2">2.5 If you believe you have been incorrectly charged, contact us at:</p>
-                    <p className="text-gray-700 ml-4">[Insert Contact Email]</p>
+                    <p className="text-gray-700 ml-4">admin@hostkeepdigital.co.uk</p>
                     <p className="text-gray-700 mt-2">
                       HostKeep will review the matter but is not obligated to issue refunds unless legally required.
                     </p>
@@ -319,7 +319,7 @@ export default function RefundPolicy() {
                   <p className="font-medium">HostKeep Digital Ltd</p>
                   <p>[Registered Address]</p>
                   <p>[Company Number]</p>
-                  <p>[Contact Email]</p>
+                  <p>admin@hostkeepdigital.co.uk</p>
                 </div>
               </section>
             </div>

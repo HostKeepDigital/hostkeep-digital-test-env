@@ -119,12 +119,12 @@ export default function LegalCentre() {
                   <span className="font-medium">HostKeep Digital Ltd</span><br />
                   [Registered Address]<br />
                   [Company Number]<br />
-                  [Contact Email]
+                  admin@hostkeepdigital.co.uk
                 </p>
                 <p>
                   <span className="font-medium">Data Protection Officer</span><br />
                   HostKeep Digital Ltd<br />
-                  [Email Address]
+                  admin@hostkeepdigital.co.uk
                 </p>
               </div>
             </section>

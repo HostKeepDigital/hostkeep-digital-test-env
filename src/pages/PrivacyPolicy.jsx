@@ -58,10 +58,10 @@ export default function PrivacyPolicy() {
                   <p><span className="font-medium">Company Name:</span> HostKeep Digital Ltd</p>
                   <p><span className="font-medium">Registered Address:</span> [Insert Address]</p>
                   <p><span className="font-medium">Company Number:</span> [Insert Number]</p>
-                  <p><span className="font-medium">Email:</span> [Insert Contact Email]</p>
+                  <p><span className="font-medium">Email:</span> admin@hostkeepdigital.co.uk</p>
                 </div>
                 <p className="text-gray-700">
-                  For data protection matters, you may contact our Data Protection Officer at: [Insert DPO Email]
+                  For data protection matters, you may contact our Data Protection Officer at: admin@hostkeepdigital.co.uk
                 </p>
               </section>
 
@@ -303,7 +303,7 @@ export default function PrivacyPolicy() {
                 </div>
 
                 <p className="text-gray-700 mt-6">
-                  To exercise your rights, contact: [Insert Contact Email]
+                  To exercise your rights, contact: admin@hostkeepdigital.co.uk
                 </p>
               </section>
 
@@ -349,8 +349,8 @@ export default function PrivacyPolicy() {
                   <p className="font-medium">HostKeep Digital Ltd</p>
                   <p>[Registered Address]</p>
                   <p>[Company Number]</p>
-                  <p>[Contact Email]</p>
-                  <p className="mt-4"><span className="font-medium">Data Protection Officer:</span> [Insert Email]</p>
+                  <p>admin@hostkeepdigital.co.uk</p>
+                  <p className="mt-4"><span className="font-medium">Data Protection Officer:</span> admin@hostkeepdigital.co.uk</p>
                 </div>
               </section>
             </div>

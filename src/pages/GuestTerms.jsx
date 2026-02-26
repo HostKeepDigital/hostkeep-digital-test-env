@@ -368,7 +368,7 @@ export default function GuestTerms() {
                   <p className="font-medium">HostKeep Digital Ltd</p>
                   <p>[Registered Address]</p>
                   <p>[Company Number]</p>
-                  <p>[Contact Email]</p>
+                  <p>admin@hostkeepdigital.co.uk</p>
                 </div>
               </section>
             </div>
