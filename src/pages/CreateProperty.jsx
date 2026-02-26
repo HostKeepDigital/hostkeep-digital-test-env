@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { addUserRole, getUserRoles, hasRole } from "@/components/utils/roleHelpers";
 import LocationAutocomplete from "@/components/LocationAutocomplete";
 import { validateLocationSelection, extractLocationData } from "@/components/LocationValidator";
+import LocationStep from "@/components/properties/LocationStep";
 
 const STEPS = [
   { id: 1, title: "Basics", icon: Home, description: "Property type and details" },
@@ -64,6 +65,13 @@ export default function CreateProperty() {
   const [titleError, setTitleError] = useState("");
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [locationError, setLocationError] = useState("");
+  const [locationData, setLocationData] = useState({
+   location_id: null,
+   lat: null,
+   lng: null,
+   normalized_name: null,
+   slug: null
+  });
 
   const validateTitle = (value) => {
     // Only allow letters, numbers, spaces, and - & ! .
@@ -275,7 +283,7 @@ export default function CreateProperty() {
     switch (currentStep) {
       case 1: return formData.title.length >= 16 && formData.title.length <= 50 && !titleError && formData.property_type && formData.guest_capacity > 0;
       case 2: return formData.description.length >= 50;
-      case 3: return selectedLocation?.id;
+      case 3: return locationData.location_id && locationData.lat && locationData.lng && formData.location?.street && formData.location?.postcode;
       case 4: return formData.photos.length >= 5 && getDuplicatePhotos().length === 0;
       case 5: return formData.nightly_rate > 0;
       case 6: return !!formData.cancellation_policy_id; // Cancellation policy is required
@@ -310,6 +318,7 @@ export default function CreateProperty() {
     
     createMutation.mutate({
       ...formData,
+      ...locationData,
       status: publish ? 'published' : 'draft'
     });
   };
@@ -544,60 +553,11 @@ export default function CreateProperty() {
 
             {/* Step 3: Location */}
             {currentStep === 3 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Location</CardTitle>
-                  <CardDescription>Where is your property located?</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <LocationAutocomplete
-                    value={selectedLocation}
-                    onChange={handleLocationSelect}
-                    label="County"
-                    placeholder="Start typing a county..."
-                    required={true}
-                    error={locationError}
-                  />
-                  <div>
-                    <Label>Street Address</Label>
-                    <Input
-                      value={formData.location.street}
-                      onChange={(e) => setFormData(prev => ({ ...prev, location: { ...prev.location, street: e.target.value } }))}
-                      placeholder="123 High Street"
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label>Locality/Village (Optional)</Label>
-                    <Input
-                      value={formData.location.locality}
-                      onChange={(e) => setFormData(prev => ({ ...prev, location: { ...prev.location, locality: e.target.value } }))}
-                      placeholder="Village name"
-                      className="mt-1"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Town/City</Label>
-                      <Input
-                        value={formData.location.town_city}
-                        onChange={(e) => setFormData(prev => ({ ...prev, location: { ...prev.location, town_city: e.target.value } }))}
-                        placeholder="London"
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label>Postcode</Label>
-                      <Input
-                        value={formData.location.postcode}
-                        onChange={(e) => setFormData(prev => ({ ...prev, location: { ...prev.location, postcode: e.target.value.toUpperCase() } }))}
-                        placeholder="SW1A 1AA"
-                        className="mt-1"
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <LocationStep
+                formData={formData}
+                onFormChange={(field, value) => setFormData(prev => ({ ...prev, [field]: value }))}
+                onLocationChange={setLocationData}
+              />
             )}
 
             {/* Step 4: Photos */}
