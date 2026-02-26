@@ -5,6 +5,8 @@ import { format, eachDayOfInterval, addMonths, parseISO, differenceInDays } from
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
 
 export default function ExportPricing({ pricingSettings }) {
   const [exportDetailed, setExportDetailed] = useState(false);
@@ -69,7 +71,7 @@ export default function ExportPricing({ pricingSettings }) {
     return "Base Rate";
   };
 
-  const exportGroupedCSV = () => {
+  const exportGroupedPDF = () => {
     const today = new Date();
     const endDate = addMonths(today, 12);
     const dates = eachDayOfInterval({ start: today, end: endDate });
@@ -98,61 +100,75 @@ export default function ExportPricing({ pricingSettings }) {
     });
     if (currentRange) ranges.push(currentRange);
 
-    // Build CSV
-    let csv = "Start Date,End Date,Nightly Price,Nights,Total Value,Rule Type\n";
+    // Build PDF
+    const doc = new jsPDF();
     
-    ranges.forEach(range => {
+    doc.setFontSize(16);
+    doc.text("Pricing Calendar - Grouped View", 14, 15);
+    
+    doc.setFontSize(10);
+    doc.text(`Generated: ${format(today, 'dd/MM/yyyy')}`, 14, 22);
+    doc.text(`Period: ${format(today, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')}`, 14, 27);
+
+    const tableData = ranges.map(range => {
       const startStr = format(range.startDate, 'dd/MM/yyyy');
       const endStr = format(range.endDate, 'dd/MM/yyyy');
       const nights = differenceInDays(range.endDate, range.startDate) + 1;
       const totalValue = range.price * nights;
 
-      csv += `${startStr},${endStr},${range.price},${nights},${totalValue},${range.ruleType}\n`;
+      return [startStr, endStr, `£${range.price}`, nights, `£${totalValue}`, range.ruleType];
     });
 
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `pricing-grouped-${format(today, 'dd-MM-yyyy')}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+    doc.autoTable({
+      head: [['Start Date', 'End Date', 'Nightly Price', 'Nights', 'Total Value', 'Rule Type']],
+      body: tableData,
+      startY: 35,
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [20, 184, 166] }
+    });
+
+    doc.save(`pricing-grouped-${format(today, 'dd-MM-yyyy')}.pdf`);
   };
 
-  const exportDetailedCSV = () => {
+  const exportDetailedPDF = () => {
     const today = new Date();
     const endDate = addMonths(today, 12);
     const dates = eachDayOfInterval({ start: today, end: endDate });
 
-    let csv = "Date,Day,Nightly Price,Rule Type\n";
+    const doc = new jsPDF();
     
-    dates.forEach(date => {
+    doc.setFontSize(16);
+    doc.text("Pricing Calendar - Detailed View", 14, 15);
+    
+    doc.setFontSize(10);
+    doc.text(`Generated: ${format(today, 'dd/MM/yyyy')}`, 14, 22);
+    doc.text(`Period: ${format(today, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')}`, 14, 27);
+
+    const tableData = dates.map(date => {
       const dateStr = format(date, 'yyyy-MM-dd');
       const dayName = format(date, 'EEEE');
       const price = calculatePrice(date);
       const ruleType = getRuleType(date, dateStr);
 
-      csv += `${format(date, 'dd/MM/yyyy')},${dayName},${price},${ruleType}\n`;
+      return [format(date, 'dd/MM/yyyy'), dayName, `£${price}`, ruleType];
     });
 
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `pricing-detailed-${format(today, 'dd-MM-yyyy')}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+    doc.autoTable({
+      head: [['Date', 'Day', 'Nightly Price', 'Rule Type']],
+      body: tableData,
+      startY: 35,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [20, 184, 166] }
+    });
+
+    doc.save(`pricing-detailed-${format(today, 'dd-MM-yyyy')}.pdf`);
   };
 
-  const exportCSV = () => {
+  const exportPDF = () => {
     if (exportDetailed) {
-      exportDetailedCSV();
+      exportDetailedPDF();
     } else {
-      exportGroupedCSV();
+      exportGroupedPDF();
     }
   };
 
@@ -177,9 +193,9 @@ export default function ExportPricing({ pricingSettings }) {
           />
         </div>
         
-        <Button type="button" onClick={exportCSV} className="w-full">
+        <Button type="button" onClick={exportPDF} className="w-full">
           <Download className="w-4 h-4 mr-2" />
-          {exportDetailed ? "Export Detailed CSV" : "Export Grouped CSV"}
+          {exportDetailed ? "Export Detailed PDF" : "Export Grouped PDF"}
         </Button>
 
         {!exportDetailed && (
