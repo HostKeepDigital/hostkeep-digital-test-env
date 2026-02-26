@@ -41,8 +41,8 @@ export default function PropertyDetails() {
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showImageOverlay, setShowImageOverlay] = useState(false);
-  const [checkIn, setCheckIn] = useState("");
-  const [nights, setNights] = useState("");
+  const [checkIn, setCheckIn] = useState(() => urlParams.get('checkIn') || "");
+  const [nights, setNights] = useState(() => urlParams.get('duration') || "");
   const [guestData, setGuestData] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     const adults = parseInt(params.get('adults')) || 1;
