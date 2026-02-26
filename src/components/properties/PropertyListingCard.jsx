@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
@@ -7,8 +7,14 @@ import { Button } from "@/components/ui/button";
 import { createPageUrl } from "@/utils";
 import {
   Image as ImageIcon, Edit3, PoundSterling, Calendar, Settings, 
-  CheckCircle2, AlertTriangle, AlertCircle, ArrowRight
+  CheckCircle2, AlertTriangle, AlertCircle, ArrowRight, Eye, EyeOff, Trash2, MoreVertical
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { format, isAfter, parseISO } from "date-fns";
 
 export default function PropertyListingCard({ 
@@ -16,8 +22,11 @@ export default function PropertyListingCard({
   cleanerSettings, 
   upcomingBookings, 
   cleaningJobs, 
-  isSingle
+  isSingle,
+  onStatusToggle,
+  onDelete
 }) {
+  const [showActions, setShowActions] = useState(false);
   // calculate completeness
   let score = 0;
   if (property.photos?.length > 0) score += 20;
@@ -159,12 +168,39 @@ export default function PropertyListingCard({
       </div>
       
       {/* Management Action Bar */}
-      <div className="bg-gray-50 border-t border-gray-100 p-4 flex justify-between items-center">
-         <Link to={createPageUrl('EditProperty') + `?id=${property.id}`} className="w-full">
+      <div className="bg-gray-50 border-t border-gray-100 p-4 flex justify-between items-center gap-3">
+         <Link to={createPageUrl('EditProperty') + `?id=${property.id}`} className="flex-1">
             <Button className="w-full bg-gray-900 hover:bg-gray-800 text-white rounded-xl h-11 text-base">
                Manage Listing
             </Button>
          </Link>
+
+         <DropdownMenu open={showActions} onOpenChange={setShowActions}>
+            <DropdownMenuTrigger asChild>
+               <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl">
+                  <MoreVertical className="w-4 h-4" />
+               </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+               <DropdownMenuItem onClick={onStatusToggle} className="cursor-pointer">
+                  {property.status === 'published' || property.status === 'draft' ? (
+                     <>
+                        <EyeOff className="w-4 h-4 mr-2" />
+                        <span>Deactivate</span>
+                     </>
+                  ) : (
+                     <>
+                        <Eye className="w-4 h-4 mr-2" />
+                        <span>Reactivate</span>
+                     </>
+                  )}
+               </DropdownMenuItem>
+               <DropdownMenuItem onClick={() => { onDelete(); setShowActions(false); }} className="cursor-pointer text-rose-600">
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  <span>Delete Property</span>
+               </DropdownMenuItem>
+            </DropdownMenuContent>
+         </DropdownMenu>
       </div>
     </div>
   );
