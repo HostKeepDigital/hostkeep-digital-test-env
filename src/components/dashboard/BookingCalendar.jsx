@@ -228,8 +228,8 @@ export default function BookingCalendar({ bookings = [], properties = [] }) {
           </Button>
         </div>
 
-        <div className="border border-gray-200 rounded-xl overflow-hidden bg-gray-50/50 shadow-sm overflow-x-auto">
-          <div className="grid grid-cols-7 border-b bg-white min-w-[600px]">
+        <div className="border border-gray-200 rounded-xl overflow-hidden bg-gray-50/50 shadow-sm">
+          <div className="grid grid-cols-7 border-b bg-white">
             {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(day => (
               <div key={day} className="text-center text-xs font-semibold text-gray-500 py-3 border-r last:border-r-0">
                 {day}
@@ -237,7 +237,7 @@ export default function BookingCalendar({ bookings = [], properties = [] }) {
             ))}
           </div>
 
-          <div className="flex flex-col min-w-[600px]">
+          <div className="flex flex-col">
             {weeks.map((week, wIdx) => {
               const weekBookings = bookings.map(booking => {
                 if (!booking.check_in || !booking.check_out) return null;
