@@ -104,10 +104,10 @@ export default function ExportPricing({ pricingSettings }) {
     
     // Add logo at the top left
     const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698eee4108bd1d9467648326/4314a0b14_HostKeepandLogo.png';
-    doc.addImage(logoUrl, 'PNG', 14, 10, 25, 12);
+    doc.addImage(logoUrl, 'PNG', 14, 8, 50, 25);
     
     doc.setFontSize(16);
-    doc.text("Pricing Calendar - Grouped View", 14, 35);
+    doc.text("Pricing Calendar - Grouped View", 14, 42);
     
     doc.setFontSize(10);
     doc.text(`Generated: ${format(today, 'dd/MM/yyyy')}`, 14, 42);
