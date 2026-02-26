@@ -202,9 +202,6 @@ export default function Layout({ children, currentPageName }) {
               <Link to={createPageUrl('Search')} className="text-gray-600 hover:text-gray-900 font-medium">
                 Explore
               </Link>
-              <Link to={createPageUrl('Subscription')} className="text-gray-600 hover:text-gray-900 font-medium">
-                Pricing
-              </Link>
               {isAuthenticated && (
                 <>
                   <Link to={createPageUrl('MyTrips')} className="text-gray-600 hover:text-gray-900 font-medium">
