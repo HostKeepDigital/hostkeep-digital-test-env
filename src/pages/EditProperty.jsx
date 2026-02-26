@@ -23,6 +23,7 @@ import { useContext } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import LocationAutocomplete from "@/components/LocationAutocomplete";
 import { validateLocationSelection } from "@/components/LocationValidator";
+import LocationStep from "@/components/properties/LocationStep";
 
 const PROPERTY_TYPES = [
   { value: "house", label: "House" },
@@ -51,6 +52,13 @@ export default function EditProperty() {
   const [uploadedFileIdentifiers, setUploadedFileIdentifiers] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [locationError, setLocationError] = useState("");
+  const [locationData, setLocationData] = useState({
+    location_id: null,
+    lat: null,
+    lng: null,
+    normalized_name: null,
+    slug: null
+  });
 
   const { data: policies } = useQuery({
     queryKey: ['cancellation-policies'],
@@ -414,6 +422,23 @@ export default function EditProperty() {
       });
     }
 
+    // Include location_id, lat, lng if they were updated
+    if (locationData.location_id) {
+      changedData.location_id = locationData.location_id;
+    }
+    if (locationData.lat !== null) {
+      changedData.lat = locationData.lat;
+    }
+    if (locationData.lng !== null) {
+      changedData.lng = locationData.lng;
+    }
+    if (locationData.normalized_name) {
+      changedData.normalized_name = locationData.normalized_name;
+    }
+    if (locationData.slug) {
+      changedData.slug = locationData.slug;
+    }
+
     if (Object.keys(changedData).length === 0) {
       toast.info("No changes to save");
       if (typeof proceed === 'function') proceed();
@@ -658,59 +683,11 @@ export default function EditProperty() {
           </TabsContent>
 
           <TabsContent value="location">
-            <Card>
-              <CardHeader>
-                <CardTitle>Location</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <LocationAutocomplete
-                  value={selectedLocation}
-                  onChange={handleLocationSelect}
-                  label="County"
-                  placeholder="Start typing a county..."
-                  required={true}
-                  error={locationError}
-                />
-                <div>
-                  <Label>Street Address</Label>
-                  <Input
-                    value={formData.location.street}
-                    onChange={(e) => setFormData(prev => ({ ...prev, location: { ...prev.location, street: e.target.value } }))}
-                    placeholder="123 High Street"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label>Locality/Village (Optional)</Label>
-                  <Input
-                    value={formData.location.locality || ""}
-                    onChange={(e) => setFormData(prev => ({ ...prev, location: { ...prev.location, locality: e.target.value } }))}
-                    placeholder="Village name"
-                    className="mt-1"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Town/City</Label>
-                    <Input
-                      value={formData.location.town_city}
-                      onChange={(e) => setFormData(prev => ({ ...prev, location: { ...prev.location, town_city: e.target.value } }))}
-                      placeholder="London"
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label>Postcode</Label>
-                    <Input
-                      value={formData.location.postcode}
-                      onChange={(e) => setFormData(prev => ({ ...prev, location: { ...prev.location, postcode: e.target.value.toUpperCase() } }))}
-                      placeholder="SW1A 1AA"
-                      className="mt-1"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <LocationStep
+              formData={formData}
+              onFormChange={(field, value) => setFormData(prev => ({ ...prev, [field]: value }))}
+              onLocationChange={setLocationData}
+            />
           </TabsContent>
 
           <TabsContent value="photos">
