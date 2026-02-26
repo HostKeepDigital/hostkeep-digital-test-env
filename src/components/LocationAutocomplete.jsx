@@ -135,7 +135,7 @@ export default function LocationAutocomplete({
             value={inputValue}
             onChange={(e) => handleSearch(e.target.value)}
             onKeyDown={handleKeyDown}
-            onFocus={() => inputValue.length >= 3 && setSuggestions.length > 0 && setIsOpen(true)}
+            onFocus={() => inputValue.length >= 3 && suggestions.length > 0 && setIsOpen(true)}
             placeholder={placeholder}
             className={cn(
               "pl-10",
