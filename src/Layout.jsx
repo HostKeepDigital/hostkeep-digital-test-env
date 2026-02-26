@@ -196,10 +196,13 @@ export default function Layout({ children, currentPageName }) {
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <Link to={createPageUrl('Home')} onClick={(e) => handleNavClick(e, createPageUrl('Home'))} className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center lg:hidden">
+                <Home className="w-4 h-4 text-white" />
+              </div>
               <img 
                 src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698eee4108bd1d9467648326/f921c6fc8_HostKeepLogo.png"
                 alt="HostKeep"
-                className="h-10 hidden sm:block"
+                className="h-12 hidden sm:block"
               />
             </Link>
 
