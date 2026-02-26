@@ -331,7 +331,7 @@ export default function BookingCalendar({ bookings = [], properties = [] }) {
                     );
                   })}
 
-                  <div className="absolute top-10 left-0 right-0 bottom-0 pointer-events-none px-1">
+                  <div className="absolute top-7 left-0 right-0 bottom-0 pointer-events-none px-0.5">
                     {placedBookings.map((pb, idx) => {
                       const { booking, leftPercent, widthPercent, isStartCell, isEndCell, checkIn, checkOut } = pb;
                       const prop = getProperty(booking.property_id);
@@ -343,24 +343,24 @@ export default function BookingCalendar({ bookings = [], properties = [] }) {
                           <TooltipTrigger asChild>
                             <div 
                               className={`
-                                absolute h-7 flex items-center px-2.5 text-xs font-medium cursor-pointer pointer-events-auto
+                                absolute h-5 flex items-center px-1.5 text-[10px] font-medium cursor-pointer pointer-events-auto
                                 shadow-sm transition-all hover:brightness-110 hover:shadow-md border
                                 ${getStatusColor(booking.booking_status)}
-                                ${isStartCell ? 'rounded-l-md ml-1' : 'border-l-0'}
-                                ${isEndCell ? 'rounded-r-md mr-1' : 'border-r-0'}
+                                ${isStartCell ? 'rounded-l ml-0.5' : 'border-l-0'}
+                                ${isEndCell ? 'rounded-r mr-0.5' : 'border-r-0'}
                                 ${isPast ? 'opacity-50' : 'opacity-100'}
                               `}
                               style={{ 
                                 left: `${leftPercent}%`, 
-                                width: `calc(${widthPercent}% - ${isStartCell ? '4px' : '0px'} - ${isEndCell ? '4px' : '0px'})`,
-                                top: `${pb.row * 34}px`,
+                                width: `calc(${widthPercent}% - ${isStartCell ? '2px' : '0px'} - ${isEndCell ? '2px' : '0px'})`,
+                                top: `${pb.row * 22}px`,
                                 zIndex: 10 + pb.row
                               }}
                               onClick={() => handleBookingClick(booking)}
                             >
-                              <span className="truncate flex-1 font-semibold tracking-tight mix-blend-overlay text-white">{prop.title || 'Property'} • {booking.guest_name}</span>
-                              {widthPercent > 20 && booking.total_amount && (
-                                <span className="ml-2 font-bold bg-white/20 px-1.5 py-0.5 rounded text-[10px] shadow-sm hidden sm:inline">£{booking.total_amount}</span>
+                              <span className="truncate flex-1 font-semibold tracking-tight text-white">{prop.title || 'Property'} • {booking.guest_name}</span>
+                              {widthPercent > 25 && booking.total_amount && (
+                                <span className="ml-1 font-bold bg-white/20 px-1 rounded text-[9px] shadow-sm hidden sm:inline">£{booking.total_amount}</span>
                               )}
                             </div>
                           </TooltipTrigger>
