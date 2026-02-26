@@ -231,7 +231,7 @@ export default function BookingCalendar({ bookings = [], properties = [] }) {
         <div className="border border-gray-200 rounded-xl overflow-hidden bg-gray-50/50 shadow-sm">
           <div className="grid grid-cols-7 border-b bg-white">
             {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(day => (
-              <div key={day} className="text-center text-[10px] sm:text-xs font-semibold text-gray-500 py-1.5 sm:py-3 border-r last:border-r-0">
+              <div key={day} className="text-center text-xs font-semibold text-gray-500 py-3 border-r last:border-r-0">
                 {day}
               </div>
             ))}
@@ -284,7 +284,7 @@ export default function BookingCalendar({ bookings = [], properties = [] }) {
               });
 
               const maxRows = Math.max(0, ...placedBookings.map(pb => pb.row));
-              const rowHeight = Math.max(60, (maxRows + 1) * 26 + 30);
+              const rowHeight = Math.max(100, (maxRows + 1) * 36 + 40);
 
               return (
                 <div key={wIdx} className="grid grid-cols-7 relative border-b last:border-b-0" style={{ minHeight: `${rowHeight}px` }}>
@@ -297,20 +297,20 @@ export default function BookingCalendar({ bookings = [], properties = [] }) {
                       <div 
                         key={day.toISOString()} 
                         className={`
-                          border-r last:border-r-0 p-1 sm:p-2 relative transition-colors hover:bg-gray-100/50
+                          border-r last:border-r-0 p-2 relative transition-colors hover:bg-gray-100/50
                           ${!isCurrentMonth ? 'bg-gray-100/30 text-gray-400' : 'bg-white'}
                           ${isToday ? 'bg-teal-50/20' : ''}
                         `}
                       >
                         <div className="flex justify-between items-start">
-                          <div className={`text-[10px] sm:text-xs font-medium w-4 h-4 sm:w-6 sm:h-6 flex items-center justify-center rounded-full ${isToday ? 'text-white bg-teal-600' : 'text-gray-600'}`}>
+                          <div className={`text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full ${isToday ? 'text-white bg-teal-600' : 'text-gray-600'}`}>
                             {format(day, "d")}
                           </div>
                           {deadProps.length > 0 && (
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <div className="cursor-help">
-                                  <AlertTriangle className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-red-500 opacity-70 hover:opacity-100" />
+                                  <AlertTriangle className="w-3.5 h-3.5 text-red-500 opacity-70 hover:opacity-100" />
                                 </div>
                               </TooltipTrigger>
                               <TooltipContent>
@@ -329,7 +329,7 @@ export default function BookingCalendar({ bookings = [], properties = [] }) {
                     );
                   })}
 
-                  <div className="absolute top-6 sm:top-10 left-0 right-0 bottom-0 pointer-events-none px-0.5 sm:px-1">
+                  <div className="absolute top-10 left-0 right-0 bottom-0 pointer-events-none px-1">
                     {placedBookings.map((pb, idx) => {
                       const { booking, leftPercent, widthPercent, isStartCell, isEndCell, checkIn, checkOut } = pb;
                       const prop = getProperty(booking.property_id);
@@ -341,25 +341,24 @@ export default function BookingCalendar({ bookings = [], properties = [] }) {
                           <TooltipTrigger asChild>
                             <div 
                               className={`
-                                absolute h-5 sm:h-7 flex items-center px-1 sm:px-2.5 text-[9px] sm:text-xs font-medium cursor-pointer pointer-events-auto
+                                absolute h-7 flex items-center px-2.5 text-xs font-medium cursor-pointer pointer-events-auto
                                 shadow-sm transition-all hover:brightness-110 hover:shadow-md border
                                 ${getStatusColor(booking.booking_status)}
-                                ${isStartCell ? 'rounded-l-md ml-0.5 sm:ml-1' : 'border-l-0'}
-                                ${isEndCell ? 'rounded-r-md mr-0.5 sm:mr-1' : 'border-r-0'}
+                                ${isStartCell ? 'rounded-l-md ml-1' : 'border-l-0'}
+                                ${isEndCell ? 'rounded-r-md mr-1' : 'border-r-0'}
                                 ${isPast ? 'opacity-50' : 'opacity-100'}
                               `}
                               style={{ 
                                 left: `${leftPercent}%`, 
-                                width: `calc(${widthPercent}% - ${isStartCell ? '2px' : '0px'} - ${isEndCell ? '2px' : '0px'})`,
-                                top: `${pb.row * 24}px`,
+                                width: `calc(${widthPercent}% - ${isStartCell ? '4px' : '0px'} - ${isEndCell ? '4px' : '0px'})`,
+                                top: `${pb.row * 34}px`,
                                 zIndex: 10 + pb.row
                               }}
                               onClick={() => handleBookingClick(booking)}
                             >
-                              <span className="truncate flex-1 font-semibold tracking-tight mix-blend-overlay text-white hidden sm:inline">{prop.title || 'Property'} • {booking.guest_name}</span>
-                              <span className="truncate flex-1 font-semibold tracking-tight mix-blend-overlay text-white sm:hidden">{booking.guest_name}</span>
+                              <span className="truncate flex-1 font-semibold tracking-tight mix-blend-overlay text-white">{prop.title || 'Property'} • {booking.guest_name}</span>
                               {widthPercent > 20 && booking.total_amount && (
-                                <span className="ml-1 sm:ml-2 font-bold bg-white/20 px-1 sm:px-1.5 py-0.5 rounded text-[8px] sm:text-[10px] shadow-sm hidden md:inline">£{booking.total_amount}</span>
+                                <span className="ml-2 font-bold bg-white/20 px-1.5 py-0.5 rounded text-[10px] shadow-sm hidden sm:inline">£{booking.total_amount}</span>
                               )}
                             </div>
                           </TooltipTrigger>
