@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Lock, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { base44 } from "@/api/base44Client";
