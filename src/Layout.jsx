@@ -27,7 +27,7 @@ import RoleSwitcher from "@/components/RoleSwitcher";
 const PUBLIC_PAGES = ["Pay"];
 
 // Host dashboard pages
-const HOST_PAGES = ["HostDashboard", "HostBookings", "HostProperties", "HostMessages", "HostSettings", "CreateProperty", "EditProperty", "Subscription"];
+const HOST_PAGES = ["HostDashboard", "HostBookings", "HostProperties", "HostMessages", "HostSettings", "CreateProperty", "EditProperty"];
 
 const GUEST_PAGES = ["Home", "Search", "PropertyDetails", "MyTrips", "GuestMessages", "GuestProfile", "BecomeHost", "BecomeCleaner"];
 
@@ -126,16 +126,7 @@ export default function Layout({ children, currentPageName }) {
               })}
             </nav>
 
-            <div className="px-3 mt-auto">
-              <Link
-                to={createPageUrl('Subscription')}
-                onClick={(e) => handleNavClick(e, createPageUrl('Subscription'))}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50"
-              >
-                <PoundSterling className="w-5 h-5 text-gray-400" />
-                Subscription
-              </Link>
-            </div>
+
           </div>
         </aside>
 
@@ -210,6 +201,9 @@ export default function Layout({ children, currentPageName }) {
             <nav className="hidden md:flex items-center gap-6">
               <Link to={createPageUrl('Search')} className="text-gray-600 hover:text-gray-900 font-medium">
                 Explore
+              </Link>
+              <Link to={createPageUrl('Subscription')} className="text-gray-600 hover:text-gray-900 font-medium">
+                Pricing
               </Link>
               {isAuthenticated && (
                 <>
