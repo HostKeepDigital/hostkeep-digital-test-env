@@ -102,19 +102,19 @@ export default function ExportPricing({ pricingSettings }) {
     // Build PDF
     const doc = new jsPDF();
     
-    // Add logo at the top
+    // Add logo at the top left
     const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698eee4108bd1d9467648326/4314a0b14_HostKeepandLogo.png';
-    doc.addImage(logoUrl, 'PNG', 14, 8, 170, 18);
+    doc.addImage(logoUrl, 'PNG', 14, 10, 25, 12);
     
     doc.setFontSize(16);
-    doc.text("Pricing Calendar - Grouped View", 14, 40);
+    doc.text("Pricing Calendar - Grouped View", 14, 35);
     
     doc.setFontSize(10);
-    doc.text(`Generated: ${format(today, 'dd/MM/yyyy')}`, 14, 32);
-    doc.text(`Period: ${format(today, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')}`, 14, 37);
+    doc.text(`Generated: ${format(today, 'dd/MM/yyyy')}`, 14, 42);
+    doc.text(`Period: ${format(today, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')}`, 14, 47);
 
     // Draw table manually
-    let y = 50;
+    let y = 55;
     const lineHeight = 7;
     const pageHeight = 280;
     
