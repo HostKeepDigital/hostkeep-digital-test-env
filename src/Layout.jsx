@@ -133,7 +133,7 @@ export default function Layout({ children, currentPageName }) {
         {/* Mobile Header for Host */}
         <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100">
           <div className="flex items-center justify-between px-4 py-3">
-            <Link to={createPageUrl('Home')} onClick={(e) => handleNavClick(e, createPageUrl('Home'))} className="flex items-center gap-3">
+            <Link to={createPageUrl('PropertyHome')} onClick={(e) => handleNavClick(e, createPageUrl('PropertyHome'))} className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center">
                 <Home className="w-4 h-4 text-white" />
               </div>
