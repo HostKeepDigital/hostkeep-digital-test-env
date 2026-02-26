@@ -150,34 +150,36 @@ export default function HostBookings() {
         </div>
 
         <Tabs defaultValue="awaiting_decision" className="space-y-6">
-          <TabsList className="bg-white border border-gray-100">
-            <TabsTrigger value="awaiting_decision" className="gap-2">
-              <Clock className="w-4 h-4" />
-              Awaiting Decision
-              {awaitingDecision.length > 0 && (
-                <Badge className="bg-amber-500">{awaitingDecision.length}</Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="awaiting_payment" className="gap-2">
-              <AlertTriangle className="w-4 h-4" />
-              Awaiting Payment
-              {awaitingPayment.length > 0 && (
-                <Badge className="bg-orange-500">{awaitingPayment.length}</Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="confirmed">
-              Confirmed ({confirmed.length})
-            </TabsTrigger>
-            <TabsTrigger value="checked_in">
-              Checked In ({checkedIn.length})
-            </TabsTrigger>
-            <TabsTrigger value="completed">
-              Completed ({completed.length})
-            </TabsTrigger>
-            <TabsTrigger value="cancelled">
-              Cancelled ({cancelled.length})
-            </TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto -mx-4 px-4">
+            <TabsList className="bg-white border border-gray-100 w-max min-w-full md:w-auto">
+              <TabsTrigger value="awaiting_decision" className="gap-1.5 text-xs sm:text-sm whitespace-nowrap">
+                <Clock className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden sm:inline">Awaiting </span>Decision
+                {awaitingDecision.length > 0 && (
+                  <Badge className="bg-amber-500 text-[10px] px-1.5 py-0">{awaitingDecision.length}</Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="awaiting_payment" className="gap-1.5 text-xs sm:text-sm whitespace-nowrap">
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden sm:inline">Awaiting </span>Payment
+                {awaitingPayment.length > 0 && (
+                  <Badge className="bg-orange-500 text-[10px] px-1.5 py-0">{awaitingPayment.length}</Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="confirmed" className="text-xs sm:text-sm whitespace-nowrap">
+                Confirmed <span className="ml-1 text-[10px] opacity-70">({confirmed.length})</span>
+              </TabsTrigger>
+              <TabsTrigger value="checked_in" className="text-xs sm:text-sm whitespace-nowrap">
+                In<span className="hidden sm:inline">-Stay</span><span className="sm:hidden"> Stay</span> <span className="ml-1 text-[10px] opacity-70">({checkedIn.length})</span>
+              </TabsTrigger>
+              <TabsTrigger value="completed" className="text-xs sm:text-sm whitespace-nowrap">
+                Done <span className="ml-1 text-[10px] opacity-70">({completed.length})</span>
+              </TabsTrigger>
+              <TabsTrigger value="cancelled" className="text-xs sm:text-sm whitespace-nowrap">
+                Cancelled <span className="ml-1 text-[10px] opacity-70">({cancelled.length})</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="awaiting_decision" className="space-y-4">
             {awaitingDecision.length === 0 ? (
