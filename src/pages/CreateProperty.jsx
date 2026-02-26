@@ -21,6 +21,8 @@ import DayBasedBookingRules from "@/components/properties/DayBasedBookingRules";
 import PricingManager from "@/components/pricing/PricingManager";
 import { toast } from "sonner";
 import { addUserRole, getUserRoles, hasRole } from "@/components/utils/roleHelpers";
+import LocationAutocomplete from "@/components/LocationAutocomplete";
+import { validateLocationSelection, extractLocationData } from "@/components/LocationValidator";
 
 const STEPS = [
   { id: 1, title: "Basics", icon: Home, description: "Property type and details" },
@@ -60,6 +62,8 @@ export default function CreateProperty() {
   });
 
   const [titleError, setTitleError] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [locationError, setLocationError] = useState("");
 
   const validateTitle = (value) => {
     // Only allow letters, numbers, spaces, and - & ! .
@@ -166,10 +170,17 @@ export default function CreateProperty() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleLocationChange = (field, value) => {
+  const handleLocationSelect = (location) => {
+    setSelectedLocation(location);
+    setLocationError("");
     setFormData(prev => ({
       ...prev,
-      location: { ...prev.location, [field]: value }
+      location_id: location.id,
+      location: {
+        ...prev.location,
+        county: location.name,
+        country: location.country
+      }
     }));
   };
 
@@ -264,7 +275,7 @@ export default function CreateProperty() {
     switch (currentStep) {
       case 1: return formData.title.length >= 16 && formData.title.length <= 50 && !titleError && formData.property_type && formData.guest_capacity > 0;
       case 2: return formData.description.length >= 50;
-      case 3: return formData.location.street?.trim() && formData.location.town_city?.trim() && formData.location.county?.trim() && formData.location.postcode?.trim();
+      case 3: return selectedLocation?.id;
       case 4: return formData.photos.length >= 5 && getDuplicatePhotos().length === 0;
       case 5: return formData.nightly_rate > 0;
       case 6: return !!formData.cancellation_policy_id; // Cancellation policy is required
@@ -539,11 +550,19 @@ export default function CreateProperty() {
                   <CardDescription>Where is your property located?</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
+                  <LocationAutocomplete
+                    value={selectedLocation}
+                    onChange={handleLocationSelect}
+                    label="County"
+                    placeholder="Start typing a county..."
+                    required={true}
+                    error={locationError}
+                  />
                   <div>
-                    <Label>Street</Label>
+                    <Label>Street Address</Label>
                     <Input
                       value={formData.location.street}
-                      onChange={(e) => handleLocationChange("street", e.target.value)}
+                      onChange={(e) => setFormData(prev => ({ ...prev, location: { ...prev.location, street: e.target.value } }))}
                       placeholder="123 High Street"
                       className="mt-1"
                     />
@@ -552,7 +571,7 @@ export default function CreateProperty() {
                     <Label>Locality/Village (Optional)</Label>
                     <Input
                       value={formData.location.locality}
-                      onChange={(e) => handleLocationChange("locality", e.target.value)}
+                      onChange={(e) => setFormData(prev => ({ ...prev, location: { ...prev.location, locality: e.target.value } }))}
                       placeholder="Village name"
                       className="mt-1"
                     />
@@ -562,29 +581,20 @@ export default function CreateProperty() {
                       <Label>Town/City</Label>
                       <Input
                         value={formData.location.town_city}
-                        onChange={(e) => handleLocationChange("town_city", e.target.value)}
+                        onChange={(e) => setFormData(prev => ({ ...prev, location: { ...prev.location, town_city: e.target.value } }))}
                         placeholder="London"
                         className="mt-1"
                       />
                     </div>
                     <div>
-                      <Label>County</Label>
+                      <Label>Postcode</Label>
                       <Input
-                        value={formData.location.county}
-                        onChange={(e) => handleLocationChange("county", e.target.value)}
-                        placeholder="Greater London"
+                        value={formData.location.postcode}
+                        onChange={(e) => setFormData(prev => ({ ...prev, location: { ...prev.location, postcode: e.target.value.toUpperCase() } }))}
+                        placeholder="SW1A 1AA"
                         className="mt-1"
                       />
                     </div>
-                  </div>
-                  <div>
-                    <Label>Postcode</Label>
-                    <Input
-                      value={formData.location.postcode}
-                      onChange={(e) => handleLocationChange("postcode", e.target.value.toUpperCase())}
-                      placeholder="SW1A 1AA"
-                      className="mt-1"
-                    />
                   </div>
                 </CardContent>
               </Card>
