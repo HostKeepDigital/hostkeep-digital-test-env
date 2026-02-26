@@ -91,13 +91,18 @@ export default function Subscription() {
           const existingSub = subs[0];
 
           if (existingSub) {
+            // If resubscribing after cancellation, keep original billing date
+            const finalEndDate = existingSub.status === 'cancelled' 
+              ? existingSub.end_date 
+              : endDate;
+
             await base44.entities.Subscription.update(existingSub.id, {
               plan,
               status: 'active',
               price_monthly: planDetails.price,
               max_properties: planDetails.max_properties,
               start_date: startDate,
-              end_date: endDate,
+              end_date: finalEndDate,
               features: planDetails.features,
             });
           } else {
@@ -178,13 +183,17 @@ export default function Subscription() {
     mutationFn: async (plan) => {
       const planDetails = PLANS.find(p => p.id === plan);
       const startDate = format(new Date(), "yyyy-MM-dd");
-      const endDate = format(addMonths(new Date(), 1), "yyyy-MM-dd");
 
       // Temporarily bypass payment - directly activate subscription
       const subs = await base44.entities.Subscription.filter({ user_id: user.id });
       const existingSub = subs[0];
 
       if (existingSub) {
+        // If resubscribing after cancellation, keep original billing date
+        const endDate = existingSub.status === 'cancelled' 
+          ? existingSub.end_date 
+          : format(addMonths(new Date(), 1), "yyyy-MM-dd");
+
         await base44.entities.Subscription.update(existingSub.id, {
           plan,
           status: 'active',
@@ -195,6 +204,7 @@ export default function Subscription() {
           features: planDetails.features,
         });
       } else {
+        const endDate = format(addMonths(new Date(), 1), "yyyy-MM-dd");
         await base44.entities.Subscription.create({
           user_id: user.id,
           plan,
