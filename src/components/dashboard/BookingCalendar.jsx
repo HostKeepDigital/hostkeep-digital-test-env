@@ -286,7 +286,7 @@ export default function BookingCalendar({ bookings = [], properties = [] }) {
               });
 
               const maxRows = Math.max(0, ...placedBookings.map(pb => pb.row));
-              const rowHeight = Math.max(100, (maxRows + 1) * 36 + 40);
+              const rowHeight = Math.max(60, (maxRows + 1) * 28 + 28);
 
               return (
               <div key={wIdx} className="grid grid-cols-7 relative border-b last:border-b-0" style={{ minHeight: `${rowHeight}px`, minWidth: '320px' }}>
