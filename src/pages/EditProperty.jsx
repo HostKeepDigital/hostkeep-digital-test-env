@@ -74,6 +74,7 @@ export default function EditProperty() {
           street: "", 
           locality: "", 
           town_city: "", 
+          county: "",
           postcode: ""
         },
         photos: property.photos || [],
@@ -333,6 +334,9 @@ export default function EditProperty() {
     }
     if (!formData.location?.town_city?.trim()) {
       errorsByTab.location.push("Town/City is required");
+    }
+    if (!formData.location?.county?.trim()) {
+      errorsByTab.location.push("County is required");
     }
     if (!formData.location?.postcode?.trim()) {
       errorsByTab.location.push("Postcode is required");
@@ -658,25 +662,34 @@ export default function EditProperty() {
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Town/City</Label>
-                    <Input
-                      value={formData.location.town_city}
-                      onChange={(e) => handleLocationChange("town_city", e.target.value)}
-                      placeholder="London"
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label>Postcode</Label>
-                    <Input
-                      value={formData.location.postcode}
-                      onChange={(e) => handleLocationChange("postcode", e.target.value.toUpperCase())}
-                      placeholder="SW1A 1AA"
-                      className="mt-1"
-                    />
-                  </div>
-                </div>
+                   <div>
+                     <Label>Town/City</Label>
+                     <Input
+                       value={formData.location.town_city}
+                       onChange={(e) => handleLocationChange("town_city", e.target.value)}
+                       placeholder="London"
+                       className="mt-1"
+                     />
+                   </div>
+                   <div>
+                     <Label>County</Label>
+                     <Input
+                       value={formData.location.county || ""}
+                       onChange={(e) => handleLocationChange("county", e.target.value)}
+                       placeholder="Greater London"
+                       className="mt-1"
+                     />
+                   </div>
+                 </div>
+                 <div>
+                   <Label>Postcode</Label>
+                   <Input
+                     value={formData.location.postcode}
+                     onChange={(e) => handleLocationChange("postcode", e.target.value.toUpperCase())}
+                     placeholder="SW1A 1AA"
+                     className="mt-1"
+                   />
+                 </div>
               </CardContent>
             </Card>
           </TabsContent>
