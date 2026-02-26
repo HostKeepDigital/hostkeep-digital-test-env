@@ -1,4 +1,5 @@
 import LegalNavigation from "@/components/legal/LegalNavigation";
+import LegalBackButton from "@/components/legal/LegalBackButton";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";

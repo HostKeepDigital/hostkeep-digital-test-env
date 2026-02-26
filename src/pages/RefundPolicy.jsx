@@ -1,4 +1,5 @@
 import LegalNavigation from "@/components/legal/LegalNavigation";
+import LegalBackButton from "@/components/legal/LegalBackButton";
 
 export default function RefundPolicy() {
   return (
