@@ -69,7 +69,6 @@ import EditProperty from './pages/EditProperty';
 import GuestMessages from './pages/GuestMessages';
 import GuestProfile from './pages/GuestProfile';
 import GuestTerms from './pages/GuestTerms';
-import Home from './pages/Home';
 import HostBookings from './pages/HostBookings';
 import HostCancellationPolicies from './pages/HostCancellationPolicies';
 import HostDashboard from './pages/HostDashboard';
@@ -90,6 +89,8 @@ import RefundPolicy from './pages/RefundPolicy';
 import Search from './pages/Search';
 import Subscription from './pages/Subscription';
 import TermsAndConditions from './pages/TermsAndConditions';
+import Home from './pages/Home';
+import LockScreen from './pages/LockScreen';
 import __Layout from './Layout.jsx';
 
 
@@ -116,7 +117,6 @@ export const PAGES = {
     "GuestMessages": GuestMessages,
     "GuestProfile": GuestProfile,
     "GuestTerms": GuestTerms,
-    "Home": Home,
     "HostBookings": HostBookings,
     "HostCancellationPolicies": HostCancellationPolicies,
     "HostDashboard": HostDashboard,
@@ -137,6 +137,8 @@ export const PAGES = {
     "Search": Search,
     "Subscription": Subscription,
     "TermsAndConditions": TermsAndConditions,
+    "Home": Home,
+    "LockScreen": LockScreen,
 }
 
 export const pagesConfig = {
