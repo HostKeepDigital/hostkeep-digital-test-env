@@ -48,6 +48,7 @@
  * The mainPage value must match a key in the PAGES object exactly.
  */
 import AboutUs from './pages/AboutUs';
+import Accessibility from './pages/Accessibility';
 import AdminVerifications from './pages/AdminVerifications';
 import BecomeCleaner from './pages/BecomeCleaner';
 import BecomeHost from './pages/BecomeHost';
@@ -59,6 +60,7 @@ import CleanerPricing from './pages/CleanerPricing';
 import CleanerProfile from './pages/CleanerProfile';
 import CleanerSignup from './pages/CleanerSignup';
 import CleanerSubscriptionPay from './pages/CleanerSubscriptionPay';
+import CleanerTerms from './pages/CleanerTerms';
 import CleanerVerification from './pages/CleanerVerification';
 import CookiePolicy from './pages/CookiePolicy';
 import CreateProperty from './pages/CreateProperty';
@@ -66,6 +68,7 @@ import DisputePolicy from './pages/DisputePolicy';
 import EditProperty from './pages/EditProperty';
 import GuestMessages from './pages/GuestMessages';
 import GuestProfile from './pages/GuestProfile';
+import GuestTerms from './pages/GuestTerms';
 import Home from './pages/Home';
 import HostBookings from './pages/HostBookings';
 import HostCancellationPolicies from './pages/HostCancellationPolicies';
@@ -87,14 +90,12 @@ import RefundPolicy from './pages/RefundPolicy';
 import Search from './pages/Search';
 import Subscription from './pages/Subscription';
 import TermsAndConditions from './pages/TermsAndConditions';
-import CleanerTerms from './pages/CleanerTerms';
-import GuestTerms from './pages/GuestTerms';
-import Accessibility from './pages/Accessibility';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "AboutUs": AboutUs,
+    "Accessibility": Accessibility,
     "AdminVerifications": AdminVerifications,
     "BecomeCleaner": BecomeCleaner,
     "BecomeHost": BecomeHost,
@@ -106,6 +107,7 @@ export const PAGES = {
     "CleanerProfile": CleanerProfile,
     "CleanerSignup": CleanerSignup,
     "CleanerSubscriptionPay": CleanerSubscriptionPay,
+    "CleanerTerms": CleanerTerms,
     "CleanerVerification": CleanerVerification,
     "CookiePolicy": CookiePolicy,
     "CreateProperty": CreateProperty,
@@ -113,6 +115,7 @@ export const PAGES = {
     "EditProperty": EditProperty,
     "GuestMessages": GuestMessages,
     "GuestProfile": GuestProfile,
+    "GuestTerms": GuestTerms,
     "Home": Home,
     "HostBookings": HostBookings,
     "HostCancellationPolicies": HostCancellationPolicies,
@@ -134,9 +137,6 @@ export const PAGES = {
     "Search": Search,
     "Subscription": Subscription,
     "TermsAndConditions": TermsAndConditions,
-    "CleanerTerms": CleanerTerms,
-    "GuestTerms": GuestTerms,
-    "Accessibility": Accessibility,
 }
 
 export const pagesConfig = {

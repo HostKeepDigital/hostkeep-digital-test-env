@@ -60,7 +60,7 @@ export default function AboutUs() {
           >
             <Link to={createPageUrl("CreateProperty")}>
               <Button size="lg" className="bg-white text-teal-700 hover:bg-gray-100">
-                <Home className="w-5 h-5 mr-2" /> List Your Home
+                <Home className="w-5 h-5 mr-2" /> List Your Property
               </Button>
             </Link>
           </motion.div>
