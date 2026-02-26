@@ -183,6 +183,7 @@ export default function HostBookings() {
               </TabsTrigger>
             </TabsList>
           </div>
+          </div>
           {/* Desktop tabs */}
           <div className="hidden md:block">
             <TabsList className="bg-white border border-gray-100">
