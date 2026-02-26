@@ -299,6 +299,37 @@ export default function EditProperty() {
     }));
   };
 
+  const validateMandatoryFields = () => {
+    const errors = [];
+    
+    if (!formData.title || formData.title.length < 16 || formData.title.length > 50) {
+      errors.push("Property title must be 16-50 characters");
+    }
+    if (!formData.property_type) {
+      errors.push("Property type is required");
+    }
+    if (!formData.guest_capacity || formData.guest_capacity <= 0) {
+      errors.push("Guest capacity must be at least 1");
+    }
+    if (!formData.description || formData.description.length < 50) {
+      errors.push("Description must be at least 50 characters");
+    }
+    if (!formData.location?.street?.trim() || !formData.location?.town_city?.trim() || !formData.location?.postcode?.trim()) {
+      errors.push("Street, town/city, and postcode are required");
+    }
+    if (!formData.photos || formData.photos.length < 5) {
+      errors.push("At least 5 photos are required");
+    }
+    if (!formData.nightly_rate || formData.nightly_rate <= 0) {
+      errors.push("Nightly rate must be greater than 0");
+    }
+    if (!formData.cancellation_policy_id) {
+      errors.push("Cancellation policy is required");
+    }
+    
+    return errors;
+  };
+
   const handleSave = async (proceed) => {
     if (formData.photos.length < 5) {
       toast.error("Please upload at least 5 photos before saving");
@@ -342,6 +373,32 @@ export default function EditProperty() {
       if (typeof proceed === 'function') proceed();
     } catch (e) {
       toast.error("Failed to save changes");
+    }
+  };
+
+  const handlePublish = async () => {
+    const errors = validateMandatoryFields();
+    
+    if (errors.length > 0) {
+      toast.error(
+        <div>
+          <p className="font-semibold mb-1">Cannot publish property:</p>
+          <ul className="list-disc pl-4 text-sm">
+            {errors.map((error, idx) => (
+              <li key={idx}>{error}</li>
+            ))}
+          </ul>
+        </div>,
+        { duration: 6000 }
+      );
+      return;
+    }
+
+    try {
+      await updateMutation.mutateAsync({ status: 'published' });
+      toast.success("Property published successfully!");
+    } catch (e) {
+      toast.error("Failed to publish property");
     }
   };
 
@@ -398,17 +455,32 @@ export default function EditProperty() {
                 <p className="text-sm text-gray-500">{formData.title}</p>
               </div>
             </div>
-            <Button 
-              onClick={handleSave}
-              disabled={updateMutation.isPending || formData.photos.length < 5 || getDuplicatePhotos().length > 0 || !formData.cancellation_policy_id}
-              className="bg-teal-600 hover:bg-teal-700"
-            >
-              {updateMutation.isPending ? (
-                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
-              ) : (
-                "Save Changes"
+            <div className="flex items-center gap-2">
+              {formData.status === 'draft' && (
+                <Button 
+                  onClick={handlePublish}
+                  disabled={updateMutation.isPending}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  {updateMutation.isPending ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Publishing...</>
+                  ) : (
+                    "Publish Property"
+                  )}
+                </Button>
               )}
-            </Button>
+              <Button 
+                onClick={handleSave}
+                disabled={updateMutation.isPending || formData.photos.length < 5 || getDuplicatePhotos().length > 0 || !formData.cancellation_policy_id}
+                className="bg-teal-600 hover:bg-teal-700"
+              >
+                {updateMutation.isPending ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
+                ) : (
+                  "Save Changes"
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
