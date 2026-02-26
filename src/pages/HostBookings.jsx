@@ -151,7 +151,9 @@ export default function HostBookings() {
 
         <Tabs defaultValue="awaiting_decision" className="space-y-6">
           {/* Mobile tabs */}
-          <div className="md:hidden overflow-x-auto -mx-4 px-4">
+          <div className="md:hidden relative">
+          <p className="text-xs text-gray-400 mb-1 flex items-center gap-1 px-1">Swipe to see more tabs →</p>
+          <div className="overflow-x-auto -mx-4 px-4">
             <TabsList className="bg-white border border-gray-100 w-max">
               <TabsTrigger value="awaiting_decision" className="gap-1.5 text-xs whitespace-nowrap">
                 <Clock className="w-3.5 h-3.5 shrink-0" />
