@@ -141,7 +141,7 @@ export default function Layout({ children, currentPageName }) {
               </div>
               <span className="text-lg font-bold text-gray-900">HostKeep</span>
             </Link>
-            <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+            <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="relative p-4 -m-2">
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </Button>
           </div>
