@@ -46,13 +46,15 @@ export default function LockScreen({ onAuthenticated }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-800 border-2 border-gray-700 mb-6">
-            <Lock className="w-10 h-10 text-gray-400" />
-          </div>
-          <h1 className="text-2xl font-bold text-white mb-2">Access Restricted</h1>
-          <p className="text-gray-400">Authorized Users Only</p>
-        </div>
+         <div className="text-center mb-8">
+           <img 
+             src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698eee4108bd1d9467648326/f825bc2e7_HostKeepLogo.png"
+             alt="HostKeep Logo"
+             className="h-24 mx-auto mb-6"
+           />
+           <h1 className="text-2xl font-bold text-white mb-2">Access Restricted</h1>
+           <p className="text-gray-400">Authorized Users Only</p>
+         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
