@@ -110,11 +110,11 @@ export default function ExportPricing({ pricingSettings }) {
     doc.text("Pricing Calendar - Grouped View", 14, 40);
     
     doc.setFontSize(10);
-    doc.text(`Generated: ${format(today, 'dd/MM/yyyy')}`, 14, 22);
-    doc.text(`Period: ${format(today, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')}`, 14, 27);
+    doc.text(`Generated: ${format(today, 'dd/MM/yyyy')}`, 14, 32);
+    doc.text(`Period: ${format(today, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')}`, 14, 37);
 
     // Draw table manually
-    let y = 40;
+    let y = 50;
     const lineHeight = 7;
     const pageHeight = 280;
     
