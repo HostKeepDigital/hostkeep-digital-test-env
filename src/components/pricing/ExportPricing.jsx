@@ -99,7 +99,7 @@ export default function ExportPricing({ pricingSettings }) {
     if (currentRange) ranges.push(currentRange);
 
     // Build CSV
-    let csv = "Start Date,End Date,Price (£),Nights,Total Value (£),Rule Type\n";
+    let csv = "Start Date,End Date,Nightly Price,Nights,Total Value,Rule Type\n";
     
     ranges.forEach(range => {
       const startStr = format(range.startDate, 'dd/MM/yyyy');
@@ -107,7 +107,7 @@ export default function ExportPricing({ pricingSettings }) {
       const nights = differenceInDays(range.endDate, range.startDate) + 1;
       const totalValue = range.price * nights;
 
-      csv += `${startStr},${endStr},£${range.price},${nights},£${totalValue},${range.ruleType}\n`;
+      csv += `${startStr},${endStr},${range.price},${nights},${totalValue},${range.ruleType}\n`;
     });
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -126,7 +126,7 @@ export default function ExportPricing({ pricingSettings }) {
     const endDate = addMonths(today, 12);
     const dates = eachDayOfInterval({ start: today, end: endDate });
 
-    let csv = "Date,Day,Price (£),Rule Type\n";
+    let csv = "Date,Day,Nightly Price,Rule Type\n";
     
     dates.forEach(date => {
       const dateStr = format(date, 'yyyy-MM-dd');
@@ -134,7 +134,7 @@ export default function ExportPricing({ pricingSettings }) {
       const price = calculatePrice(date);
       const ruleType = getRuleType(date, dateStr);
 
-      csv += `${format(date, 'dd/MM/yyyy')},${dayName},£${price},${ruleType}\n`;
+      csv += `${format(date, 'dd/MM/yyyy')},${dayName},${price},${ruleType}\n`;
     });
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
