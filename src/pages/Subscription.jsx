@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { format, addMonths } from "date-fns";
 import { createPageUrl } from "@/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { addUserRole, getUserRoles, hasRole } from "@/components/utils/roleHelpers";
 
 const PLANS = [
   {
@@ -112,6 +113,15 @@ export default function Subscription() {
             });
           }
 
+          // Add host role to user
+          const roles = await getUserRoles(user.id);
+          if (!hasRole(roles, 'guest')) {
+            await addUserRole(user.id, 'guest');
+          }
+          if (!hasRole(roles, 'host')) {
+            await addUserRole(user.id, 'host');
+          }
+
           queryClient.invalidateQueries({ queryKey: ['subscription'] });
           toast.success("Subscription activated! You can now list your properties.");
           
@@ -142,8 +152,10 @@ export default function Subscription() {
             }
           }
           
-          // Clean up URL
-          window.history.replaceState({}, '', createPageUrl('Subscription'));
+          // Redirect to CreateProperty page
+          setTimeout(() => {
+            window.location.href = createPageUrl('CreateProperty');
+          }, 1500);
         } catch (error) {
           toast.error("Failed to activate subscription. Please contact support.");
         }
@@ -198,6 +210,15 @@ export default function Subscription() {
       return { plan };
     },
     onSuccess: async () => {
+      // Add host role to user
+      const roles = await getUserRoles(user.id);
+      if (!hasRole(roles, 'guest')) {
+        await addUserRole(user.id, 'guest');
+      }
+      if (!hasRole(roles, 'host')) {
+        await addUserRole(user.id, 'host');
+      }
+
       queryClient.invalidateQueries({ queryKey: ['subscription'] });
       toast.success("Subscription activated! You can now list your properties.");
       
@@ -228,8 +249,9 @@ export default function Subscription() {
         }
       }
       
+      // Redirect to CreateProperty page
       setTimeout(() => {
-        window.location.href = createPageUrl('HostDashboard');
+        window.location.href = createPageUrl('CreateProperty');
       }, 1500);
     },
     onError: (error) => {
