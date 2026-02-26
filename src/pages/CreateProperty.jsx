@@ -91,6 +91,7 @@ export default function CreateProperty() {
       street: "",
       locality: "",
       town_city: "",
+      county: "",
       postcode: ""
     },
     photos: [],
@@ -263,7 +264,7 @@ export default function CreateProperty() {
     switch (currentStep) {
       case 1: return formData.title.length >= 16 && formData.title.length <= 50 && !titleError && formData.property_type && formData.guest_capacity > 0;
       case 2: return formData.description.length >= 50;
-      case 3: return formData.location.street?.trim() && formData.location.town_city?.trim() && formData.location.postcode?.trim();
+      case 3: return formData.location.street?.trim() && formData.location.town_city?.trim() && formData.location.county?.trim() && formData.location.postcode?.trim();
       case 4: return formData.photos.length >= 5 && getDuplicatePhotos().length === 0;
       case 5: return formData.nightly_rate > 0;
       case 6: return !!formData.cancellation_policy_id; // Cancellation policy is required
@@ -567,14 +568,23 @@ export default function CreateProperty() {
                       />
                     </div>
                     <div>
-                      <Label>Postcode</Label>
+                      <Label>County</Label>
                       <Input
-                        value={formData.location.postcode}
-                        onChange={(e) => handleLocationChange("postcode", e.target.value.toUpperCase())}
-                        placeholder="SW1A 1AA"
+                        value={formData.location.county}
+                        onChange={(e) => handleLocationChange("county", e.target.value)}
+                        placeholder="Greater London"
                         className="mt-1"
                       />
                     </div>
+                  </div>
+                  <div>
+                    <Label>Postcode</Label>
+                    <Input
+                      value={formData.location.postcode}
+                      onChange={(e) => handleLocationChange("postcode", e.target.value.toUpperCase())}
+                      placeholder="SW1A 1AA"
+                      className="mt-1"
+                    />
                   </div>
                 </CardContent>
               </Card>
