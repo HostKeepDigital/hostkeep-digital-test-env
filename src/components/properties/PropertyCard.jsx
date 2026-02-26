@@ -24,9 +24,22 @@ export default function PropertyCard({ property, onSave, isAvailable = true, una
     e.stopPropagation();
     
     const params = new URLSearchParams(window.location.search);
-    if (targetCheckIn) params.set('checkIn', targetCheckIn);
-    if (targetDuration) params.set('duration', targetDuration.toString());
     
+    // Update search params in URL
+    const currentUrl = new URL(window.location.href);
+    if (targetCheckIn) {
+      params.set('checkIn', targetCheckIn);
+      currentUrl.searchParams.set('checkIn', targetCheckIn);
+    }
+    if (targetDuration) {
+      params.set('duration', targetDuration.toString());
+      currentUrl.searchParams.set('duration', targetDuration.toString());
+    }
+    
+    // Update URL without navigation
+    window.history.replaceState({}, '', currentUrl);
+    
+    // Navigate to property details with updated params
     const url = createPageUrl('PropertyDetails') + `?id=${property.id}&${params.toString()}`;
     navigate(url);
   };
