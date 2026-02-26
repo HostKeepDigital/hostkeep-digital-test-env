@@ -163,17 +163,17 @@ export default function ExportPricing({ pricingSettings }) {
     
     // Add logo at the top left
     const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698eee4108bd1d9467648326/4314a0b14_HostKeepandLogo.png';
-    doc.addImage(logoUrl, 'PNG', 14, 8, 50, 25);
+    doc.addImage(logoUrl, 'PNG', 14, 8, 100, 50);
     
     doc.setFontSize(16);
-    doc.text("Pricing Calendar - Detailed View", 14, 42);
+    doc.text("Pricing Calendar - Detailed View", 14, 70);
     
     doc.setFontSize(10);
-    doc.text(`Generated: ${format(today, 'dd/MM/yyyy')}`, 14, 50);
-    doc.text(`Period: ${format(today, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')}`, 14, 55);
+    doc.text(`Generated: ${format(today, 'dd/MM/yyyy')}`, 14, 78);
+    doc.text(`Period: ${format(today, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')}`, 14, 83);
 
     // Draw table manually
-    let y = 65;
+    let y = 93;
     const lineHeight = 6;
     const pageHeight = 280;
     
