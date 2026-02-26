@@ -24,7 +24,7 @@ import { getUserRoles, hasRole } from "@/components/utils/roleHelpers";
 import RoleSwitcher from "@/components/RoleSwitcher";
 
 // Pages without layout (guest facing / public)
-const PUBLIC_PAGES = ["Pay"];
+const PUBLIC_PAGES = ["Pay", "Home"];
 
 // Host dashboard pages
 const HOST_PAGES = ["HostDashboard", "HostBookings", "HostProperties", "HostMessages", "HostSettings", "CreateProperty", "EditProperty"];
