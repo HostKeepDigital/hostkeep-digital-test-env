@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -54,7 +54,6 @@ export default function CreateProperty() {
   const [user, setUser] = useState(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [isUploading, setIsUploading] = useState(false);
-  const { useRef } = require('react');
   const formContentRef = useRef(null);
   const queryClient = useQueryClient();
 
