@@ -300,34 +300,58 @@ export default function EditProperty() {
   };
 
   const validateMandatoryFields = () => {
-    const errors = [];
+    const errorsByTab = {
+      basics: [],
+      details: [],
+      location: [],
+      photos: [],
+      pricing: [],
+      'booking-rules': []
+    };
     
+    // Basics tab
     if (!formData.title || formData.title.length < 16 || formData.title.length > 50) {
-      errors.push("Property title must be 16-50 characters");
+      errorsByTab.basics.push("Property title must be 16-50 characters");
     }
     if (!formData.property_type) {
-      errors.push("Property type is required");
+      errorsByTab.basics.push("Property type is required");
     }
     if (!formData.guest_capacity || formData.guest_capacity <= 0) {
-      errors.push("Guest capacity must be at least 1");
-    }
-    if (!formData.description || formData.description.length < 50) {
-      errors.push("Description must be at least 50 characters");
-    }
-    if (!formData.location?.street?.trim() || !formData.location?.town_city?.trim() || !formData.location?.postcode?.trim()) {
-      errors.push("Street, town/city, and postcode are required");
-    }
-    if (!formData.photos || formData.photos.length < 5) {
-      errors.push("At least 5 photos are required");
-    }
-    if (!formData.nightly_rate || formData.nightly_rate <= 0) {
-      errors.push("Nightly rate must be greater than 0");
-    }
-    if (!formData.cancellation_policy_id) {
-      errors.push("Cancellation policy is required");
+      errorsByTab.basics.push("Guest capacity must be at least 1");
     }
     
-    return errors;
+    // Description tab
+    if (!formData.description || formData.description.length < 50) {
+      errorsByTab.details.push("Description must be at least 50 characters");
+    }
+    
+    // Location tab
+    if (!formData.location?.street?.trim()) {
+      errorsByTab.location.push("Street address is required");
+    }
+    if (!formData.location?.town_city?.trim()) {
+      errorsByTab.location.push("Town/City is required");
+    }
+    if (!formData.location?.postcode?.trim()) {
+      errorsByTab.location.push("Postcode is required");
+    }
+    
+    // Photos tab
+    if (!formData.photos || formData.photos.length < 5) {
+      errorsByTab.photos.push(`At least 5 photos required (currently: ${formData.photos?.length || 0})`);
+    }
+    
+    // Pricing tab
+    if (!formData.nightly_rate || formData.nightly_rate <= 0) {
+      errorsByTab.pricing.push("Nightly rate must be greater than £0");
+    }
+    
+    // Booking Rules tab
+    if (!formData.cancellation_policy_id) {
+      errorsByTab['booking-rules'].push("Cancellation policy is required");
+    }
+    
+    return errorsByTab;
   };
 
   const handleSave = async (proceed) => {
@@ -377,19 +401,37 @@ export default function EditProperty() {
   };
 
   const handlePublish = async () => {
-    const errors = validateMandatoryFields();
+    const errorsByTab = validateMandatoryFields();
     
-    if (errors.length > 0) {
+    const tabNames = {
+      basics: "Basics",
+      details: "Description",
+      location: "Location",
+      photos: "Photos",
+      pricing: "Pricing",
+      'booking-rules': "Booking Rules"
+    };
+    
+    const tabsWithErrors = Object.entries(errorsByTab).filter(([_, errors]) => errors.length > 0);
+    
+    if (tabsWithErrors.length > 0) {
       toast.error(
-        <div>
-          <p className="font-semibold mb-1">Cannot publish property:</p>
-          <ul className="list-disc pl-4 text-sm">
-            {errors.map((error, idx) => (
-              <li key={idx}>{error}</li>
+        <div className="max-w-md">
+          <p className="font-semibold mb-2">Cannot publish property. Please complete the following:</p>
+          <div className="space-y-3">
+            {tabsWithErrors.map(([tab, errors]) => (
+              <div key={tab}>
+                <p className="font-medium text-sm">{tabNames[tab]}:</p>
+                <ul className="list-disc pl-5 text-xs mt-1 space-y-0.5">
+                  {errors.map((error, idx) => (
+                    <li key={idx}>{error}</li>
+                  ))}
+                </ul>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>,
-        { duration: 6000 }
+        { duration: 8000 }
       );
       return;
     }
