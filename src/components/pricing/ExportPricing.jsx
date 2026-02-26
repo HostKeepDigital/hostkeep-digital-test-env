@@ -6,7 +6,6 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
 
 export default function ExportPricing({ pricingSettings }) {
   const [exportDetailed, setExportDetailed] = useState(false);
@@ -110,21 +109,42 @@ export default function ExportPricing({ pricingSettings }) {
     doc.text(`Generated: ${format(today, 'dd/MM/yyyy')}`, 14, 22);
     doc.text(`Period: ${format(today, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')}`, 14, 27);
 
-    const tableData = ranges.map(range => {
+    // Draw table manually
+    let y = 40;
+    const lineHeight = 7;
+    const pageHeight = 280;
+    
+    // Table headers
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'bold');
+    doc.text("Start Date", 14, y);
+    doc.text("End Date", 44, y);
+    doc.text("Price", 74, y);
+    doc.text("Nights", 94, y);
+    doc.text("Total", 114, y);
+    doc.text("Rule Type", 140, y);
+    y += lineHeight;
+    
+    doc.setFont(undefined, 'normal');
+    
+    ranges.forEach(range => {
+      if (y > pageHeight) {
+        doc.addPage();
+        y = 20;
+      }
+      
       const startStr = format(range.startDate, 'dd/MM/yyyy');
       const endStr = format(range.endDate, 'dd/MM/yyyy');
       const nights = differenceInDays(range.endDate, range.startDate) + 1;
       const totalValue = range.price * nights;
 
-      return [startStr, endStr, `£${range.price}`, nights, `£${totalValue}`, range.ruleType];
-    });
-
-    doc.autoTable({
-      head: [['Start Date', 'End Date', 'Nightly Price', 'Nights', 'Total Value', 'Rule Type']],
-      body: tableData,
-      startY: 35,
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [20, 184, 166] }
+      doc.text(startStr, 14, y);
+      doc.text(endStr, 44, y);
+      doc.text(`£${range.price}`, 74, y);
+      doc.text(String(nights), 94, y);
+      doc.text(`£${totalValue}`, 114, y);
+      doc.text(range.ruleType, 140, y);
+      y += lineHeight;
     });
 
     doc.save(`pricing-grouped-${format(today, 'dd-MM-yyyy')}.pdf`);
@@ -144,21 +164,39 @@ export default function ExportPricing({ pricingSettings }) {
     doc.text(`Generated: ${format(today, 'dd/MM/yyyy')}`, 14, 22);
     doc.text(`Period: ${format(today, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')}`, 14, 27);
 
-    const tableData = dates.map(date => {
+    // Draw table manually
+    let y = 40;
+    const lineHeight = 6;
+    const pageHeight = 280;
+    
+    // Table headers
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'bold');
+    doc.text("Date", 14, y);
+    doc.text("Day", 50, y);
+    doc.text("Price", 90, y);
+    doc.text("Rule Type", 120, y);
+    y += lineHeight;
+    
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(8);
+    
+    dates.forEach(date => {
+      if (y > pageHeight) {
+        doc.addPage();
+        y = 20;
+      }
+      
       const dateStr = format(date, 'yyyy-MM-dd');
       const dayName = format(date, 'EEEE');
       const price = calculatePrice(date);
       const ruleType = getRuleType(date, dateStr);
 
-      return [format(date, 'dd/MM/yyyy'), dayName, `£${price}`, ruleType];
-    });
-
-    doc.autoTable({
-      head: [['Date', 'Day', 'Nightly Price', 'Rule Type']],
-      body: tableData,
-      startY: 35,
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [20, 184, 166] }
+      doc.text(format(date, 'dd/MM/yyyy'), 14, y);
+      doc.text(dayName, 50, y);
+      doc.text(`£${price}`, 90, y);
+      doc.text(ruleType, 120, y);
+      y += lineHeight;
     });
 
     doc.save(`pricing-detailed-${format(today, 'dd-MM-yyyy')}.pdf`);
