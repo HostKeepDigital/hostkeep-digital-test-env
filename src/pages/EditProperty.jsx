@@ -357,17 +357,20 @@ export default function EditProperty() {
   };
 
   const handleSave = async (proceed) => {
-    if (formData.photos.length < 5) {
-      toast.error("Please upload at least 5 photos before saving");
-      return;
-    }
-    if (getDuplicatePhotos().length > 0) {
-      toast.error("Please remove duplicate photos before saving");
-      return;
-    }
-    if (!formData.cancellation_policy_id) {
-      toast.error("Please select a cancellation policy before saving");
-      return;
+    // Only enforce strict validation when saving manually (not when navigating away)
+    if (!proceed) {
+      if (formData.photos.length < 5) {
+        toast.error("Please upload at least 5 photos before saving");
+        return;
+      }
+      if (getDuplicatePhotos().length > 0) {
+        toast.error("Please remove duplicate photos before saving");
+        return;
+      }
+      if (!formData.cancellation_policy_id) {
+        toast.error("Please select a cancellation policy before saving");
+        return;
+      }
     }
     
     let currentFormData = { ...formData };
