@@ -24,7 +24,7 @@ import { getUserRoles, hasRole } from "@/components/utils/roleHelpers";
 import RoleSwitcher from "@/components/RoleSwitcher";
 
 // Pages without layout (guest facing / public)
-const PUBLIC_PAGES = ["Pay", "Home"];
+const PUBLIC_PAGES = ["Pay"];
 
 // Host dashboard pages
 const HOST_PAGES = ["HostDashboard", "HostBookings", "HostProperties", "HostMessages", "HostSettings", "CreateProperty", "EditProperty"];
@@ -100,7 +100,7 @@ export default function Layout({ children, currentPageName }) {
         {/* Desktop Sidebar */}
         <aside className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
           <div className="flex flex-col flex-grow bg-white border-r border-gray-100 pt-5 pb-4 overflow-y-auto">
-            <Link to={createPageUrl('PropertyHome')} onClick={(e) => handleNavClick(e, createPageUrl('PropertyHome'))} className="flex items-center gap-3 px-6 mb-8">
+            <Link to={createPageUrl('Home')} onClick={(e) => handleNavClick(e, createPageUrl('Home'))} className="flex items-center gap-3 px-6 mb-8">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center">
                 <Home className="w-5 h-5 text-white" />
               </div>
@@ -133,7 +133,7 @@ export default function Layout({ children, currentPageName }) {
         {/* Mobile Header for Host */}
         <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100">
           <div className="flex items-center justify-between px-4 py-3">
-            <Link to={createPageUrl('PropertyHome')} onClick={(e) => handleNavClick(e, createPageUrl('PropertyHome'))} className="flex items-center gap-3">
+            <Link to={createPageUrl('Home')} onClick={(e) => handleNavClick(e, createPageUrl('Home'))} className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center">
                 <Home className="w-4 h-4 text-white" />
               </div>
@@ -191,7 +191,7 @@ export default function Layout({ children, currentPageName }) {
       <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            <Link to={createPageUrl('PropertyHome')} onClick={(e) => handleNavClick(e, createPageUrl('PropertyHome'))} className="flex items-center gap-3">
+            <Link to={createPageUrl('Home')} onClick={(e) => handleNavClick(e, createPageUrl('Home'))} className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center">
                 <Home className="w-4 h-4 text-white" />
               </div>
