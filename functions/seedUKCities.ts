@@ -60,10 +60,8 @@ const UK_CITIES_DATA = [
   { name: 'St Albans', county: 'Hertfordshire', country: 'England', lat: 51.7487, lng: -0.3390 },
   { name: 'Hereford', county: 'Herefordshire', country: 'England', lat: 52.0562, lng: -2.7153 },
   { name: 'Kingston upon Thames', county: 'Greater London', country: 'England', lat: 51.4129, lng: -0.3044 },
-  { name: 'Stoke-on-Trent', county: 'Staffordshire', country: 'England', lat: 53.0029, lng: -2.1794 },
   { name: 'Lichfield', county: 'Staffordshire', country: 'England', lat: 52.6808, lng: -1.8322 },
-  { name: 'Newcastleunder-Lyme', county: 'Staffordshire', country: 'England', lat: 53.0095, lng: -2.1324 },
-  { name: 'Nottingham', county: 'Nottinghamshire', country: 'England', lat: 52.9549, lng: -1.1581 },
+  { name: 'Newcastle-under-Lyme', county: 'Staffordshire', country: 'England', lat: 53.0095, lng: -2.1324 },
 
   // SCOTLAND (7 official cities)
   { name: 'Glasgow', county: 'Glasgow City', country: 'Scotland', lat: 55.8642, lng: -4.2518 },
