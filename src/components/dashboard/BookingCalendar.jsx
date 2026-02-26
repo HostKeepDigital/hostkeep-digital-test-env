@@ -157,9 +157,11 @@ export default function BookingCalendar({ bookings = [], properties = [] }) {
                 <MessageSquare className="w-4 h-4 mr-2" /> Message Guest
               </Button>
               <div className="flex gap-2">
-                <Button variant="outline" className="flex-1">
-                  Modify
-                </Button>
+                {selectedBooking.booking_status === 'blocked' && (
+                  <Button variant="outline" className="flex-1">
+                    Modify
+                  </Button>
+                )}
                 <Button variant="outline" className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50">
                   Cancel
                 </Button>
