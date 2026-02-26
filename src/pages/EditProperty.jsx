@@ -490,10 +490,12 @@ export default function EditProperty() {
             }}>
               Discard
             </Button>
-            <Button onClick={() => handleSave(() => {
-              setShowUnsavedDialog(false);
-              if (pendingAction) pendingAction();
-            })}>
+            <Button onClick={async () => {
+              await handleSave(() => {
+                setShowUnsavedDialog(false);
+                if (pendingAction) pendingAction();
+              });
+            }}>
               Save Changes
             </Button>
           </DialogFooter>
