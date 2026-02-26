@@ -133,31 +133,33 @@ export default function AboutUs() {
       </section>
 
       {/* Comparison Table */}
-      <section className="py-16 lg:py-24 bg-gray-50">
+      <section className="py-12 lg:py-20 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Why HostKeep Is Different</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 text-center">Why HostKeep Is Different</h2>
           
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-            <div className="grid grid-cols-3 bg-gray-100 font-semibold text-sm">
-              <div className="p-4 text-gray-600"></div>
-              <div className="p-4 text-center text-teal-700 bg-teal-50">HostKeep</div>
-              <div className="p-4 text-center text-gray-600">Others</div>
-            </div>
-            {comparisonData.map((row, index) => (
-              <div key={index} className="grid grid-cols-3 border-t border-gray-100">
-                <div className="p-4 font-medium text-gray-800 text-sm">{row.feature}</div>
-                <div className="p-4 text-center text-sm bg-teal-50/50">
-                  <span className="inline-flex items-center gap-1 text-teal-700">
-                    <CheckCircle className="w-4 h-4" /> {row.hostkeep}
-                  </span>
-                </div>
-                <div className="p-4 text-center text-sm text-gray-500">
-                  <span className="inline-flex items-center gap-1">
-                    <X className="w-4 h-4 text-red-400" /> {row.others}
-                  </span>
-                </div>
+          <div className="bg-white rounded-2xl shadow-lg overflow-hidden overflow-x-auto">
+            <div className="min-w-[320px]">
+              <div className="grid grid-cols-3 bg-gray-100 font-semibold text-xs sm:text-sm">
+                <div className="p-3 sm:p-4 text-gray-600"></div>
+                <div className="p-3 sm:p-4 text-center text-teal-700 bg-teal-50">HostKeep</div>
+                <div className="p-3 sm:p-4 text-center text-gray-600">Others</div>
               </div>
-            ))}
+              {comparisonData.map((row, index) => (
+                <div key={index} className="grid grid-cols-3 border-t border-gray-100">
+                  <div className="p-3 sm:p-4 font-medium text-gray-800 text-xs sm:text-sm">{row.feature}</div>
+                  <div className="p-3 sm:p-4 text-center text-xs sm:text-sm bg-teal-50/50">
+                    <span className="inline-flex items-center gap-1 text-teal-700">
+                      <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" /> <span className="leading-tight">{row.hostkeep}</span>
+                    </span>
+                  </div>
+                  <div className="p-3 sm:p-4 text-center text-xs sm:text-sm text-gray-500">
+                    <span className="inline-flex items-center gap-1">
+                      <X className="w-3 h-3 sm:w-4 sm:h-4 text-red-400 flex-shrink-0" /> <span className="leading-tight">{row.others}</span>
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
