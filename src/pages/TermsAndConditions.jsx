@@ -1,6 +1,22 @@
 import LegalNavigation from "@/components/legal/LegalNavigation";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 export default function TermsAndConditions() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const propertyId = urlParams.get('propertyId');
+  const checkIn = urlParams.get('checkIn');
+  const nights = urlParams.get('nights');
+  const adults = urlParams.get('adults');
+  const childrenAges = urlParams.get('childrenAges');
+  
+  const hasBookingParams = propertyId && checkIn && nights;
+  const bookingParams = hasBookingParams 
+    ? `?id=${propertyId}&checkIn=${checkIn}&nights=${nights}&adults=${adults || 1}${childrenAges ? `&childrenAges=${childrenAges}` : ''}`
+    : '';
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto flex">
@@ -10,6 +26,14 @@ export default function TermsAndConditions() {
         
         <div className="flex-1 px-4 py-12 md:px-8">
           <div className="max-w-3xl mx-auto">
+            {hasBookingParams && (
+              <Link to={`${createPageUrl('PropertyDetails')}${bookingParams}`}>
+                <Button variant="outline" className="mb-6">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Booking
+                </Button>
+              </Link>
+            )}
             <p className="text-sm text-gray-500 mb-2">Last Updated: February 2026</p>
             <h1 className="text-4xl font-bold text-gray-900 mb-8">Terms & Conditions</h1>
 

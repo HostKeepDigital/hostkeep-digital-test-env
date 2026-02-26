@@ -685,7 +685,10 @@ export default function PropertyDetails() {
         <div className="grid gap-1.5 leading-none">
           <label htmlFor="terms" className="text-sm font-medium leading-none cursor-pointer">
             I agree to the terms & conditions{' '}
-            <Link to={createPageUrl('LegalCentre')} className="text-xs text-teal-600 hover:underline">
+            <Link 
+              to={`${createPageUrl('LegalCentre')}?propertyId=${propertyId}&checkIn=${checkIn}&nights=${nights}&adults=${guestData.adults}&childrenAges=${guestData.childrenAges.join(',')}`} 
+              className="text-xs text-teal-600 hover:underline"
+            >
               (See here)
             </Link>
           </label>

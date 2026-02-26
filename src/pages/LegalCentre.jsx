@@ -1,8 +1,22 @@
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import LegalNavigation from "@/components/legal/LegalNavigation";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 export default function LegalCentre() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const propertyId = urlParams.get('propertyId');
+  const checkIn = urlParams.get('checkIn');
+  const nights = urlParams.get('nights');
+  const adults = urlParams.get('adults');
+  const childrenAges = urlParams.get('childrenAges');
+  
+  const hasBookingParams = propertyId && checkIn && nights;
+  const bookingParams = hasBookingParams 
+    ? `?id=${propertyId}&checkIn=${checkIn}&nights=${nights}&adults=${adults || 1}${childrenAges ? `&childrenAges=${childrenAges}` : ''}`
+    : '';
+
   const documents = [
     { title: "Terms & Conditions", description: "The master agreement governing access to and use of the Platform.", page: "TermsAndConditions" },
     { title: "Privacy Policy", description: "Explains how HostKeep collects, uses, stores, and protects personal data in accordance with UK GDPR and the Data Protection Act 2018.", page: "PrivacyPolicy" },
@@ -24,6 +38,14 @@ export default function LegalCentre() {
         
         <div className="flex-1 px-4 py-12 md:px-8">
           <div className="max-w-3xl mx-auto">
+            {hasBookingParams && (
+              <Link to={`${createPageUrl('PropertyDetails')}${bookingParams}`}>
+                <Button variant="outline" className="mb-6">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Booking
+                </Button>
+              </Link>
+            )}
             <h1 className="text-4xl font-bold text-gray-900 mb-2">HostKeep Digital Ltd</h1>
             <p className="text-lg text-gray-600 mb-8">Legal Centre</p>
 
@@ -43,7 +65,10 @@ export default function LegalCentre() {
                 {documents.map((doc) => (
                   <Link
                     key={doc.page}
-                    to={createPageUrl(doc.page)}
+                    to={hasBookingParams 
+                      ? `${createPageUrl(doc.page)}?propertyId=${propertyId}&checkIn=${checkIn}&nights=${nights}&adults=${adults}&childrenAges=${childrenAges || ''}`
+                      : createPageUrl(doc.page)
+                    }
                     className="block p-6 bg-white rounded-xl border border-gray-100 hover:border-teal-300 hover:shadow-md transition-all"
                   >
                     <h3 className="text-lg font-semibold text-teal-700 mb-2">{doc.title}</h3>
