@@ -502,127 +502,146 @@ export default function Search() {
                 </Button>
               </SheetTrigger>
               <SheetContent className="w-full sm:max-w-md overflow-y-auto">
-                <SheetHeader>
-                  <SheetTitle>Filters</SheetTitle>
+                <SheetHeader className="border-b pb-4">
+                  <SheetTitle className="text-xl text-gray-900">Filter Properties</SheetTitle>
                 </SheetHeader>
-                <div className="mt-6 space-y-6">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">Property Type</label>
-                    <Select value={filters.type} onValueChange={(v) => handleFilterChange("type", v)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Types</SelectItem>
-                        <SelectItem value="lodges">Lodges</SelectItem>
-                        <SelectItem value="house">House</SelectItem>
-                        <SelectItem value="chalet">Chalet</SelectItem>
-                        <SelectItem value="caravan">Caravan</SelectItem>
-                        <SelectItem value="cabin">Cabin</SelectItem>
-                        <SelectItem value="bungalow">Bungalow</SelectItem>
-                        <SelectItem value="apartment">Apartment</SelectItem>
-                      </SelectContent>
-                    </Select>
+                <div className="mt-6 space-y-8">
+                  {/* Property Details */}
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-semibold text-teal-700 uppercase tracking-wide">Property Details</h3>
+                    
+                    <div>
+                      <label className="text-sm font-medium text-gray-900 mb-2 block">Property Type</label>
+                      <Select value={filters.type} onValueChange={(v) => handleFilterChange("type", v)}>
+                        <SelectTrigger className="border-gray-300 focus:border-teal-600 focus:ring-teal-600">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Types</SelectItem>
+                          <SelectItem value="lodges">Lodges</SelectItem>
+                          <SelectItem value="house">House</SelectItem>
+                          <SelectItem value="chalet">Chalet</SelectItem>
+                          <SelectItem value="caravan">Caravan</SelectItem>
+                          <SelectItem value="cabin">Cabin</SelectItem>
+                          <SelectItem value="bungalow">Bungalow</SelectItem>
+                          <SelectItem value="apartment">Apartment</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-900 mb-2 block">Bedrooms</label>
+                      <Select value={filters.bedrooms} onValueChange={(v) => handleFilterChange("bedrooms", v)}>
+                        <SelectTrigger className="border-gray-300 focus:border-teal-600 focus:ring-teal-600">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="any">Any</SelectItem>
+                          <SelectItem value="1">1+</SelectItem>
+                          <SelectItem value="2">2+</SelectItem>
+                          <SelectItem value="3">3+</SelectItem>
+                          <SelectItem value="4">4+</SelectItem>
+                          <SelectItem value="5">5+</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">Bedrooms</label>
-                    <Select value={filters.bedrooms} onValueChange={(v) => handleFilterChange("bedrooms", v)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="any">Any</SelectItem>
-                        <SelectItem value="1">1+</SelectItem>
-                        <SelectItem value="2">2+</SelectItem>
-                        <SelectItem value="3">3+</SelectItem>
-                        <SelectItem value="4">4+</SelectItem>
-                        <SelectItem value="5">5+</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  {/* Price Range */}
+                  <div className="space-y-4 pt-4 border-t">
+                    <h3 className="text-sm font-semibold text-teal-700 uppercase tracking-wide">Price Range</h3>
+                    <div>
+                      <div className="flex justify-between items-center mb-4">
+                        <span className="text-sm font-medium text-gray-900">£{filters.minPrice}</span>
+                        <span className="text-sm font-medium text-gray-900">£{filters.maxPrice}+</span>
+                      </div>
+                      <Slider
+                        value={[filters.minPrice, filters.maxPrice]}
+                        onValueChange={([min, max]) => {
+                          handleFilterChange("minPrice", min);
+                          handleFilterChange("maxPrice", max);
+                        }}
+                        max={1000}
+                        step={10}
+                        className="[&_[role=slider]]:bg-teal-600 [&_[role=slider]]:border-teal-600"
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Price Range: £{filters.minPrice} - £{filters.maxPrice}+
-                    </label>
-                    <Slider
-                      value={[filters.minPrice, filters.maxPrice]}
-                      onValueChange={([min, max]) => {
-                        handleFilterChange("minPrice", min);
-                        handleFilterChange("maxPrice", max);
-                      }}
-                      max={1000}
-                      step={10}
-                      className="mt-4"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-3 block">Amenities</label>
-                    <div className="grid grid-cols-2 gap-2">
+                  {/* Amenities */}
+                  <div className="space-y-4 pt-4 border-t">
+                    <h3 className="text-sm font-semibold text-teal-700 uppercase tracking-wide">Amenities</h3>
+                    <div className="grid grid-cols-2 gap-3">
                       {AMENITIES.map(amenity => (
-                        <label key={amenity} className="flex items-center gap-2 cursor-pointer">
+                        <label key={amenity} className="flex items-center gap-2.5 cursor-pointer group">
                           <Checkbox
                             checked={filters.amenities.includes(amenity)}
                             onCheckedChange={() => toggleAmenity(amenity)}
+                            className="data-[state=checked]:bg-teal-600 data-[state=checked]:border-teal-600"
                           />
-                          <span className="text-sm text-gray-600">{amenity}</span>
+                          <span className="text-sm text-gray-700 group-hover:text-gray-900">{amenity}</span>
                         </label>
                       ))}
                     </div>
                   </div>
 
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-3 block">Special Features</label>
-                    <div className="space-y-2">
-                      <label className="flex items-center gap-2 cursor-pointer">
+                  {/* Special Features */}
+                  <div className="space-y-4 pt-4 border-t">
+                    <h3 className="text-sm font-semibold text-teal-700 uppercase tracking-wide">Special Features</h3>
+                    <div className="space-y-3">
+                      <label className="flex items-center gap-2.5 cursor-pointer group">
                         <Checkbox
                           checked={filters.petsAllowed}
                           onCheckedChange={(v) => handleFilterChange("petsAllowed", v)}
+                          className="data-[state=checked]:bg-teal-600 data-[state=checked]:border-teal-600"
                         />
-                        <span className="text-sm text-gray-600">Pet-friendly</span>
+                        <span className="text-sm text-gray-700 group-hover:text-gray-900">Pet-friendly</span>
                       </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
+                      <label className="flex items-center gap-2.5 cursor-pointer group">
                         <Checkbox
                           checked={filters.childrenAllowed}
                           onCheckedChange={(v) => handleFilterChange("childrenAllowed", v)}
+                          className="data-[state=checked]:bg-teal-600 data-[state=checked]:border-teal-600"
                         />
-                        <span className="text-sm text-gray-600">Family-friendly</span>
+                        <span className="text-sm text-gray-700 group-hover:text-gray-900">Family-friendly</span>
                       </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
+                      <label className="flex items-center gap-2.5 cursor-pointer group">
                         <Checkbox
                           checked={filters.smokingAllowed}
                           onCheckedChange={(v) => handleFilterChange("smokingAllowed", v)}
+                          className="data-[state=checked]:bg-teal-600 data-[state=checked]:border-teal-600"
                         />
-                        <span className="text-sm text-gray-600">Smoking allowed</span>
+                        <span className="text-sm text-gray-700 group-hover:text-gray-900">Smoking allowed</span>
                       </label>
                     </div>
                   </div>
 
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={() => setFilters({
-                      location: "",
-                      checkIn: "",
-                      duration: "",
-                      adults: 1,
-                      children: 0,
-                      childAges: [],
-                      type: "all",
-                      minPrice: 0,
-                      maxPrice: 1000,
-                      bedrooms: "any",
-                      amenities: [],
-                      petsAllowed: false,
-                      smokingAllowed: false,
-                      childrenAllowed: false,
-                      instantBook: false,
-                    })}
-                  >
-                    Clear All Filters
-                  </Button>
+                  {/* Action Buttons */}
+                  <div className="pt-4 border-t sticky bottom-0 bg-white pb-4">
+                    <Button 
+                      variant="outline" 
+                      className="w-full border-teal-600 text-teal-700 hover:bg-teal-50"
+                      onClick={() => setFilters({
+                        location: "",
+                        checkIn: "",
+                        duration: "",
+                        adults: 1,
+                        children: 0,
+                        childAges: [],
+                        type: "all",
+                        minPrice: 0,
+                        maxPrice: 1000,
+                        bedrooms: "any",
+                        amenities: [],
+                        petsAllowed: false,
+                        smokingAllowed: false,
+                        childrenAllowed: false,
+                        instantBook: false,
+                      })}
+                    >
+                      Clear All Filters
+                    </Button>
+                  </div>
                 </div>
               </SheetContent>
             </Sheet>
