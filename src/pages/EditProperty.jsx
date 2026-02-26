@@ -124,6 +124,8 @@ export default function EditProperty() {
 
   const navigate = useNavigate();
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [showValidationDialog, setShowValidationDialog] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
   const [pendingAction, setPendingAction] = useState(null);
   const setNavBlocker = useContext(NavigationContext);
 
@@ -403,36 +405,11 @@ export default function EditProperty() {
   const handlePublish = async () => {
     const errorsByTab = validateMandatoryFields();
     
-    const tabNames = {
-      basics: "Basics",
-      details: "Description",
-      location: "Location",
-      photos: "Photos",
-      pricing: "Pricing",
-      'booking-rules': "Booking Rules"
-    };
-    
     const tabsWithErrors = Object.entries(errorsByTab).filter(([_, errors]) => errors.length > 0);
     
     if (tabsWithErrors.length > 0) {
-      toast.error(
-        <div className="max-w-md">
-          <p className="font-semibold mb-2">Cannot publish property. Please complete the following:</p>
-          <div className="space-y-3">
-            {tabsWithErrors.map(([tab, errors]) => (
-              <div key={tab}>
-                <p className="font-medium text-sm">{tabNames[tab]}:</p>
-                <ul className="list-disc pl-5 text-xs mt-1 space-y-0.5">
-                  {errors.map((error, idx) => (
-                    <li key={idx}>{error}</li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </div>,
-        { duration: 8000 }
-      );
+      setValidationErrors(errorsByTab);
+      setShowValidationDialog(true);
       return;
     }
 
@@ -452,8 +429,45 @@ export default function EditProperty() {
     );
   }
 
+  const tabNames = {
+    basics: "Basics",
+    details: "Description",
+    location: "Location",
+    photos: "Photos",
+    pricing: "Pricing",
+    'booking-rules': "Booking Rules"
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
+      <Dialog open={showValidationDialog} onOpenChange={setShowValidationDialog}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Cannot Publish Property</DialogTitle>
+            <DialogDescription>
+              Please complete the following required fields before publishing:
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            {Object.entries(validationErrors).filter(([_, errors]) => errors.length > 0).map(([tab, errors]) => (
+              <div key={tab} className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <h3 className="font-semibold text-red-900 mb-2">{tabNames[tab]}</h3>
+                <ul className="list-disc pl-5 space-y-1">
+                  {errors.map((error, idx) => (
+                    <li key={idx} className="text-sm text-red-700">{error}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowValidationDialog(false)}>
+              OK
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
         <DialogContent>
           <DialogHeader>
