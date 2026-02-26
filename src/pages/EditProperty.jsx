@@ -21,6 +21,8 @@ import { isEqual } from "lodash";
 import { NavigationContext } from "../Layout";
 import { useContext } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import LocationAutocomplete from "@/components/LocationAutocomplete";
+import { validateLocationSelection } from "@/components/LocationValidator";
 
 const PROPERTY_TYPES = [
   { value: "house", label: "House" },
@@ -47,6 +49,8 @@ export default function EditProperty() {
   const [formData, setFormData] = useState(null);
   const [originalData, setOriginalData] = useState(null);
   const [uploadedFileIdentifiers, setUploadedFileIdentifiers] = useState([]);
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [locationError, setLocationError] = useState("");
 
   const { data: policies } = useQuery({
     queryKey: ['cancellation-policies'],
@@ -110,6 +114,14 @@ export default function EditProperty() {
       };
       setFormData(initial);
       setOriginalData(initial);
+      
+      // Set selected location if property has location_id
+      if (property.location_id) {
+        const locData = await base44.entities.UKLocation.filter({ id: property.location_id });
+        if (locData.length > 0) {
+          setSelectedLocation(locData[0]);
+        }
+      }
     }
   }, [property]);
 
@@ -210,10 +222,17 @@ export default function EditProperty() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleLocationChange = (field, value) => {
+  const handleLocationSelect = (location) => {
+    setSelectedLocation(location);
+    setLocationError("");
     setFormData(prev => ({
       ...prev,
-      location: { ...prev.location, [field]: value }
+      location_id: location.id,
+      location: {
+        ...prev.location,
+        county: location.name,
+        country: location.country
+      }
     }));
   };
 
@@ -643,11 +662,19 @@ export default function EditProperty() {
                 <CardTitle>Location</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
+                <LocationAutocomplete
+                  value={selectedLocation}
+                  onChange={handleLocationSelect}
+                  label="County"
+                  placeholder="Start typing a county..."
+                  required={true}
+                  error={locationError}
+                />
                 <div>
-                  <Label>Street</Label>
+                  <Label>Street Address</Label>
                   <Input
                     value={formData.location.street}
-                    onChange={(e) => handleLocationChange("street", e.target.value)}
+                    onChange={(e) => setFormData(prev => ({ ...prev, location: { ...prev.location, street: e.target.value } }))}
                     placeholder="123 High Street"
                     className="mt-1"
                   />
@@ -656,40 +683,31 @@ export default function EditProperty() {
                   <Label>Locality/Village (Optional)</Label>
                   <Input
                     value={formData.location.locality || ""}
-                    onChange={(e) => handleLocationChange("locality", e.target.value)}
+                    onChange={(e) => setFormData(prev => ({ ...prev, location: { ...prev.location, locality: e.target.value } }))}
                     placeholder="Village name"
                     className="mt-1"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                   <div>
-                     <Label>Town/City</Label>
-                     <Input
-                       value={formData.location.town_city}
-                       onChange={(e) => handleLocationChange("town_city", e.target.value)}
-                       placeholder="London"
-                       className="mt-1"
-                     />
-                   </div>
-                   <div>
-                     <Label>County</Label>
-                     <Input
-                       value={formData.location.county || ""}
-                       onChange={(e) => handleLocationChange("county", e.target.value)}
-                       placeholder="Greater London"
-                       className="mt-1"
-                     />
-                   </div>
-                 </div>
-                 <div>
-                   <Label>Postcode</Label>
-                   <Input
-                     value={formData.location.postcode}
-                     onChange={(e) => handleLocationChange("postcode", e.target.value.toUpperCase())}
-                     placeholder="SW1A 1AA"
-                     className="mt-1"
-                   />
-                 </div>
+                  <div>
+                    <Label>Town/City</Label>
+                    <Input
+                      value={formData.location.town_city}
+                      onChange={(e) => setFormData(prev => ({ ...prev, location: { ...prev.location, town_city: e.target.value } }))}
+                      placeholder="London"
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label>Postcode</Label>
+                    <Input
+                      value={formData.location.postcode}
+                      onChange={(e) => setFormData(prev => ({ ...prev, location: { ...prev.location, postcode: e.target.value.toUpperCase() } }))}
+                      placeholder="SW1A 1AA"
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
