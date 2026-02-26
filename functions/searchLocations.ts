@@ -3,10 +3,18 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const url = new URL(req.url);
-    const query = url.searchParams.get('q') || '';
+    
+    let query = '';
+    
+    if (req.method === 'POST') {
+      const body = await req.json();
+      query = body.q || '';
+    } else {
+      const url = new URL(req.url);
+      query = url.searchParams.get('q') || '';
+    }
 
-    if (!query || query.length < 3) {
+    if (!query || query.length < 1) {
       return Response.json([]);
     }
 
