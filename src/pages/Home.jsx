@@ -334,12 +334,14 @@ export default function Home() {
               )}
             </div>
 
-            <div className="text-center mb-8">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Simple, Transparent Pricing</h3>
-              <p className="text-gray-600">Choose the plan that works for you. No commissions, no hidden fees.</p>
-            </div>
+            {!(isAuthenticated && hasRole(userRoles, 'host')) && (
+              <>
+                <div className="text-center mb-8">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Simple, Transparent Pricing</h3>
+                  <p className="text-gray-600">Choose the plan that works for you. No commissions, no hidden fees.</p>
+                </div>
 
-            <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
               {[
                 { 
                   name: "Basic", 
