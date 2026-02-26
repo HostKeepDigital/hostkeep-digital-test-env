@@ -22,6 +22,7 @@ import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
 import { getUserRoles, hasRole } from "@/components/utils/roleHelpers";
 import RoleSwitcher from "@/components/RoleSwitcher";
+import AppLockWrapper from "@/components/AppLockWrapper";
 
 // Pages without layout (guest facing / public)
 const PUBLIC_PAGES = ["Pay"];
@@ -96,6 +97,7 @@ export default function Layout({ children, currentPageName }) {
     ];
 
     return (
+      <AppLockWrapper>
       <div className="min-h-screen bg-gray-50">
         {/* Desktop Sidebar */}
         <aside className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
@@ -181,11 +183,13 @@ export default function Layout({ children, currentPageName }) {
           </NavigationContext.Provider>
         </main>
       </div>
+      </AppLockWrapper>
     );
   }
 
   // Guest/Public Layout
   return (
+    <AppLockWrapper>
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100">
@@ -329,5 +333,6 @@ export default function Layout({ children, currentPageName }) {
       {/* Footer */}
       <Footer />
     </div>
+    </AppLockWrapper>
   );
 }
