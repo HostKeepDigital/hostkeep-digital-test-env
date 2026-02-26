@@ -518,20 +518,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-teal-500 flex items-center justify-center">
-              <HomeIcon className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold">HostKeep</span>
-          </div>
-          <p className="text-gray-400 text-sm">
-            © 2026 HostKeep. Book directly with holiday home owners.
-          </p>
-        </div>
-      </footer>
+
     </div>
   );
 }
