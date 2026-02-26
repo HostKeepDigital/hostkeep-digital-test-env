@@ -204,7 +204,7 @@ export default function BookingCalendar({ bookings = [], properties = [] }) {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
+        className="bg-white rounded-2xl p-3 sm:p-6 shadow-sm border border-gray-100 w-full overflow-hidden"
       >
         <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
           <div className="flex items-center gap-4">
@@ -228,11 +228,13 @@ export default function BookingCalendar({ bookings = [], properties = [] }) {
           </Button>
         </div>
 
-        <div className="border border-gray-200 rounded-xl overflow-hidden bg-gray-50/50 shadow-sm">
+        <div className="border border-gray-200 rounded-xl overflow-hidden bg-gray-50/50 shadow-sm overflow-x-auto">
+          <div className="min-w-[320px]">
           <div className="grid grid-cols-7 border-b bg-white">
-            {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(day => (
-              <div key={day} className="text-center text-xs font-semibold text-gray-500 py-3 border-r last:border-r-0">
-                {day}
+            {["M", "T", "W", "T", "F", "S", "S"].map((day, i) => (
+              <div key={i} className="text-center text-xs font-semibold text-gray-500 py-2 border-r last:border-r-0">
+                <span className="hidden sm:inline">{["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][i]}</span>
+                <span className="sm:hidden">{day}</span>
               </div>
             ))}
           </div>
@@ -287,8 +289,8 @@ export default function BookingCalendar({ bookings = [], properties = [] }) {
               const rowHeight = Math.max(100, (maxRows + 1) * 36 + 40);
 
               return (
-                <div key={wIdx} className="grid grid-cols-7 relative border-b last:border-b-0" style={{ minHeight: `${rowHeight}px` }}>
-                  {week.map(day => {
+              <div key={wIdx} className="grid grid-cols-7 relative border-b last:border-b-0" style={{ minHeight: `${rowHeight}px`, minWidth: '320px' }}>
+                {week.map(day => {
                     const isCurrentMonth = day.getMonth() === currentMonth.getMonth();
                     const isToday = isSameDay(day, new Date());
                     const deadProps = getDeadPropertiesForDate(day);
@@ -297,13 +299,13 @@ export default function BookingCalendar({ bookings = [], properties = [] }) {
                       <div 
                         key={day.toISOString()} 
                         className={`
-                          border-r last:border-r-0 p-2 relative transition-colors hover:bg-gray-100/50
+                          border-r last:border-r-0 p-1 relative transition-colors hover:bg-gray-100/50 min-w-0
                           ${!isCurrentMonth ? 'bg-gray-100/30 text-gray-400' : 'bg-white'}
                           ${isToday ? 'bg-teal-50/20' : ''}
                         `}
                       >
                         <div className="flex justify-between items-start">
-                          <div className={`text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full ${isToday ? 'text-white bg-teal-600' : 'text-gray-600'}`}>
+                          <div className={`text-xs font-medium w-5 h-5 flex items-center justify-center rounded-full flex-shrink-0 ${isToday ? 'text-white bg-teal-600' : 'text-gray-600'}`}>
                             {format(day, "d")}
                           </div>
                           {deadProps.length > 0 && (
@@ -393,6 +395,7 @@ export default function BookingCalendar({ bookings = [], properties = [] }) {
                 </div>
               );
             })}
+          </div>
           </div>
         </div>
 
