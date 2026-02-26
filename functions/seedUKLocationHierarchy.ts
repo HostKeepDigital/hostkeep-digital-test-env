@@ -177,21 +177,6 @@ Deno.serve(async (req) => {
       names.set(loc.slug, loc.name);
     });
 
-    // Identify duplicates for reporting
-    const slugMap = {};
-    const duplicateSlugs = [];
-    allLocations.forEach(loc => {
-      if (slugMap[loc.slug]) {
-        duplicateSlugs.push({
-          slug: loc.slug,
-          locations: [slugMap[loc.slug].name, loc.name],
-          types: [slugMap[loc.slug].type, loc.type]
-        });
-      } else {
-        slugMap[loc.slug] = { name: loc.name, type: loc.type };
-      }
-    });
-
     // Validation checks
     const validationResults = {
       total_locations: allLocations.length,
@@ -202,9 +187,7 @@ Deno.serve(async (req) => {
         typeof loc.lat === 'number' && typeof loc.lng === 'number' &&
         loc.lat >= -90 && loc.lat <= 90 && loc.lng >= -180 && loc.lng <= 180
       ),
-      no_duplicates: duplicateSlugs.length === 0,
-      duplicate_slugs_found: duplicateSlugs.length,
-      sample_duplicates: duplicateSlugs.slice(0, 5)
+      no_duplicates: slugs.size === allLocations.length
     };
 
     // Generate sample preview (10 of each type if available)
