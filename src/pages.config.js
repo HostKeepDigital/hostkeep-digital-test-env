@@ -90,6 +90,7 @@ import RefundPolicy from './pages/RefundPolicy';
 import Search from './pages/Search';
 import Subscription from './pages/Subscription';
 import TermsAndConditions from './pages/TermsAndConditions';
+import Maintenance from './pages/Maintenance';
 import __Layout from './Layout.jsx';
 
 
@@ -137,6 +138,7 @@ export const PAGES = {
     "Search": Search,
     "Subscription": Subscription,
     "TermsAndConditions": TermsAndConditions,
+    "Maintenance": Maintenance,
 }
 
 export const pagesConfig = {
