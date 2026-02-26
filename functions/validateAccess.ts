@@ -44,7 +44,11 @@ Deno.serve(async (req) => {
       }, { status: 401 });
     }
     
-    if (token === storedToken) {
+    // Normalize both tokens for comparison (trim whitespace)
+    const normalizedToken = token.trim();
+    const normalizedStoredToken = storedToken.trim();
+    
+    if (normalizedToken === normalizedStoredToken) {
       // Clear failed attempts on success
       failedAttempts.delete(attemptKey);
       
