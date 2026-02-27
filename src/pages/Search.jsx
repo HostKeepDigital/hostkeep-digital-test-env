@@ -397,9 +397,16 @@ export default function Search() {
     return true;
   });
 
+  const effectiveSortBy = postcodeCoords ? "nearest" : sortBy;
+
   const sortedProperties = [...filteredProperties].sort((a, b) => {
     if (a.isAvailable !== b.isAvailable) {
       return a.isAvailable ? -1 : 1;
+    }
+
+    // When postcode coords resolved, sort by distance first
+    if (effectiveSortBy === "nearest") {
+      return (a._distance_miles || 0) - (b._distance_miles || 0);
     }
 
     const aRating = propertyRatings[a.id] 
