@@ -65,6 +65,7 @@ export default function Search() {
   });
 
   const [sortBy, setSortBy] = useState("recommended");
+  const [debugLog, setDebugLog] = useState([]);
 
   // Postcode radius search state
   const [postcodeCoords, setPostcodeCoords] = useState(null); // { lat, lng, postcode }
