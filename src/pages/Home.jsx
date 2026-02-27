@@ -138,15 +138,34 @@ export default function Home() {
           >
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="md:col-span-1">
-                <label className="text-xs font-medium text-gray-500 mb-1 block">Location</label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <Input
-                    placeholder="Where to?"
-                    value={searchLocation}
-                    onChange={(e) => setSearchLocation(e.target.value)}
-                    className="pl-10 h-12 border-gray-200"
-                  />
+                <label className="text-xs font-medium text-gray-500 mb-1 block">Location or postcode</label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Input
+                      placeholder="e.g. Cornwall or PL13 2JE"
+                      value={searchLocation}
+                      onChange={(e) => setSearchLocation(e.target.value)}
+                      className={`pl-10 h-12 border-gray-200 ${postcodeCoords ? 'border-teal-400' : ''}`}
+                    />
+                    {postcodeLoading && (
+                      <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-gray-400" />
+                    )}
+                  </div>
+                  {postcodeCoords && (
+                    <Select value={String(radiusMiles)} onValueChange={(v) => setRadiusMiles(parseInt(v))}>
+                      <SelectTrigger className="w-36 h-12 bg-teal-50 border-teal-200 text-teal-800 shrink-0">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="5">Within 5 mi</SelectItem>
+                        <SelectItem value="10">Within 10 mi</SelectItem>
+                        <SelectItem value="25">Within 25 mi</SelectItem>
+                        <SelectItem value="50">Within 50 mi</SelectItem>
+                        <SelectItem value="100">Within 100 mi</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
               </div>
               <div>
