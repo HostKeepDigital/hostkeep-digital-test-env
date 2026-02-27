@@ -898,7 +898,7 @@ export default function Search() {
         {postcodeCoords && (
           <div className="mb-4 text-sm text-teal-700 flex items-center gap-1.5 bg-teal-50 border border-teal-200 rounded-lg px-3 py-2">
             <MapPin className="w-4 h-4" />
-            Showing properties within <strong className="mx-1">{filters.radiusMiles} miles</strong> of <strong className="ml-1">{postcodeCoords.postcode}</strong>, sorted nearest first.
+            Showing properties within <strong className="mx-1">{filters.radiusMiles} miles</strong> of <strong className="ml-1">{postcodeCoords.label || filters.location}</strong>, sorted nearest first.
           </div>
         )}
         {postcodeCoords && debugLog.length > 0 && (
