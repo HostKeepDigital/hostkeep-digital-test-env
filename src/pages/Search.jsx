@@ -336,10 +336,12 @@ export default function Search() {
     if (filters.location) {
       if (postcodeCoords) {
         // Postcode radius search: use Haversine distance in miles
-        if (!property.latitude || !property.longitude) return false;
+        const lat = property.property_lat ?? property.latitude;
+        const lng = property.property_lng ?? property.longitude;
+        if (!lat || !lng) return false;
         const dist = haversineDistanceMiles(
           postcodeCoords.lat, postcodeCoords.lng,
-          property.latitude, property.longitude
+          lat, lng
         );
         if (dist > filters.radiusMiles) return false;
         // Attach distance for sorting
