@@ -336,13 +336,23 @@ export default function Search() {
     if (filters.location) {
       if (postcodeCoords) {
         // Postcode radius search: use Haversine distance in miles
+        console.log("DEBUG PROPERTY RAW:", property);
+        console.log(
+          "DEBUG COORD FIELDS:",
+          "property_lat =", property.property_lat,
+          "property_lng =", property.property_lng,
+          "latitude =", property.latitude,
+          "longitude =", property.longitude
+        );
         const lat = property.property_lat ?? property.latitude;
         const lng = property.property_lng ?? property.longitude;
+        console.log("DEBUG COORD TYPES:", typeof lat, lat, typeof lng, lng);
         if (!lat || !lng) return false;
         const dist = haversineDistanceMiles(
           postcodeCoords.lat, postcodeCoords.lng,
           lat, lng
         );
+        console.log("DISTANCE RESULT:", property.id, "→", dist, "(radius limit =", filters.radiusMiles, ")");
         if (dist > filters.radiusMiles) return false;
         // Attach distance for sorting
         property._distance_miles = dist;
