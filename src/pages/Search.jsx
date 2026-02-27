@@ -37,11 +37,31 @@ const geocodeLocation = async (input) => {
 
   if (isPostcodeLike(clean)) {
     const code = clean.toUpperCase().replace(/\s+/g, '');
+
+    // Try active postcode first
     const res = await fetch(`https://api.postcodes.io/postcodes/${code}`);
     const data = await res.json();
     if (res.ok && data.status === 200 && data.result) {
       return { lat: data.result.latitude, lng: data.result.longitude, label: data.result.postcode };
     }
+
+    // Try terminated postcode (e.g. old postcodes that still have coords)
+    const termRes = await fetch(`https://api.postcodes.io/terminated_postcodes/${code}`);
+    const termData = await termRes.json();
+    if (termRes.ok && termData.status === 200 && termData.result) {
+      return { lat: termData.result.latitude, lng: termData.result.longitude, label: termData.result.postcode };
+    }
+
+    // Final fallback: Nominatim geocoding for the postcode string
+    const encoded = encodeURIComponent(clean + ', UK');
+    const nomRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${encoded}&format=json&limit=1&countrycodes=gb`, {
+      headers: { 'Accept-Language': 'en' }
+    });
+    const nomData = await nomRes.json();
+    if (nomData && nomData[0]) {
+      return { lat: parseFloat(nomData[0].lat), lng: parseFloat(nomData[0].lon), label: clean.toUpperCase() };
+    }
+
     return null;
   }
 
