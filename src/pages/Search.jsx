@@ -421,6 +421,52 @@ export default function Search() {
     }
   });
 
+  // Resolve postcode to coordinates via Postcodes.io when location looks like a postcode
+  useEffect(() => {
+    const loc = filters.location.trim();
+    if (!loc || !isPostcodeLike(loc)) {
+      setPostcodeCoords(null);
+      setPostcodeError("");
+      return;
+    }
+
+    const clean = loc.toUpperCase().replace(/\s+/g, '');
+
+    // Check in-memory cache first
+    if (postcodeCache.current[clean]) {
+      setPostcodeCoords(postcodeCache.current[clean]);
+      setPostcodeError("");
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setPostcodeLoading(true);
+      setPostcodeError("");
+      try {
+        const res = await fetch(`https://api.postcodes.io/postcodes/${clean}`);
+        const data = await res.json();
+        if (res.ok && data.status === 200 && data.result) {
+          const coords = {
+            lat: data.result.latitude,
+            lng: data.result.longitude,
+            postcode: (clean.slice(0, -3) + ' ' + clean.slice(-3))
+          };
+          postcodeCache.current[clean] = coords;
+          setPostcodeCoords(coords);
+        } else {
+          setPostcodeCoords(null);
+          setPostcodeError("Please enter a valid UK postcode.");
+        }
+      } catch {
+        setPostcodeCoords(null);
+      } finally {
+        setPostcodeLoading(false);
+      }
+    }, 600); // debounce
+
+    return () => clearTimeout(timer);
+  }, [filters.location]);
+
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
