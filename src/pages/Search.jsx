@@ -509,12 +509,30 @@ export default function Search() {
             <div className="relative flex-1 min-w-[200px]">
               <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <Input
-                placeholder="Location"
+                placeholder="Location or postcode (e.g. PL13 2JE)"
                 value={filters.location}
                 onChange={(e) => handleFilterChange("location", e.target.value)}
-                className="pl-10 h-11"
+                className={`pl-10 h-11 ${postcodeError ? 'border-red-400' : postcodeCoords ? 'border-green-400' : ''}`}
               />
+              {postcodeLoading && (
+                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-gray-400" />
+              )}
             </div>
+            {/* Radius selector — only shown when postcode resolved */}
+            {postcodeCoords && (
+              <Select value={String(filters.radiusMiles)} onValueChange={(v) => handleFilterChange("radiusMiles", parseInt(v))}>
+                <SelectTrigger className="w-36 h-11 bg-teal-50 border-teal-200 text-teal-800">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">Within 5 miles</SelectItem>
+                  <SelectItem value="10">Within 10 miles</SelectItem>
+                  <SelectItem value="25">Within 25 miles</SelectItem>
+                  <SelectItem value="50">Within 50 miles</SelectItem>
+                  <SelectItem value="100">Within 100 miles</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
             <div className="w-44">
               <BookingCalendar
                 value={filters.checkIn}
