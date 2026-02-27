@@ -882,6 +882,7 @@ export default function Search() {
                   isAvailable={property.isAvailable} 
                   unavailableReason={property.unavailableReason}
                   distanceMiles={property._distance_miles != null ? Math.round(property._distance_miles * 10) / 10 : null}
+
                 />
               </motion.div>
             ))}
