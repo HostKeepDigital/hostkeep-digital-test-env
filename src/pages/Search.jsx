@@ -408,7 +408,7 @@ export default function Search() {
 
     // When postcode coords resolved, sort by distance first
     if (effectiveSortBy === "nearest") {
-      return (a._distance_miles || 0) - (b._distance_miles || 0);
+      return (a._distance_miles ?? Infinity) - (b._distance_miles ?? Infinity);
     }
 
     const aRating = propertyRatings[a.id] 
