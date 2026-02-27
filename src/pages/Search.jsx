@@ -509,7 +509,7 @@ export default function Search() {
             <div className="relative flex-1 min-w-[200px]">
               <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <Input
-                placeholder="Location or postcode (e.g. PL13 2JE)"
+                placeholder="Location or Postcode"
                 value={filters.location}
                 onChange={(e) => handleFilterChange("location", e.target.value)}
                 className={`pl-10 h-11 ${postcodeError ? 'border-red-400' : postcodeCoords ? 'border-green-400' : ''}`}
