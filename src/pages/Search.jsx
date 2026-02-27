@@ -332,16 +332,29 @@ export default function Search() {
 
     return { ...property, isAvailable, unavailableReason, suggestion };
   }).filter(property => {
-    // Location filter
+    // Location filter — postcode radius takes priority over text matching
     if (filters.location) {
-      const searchTerm = filters.location.toLowerCase();
-      const locationMatch = 
-        property.location?.city?.toLowerCase().includes(searchTerm) ||
-        property.location?.town_city?.toLowerCase().includes(searchTerm) ||
-        property.location?.locality?.toLowerCase().includes(searchTerm) ||
-        property.location?.postcode?.toLowerCase().includes(searchTerm) ||
-        property.title?.toLowerCase().includes(searchTerm);
-      if (!locationMatch) return false;
+      if (postcodeCoords) {
+        // Postcode radius search: use Haversine distance in miles
+        if (!property.latitude || !property.longitude) return false;
+        const dist = haversineDistanceMiles(
+          postcodeCoords.lat, postcodeCoords.lng,
+          property.latitude, property.longitude
+        );
+        if (dist > filters.radiusMiles) return false;
+        // Attach distance for sorting
+        property._distance_miles = dist;
+      } else if (!isPostcodeLike(filters.location)) {
+        // Text-based fallback only for non-postcode searches
+        const searchTerm = filters.location.toLowerCase();
+        const locationMatch =
+          property.county?.toLowerCase().includes(searchTerm) ||
+          property.town?.toLowerCase().includes(searchTerm) ||
+          property.location?.locality?.toLowerCase().includes(searchTerm) ||
+          property.postcode?.toLowerCase().includes(searchTerm) ||
+          property.title?.toLowerCase().includes(searchTerm);
+        if (!locationMatch) return false;
+      }
     }
 
     // Property type filter
