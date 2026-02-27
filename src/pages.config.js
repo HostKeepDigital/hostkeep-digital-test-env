@@ -91,6 +91,7 @@ import RefundPolicy from './pages/RefundPolicy';
 import Search from './pages/Search';
 import Subscription from './pages/Subscription';
 import TermsAndConditions from './pages/TermsAndConditions';
+import PostcodeTestConsole from './pages/PostcodeTestConsole';
 import __Layout from './Layout.jsx';
 
 
@@ -139,6 +140,7 @@ export const PAGES = {
     "Search": Search,
     "Subscription": Subscription,
     "TermsAndConditions": TermsAndConditions,
+    "PostcodeTestConsole": PostcodeTestConsole,
 }
 
 export const pagesConfig = {
