@@ -131,7 +131,7 @@ export default function Search() {
     return acc;
   }, {});
 
-  const filteredProperties = allProperties.map(property => {
+  const mappedProperties = allProperties.map(property => {
     let isAvailable = true;
     let unavailableReason = null;
     let suggestion = null;
