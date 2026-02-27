@@ -29,6 +29,10 @@ export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const [userRoles, setUserRoles] = useState([]);
+  const [radiusMiles, setRadiusMiles] = useState(25);
+  const [postcodeCoords, setPostcodeCoords] = useState(null);
+  const [postcodeLoading, setPostcodeLoading] = useState(false);
+  const postcodeCache = useRef({});
 
   useEffect(() => {
     base44.auth.isAuthenticated().then(setIsAuthenticated);
