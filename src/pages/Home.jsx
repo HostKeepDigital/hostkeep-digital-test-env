@@ -32,6 +32,7 @@ export default function Home() {
   const [radiusMiles, setRadiusMiles] = useState(25);
   const [postcodeCoords, setPostcodeCoords] = useState(null);
   const [postcodeLoading, setPostcodeLoading] = useState(false);
+  const [postcodeError, setPostcodeError] = useState("");
   const postcodeCache = useRef({});
 
   useEffect(() => {
