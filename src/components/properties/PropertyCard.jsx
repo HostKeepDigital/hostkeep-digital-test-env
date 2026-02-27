@@ -154,7 +154,10 @@ export default function PropertyCard({ property, onSave, isAvailable = true, una
               <h3 className="font-semibold text-gray-900 line-clamp-1">{property.title}</h3>
               <p className="text-sm text-gray-500 flex items-center gap-1">
                 <MapPin className="w-3 h-3" />
-                {property.location?.town_city || property.location?.city || 'Location TBC'}
+                {property.county || property.town || property.location?.town_city || property.location?.city || 'Location TBC'}
+                {distanceMiles != null && (
+                  <span className="ml-1 text-xs text-teal-600 font-medium">· {distanceMiles} mi</span>
+                )}
               </p>
             </div>
             {reviews.length > 0 && (
