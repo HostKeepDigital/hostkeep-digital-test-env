@@ -15,7 +15,7 @@ const AMENITY_ICONS = {
   "Kitchen": ChefHat,
 };
 
-export default function PropertyCard({ property, onSave, isAvailable = true, unavailableReason }) {
+export default function PropertyCard({ property, onSave, isAvailable = true, unavailableReason, distanceMiles }) {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
 
