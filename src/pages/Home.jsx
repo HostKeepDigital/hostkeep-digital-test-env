@@ -51,17 +51,17 @@ export default function Home() {
     queryFn: () => base44.entities.Property.filter({ status: 'published' }, '-created_date', 6),
   });
 
-  // Resolve postcode to coords as user types
+  // Geocode any location (postcode or place name) with debounce + cache
   useEffect(() => {
     const loc = searchLocation.trim();
-    if (!loc || !isPostcodeLike(loc)) {
+    if (!loc) {
       setPostcodeCoords(null);
       setPostcodeError("");
       return;
     }
-    const clean = loc.toUpperCase().replace(/\s+/g, '');
-    if (postcodeCache.current[clean]) {
-      setPostcodeCoords(postcodeCache.current[clean]);
+    const cacheKey = loc.toLowerCase();
+    if (postcodeCache.current[cacheKey]) {
+      setPostcodeCoords(postcodeCache.current[cacheKey]);
       setPostcodeError("");
       return;
     }
@@ -69,22 +69,37 @@ export default function Home() {
       setPostcodeLoading(true);
       setPostcodeError("");
       try {
-        const res = await fetch(`https://api.postcodes.io/postcodes/${clean}`);
-        const data = await res.json();
-        if (res.ok && data.status === 200 && data.result) {
-          const coords = { lat: data.result.latitude, lng: data.result.longitude, postcode: clean.slice(0, -3) + ' ' + clean.slice(-3) };
-          postcodeCache.current[clean] = coords;
+        let coords = null;
+        if (isPostcodeLike(loc)) {
+          const clean = loc.toUpperCase().replace(/\s+/g, '');
+          const res = await fetch(`https://api.postcodes.io/postcodes/${clean}`);
+          const data = await res.json();
+          if (res.ok && data.status === 200 && data.result) {
+            coords = { lat: data.result.latitude, lng: data.result.longitude, label: data.result.postcode };
+          }
+        } else {
+          const encoded = encodeURIComponent(loc + ', UK');
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encoded}&format=json&limit=1&countrycodes=gb`, {
+            headers: { 'Accept-Language': 'en' }
+          });
+          const data = await res.json();
+          if (data && data[0]) {
+            coords = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), label: data[0].display_name.split(',')[0] };
+          }
+        }
+        if (coords) {
+          postcodeCache.current[cacheKey] = coords;
           setPostcodeCoords(coords);
         } else {
           setPostcodeCoords(null);
-          setPostcodeError("Please enter a valid UK postcode.");
+          setPostcodeError("Location not found.");
         }
       } catch {
         setPostcodeCoords(null);
       } finally {
         setPostcodeLoading(false);
       }
-    }, 600);
+    }, 800);
     return () => clearTimeout(timer);
   }, [searchLocation]);
 
