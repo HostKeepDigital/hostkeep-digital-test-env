@@ -502,20 +502,18 @@ export default function Search() {
     }
   });
 
-  // Resolve postcode to coordinates via Postcodes.io when location looks like a postcode
+  // Geocode any location (postcode or place name) with debounce + cache
   useEffect(() => {
     const loc = filters.location.trim();
-    if (!loc || !isPostcodeLike(loc)) {
+    if (!loc) {
       setPostcodeCoords(null);
       setPostcodeError("");
       return;
     }
 
-    const clean = loc.toUpperCase().replace(/\s+/g, '');
-
-    // Check in-memory cache first
-    if (postcodeCache.current[clean]) {
-      setPostcodeCoords(postcodeCache.current[clean]);
+    const cacheKey = loc.toLowerCase();
+    if (postcodeCache.current[cacheKey]) {
+      setPostcodeCoords(postcodeCache.current[cacheKey]);
       setPostcodeError("");
       return;
     }
@@ -524,26 +522,20 @@ export default function Search() {
       setPostcodeLoading(true);
       setPostcodeError("");
       try {
-        const res = await fetch(`https://api.postcodes.io/postcodes/${clean}`);
-        const data = await res.json();
-        if (res.ok && data.status === 200 && data.result) {
-          const coords = {
-            lat: data.result.latitude,
-            lng: data.result.longitude,
-            postcode: (clean.slice(0, -3) + ' ' + clean.slice(-3))
-          };
-          postcodeCache.current[clean] = coords;
+        const coords = await geocodeLocation(loc);
+        if (coords) {
+          postcodeCache.current[cacheKey] = coords;
           setPostcodeCoords(coords);
         } else {
           setPostcodeCoords(null);
-          setPostcodeError("Please enter a valid UK postcode.");
+          setPostcodeError("Location not found. Try a postcode or place name.");
         }
       } catch {
         setPostcodeCoords(null);
       } finally {
         setPostcodeLoading(false);
       }
-    }, 600); // debounce
+    }, 800);
 
     return () => clearTimeout(timer);
   }, [filters.location]);
