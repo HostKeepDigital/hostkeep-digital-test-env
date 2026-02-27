@@ -332,30 +332,41 @@ export default function Search() {
     }
 
     return { ...property, isAvailable, unavailableReason, suggestion };
+  const newDebugLog = [];
+
   }).filter(property => {
     // Location filter — postcode radius takes priority over text matching
     if (filters.location) {
       if (postcodeCoords) {
-        // Postcode radius search: use Haversine distance in miles
-        console.log("DEBUG PROPERTY RAW:", property);
-        console.log(
-          "DEBUG COORD FIELDS:",
-          "property_lat =", property.property_lat,
-          "property_lng =", property.property_lng,
-          "latitude =", property.latitude,
-          "longitude =", property.longitude
-        );
         const lat = property.property_lat ?? property.latitude;
         const lng = property.property_lng ?? property.longitude;
-        console.log("DEBUG COORD TYPES:", typeof lat, lat, typeof lng, lng);
-        if (!lat || !lng) return false;
+
+        if (!lat || !lng) {
+          newDebugLog.push({
+            id: property.id,
+            title: property.title,
+            status: "❌ NO COORDS",
+            lat, lng,
+            dist: null,
+          });
+          return false;
+        }
+
         const dist = haversineDistanceMiles(
           postcodeCoords.lat, postcodeCoords.lng,
           lat, lng
         );
-        console.log("DISTANCE RESULT:", property.id, "→", dist, "(radius limit =", filters.radiusMiles, ")");
-        if (dist > filters.radiusMiles) return false;
-        // Attach distance for sorting
+        const passes = dist <= filters.radiusMiles;
+        newDebugLog.push({
+          id: property.id,
+          title: property.title,
+          status: passes ? "✅ IN RANGE" : "❌ TOO FAR",
+          lat, lng,
+          dist: Math.round(dist * 10) / 10,
+          radius: filters.radiusMiles,
+        });
+
+        if (!passes) return false;
         property._distance_miles = dist;
       } else if (!isPostcodeLike(filters.location)) {
         // Text-based fallback only for non-postcode searches
