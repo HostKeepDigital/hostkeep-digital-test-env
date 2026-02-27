@@ -30,6 +30,33 @@ const haversineDistanceMiles = (lat1, lon1, lat2, lon2) => {
 // Detect if input looks like a UK postcode
 const isPostcodeLike = (val) => /^[A-Z]{1,2}\d/i.test(val.trim().replace(/\s/g, ''));
 
+// Geocode any UK location string (postcode or place name) to lat/lng
+const geocodeLocation = async (input) => {
+  const clean = input.trim();
+  if (!clean) return null;
+
+  if (isPostcodeLike(clean)) {
+    const code = clean.toUpperCase().replace(/\s+/g, '');
+    const res = await fetch(`https://api.postcodes.io/postcodes/${code}`);
+    const data = await res.json();
+    if (res.ok && data.status === 200 && data.result) {
+      return { lat: data.result.latitude, lng: data.result.longitude, label: data.result.postcode };
+    }
+    return null;
+  }
+
+  // Place name: use Nominatim (OpenStreetMap) free geocoder
+  const encoded = encodeURIComponent(clean + ', UK');
+  const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encoded}&format=json&limit=1&countrycodes=gb`, {
+    headers: { 'Accept-Language': 'en' }
+  });
+  const data = await res.json();
+  if (data && data[0]) {
+    return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), label: data[0].display_name.split(',')[0] };
+  }
+  return null;
+};
+
 const AMENITIES = [
   "WiFi", "Pool", "Parking", "Air Conditioning", "Kitchen", "Washing Machine",
   "TV", "Hot Tub", "Garden", "BBQ", "Gym", "Beach Access"
