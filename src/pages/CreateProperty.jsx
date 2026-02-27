@@ -283,7 +283,7 @@ export default function CreateProperty() {
     switch (currentStep) {
       case 1: return formData.title.length >= 16 && formData.title.length <= 50 && !titleError && formData.property_type && formData.guest_capacity > 0;
       case 2: return formData.description.length >= 50;
-      case 3: return locationData.location_id && locationData.lat && locationData.lng && formData.location?.street && formData.location?.postcode;
+      case 3: return formData.postcode && formData.latitude && formData.longitude && formData.location?.street;
       case 4: return formData.photos.length >= 5 && getDuplicatePhotos().length === 0;
       case 5: return formData.nightly_rate > 0;
       case 6: return !!formData.cancellation_policy_id; // Cancellation policy is required
