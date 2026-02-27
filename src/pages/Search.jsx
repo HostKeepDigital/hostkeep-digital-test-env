@@ -743,6 +743,7 @@ export default function Search() {
                         smokingAllowed: false,
                         childrenAllowed: false,
                         instantBook: false,
+                        radiusMiles: 25,
                       })}
                     >
                       Clear All Filters
