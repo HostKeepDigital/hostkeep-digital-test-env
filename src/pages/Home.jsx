@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { 
   Search, MapPin, Calendar, Users, Star, Home as HomeIcon, 
-  CheckCircle, ArrowRight, Building2, Mountain, Waves, TreePine, Caravan, Sparkles
+  CheckCircle, ArrowRight, Building2, Mountain, Waves, TreePine, Caravan, Sparkles, Loader2
 } from "lucide-react";
 import PropertyCard from "@/components/properties/PropertyCard";
 import GuestSelector from "@/components/search/GuestSelector";
@@ -18,6 +18,8 @@ import BookingCalendar from "@/components/shared/BookingCalendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { format } from "date-fns";
+
+const isPostcodeLike = (val) => /^[A-Z]{1,2}\d/i.test(val.trim().replace(/\s/g, ''));
 
 export default function Home() {
   const [searchLocation, setSearchLocation] = useState("");
