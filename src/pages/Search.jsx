@@ -874,7 +874,12 @@ export default function Search() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
               >
-                <PropertyCard property={property} isAvailable={property.isAvailable} unavailableReason={property.unavailableReason} />
+                <PropertyCard 
+                  property={property} 
+                  isAvailable={property.isAvailable} 
+                  unavailableReason={property.unavailableReason}
+                  distanceMiles={property._distance_miles != null ? Math.round(property._distance_miles * 10) / 10 : null}
+                />
               </motion.div>
             ))}
           </div>
