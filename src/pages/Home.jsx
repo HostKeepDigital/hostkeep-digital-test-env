@@ -50,9 +50,42 @@ export default function Home() {
     queryFn: () => base44.entities.Property.filter({ status: 'published' }, '-created_date', 6),
   });
 
+  // Resolve postcode to coords as user types
+  useEffect(() => {
+    const loc = searchLocation.trim();
+    if (!loc || !isPostcodeLike(loc)) {
+      setPostcodeCoords(null);
+      return;
+    }
+    const clean = loc.toUpperCase().replace(/\s+/g, '');
+    if (postcodeCache.current[clean]) {
+      setPostcodeCoords(postcodeCache.current[clean]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setPostcodeLoading(true);
+      try {
+        const res = await fetch(`https://api.postcodes.io/postcodes/${clean}`);
+        const data = await res.json();
+        if (res.ok && data.status === 200 && data.result) {
+          const coords = { lat: data.result.latitude, lng: data.result.longitude, postcode: clean.slice(0, -3) + ' ' + clean.slice(-3) };
+          postcodeCache.current[clean] = coords;
+          setPostcodeCoords(coords);
+        } else {
+          setPostcodeCoords(null);
+        }
+      } catch {
+        setPostcodeCoords(null);
+      } finally {
+        setPostcodeLoading(false);
+      }
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [searchLocation]);
+
   const handleSearch = () => {
     if (guestData.children > 0 && !guestData.isValid) {
-      return; // Don't search if child ages not filled
+      return;
     }
     const params = new URLSearchParams();
     if (searchLocation) params.set('location', searchLocation);
@@ -63,6 +96,7 @@ export default function Home() {
     if (guestData.childAges.length > 0) {
       params.set('childAges', guestData.childAges.join(','));
     }
+    if (postcodeCoords) params.set('radius', radiusMiles);
     window.location.href = createPageUrl('Search') + '?' + params.toString();
   };
 
