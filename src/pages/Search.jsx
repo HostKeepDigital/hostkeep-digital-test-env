@@ -525,8 +525,13 @@ export default function Search() {
                 onChange={(e) => handleFilterChange("location", e.target.value)}
                 className={`pl-10 h-11 ${postcodeError ? 'border-red-400' : postcodeCoords ? 'border-green-400' : ''}`}
               />
-              {postcodeLoading && (
+              {postcodeLoading ? (
                 <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-gray-400" />
+              ) : postcodeCoords ? (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-xs font-medium">✓</span>
+              ) : null}
+              {filters.location && !postcodeCoords && !postcodeLoading && !postcodeError && (
+                <p className="absolute top-full mt-1 left-0 text-xs text-gray-400">Searching as you type…</p>
               )}
             </div>
             {/* Radius selector — only shown when postcode resolved */}
