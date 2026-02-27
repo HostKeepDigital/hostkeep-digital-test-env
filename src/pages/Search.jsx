@@ -61,9 +61,16 @@ export default function Search() {
     smokingAllowed: false,
     childrenAllowed: false,
     instantBook: false,
+    radiusMiles: 25,
   });
 
   const [sortBy, setSortBy] = useState("recommended");
+
+  // Postcode radius search state
+  const [postcodeCoords, setPostcodeCoords] = useState(null); // { lat, lng, postcode }
+  const [postcodeLoading, setPostcodeLoading] = useState(false);
+  const [postcodeError, setPostcodeError] = useState("");
+  const postcodeCache = useRef({});
 
   const { data: allProperties = [], isLoading } = useQuery({
     queryKey: ['properties'],
