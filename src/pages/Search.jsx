@@ -359,44 +359,32 @@ export default function Search() {
     }
 
     return { ...property, isAvailable, unavailableReason, suggestion };
-  const newDebugLog = [];
+  });
 
-  }).filter(property => {
-    // Location filter — postcode radius takes priority over text matching
+  const newDebugLog = [];
+  const filteredProperties = mappedProperties.filter(property => {
+    // Location filter — coords radius takes priority over text matching
     if (filters.location) {
       if (postcodeCoords) {
         const lat = property.property_lat ?? property.latitude;
         const lng = property.property_lng ?? property.longitude;
 
         if (!lat || !lng) {
-          newDebugLog.push({
-            id: property.id,
-            title: property.title,
-            status: "❌ NO COORDS",
-            lat, lng,
-            dist: null,
-          });
+          newDebugLog.push({ id: property.id, title: property.title, status: "❌ NO COORDS", lat, lng, dist: null });
           return false;
         }
 
-        const dist = haversineDistanceMiles(
-          postcodeCoords.lat, postcodeCoords.lng,
-          lat, lng
-        );
+        const dist = haversineDistanceMiles(postcodeCoords.lat, postcodeCoords.lng, lat, lng);
         const passes = dist <= filters.radiusMiles;
         newDebugLog.push({
-          id: property.id,
-          title: property.title,
+          id: property.id, title: property.title,
           status: passes ? "✅ IN RANGE" : "❌ TOO FAR",
-          lat, lng,
-          dist: Math.round(dist * 10) / 10,
-          radius: filters.radiusMiles,
+          lat, lng, dist: Math.round(dist * 10) / 10, radius: filters.radiusMiles,
         });
 
         if (!passes) return false;
         property._distance_miles = dist;
-      } else if (!isPostcodeLike(filters.location)) {
-        // Text-based fallback only for non-postcode searches
+      } else {
         const searchTerm = filters.location.toLowerCase();
         const locationMatch =
           property.county?.toLowerCase().includes(searchTerm) ||
@@ -408,54 +396,24 @@ export default function Search() {
       }
     }
 
-    // Property type filter
-    if (filters.type !== "all" && property.property_type !== filters.type) {
-      return false;
-    }
+    if (filters.type !== "all" && property.property_type !== filters.type) return false;
 
-    // Bedroom filter
     if (filters.bedrooms !== "any") {
-      const bedroomCount = parseInt(filters.bedrooms);
-      if (property.bedrooms < bedroomCount) {
-        return false;
-      }
+      if (property.bedrooms < parseInt(filters.bedrooms)) return false;
     }
 
-    // Price range filter
-    if (property.nightly_rate < filters.minPrice || property.nightly_rate > filters.maxPrice) {
-      return false;
-    }
+    if (property.nightly_rate < filters.minPrice || property.nightly_rate > filters.maxPrice) return false;
 
-    // Amenities filter
     if (filters.amenities.length > 0) {
       const propertyAmenities = property.amenities || [];
-      if (!filters.amenities.every(a => propertyAmenities.includes(a))) {
-        return false;
-      }
+      if (!filters.amenities.every(a => propertyAmenities.includes(a))) return false;
     }
 
-    // Special features filters
-    if (filters.petsAllowed && !property.pets_allowed) {
-      return false;
-    }
-    if (filters.smokingAllowed && !property.smoking_allowed) {
-      return false;
-    }
-    if (filters.childrenAllowed && !property.children_allowed) {
-      return false;
-    }
+    if (filters.petsAllowed && !property.pets_allowed) return false;
+    if (filters.smokingAllowed && !property.smoking_allowed) return false;
+    if (filters.childrenAllowed && !property.children_allowed) return false;
 
     return true;
-  });
-
-  // Update debug log state after filter completes (only when postcode active)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (postcodeCoords && newDebugLog.length > 0) {
-      setDebugLog(newDebugLog);
-    } else if (!postcodeCoords) {
-      setDebugLog([]);
-    }
   });
 
   const effectiveSortBy = postcodeCoords ? "nearest" : sortBy;
