@@ -56,15 +56,18 @@ export default function Home() {
     const loc = searchLocation.trim();
     if (!loc || !isPostcodeLike(loc)) {
       setPostcodeCoords(null);
+      setPostcodeError("");
       return;
     }
     const clean = loc.toUpperCase().replace(/\s+/g, '');
     if (postcodeCache.current[clean]) {
       setPostcodeCoords(postcodeCache.current[clean]);
+      setPostcodeError("");
       return;
     }
     const timer = setTimeout(async () => {
       setPostcodeLoading(true);
+      setPostcodeError("");
       try {
         const res = await fetch(`https://api.postcodes.io/postcodes/${clean}`);
         const data = await res.json();
@@ -74,6 +77,7 @@ export default function Home() {
           setPostcodeCoords(coords);
         } else {
           setPostcodeCoords(null);
+          setPostcodeError("Please enter a valid UK postcode.");
         }
       } catch {
         setPostcodeCoords(null);
