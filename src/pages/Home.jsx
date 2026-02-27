@@ -148,10 +148,10 @@ export default function Home() {
                   <div className="relative flex-1">
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <Input
-                      placeholder="Location or Postcode"
-                      value={searchLocation}
-                      onChange={(e) => setSearchLocation(e.target.value)}
-                      className={`pl-10 h-12 border-gray-200 ${postcodeCoords ? 'border-teal-400' : ''}`}
+                     placeholder="Location or Postcode"
+                     value={searchLocation}
+                     onChange={(e) => setSearchLocation(e.target.value)}
+                     className={`pl-10 h-12 border-gray-200 ${postcodeError ? 'border-red-400' : postcodeCoords ? 'border-teal-400' : ''}`}
                     />
                     {postcodeLoading && (
                       <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-gray-400" />
