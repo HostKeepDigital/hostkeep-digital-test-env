@@ -421,6 +421,16 @@ export default function Search() {
     return true;
   });
 
+  // Update debug log state after filter completes (only when postcode active)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (postcodeCoords && newDebugLog.length > 0) {
+      setDebugLog(newDebugLog);
+    } else if (!postcodeCoords) {
+      setDebugLog([]);
+    }
+  });
+
   const effectiveSortBy = postcodeCoords ? "nearest" : sortBy;
 
   const sortedProperties = [...filteredProperties].sort((a, b) => {
