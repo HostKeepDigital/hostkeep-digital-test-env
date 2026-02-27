@@ -882,6 +882,33 @@ export default function Search() {
             Showing properties within <strong className="mx-1">{filters.radiusMiles} miles</strong> of <strong className="ml-1">{postcodeCoords.postcode}</strong>, sorted nearest first.
           </div>
         )}
+        {postcodeCoords && debugLog.length > 0 && (
+          <div className="mb-6 border border-amber-300 bg-amber-50 rounded-lg p-4 text-xs font-mono">
+            <div className="font-bold text-amber-800 mb-2 text-sm">
+              🔍 Radius Debug — search centre: {postcodeCoords.lat.toFixed(4)}, {postcodeCoords.lng.toFixed(4)} | radius: {filters.radiusMiles} mi
+            </div>
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="text-amber-700 border-b border-amber-300">
+                  <th className="text-left py-1 pr-3">Property</th>
+                  <th className="text-left py-1 pr-3">Lat / Lng</th>
+                  <th className="text-left py-1 pr-3">Distance</th>
+                  <th className="text-left py-1">Result</th>
+                </tr>
+              </thead>
+              <tbody>
+                {debugLog.map((row, i) => (
+                  <tr key={i} className={`border-b border-amber-200 ${row.status.startsWith('✅') ? 'text-green-700' : 'text-red-700'}`}>
+                    <td className="py-1 pr-3">{row.title || row.id}</td>
+                    <td className="py-1 pr-3">{row.lat ?? 'null'} / {row.lng ?? 'null'}</td>
+                    <td className="py-1 pr-3">{row.dist != null ? `${row.dist} mi` : '—'}</td>
+                    <td className="py-1">{row.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-xl font-semibold text-gray-900">
             {sortedProperties.length} {sortedProperties.length === 1 ? 'property' : 'properties'} found
