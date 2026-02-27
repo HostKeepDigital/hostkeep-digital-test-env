@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
@@ -9,11 +9,26 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Search as SearchIcon, MapPin, Calendar, Users, SlidersHorizontal, X } from "lucide-react";
+import { Search as SearchIcon, MapPin, Calendar, Users, SlidersHorizontal, X, Loader2 } from "lucide-react";
 import PropertyCard from "@/components/properties/PropertyCard";
 import { format, parseISO, addDays, getDay } from "date-fns";
 import BookingCalendar from "@/components/shared/BookingCalendar";
 import GuestSelector from "@/components/search/GuestSelector";
+
+// Haversine distance in miles
+const haversineDistanceMiles = (lat1, lon1, lat2, lon2) => {
+  const R = 3959; // Earth radius in miles
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
+// Detect if input looks like a UK postcode
+const isPostcodeLike = (val) => /^[A-Z]{1,2}\d/i.test(val.trim().replace(/\s/g, ''));
 
 const AMENITIES = [
   "WiFi", "Pool", "Parking", "Air Conditioning", "Kitchen", "Washing Machine",
