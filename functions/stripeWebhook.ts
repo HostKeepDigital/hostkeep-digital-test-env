@@ -8,9 +8,9 @@ const PLAN_DETAILS = {
   host_starter_monthly: { name: 'Host Starter', price: 29, max_properties: 1, role: 'host' },
   host_growth_monthly: { name: 'Host Growth', price: 59, max_properties: 5, role: 'host' },
   host_pro_monthly: { name: 'Host Pro', price: 99, max_properties: 999, role: 'host' },
-  cleaner_solo_monthly: { name: 'Cleaner Solo', price: 29, max_properties: null, role: 'cleaner' },
-  cleaner_pro_monthly: { name: 'Cleaner Pro', price: 59, max_properties: null, role: 'cleaner' },
-  cleaner_team_monthly: { name: 'Cleaner Team', price: 99, max_properties: null, role: 'cleaner' },
+  cleaner_solo_monthly: { name: 'Cleaner Solo', price: 9.99, max_properties: null, role: 'cleaner' },
+  cleaner_pro_monthly: { name: 'Cleaner Pro', price: 19.99, max_properties: null, role: 'cleaner' },
+  cleaner_team_monthly: { name: 'Cleaner Team', price: 39.99, max_properties: null, role: 'cleaner' },
 };
 
 Deno.serve(async (req) => {
