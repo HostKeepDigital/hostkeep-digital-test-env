@@ -106,28 +106,48 @@ function RequireAdmin({ children }) {
   return children;
 }
 
+// Helper: returns true if user's non-guest roles are ALL pending (no approved roles)
+function isUserPending(roles) {
+  if (!roles || roles.length === 0) return false;
+  const nonGuestRoles = roles.filter(r => !['guest'].includes((r.role || '').toLowerCase()));
+  if (nonGuestRoles.length === 0) return false;
+  return !nonGuestRoles.some(r => (r.approval_status || '').toLowerCase() === 'approved');
+}
+
+// Guard: hard-blocks pending users from all routes except /pending
+function RequirePendingCheck({ children }) {
+  const { isAuthenticated, isLoadingAuth } = useAuth();
+  const location = useLocation();
+  const [pendingStatus, setPendingStatus] = useState(null); // null=loading, true=pending, false=ok
+
+  useEffect(() => {
+    if (!isAuthenticated || isLoadingAuth) { setPendingStatus(false); return; }
+    base44.auth.me().then(async (u) => {
+      if (!u?.id) { setPendingStatus(false); return; }
+      const roles = await base44.entities.UserRole.filter({ user_id: u.id });
+      setPendingStatus(isUserPending(roles));
+    }).catch(() => setPendingStatus(false));
+  }, [isAuthenticated, isLoadingAuth, location.pathname]);
+
+  if (pendingStatus === null) return (
+    <div className="fixed inset-0 flex items-center justify-center">
+      <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin" />
+    </div>
+  );
+  if (pendingStatus && location.pathname !== '/pending') {
+    return <Navigate to="/pending" replace />;
+  }
+  return children;
+}
+
 // Guard: redirects unauthenticated users to login for protected routes
 function RequireAuth({ children }) {
   const { isAuthenticated, isLoadingAuth, isLoadingPublicSettings } = useAuth();
   const location = useLocation();
-  const [userRoles, setUserRoles] = useState(null);
 
   // Normalise path for matching (strip trailing slash, ignore query/hash)
   const basePath = '/' + location.pathname.replace(/^\/+/, '').split('/')[0];
   const isPublic = PUBLIC_ROUTES.has(basePath) || PUBLIC_ROUTES.has(location.pathname);
-
-  useEffect(() => {
-    if (isAuthenticated && userRoles === null) {
-      base44.auth.me().then(async (u) => {
-        if (u?.id) {
-          const roles = await base44.entities.UserRole.filter({ user_id: u.id });
-          setUserRoles(roles || []);
-        } else {
-          setUserRoles([]);
-        }
-      }).catch(() => setUserRoles([]));
-    }
-  }, [isAuthenticated]);
 
   if (isLoadingPublicSettings || isLoadingAuth) return null;
   if (isPublic) return children;
