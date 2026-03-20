@@ -221,6 +221,7 @@ const AuthenticatedApp = () => {
         ))}
         <Route path="/pending" element={<Pending />} />
         <Route path="/founding" element={<Founding />} />
+        <Route path="/login" element={<SignIn />} />
         <Route path="/admin" element={
           <RequireAdmin>
             <LayoutWrapper currentPageName="AdminPanel">
