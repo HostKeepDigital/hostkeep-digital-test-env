@@ -11,6 +11,7 @@ import { base44 } from '@/api/base44Client';
 import { useState, useEffect } from 'react';
 import AdminPanel from './pages/AdminPanel';
 import Pending from './pages/Pending';
+import Founding from './pages/Founding';
 
 // Pages accessible without authentication
 const PUBLIC_ROUTES = new Set([
