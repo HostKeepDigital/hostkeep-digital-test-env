@@ -75,7 +75,7 @@ export default function PropertyListingCard({
           <h3 className="text-2xl font-bold mb-1.5 tracking-tight drop-shadow-md">{property.title}</h3>
           <p className="text-white/90 text-sm font-medium drop-shadow-md">
               {property.property_type ? property.property_type.charAt(0).toUpperCase() + property.property_type.slice(1) : 'Property'}
-              {(property.town || property.county) && ` • ${[property.town, property.county].filter(Boolean).join(', ')}`}
+              {(property.location?.locality || property.county) && ` • ${[property.location?.locality, property.county].filter(Boolean).join(', ')}`}
             </p>
         </div>
 

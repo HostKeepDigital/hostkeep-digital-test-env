@@ -152,10 +152,10 @@ export default function PropertyCard({ property, onSave, isAvailable = true, una
           <div className="flex items-start justify-between mb-2">
             <div>
               <h3 className="font-semibold text-gray-900 line-clamp-1">{property.title}</h3>
-              {(property.town || property.county) && (
+              {(property.location?.locality || property.county || property.postcode) && (
                 <p className="text-sm text-gray-500 flex items-center gap-1">
                   <MapPin className="w-3 h-3" />
-                  {[property.town, property.county].filter(Boolean).join(', ')}
+                  {[property.location?.locality, property.county, property.postcode].filter(Boolean).join(', ')}
                   {distanceMiles != null && (
                     <span className="ml-1 text-xs text-teal-600 font-medium">· {distanceMiles} mi</span>
                   )}
