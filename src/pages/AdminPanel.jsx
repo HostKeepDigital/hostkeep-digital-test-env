@@ -1,5 +1,3 @@
-import { useEffect, useState } from "react";
-import { base44 } from "@/api/base44Client";
 import { Shield } from "lucide-react";
 
 export default function AdminPanel() {
