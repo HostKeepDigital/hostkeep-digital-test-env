@@ -242,10 +242,10 @@ export default function Subscription() {
                             ? 'bg-violet-600 hover:bg-violet-700' 
                             : 'bg-teal-600 hover:bg-teal-700'
                         }`}
-                        onClick={() => subscribeMutation.mutate(plan.id)}
-                        disabled={subscribeMutation.isPending}
+                        onClick={() => handleSubscribe(plan.id)}
+                        disabled={!!checkoutLoading}
                       >
-                        {subscribeMutation.isPending ? (
+                        {checkoutLoading === plan.id ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : subscription?.status === 'active' ? (
                           'Switch to ' + plan.name
