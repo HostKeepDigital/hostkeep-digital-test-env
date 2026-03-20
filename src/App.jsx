@@ -59,6 +59,40 @@ function PostLoginRedirect() {
   return <Navigate to={redirect} replace />;
 }
 
+// Guard: only allows admin-role users; redirects others to their dashboard
+function RequireAdmin({ children }) {
+  const { isAuthenticated, isLoadingAuth } = useAuth();
+  const [redirect, setRedirect] = useState(null);
+  const [checked, setChecked] = useState(false);
+
+  useEffect(() => {
+    if (isLoadingAuth) return;
+    if (!isAuthenticated) {
+      base44.auth.redirectToLogin(window.location.href);
+      return;
+    }
+    base44.auth.me().then(async (u) => {
+      if (!u?.id) { setRedirect('/Home'); setChecked(true); return; }
+      const roles = await base44.entities.UserRole.filter({ user_id: u.id });
+      const approved = roles.filter(r => (r.approval_status || '').toLowerCase() === 'approved').map(r => (r.role || '').toLowerCase());
+      if (approved.includes('admin')) {
+        setChecked(true); // authorised
+      } else {
+        setRedirect(approved.includes('host') ? '/HostDashboard' : approved.includes('cleaner') ? '/CleanerDashboard' : '/Home');
+        setChecked(true);
+      }
+    }).catch(() => { setRedirect('/Home'); setChecked(true); });
+  }, [isAuthenticated, isLoadingAuth]);
+
+  if (!checked) return (
+    <div className="fixed inset-0 flex items-center justify-center">
+      <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin" />
+    </div>
+  );
+  if (redirect) return <Navigate to={redirect} replace />;
+  return children;
+}
+
 // Guard: redirects unauthenticated users to login for protected routes
 function RequireAuth({ children }) {
   const { isAuthenticated, isLoadingAuth, isLoadingPublicSettings } = useAuth();
@@ -144,11 +178,11 @@ const AuthenticatedApp = () => {
         />
       ))}
       <Route path="/admin" element={
-        <RequireAuth>
+        <RequireAdmin>
           <LayoutWrapper currentPageName="AdminPanel">
             <AdminPanel />
           </LayoutWrapper>
-        </RequireAuth>
+        </RequireAdmin>
       } />
       <Route path="*" element={<PageNotFound />} />
     </Routes>

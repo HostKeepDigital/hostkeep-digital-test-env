@@ -3,37 +3,6 @@ import { base44 } from "@/api/base44Client";
 import { Shield } from "lucide-react";
 
 export default function AdminPanel() {
-  const [user, setUser] = useState(null);
-  const [authorized, setAuthorized] = useState(null);
-
-  useEffect(() => {
-    base44.auth.me().then(async (u) => {
-      setUser(u);
-      if (u?.id) {
-        const roles = await base44.entities.UserRole.filter({ user_id: u.id });
-        setAuthorized(roles.some(r => r.role === 'admin'));
-      } else {
-        setAuthorized(false);
-      }
-    }).catch(() => setAuthorized(false));
-  }, []);
-
-  if (authorized === null) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (!authorized) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-500">You do not have permission to view this page.</p>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto">
