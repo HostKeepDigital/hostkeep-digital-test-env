@@ -153,7 +153,7 @@ function RequireAuth({ children }) {
   if (isLoadingPublicSettings || isLoadingAuth) return null;
   if (isPublic) return children;
   if (!isAuthenticated) {
-    base44.auth.redirectToLogin(window.location.href);
+    window.location.href = `/login?next=${encodeURIComponent(window.location.href)}`;
     return null;
   }
   return children;
