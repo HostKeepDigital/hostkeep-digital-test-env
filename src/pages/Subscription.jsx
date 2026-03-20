@@ -108,6 +108,7 @@ const CLEANER_PLANS = [
 ];
 
 export default function Subscription() {
+  const [activeTab, setActiveTab] = useState('host');
   const [user, setUser] = useState(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
