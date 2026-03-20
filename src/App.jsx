@@ -3,10 +3,63 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import NavigationTracker from '@/lib/NavigationTracker'
 import { pagesConfig } from './pages.config'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import { base44 } from '@/api/base44Client';
+import { useState, useEffect } from 'react';
+
+// Pages accessible without authentication
+const PUBLIC_ROUTES = new Set([
+  '/', '/Home', '/Search', '/PropertyDetails', '/Pay',
+  '/AboutUs', '/LegalCentre', '/TermsAndConditions', '/PrivacyPolicy',
+  '/CookiePolicy', '/GuestTerms', '/HostTerms', '/CleanerTerms',
+  '/DisputePolicy', '/PaymentPolicy', '/RefundPolicy', '/Accessibility',
+  '/BecomeHost', '/BecomeCleaner', '/Index', '/LockScreen',
+]);
+
+// After login, redirect based on role
+function getRoleRedirect(userRoles) {
+  if (!userRoles || userRoles.length === 0) return '/Home';
+  const roles = userRoles.map(r => r.role);
+  if (roles.includes('admin')) return '/AdminVerifications';
+  if (roles.includes('host')) return '/HostDashboard';
+  if (roles.includes('cleaner')) return '/CleanerDashboard';
+  return '/Home';
+}
+
+// Guard: redirects unauthenticated users to login for protected routes
+function RequireAuth({ children }) {
+  const { isAuthenticated, isLoadingAuth, isLoadingPublicSettings } = useAuth();
+  const location = useLocation();
+  const [userRoles, setUserRoles] = useState(null);
+
+  // Normalise path for matching (strip trailing slash, ignore query/hash)
+  const basePath = '/' + location.pathname.replace(/^\/+/, '').split('/')[0];
+  const isPublic = PUBLIC_ROUTES.has(basePath) || PUBLIC_ROUTES.has(location.pathname);
+
+  useEffect(() => {
+    if (isAuthenticated && userRoles === null) {
+      base44.auth.me().then(async (u) => {
+        if (u?.id) {
+          const roles = await base44.entities.UserRole.filter({ user_id: u.id });
+          setUserRoles(roles || []);
+        } else {
+          setUserRoles([]);
+        }
+      }).catch(() => setUserRoles([]));
+    }
+  }, [isAuthenticated]);
+
+  if (isLoadingPublicSettings || isLoadingAuth) return null;
+  if (isPublic) return children;
+  if (!isAuthenticated) {
+    base44.auth.redirectToLogin(window.location.href);
+    return null;
+  }
+  return children;
+}
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
