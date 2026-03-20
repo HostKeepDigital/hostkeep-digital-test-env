@@ -140,6 +140,13 @@ const AuthenticatedApp = () => {
           }
         />
       ))}
+      <Route path="/admin" element={
+        <RequireAuth>
+          <LayoutWrapper currentPageName="AdminPanel">
+            <AdminPanel />
+          </LayoutWrapper>
+        </RequireAuth>
+      } />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
