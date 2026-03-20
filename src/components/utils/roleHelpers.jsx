@@ -1,13 +1,25 @@
 import { base44 } from "@/api/base44Client";
 
-// Get all roles for a user
+// Get all roles for a user (returns full objects with approval_status)
 export async function getUserRoles(userId) {
   try {
     const userRoles = await base44.entities.UserRole.filter({ user_id: userId });
-    return userRoles.map(ur => ur.role);
+    return userRoles;
   } catch (error) {
     return [];
   }
+}
+
+// Check if any of the user's roles are pending (not yet approved)
+export function hasPendingRole(userRoles) {
+  return userRoles.some(r => (r.approval_status || 'pending') === 'pending' && ['host', 'cleaner'].includes(r.role));
+}
+
+// Check if user has NO approved non-guest roles (fully pending state)
+export function isFullyPending(userRoles) {
+  const nonGuestRoles = userRoles.filter(r => !['guest'].includes(r.role));
+  if (nonGuestRoles.length === 0) return false;
+  return nonGuestRoles.every(r => (r.approval_status || 'pending') !== 'approved');
 }
 
 // Check if user has at least one of the required roles
