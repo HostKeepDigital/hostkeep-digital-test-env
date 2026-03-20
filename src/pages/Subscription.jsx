@@ -73,102 +73,25 @@ export default function Subscription() {
     base44.auth.me().then(setUser).catch(() => {});
   }, []);
 
-  // Handle successful payment redirect
+  // Handle Stripe redirect back to page
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const success = urlParams.get('success');
-    const plan = urlParams.get('plan');
-    
-    if (success === 'true' && plan && user?.id) {
-      const planDetails = PLANS.find(p => p.id === plan);
-      const startDate = format(new Date(), "yyyy-MM-dd");
-      const endDate = format(addMonths(new Date(), 1), "yyyy-MM-dd");
+    const cancelled = urlParams.get('cancelled');
 
-      // Create or update subscription after successful payment
-      const createSubscription = async () => {
-        try {
-          const subs = await base44.entities.Subscription.filter({ user_id: user.id });
-          const existingSub = subs[0];
-
-          if (existingSub) {
-            // If resubscribing after cancellation, keep original billing date
-            const finalEndDate = existingSub.status === 'cancelled' 
-              ? existingSub.end_date 
-              : endDate;
-
-            await base44.entities.Subscription.update(existingSub.id, {
-              plan,
-              status: 'active',
-              price_monthly: planDetails.price,
-              max_properties: planDetails.max_properties,
-              start_date: startDate,
-              end_date: finalEndDate,
-              features: planDetails.features,
-            });
-          } else {
-            await base44.entities.Subscription.create({
-              user_id: user.id,
-              plan,
-              status: 'active',
-              price_monthly: planDetails.price,
-              max_properties: planDetails.max_properties,
-              start_date: startDate,
-              end_date: endDate,
-              features: planDetails.features,
-            });
-          }
-
-          // Add host role to user
-          const roles = await getUserRoles(user.id);
-          if (!hasRole(roles, 'guest')) {
-            await addUserRole(user.id, 'guest');
-          }
-          if (!hasRole(roles, 'host')) {
-            await addUserRole(user.id, 'host');
-          }
-
-          queryClient.invalidateQueries({ queryKey: ['subscription'] });
-          toast.success("Subscription activated! You can now list your properties.");
-          
-          // Check if there's a pending property draft
-          const pendingDraft = localStorage.getItem('pendingPropertyDraft');
-          if (pendingDraft) {
-            try {
-              const draftData = JSON.parse(pendingDraft);
-              const { publish, ...propertyData } = draftData;
-              
-              // Create the property
-              await base44.entities.Property.create({
-                ...propertyData,
-                status: publish ? 'published' : 'draft'
-              });
-              
-              // Clear the draft
-              localStorage.removeItem('pendingPropertyDraft');
-              
-              toast.success("Your property has been added!");
-              setTimeout(() => {
-                window.location.href = createPageUrl('HostProperties');
-              }, 1500);
-              return;
-            } catch (error) {
-              console.error('Failed to create property:', error);
-              toast.error("Subscription activated, but failed to create property. Please try again.");
-            }
-          }
-          
-          // Redirect to CreateProperty page
-          setTimeout(() => {
-            window.location.href = createPageUrl('CreateProperty');
-          }, 1500);
-        } catch (error) {
-          toast.error("Failed to activate subscription. Please contact support.");
-        }
-      };
-
-      createSubscription();
+    if (success === 'true') {
+      toast.success("Payment successful! Your subscription is being activated.");
+      queryClient.invalidateQueries({ queryKey: ['subscription'] });
+      // Clean URL then redirect to dashboard
+      window.history.replaceState({}, '', window.location.pathname);
+      setTimeout(() => {
+        window.location.href = createPageUrl('HostDashboard');
+      }, 2000);
+    } else if (cancelled === 'true') {
+      toast.error("Payment cancelled. No changes were made to your account.");
+      window.history.replaceState({}, '', window.location.pathname);
     }
-  }, [user?.id, queryClient]);
+  }, [queryClient]);
 
   const { data: subscription } = useQuery({
     queryKey: ['subscription', user?.id],
