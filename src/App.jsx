@@ -182,6 +182,7 @@ const AuthenticatedApp = () => {
           </LayoutWrapper>
         </RequireAuth>
       } />
+
       {Object.entries(Pages).map(([path, Page]) => (
         <Route
           key={path}
