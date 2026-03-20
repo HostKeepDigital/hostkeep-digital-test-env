@@ -345,7 +345,7 @@ export default function Home() {
                   </Link>
                 )
               ) : (
-                <Link to={createPageUrl('BecomeHost')}>
+                <Link to="/founding">
                   <Button size="lg" className="bg-white text-teal-700 hover:bg-teal-50">
                     Become a Host
                     <ArrowRight className="w-4 h-4 ml-2" />
