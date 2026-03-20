@@ -5,9 +5,12 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
 const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
 
 const PLAN_DETAILS = {
-  host_solo: { name: 'Host Solo', price: 29, max_properties: 1 },
-  host_pro: { name: 'Host Pro', price: 59, max_properties: 5 },
-  host_agency: { name: 'Host Agency', price: 99, max_properties: 999 },
+  host_starter_monthly: { name: 'Host Starter', price: 29, max_properties: 1, role: 'host' },
+  host_growth_monthly: { name: 'Host Growth', price: 59, max_properties: 5, role: 'host' },
+  host_pro_monthly: { name: 'Host Pro', price: 99, max_properties: 999, role: 'host' },
+  cleaner_solo_monthly: { name: 'Cleaner Solo', price: 29, max_properties: null, role: 'cleaner' },
+  cleaner_pro_monthly: { name: 'Cleaner Pro', price: 59, max_properties: null, role: 'cleaner' },
+  cleaner_team_monthly: { name: 'Cleaner Team', price: 99, max_properties: null, role: 'cleaner' },
 };
 
 Deno.serve(async (req) => {
@@ -59,15 +62,16 @@ Deno.serve(async (req) => {
         await base44.asServiceRole.entities.Subscription.create({ user_id, ...subData });
       }
 
-      // Ensure host role exists
+      // Ensure the correct role exists
+      const requiredRole = planDetails.role;
       const roles = await base44.asServiceRole.entities.UserRole.filter({ user_id });
-      const hasHost = roles.some(r => r.role === 'host' && r.approval_status === 'approved');
-      if (!hasHost) {
-        const existing = roles.find(r => r.role === 'host');
+      const hasRole = roles.some(r => r.role === requiredRole && r.approval_status === 'approved');
+      if (!hasRole) {
+        const existing = roles.find(r => r.role === requiredRole);
         if (existing) {
           await base44.asServiceRole.entities.UserRole.update(existing.id, { approval_status: 'approved' });
         } else {
-          await base44.asServiceRole.entities.UserRole.create({ user_id, role: 'host', approval_status: 'approved' });
+          await base44.asServiceRole.entities.UserRole.create({ user_id, role: requiredRole, approval_status: 'approved' });
         }
       }
 

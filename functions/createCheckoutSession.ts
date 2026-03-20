@@ -4,9 +4,12 @@ import Stripe from 'npm:stripe@14';
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
 
 const PLAN_LOOKUP_KEYS = {
-  host_solo: 'host_solo',
-  host_pro: 'host_pro',
-  host_agency: 'host_agency',
+  host_starter_monthly: 'host_starter_monthly',
+  host_growth_monthly: 'host_growth_monthly',
+  host_pro_monthly: 'host_pro_monthly',
+  cleaner_solo_monthly: 'cleaner_solo_monthly',
+  cleaner_pro_monthly: 'cleaner_pro_monthly',
+  cleaner_team_monthly: 'cleaner_team_monthly',
 };
 
 Deno.serve(async (req) => {

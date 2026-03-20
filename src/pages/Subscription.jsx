@@ -10,10 +10,10 @@ import { toast } from "sonner";
 import { createPageUrl } from "@/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const PLANS = [
+const HOST_PLANS = [
   {
-    id: "host_solo",
-    name: "Host Solo",
+    id: "host_starter_monthly",
+    name: "Host Starter",
     price: 29,
     icon: Zap,
     color: "teal",
@@ -27,8 +27,8 @@ const PLANS = [
     ],
   },
   {
-    id: "host_pro",
-    name: "Host Pro",
+    id: "host_growth_monthly",
+    name: "Host Growth",
     price: 59,
     icon: Crown,
     color: "violet",
@@ -36,7 +36,7 @@ const PLANS = [
     popular: true,
     features: [
       "Up to 5 properties",
-      "Everything in Host Solo",
+      "Everything in Host Starter",
       "Priority support",
       "Analytics dashboard",
       "iCal sync",
@@ -44,19 +44,65 @@ const PLANS = [
     ],
   },
   {
-    id: "host_agency",
-    name: "Host Agency",
+    id: "host_pro_monthly",
+    name: "Host Pro",
     price: 99,
     icon: Rocket,
     color: "amber",
     max_properties: 999,
     features: [
       "Unlimited properties",
-      "Everything in Host Pro",
+      "Everything in Host Growth",
       "Featured listings",
       "API access",
       "Dedicated account manager",
       "Custom branding",
+    ],
+  },
+];
+
+const CLEANER_PLANS = [
+  {
+    id: "cleaner_solo_monthly",
+    name: "Cleaner Solo",
+    price: 29,
+    icon: Zap,
+    color: "teal",
+    features: [
+      "1 cleaner profile",
+      "Job management",
+      "Host messaging",
+      "Availability calendar",
+      "Email notifications",
+    ],
+  },
+  {
+    id: "cleaner_pro_monthly",
+    name: "Cleaner Pro",
+    price: 59,
+    icon: Crown,
+    color: "violet",
+    popular: true,
+    features: [
+      "Everything in Cleaner Solo",
+      "Priority job matching",
+      "Analytics dashboard",
+      "Auto-accept jobs",
+      "Portfolio showcase",
+    ],
+  },
+  {
+    id: "cleaner_team_monthly",
+    name: "Cleaner Team",
+    price: 99,
+    icon: Rocket,
+    color: "amber",
+    features: [
+      "Everything in Cleaner Pro",
+      "Team management",
+      "Multiple staff profiles",
+      "Advanced scheduling",
+      "Dedicated support",
     ],
   },
 ];
