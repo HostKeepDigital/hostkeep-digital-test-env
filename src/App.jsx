@@ -21,13 +21,39 @@ const PUBLIC_ROUTES = new Set([
 ]);
 
 // After login, redirect based on role
-function getRoleRedirect(userRoles) {
-  if (!userRoles || userRoles.length === 0) return '/Home';
-  const roles = userRoles.map(r => r.role);
-  if (roles.includes('admin')) return '/AdminVerifications';
-  if (roles.includes('host')) return '/HostDashboard';
-  if (roles.includes('cleaner')) return '/CleanerDashboard';
+function getRoleRedirect(roles) {
+  if (!roles || roles.length === 0) return '/Home';
+  const roleNames = roles.map(r => r.role);
+  if (roleNames.includes('admin')) return '/admin';
+  if (roleNames.includes('host')) return '/HostDashboard';
+  if (roleNames.includes('cleaner')) return '/CleanerDashboard';
   return '/Home';
+}
+
+// Fires on the root path when authenticated — redirects to the right dashboard
+function PostLoginRedirect() {
+  const { isAuthenticated, isLoadingAuth } = useAuth();
+  const [redirect, setRedirect] = useState(null);
+
+  useEffect(() => {
+    if (!isAuthenticated || isLoadingAuth) return;
+    base44.auth.me().then(async (u) => {
+      if (u?.id) {
+        const roles = await base44.entities.UserRole.filter({ user_id: u.id });
+        setRedirect(getRoleRedirect(roles));
+      } else {
+        setRedirect('/Home');
+      }
+    }).catch(() => setRedirect('/Home'));
+  }, [isAuthenticated, isLoadingAuth]);
+
+  if (!isAuthenticated) return null;
+  if (!redirect) return (
+    <div className="fixed inset-0 flex items-center justify-center">
+      <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin" />
+    </div>
+  );
+  return <Navigate to={redirect} replace />;
 }
 
 // Guard: redirects unauthenticated users to login for protected routes
