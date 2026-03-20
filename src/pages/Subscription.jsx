@@ -7,10 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Crown, Zap, Rocket, Loader2, X, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { format, addMonths } from "date-fns";
 import { createPageUrl } from "@/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { addUserRole, getUserRoles, hasRole } from "@/components/utils/roleHelpers";
 
 const PLANS = [
   {
