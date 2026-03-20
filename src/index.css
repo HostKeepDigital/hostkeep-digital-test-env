@@ -77,6 +77,11 @@
 
 
 
+/* Hide "Need an account? Sign up" on the login page during beta */
+button:has(> span.font-medium) {
+  display: none !important;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
