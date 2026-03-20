@@ -10,6 +10,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { base44 } from '@/api/base44Client';
 import { useState, useEffect } from 'react';
 import AdminPanel from './pages/AdminPanel';
+import Pending from './pages/Pending';
 
 // Pages accessible without authentication
 const PUBLIC_ROUTES = new Set([
@@ -23,6 +24,12 @@ const PUBLIC_ROUTES = new Set([
 // After login, redirect based on role
 function getRoleRedirect(roles) {
   if (!roles || roles.length === 0) return '/Home';
+  // If any host/cleaner role is pending and none are approved, send to /pending
+  const nonGuestRoles = roles.filter(r => !['guest'].includes((r.role || '').toLowerCase()));
+  if (nonGuestRoles.length > 0) {
+    const hasApproved = nonGuestRoles.some(r => (r.approval_status || '').toLowerCase() === 'approved');
+    if (!hasApproved) return '/pending';
+  }
   // Only consider approved roles, case-insensitive
   const approved = roles
     .filter(r => (r.approval_status || '').toLowerCase() === 'approved')
