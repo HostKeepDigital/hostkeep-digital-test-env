@@ -23,9 +23,10 @@ export default function LocationStep({ formData, onFormChange, onLocationChange 
   const [postcodeError, setPostcodeError] = useState("");
   const [postcodeData, setPostcodeData] = useState(null);
 
-  // Restore existing verified postcode data on mount (edit mode)
+  // Restore existing verified postcode data once property loads (edit mode)
   useEffect(() => {
-    if (formData.postcode && formData.latitude && formData.longitude) {
+    if (formData.postcode && formData.latitude && formData.longitude && !postcodeData) {
+      setPostcodeInput(formData.postcode);
       setPostcodeData({
         postcode: formData.postcode,
         county: formData.county,
@@ -36,7 +37,7 @@ export default function LocationStep({ formData, onFormChange, onLocationChange 
         longitude: formData.longitude
       });
     }
-  }, []);
+  }, [formData.postcode]);
 
   const handlePostcodeLookup = async () => {
     const raw = postcodeInput.trim();
