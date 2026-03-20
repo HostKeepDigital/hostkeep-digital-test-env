@@ -82,7 +82,7 @@ function RequireAdmin({ children }) {
   useEffect(() => {
     if (isLoadingAuth) return;
     if (!isAuthenticated) {
-      base44.auth.redirectToLogin(window.location.href);
+      window.location.href = `/login?next=${encodeURIComponent(window.location.href)}`;
       return;
     }
     base44.auth.me().then(async (u) => {
