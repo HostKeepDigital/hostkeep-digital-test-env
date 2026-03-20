@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import LockScreen from "@/pages/LockScreen";
+import { base44 } from "@/api/base44Client";
 
 const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -8,8 +9,17 @@ export default function AppLockWrapper({ children }) {
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    const checkAccess = () => {
+    const checkAccess = async () => {
       try {
+        // If the user is already logged in via Base44, skip the lock screen entirely
+        const loggedIn = await base44.auth.isAuthenticated();
+        if (loggedIn) {
+          setIsAuthenticated(true);
+          setIsChecking(false);
+          return;
+        }
+
+        // Otherwise check the session token from the lock screen
         const sessionToken = sessionStorage.getItem('app_access_token');
         const accessTime = sessionStorage.getItem('app_access_time');
         
