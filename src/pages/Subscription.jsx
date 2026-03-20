@@ -211,8 +211,30 @@ export default function Subscription() {
           </motion.div>
         )}
 
+        {/* Plan type tabs */}
+        <div className="flex justify-center mb-8">
+          <div className="flex bg-white border border-gray-200 rounded-xl p-1 gap-1">
+            <button
+              onClick={() => setActiveTab('host')}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                activeTab === 'host' ? 'bg-teal-600 text-white shadow' : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Building2 className="w-4 h-4" /> Host Plans
+            </button>
+            <button
+              onClick={() => setActiveTab('cleaner')}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                activeTab === 'cleaner' ? 'bg-teal-600 text-white shadow' : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Sparkles className="w-4 h-4" /> Cleaner Plans
+            </button>
+          </div>
+        </div>
+
         <div className="grid md:grid-cols-3 gap-6">
-          {PLANS.map((plan, idx) => {
+          {(activeTab === 'host' ? HOST_PLANS : CLEANER_PLANS).map((plan, idx) => {
             const isCurrentPlan = subscription?.plan === plan.id && subscription?.status === 'active';
             const Icon = plan.icon;
 
@@ -252,9 +274,11 @@ export default function Subscription() {
                       <span className="text-4xl font-bold text-gray-900">£{plan.price}</span>
                       <span className="text-gray-500">/month</span>
                     </div>
-                    <CardDescription className="mt-2">
-                      {plan.max_properties === 999 ? 'Unlimited' : plan.max_properties} {plan.max_properties === 1 ? 'property' : 'properties'}
-                    </CardDescription>
+                    {plan.max_properties && (
+                      <CardDescription className="mt-2">
+                        {plan.max_properties === 999 ? 'Unlimited' : plan.max_properties} {plan.max_properties === 1 ? 'property' : 'properties'}
+                      </CardDescription>
+                    )}
                   </CardHeader>
 
                   <CardContent className="flex-1">
@@ -273,11 +297,7 @@ export default function Subscription() {
 
                   <CardFooter>
                     {isCurrentPlan ? (
-                      <Button 
-                        variant="outline" 
-                        className="w-full"
-                        disabled
-                      >
+                      <Button variant="outline" className="w-full" disabled>
                         Currently Selected
                       </Button>
                     ) : (
