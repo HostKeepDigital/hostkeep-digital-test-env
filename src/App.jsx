@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { base44 } from '@/api/base44Client';
 import { useState, useEffect } from 'react';
+import AdminPanel from './pages/AdminPanel';
 
 // Pages accessible without authentication
 const PUBLIC_ROUTES = new Set([
