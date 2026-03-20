@@ -199,6 +199,7 @@ const AuthenticatedApp = () => {
   return (
     <RequirePendingCheck>
       <Routes>
+        <Route path="/login" element={<SignIn />} />
         <Route path="/" element={
           <RequireAuth>
             <LayoutWrapper currentPageName="Home">
