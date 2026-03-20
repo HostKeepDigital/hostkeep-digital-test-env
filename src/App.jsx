@@ -19,6 +19,7 @@ const PUBLIC_ROUTES = new Set([
   '/CookiePolicy', '/GuestTerms', '/HostTerms', '/CleanerTerms',
   '/DisputePolicy', '/PaymentPolicy', '/RefundPolicy', '/Accessibility',
   '/BecomeHost', '/BecomeCleaner', '/Index', '/LockScreen',
+  '/founding', '/waitlist', '/pending', '/Subscription',
 ]);
 
 // After login, redirect based on role
