@@ -575,7 +575,7 @@ export default function Home() {
                         </Button>
                       </Link>
                     ) : (
-                      <Link to={createPageUrl('BecomeCleaner')}>
+                      <Link to="/founding">
                         <Button 
                           variant={plan.popular ? "default" : "outline"} 
                           className={`w-full ${plan.popular ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
