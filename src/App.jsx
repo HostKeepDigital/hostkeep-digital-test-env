@@ -41,10 +41,12 @@ function getRoleRedirect(roles) {
   return '/Home';
 }
 
-// Fires on the root path when authenticated — redirects to the right dashboard
+// Fires on the root path — shows Home for guests, redirects authenticated users to their dashboard
 function PostLoginRedirect() {
   const { isAuthenticated, isLoadingAuth } = useAuth();
   const [redirect, setRedirect] = useState(null);
+  const { Pages } = pagesConfig;
+  const HomePage = Pages['Home'];
 
   useEffect(() => {
     if (!isAuthenticated || isLoadingAuth) return;
@@ -58,7 +60,9 @@ function PostLoginRedirect() {
     }).catch(() => setRedirect('/Home'));
   }, [isAuthenticated, isLoadingAuth]);
 
-  if (!isAuthenticated) return null;
+  // Unauthenticated visitors see the Home page
+  if (!isAuthenticated) return HomePage ? <HomePage /> : null;
+  // Authenticated but still loading roles
   if (!redirect) return (
     <div className="fixed inset-0 flex items-center justify-center">
       <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin" />
