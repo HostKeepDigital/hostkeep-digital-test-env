@@ -310,12 +310,11 @@ export default function Layout({ children, currentPageName }) {
                   <Link to="/founding">
                     <Button variant="ghost">Become a Cleaner</Button>
                   </Link>
-                  <Button 
-                    onClick={() => base44.auth.redirectToLogin()}
-                    className="bg-teal-600 hover:bg-teal-700"
-                  >
-                    Sign In
-                  </Button>
+                  <Link to="/login">
+                    <Button className="bg-teal-600 hover:bg-teal-700">
+                      Sign In
+                    </Button>
+                  </Link>
                 </>
               )}
             </div>
