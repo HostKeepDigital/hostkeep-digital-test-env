@@ -37,6 +37,14 @@ export default function LocationStep({ formData, onFormChange, onLocationChange 
   const [postcodeError, setPostcodeError] = useState("");
   const [postcodeData, setPostcodeData] = useState(() => buildPostcodeData(formData));
 
+  // Sync when formData.postcode arrives asynchronously (e.g. after DB load)
+  useEffect(() => {
+    if (formData.postcode && !postcodeData) {
+      setPostcodeInput(formData.postcode);
+      setPostcodeData(buildPostcodeData(formData));
+    }
+  }, [formData.postcode]);
+
   const handlePostcodeLookup = async () => {
     const raw = postcodeInput.trim();
     if (!raw) {
