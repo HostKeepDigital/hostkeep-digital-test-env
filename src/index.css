@@ -78,7 +78,8 @@
 
 
 /* Hide "Need an account? Sign up" on the login page during beta */
-.flex.flex-col.sm\:flex-row button:last-child {
+.flex.flex-col.sm\:flex-row button:last-child,
+button:has(span.font-medium) {
   display: none !important;
 }
 
