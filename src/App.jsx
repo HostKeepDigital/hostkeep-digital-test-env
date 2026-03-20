@@ -12,6 +12,7 @@ import { useState, useEffect } from 'react';
 import AdminPanel from './pages/AdminPanel';
 import Pending from './pages/Pending';
 import Founding from './pages/Founding';
+import SignIn from './pages/SignIn';
 
 // Pages accessible without authentication
 const PUBLIC_ROUTES = new Set([
