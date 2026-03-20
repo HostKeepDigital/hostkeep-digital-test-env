@@ -2,7 +2,16 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
-  const { role_id } = await req.json();
+
+  // Support both GET (email link click) and POST (programmatic)
+  let role_id;
+  if (req.method === 'GET') {
+    const url = new URL(req.url);
+    role_id = url.searchParams.get('role_id');
+  } else {
+    const body = await req.json();
+    role_id = body.role_id;
+  }
 
   if (!role_id) {
     return Response.json({ error: 'Missing role_id' }, { status: 400 });
