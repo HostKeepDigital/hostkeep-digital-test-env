@@ -14,9 +14,9 @@ import { addUserRole, getUserRoles, hasRole } from "@/components/utils/roleHelpe
 
 const PLANS = [
   {
-    id: "basic",
-    name: "Basic",
-    price: 25,
+    id: "host_solo",
+    name: "Host Solo",
+    price: 29,
     icon: Zap,
     color: "teal",
     max_properties: 1,
@@ -29,16 +29,16 @@ const PLANS = [
     ],
   },
   {
-    id: "pro",
-    name: "Pro",
-    price: 49,
+    id: "host_pro",
+    name: "Host Pro",
+    price: 59,
     icon: Crown,
     color: "violet",
     max_properties: 5,
     popular: true,
     features: [
       "Up to 5 properties",
-      "Everything in Basic",
+      "Everything in Host Solo",
       "Priority support",
       "Analytics dashboard",
       "iCal sync",
@@ -46,15 +46,15 @@ const PLANS = [
     ],
   },
   {
-    id: "premium",
-    name: "Premium",
-    price: 79,
+    id: "host_agency",
+    name: "Host Agency",
+    price: 99,
     icon: Rocket,
     color: "amber",
     max_properties: 999,
     features: [
       "Unlimited properties",
-      "Everything in Pro",
+      "Everything in Host Pro",
       "Featured listings",
       "API access",
       "Dedicated account manager",
