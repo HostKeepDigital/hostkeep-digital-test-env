@@ -23,7 +23,7 @@ const PUBLIC_ROUTES = new Set([
 // After login, redirect based on role
 function getRoleRedirect(roles) {
   if (!roles || roles.length === 0) return '/Home';
-  const roleNames = roles.map(r => r.role);
+  const roleNames = roles.map(r => (r.role || '').toLowerCase());
   if (roleNames.includes('admin')) return '/admin';
   if (roleNames.includes('host')) return '/HostDashboard';
   if (roleNames.includes('cleaner')) return '/CleanerDashboard';
