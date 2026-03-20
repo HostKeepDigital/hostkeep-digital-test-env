@@ -79,7 +79,7 @@ const CLEANER_PLANS = [
   {
     id: "cleaner_pro_monthly",
     name: "Cleaner Pro",
-    price: 59,
+    price: 19.99,
     icon: Crown,
     color: "violet",
     popular: true,
@@ -94,7 +94,7 @@ const CLEANER_PLANS = [
   {
     id: "cleaner_team_monthly",
     name: "Cleaner Team",
-    price: 99,
+    price: 39.99,
     icon: Rocket,
     color: "amber",
     features: [
