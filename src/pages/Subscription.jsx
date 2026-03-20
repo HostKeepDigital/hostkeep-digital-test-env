@@ -179,96 +179,23 @@ export default function Subscription() {
     enabled: !!user?.id,
   });
 
-  const subscribeMutation = useMutation({
-    mutationFn: async (plan) => {
-      const planDetails = PLANS.find(p => p.id === plan);
-      const startDate = format(new Date(), "yyyy-MM-dd");
+  const [checkoutLoading, setCheckoutLoading] = useState(null);
 
-      // Temporarily bypass payment - directly activate subscription
-      const subs = await base44.entities.Subscription.filter({ user_id: user.id });
-      const existingSub = subs[0];
-
-      if (existingSub) {
-        // If resubscribing after cancellation, keep original billing date
-        const endDate = existingSub.status === 'cancelled' 
-          ? existingSub.end_date 
-          : format(addMonths(new Date(), 1), "yyyy-MM-dd");
-
-        await base44.entities.Subscription.update(existingSub.id, {
-          plan,
-          status: 'active',
-          price_monthly: planDetails.price,
-          max_properties: planDetails.max_properties,
-          start_date: startDate,
-          end_date: endDate,
-          features: planDetails.features,
-        });
+  const handleSubscribe = async (planId) => {
+    setCheckoutLoading(planId);
+    try {
+      const response = await base44.functions.invoke('createCheckoutSession', { plan: planId });
+      if (response.data?.url) {
+        window.location.href = response.data.url;
       } else {
-        const endDate = format(addMonths(new Date(), 1), "yyyy-MM-dd");
-        await base44.entities.Subscription.create({
-          user_id: user.id,
-          plan,
-          status: 'active',
-          price_monthly: planDetails.price,
-          max_properties: planDetails.max_properties,
-          start_date: startDate,
-          end_date: endDate,
-          features: planDetails.features,
-        });
+        toast.error(response.data?.error || 'Failed to create checkout session');
       }
-
-      return { plan };
-    },
-    onSuccess: async () => {
-      // Add host role to user
-      const roles = await getUserRoles(user.id);
-      if (!hasRole(roles, 'guest')) {
-        await addUserRole(user.id, 'guest');
-      }
-      if (!hasRole(roles, 'host')) {
-        await addUserRole(user.id, 'host');
-      }
-
-      queryClient.invalidateQueries({ queryKey: ['subscription'] });
-      toast.success("Subscription activated! You can now list your properties.");
-      
-      // Check if there's a pending property draft
-      const pendingDraft = localStorage.getItem('pendingPropertyDraft');
-      if (pendingDraft) {
-        try {
-          const draftData = JSON.parse(pendingDraft);
-          const { publish, ...propertyData } = draftData;
-          
-          // Create the property
-          await base44.entities.Property.create({
-            ...propertyData,
-            status: publish ? 'published' : 'draft'
-          });
-          
-          // Clear the draft
-          localStorage.removeItem('pendingPropertyDraft');
-          
-          toast.success("Your property has been added!");
-          setTimeout(() => {
-            window.location.href = createPageUrl('HostProperties');
-          }, 1500);
-          return;
-        } catch (error) {
-          console.error('Failed to create property:', error);
-          toast.error("Subscription activated, but failed to create property. Please try again.");
-        }
-      }
-      
-      // Redirect to CreateProperty page
-      setTimeout(() => {
-        window.location.href = createPageUrl('CreateProperty');
-      }, 1500);
-    },
-    onError: (error) => {
-      toast.error("Failed to activate subscription. Please try again.");
-      console.error(error);
+    } catch (error) {
+      toast.error('Failed to start checkout. Please try again.');
+    } finally {
+      setCheckoutLoading(null);
     }
-  });
+  };
 
   const cancelMutation = useMutation({
     mutationFn: () => {
