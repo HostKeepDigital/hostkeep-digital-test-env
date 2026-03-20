@@ -466,13 +466,15 @@ export default function Home() {
                       </li>
                     ))}
                   </ul>
-                  <Button 
-                    variant={plan.popular ? "default" : "outline"} 
-                    className={`w-full ${plan.popular ? 'bg-teal-600 hover:bg-teal-700' : ''}`}
-                    size="lg"
-                  >
-                    Get Started
-                  </Button>
+                  <Link to="/founding" className="block">
+                    <Button 
+                      variant={plan.popular ? "default" : "outline"} 
+                      className={`w-full ${plan.popular ? 'bg-teal-600 hover:bg-teal-700' : ''}`}
+                      size="lg"
+                    >
+                      Get Started
+                    </Button>
+                  </Link>
                 </motion.div>
               ))}
                 </div>
