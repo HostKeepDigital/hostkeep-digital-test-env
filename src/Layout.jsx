@@ -304,11 +304,11 @@ export default function Layout({ children, currentPageName }) {
                 </>
               ) : (
                 <>
-                  <Link to={createPageUrl('GuestProfile')}>
-                    <Button variant="outline">Sign Up</Button>
+                  <Link to="/founding">
+                    <Button variant="outline">Become a Host</Button>
                   </Link>
-                  <Link to={createPageUrl('BecomeHost')}>
-                    <Button variant="ghost">Become a Host</Button>
+                  <Link to="/founding">
+                    <Button variant="ghost">Become a Cleaner</Button>
                   </Link>
                   <Button 
                     onClick={() => base44.auth.redirectToLogin()}
