@@ -195,39 +195,41 @@ const AuthenticatedApp = () => {
 
   // Render the main app
   return (
-    <Routes>
-      <Route path="/" element={
-        <RequireAuth>
-          <LayoutWrapper currentPageName="Home">
-            <PostLoginRedirect />
-          </LayoutWrapper>
-        </RequireAuth>
-      } />
+    <RequirePendingCheck>
+      <Routes>
+        <Route path="/" element={
+          <RequireAuth>
+            <LayoutWrapper currentPageName="Home">
+              <PostLoginRedirect />
+            </LayoutWrapper>
+          </RequireAuth>
+        } />
 
-      {Object.entries(Pages).map(([path, Page]) => (
-        <Route
-          key={path}
-          path={`/${path}`}
-          element={
-            <RequireAuth>
-              <LayoutWrapper currentPageName={path}>
-                <Page />
-              </LayoutWrapper>
-            </RequireAuth>
-          }
-        />
-      ))}
-      <Route path="/pending" element={<Pending />} />
-      <Route path="/founding" element={<Founding />} />
-      <Route path="/admin" element={
-        <RequireAdmin>
-          <LayoutWrapper currentPageName="AdminPanel">
-            <AdminPanel />
-          </LayoutWrapper>
-        </RequireAdmin>
-      } />
-      <Route path="*" element={<PageNotFound />} />
-    </Routes>
+        {Object.entries(Pages).map(([path, Page]) => (
+          <Route
+            key={path}
+            path={`/${path}`}
+            element={
+              <RequireAuth>
+                <LayoutWrapper currentPageName={path}>
+                  <Page />
+                </LayoutWrapper>
+              </RequireAuth>
+            }
+          />
+        ))}
+        <Route path="/pending" element={<Pending />} />
+        <Route path="/founding" element={<Founding />} />
+        <Route path="/admin" element={
+          <RequireAdmin>
+            <LayoutWrapper currentPageName="AdminPanel">
+              <AdminPanel />
+            </LayoutWrapper>
+          </RequireAdmin>
+        } />
+        <Route path="*" element={<PageNotFound />} />
+      </Routes>
+    </RequirePendingCheck>
   );
 };
 
