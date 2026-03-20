@@ -919,10 +919,12 @@ export default function PropertyDetails() {
             <div className="flex-1">
               <h1 className="text-xl sm:text-2xl md:text-4xl font-bold text-gray-900 mb-2">{property.title}</h1>
               <div className="flex flex-wrap items-center gap-2 md:gap-4 text-sm md:text-base text-gray-600 mb-3">
-                <span className="flex items-center gap-1.5">
-                  <MapPin className="w-4 h-4 text-teal-600" />
-                  {property.location?.city || property.location?.town_city}, {property.location?.country || 'UK'}
-                </span>
+                {(property.town || property.county || property.postcode) && (
+                  <span className="flex items-center gap-1.5">
+                    <MapPin className="w-4 h-4 text-teal-600" />
+                    {[property.town, property.county, property.postcode].filter(Boolean).join(', ')}
+                  </span>
+                )}
                 {reviews.length > 0 && (
                   <span className="flex items-center gap-1 md:gap-1.5 px-2 md:px-3 py-1 bg-amber-50 rounded-full text-sm">
                     <Star className="w-3 h-3 md:w-4 md:h-4 fill-amber-400 text-amber-400" />

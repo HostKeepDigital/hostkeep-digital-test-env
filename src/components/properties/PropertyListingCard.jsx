@@ -74,8 +74,9 @@ export default function PropertyListingCard({
         <div className="absolute bottom-5 left-5 right-5 text-white">
           <h3 className="text-2xl font-bold mb-1.5 tracking-tight drop-shadow-md">{property.title}</h3>
           <p className="text-white/90 text-sm font-medium drop-shadow-md">
-            {property.property_type ? property.property_type.charAt(0).toUpperCase() + property.property_type.slice(1) : 'Property'} • {property.location?.city || 'Location TBC'}
-          </p>
+              {property.property_type ? property.property_type.charAt(0).toUpperCase() + property.property_type.slice(1) : 'Property'}
+              {(property.town || property.county) && ` • ${[property.town, property.county].filter(Boolean).join(', ')}`}
+            </p>
         </div>
 
         {/* Hover Action Bar */}
