@@ -22,15 +22,19 @@ export function isFullyPending(userRoles) {
   return nonGuestRoles.every(r => (r.approval_status || 'pending') !== 'approved');
 }
 
-// Check if user has at least one of the required roles
+// Check if user has at least one of the required roles (approved)
 export function hasAnyRole(userRoles, requiredRoles) {
   if (!requiredRoles || requiredRoles.length === 0) return true;
-  return requiredRoles.some(role => userRoles.includes(role));
+  return requiredRoles.some(role => hasRole(userRoles, role));
 }
 
-// Check if user has a specific role
+// Check if user has a specific approved role
 export function hasRole(userRoles, role) {
-  return userRoles.includes(role);
+  return userRoles.some(r => {
+    const roleName = typeof r === 'string' ? r : r.role;
+    const status = typeof r === 'string' ? 'approved' : (r.approval_status || 'pending');
+    return roleName === role && status === 'approved';
+  });
 }
 
 // Add role to user
