@@ -14,6 +14,10 @@ const PLAN_DETAILS = {
 };
 
 Deno.serve(async (req) => {
+  if (req.method !== 'POST') {
+    return new Response('Method Not Allowed', { status: 405 });
+  }
+
   const body = await req.text();
   const signature = req.headers.get('stripe-signature');
 
