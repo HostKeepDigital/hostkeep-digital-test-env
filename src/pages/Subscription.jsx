@@ -65,7 +65,7 @@ const CLEANER_PLANS = [
   {
     id: "cleaner_solo_monthly",
     name: "Cleaner Solo",
-    price: 29,
+    price: 9.99,
     icon: Zap,
     color: "teal",
     features: [
