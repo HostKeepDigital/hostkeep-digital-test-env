@@ -16,28 +16,26 @@ import { toast } from "sonner";
  */
 
 export default function LocationStep({ formData, onFormChange, onLocationChange }) {
-  const [postcodeInput, setPostcodeInput] = useState(
-    formData.postcode || formData.location?.postcode || ""
-  );
+  const buildPostcodeData = (fd) => {
+    if (fd.postcode) {
+      return {
+        postcode: fd.postcode,
+        county: fd.county,
+        district: fd.postcode_district,
+        parish: fd.town,
+        country: fd.country,
+        latitude: fd.latitude,
+        longitude: fd.longitude,
+        source: 'saved'
+      };
+    }
+    return null;
+  };
+
+  const [postcodeInput, setPostcodeInput] = useState(formData.postcode || "");
   const [postcodeLoading, setPostcodeLoading] = useState(false);
   const [postcodeError, setPostcodeError] = useState("");
-  const [postcodeData, setPostcodeData] = useState(null);
-
-  // Restore existing verified postcode data once property loads (edit mode)
-  useEffect(() => {
-    if (formData.postcode && formData.latitude && formData.longitude && !postcodeData) {
-      setPostcodeInput(formData.postcode);
-      setPostcodeData({
-        postcode: formData.postcode,
-        county: formData.county,
-        district: formData.postcode_district,
-        parish: formData.town,
-        country: formData.country,
-        latitude: formData.latitude,
-        longitude: formData.longitude
-      });
-    }
-  }, [formData.postcode]);
+  const [postcodeData, setPostcodeData] = useState(() => buildPostcodeData(formData));
 
   const handlePostcodeLookup = async () => {
     const raw = postcodeInput.trim();
