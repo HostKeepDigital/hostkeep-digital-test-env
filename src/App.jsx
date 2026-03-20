@@ -173,7 +173,9 @@ const AuthenticatedApp = () => {
     <Routes>
       <Route path="/" element={
         <RequireAuth>
-          <PostLoginRedirect />
+          <LayoutWrapper currentPageName="Home">
+            <PostLoginRedirect />
+          </LayoutWrapper>
         </RequireAuth>
       } />
       {Object.entries(Pages).map(([path, Page]) => (
