@@ -184,8 +184,9 @@ const AuthenticatedApp = () => {
     );
   }
 
-  // Handle authentication errors (only for non-public routes)
-  if (!isPublicRoute && authError) {
+  // Handle authentication errors (only for non-public routes, never on /login itself)
+  const isLoginRoute = location.pathname === '/login';
+  if (!isPublicRoute && !isLoginRoute && authError) {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
     } else if (authError.type === 'auth_required') {
