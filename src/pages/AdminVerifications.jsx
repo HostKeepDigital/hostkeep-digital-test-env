@@ -179,8 +179,12 @@ export default function AdminVerifications() {
           </div>
         </div>
 
-        <Tabs defaultValue="documents" className="space-y-6">
+        <Tabs defaultValue="founding" className="space-y-6">
           <TabsList>
+            <TabsTrigger value="founding" className="gap-2">
+              <Star className="w-4 h-4" />
+              Founding Members ({pendingFoundingMembers.length})
+            </TabsTrigger>
             <TabsTrigger value="documents" className="gap-2">
               <FileText className="w-4 h-4" />
               Pending Documents ({pendingDocs.length})
