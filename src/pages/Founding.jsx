@@ -74,6 +74,8 @@ export default function Founding() {
     const e = {};
     if (!form.full_name.trim()) e.full_name = "Full name is required.";
     if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "A valid email is required.";
+    if (!form.password || form.password.length < 8) e.password = "Password must be at least 8 characters.";
+    if (form.password !== form.confirm_password) e.confirm_password = "Passwords do not match.";
     if (!form.role) e.role = "Please select a role.";
     if (!form.postcode.trim()) e.postcode = "Postcode is required.";
     if (!form.terms) e.terms = "You must agree to the terms and conditions.";
