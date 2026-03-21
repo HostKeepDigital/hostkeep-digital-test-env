@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    await base44.asServiceRole.auth.register({
+    await base44.auth.register({
       email: email.toLowerCase().trim(),
       password,
       full_name,
