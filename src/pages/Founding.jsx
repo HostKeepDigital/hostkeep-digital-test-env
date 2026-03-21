@@ -383,6 +383,8 @@ export default function Founding() {
               email={pendingFormData.email.toLowerCase().trim()}
               onVerified={handleVerified}
               onBack={() => setVerificationStep(false)}
+              message={verificationMessage}
+              initialShowResend={verificationShowResend}
             />
           ) : (
             <motion.div
