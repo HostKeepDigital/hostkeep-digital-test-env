@@ -84,36 +84,100 @@ export default function Founding() {
     }
   };
 
+  const isOutOfArea = form.postcode && !isCornwallPostcode(form.postcode);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
 
-    if (!isCornwallPostcode(form.postcode)) {
-      navigate("/waitlist");
-      return;
-    }
-
-    if (form.role === "host" && hostFull) { navigate("/waitlist"); return; }
-    if (form.role === "cleaner" && cleanerFull) { navigate("/waitlist"); return; }
+    const outOfArea = !isCornwallPostcode(form.postcode);
 
     setSubmitting(true);
     try {
-      await base44.entities.FoundingMember.create({
-        full_name: form.full_name,
-        email: form.email,
-        role: form.role,
-        postcode: form.postcode.toUpperCase(),
-        signup_timestamp: new Date().toISOString(),
-        approval_status: "pending",
-      });
+      // Duplicate check
+      const existing = await base44.entities.FoundingMember.filter({ email: form.email.toLowerCase().trim() });
+      if (existing && existing.length > 0) {
+        setErrors({ email: "This email address has already been registered. If you have not received a confirmation email please check your spam folder or contact us at Hello@hostkeepdigital.co.uk" });
+        return;
+      }
 
       const firstName = form.full_name.split(' ')[0];
-      await base44.integrations.Core.SendEmail({
-        from_name: 'HostKeep Digital',
-        to: form.email,
-        subject: 'Thanks for applying — HostKeep Digital Founding Operator Programme 🌊',
-        body: `<!DOCTYPE html>
+
+      if (outOfArea) {
+        // Store as out_of_area
+        await base44.entities.FoundingMember.create({
+          full_name: form.full_name,
+          email: form.email.toLowerCase().trim(),
+          role: form.role,
+          postcode: form.postcode.toUpperCase(),
+          signup_timestamp: new Date().toISOString(),
+          approval_status: "out_of_area",
+        });
+
+        await base44.integrations.Core.SendEmail({
+          from_name: 'HostKeep Digital',
+          to: form.email,
+          subject: "We're not in your area yet — but we're coming 🌊",
+          body: `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:30px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="background:#1E3A5F;padding:32px 40px;text-align:center;">
+            <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:0.5px;">HostKeep Digital</h1>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:40px 40px 32px;color:#333333;font-size:15px;line-height:1.7;">
+            <p style="margin:0 0 16px;">Hi ${firstName},</p>
+            <p style="margin:0 0 16px;">Thank you for your interest in <strong>HostKeep Digital</strong>.</p>
+            <p style="margin:0 0 16px;">We are currently launching in Cornwall in Summer 2026, but we are expanding UK-wide throughout 2027. We have registered your interest and will be in touch as soon as we launch in your area.</p>
+            <p style="margin:0 0 8px;">Follow us for updates:</p>
+            <p style="margin:0 0 24px;">
+              <a href="https://www.facebook.com/HostKeepDigital/" target="_blank" style="display:inline-block;margin:0 6px;"><img src="https://cdn-icons-png.flaticon.com/512/124/124010.png" alt="Facebook" width="32" height="32" style="display:inline-block;" /></a>
+              <a href="https://www.instagram.com/hostkeepdigital/" target="_blank" style="display:inline-block;margin:0 6px;"><img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram" width="32" height="32" style="display:inline-block;" /></a>
+            </p>
+            <p style="margin:0 0 4px;">The HostKeep Team</p>
+            <p style="margin:0;color:#0F766E;">Hello@hostkeepdigital.co.uk</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f9f9f9;border-top:1px solid #eeeeee;padding:20px 40px;text-align:center;color:#999999;font-size:12px;line-height:1.8;">
+            HostKeep Digital Ltd | You received this because you registered your interest with HostKeep Digital.<br>
+            <a href="#" style="color:#999999;">Unsubscribe</a><br><br>
+            <a href="https://www.facebook.com/HostKeepDigital/" target="_blank" style="display:inline-block;margin:0 6px;"><img src="https://cdn-icons-png.flaticon.com/512/124/124010.png" alt="Facebook" width="32" height="32" style="display:inline-block;" /></a>
+            <a href="https://www.instagram.com/hostkeepdigital/" target="_blank" style="display:inline-block;margin:0 6px;"><img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram" width="32" height="32" style="display:inline-block;" /></a>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+        });
+      } else {
+        // Cornwall — founding member application
+        if (form.role === "host" && hostFull) { navigate("/waitlist"); return; }
+        if (form.role === "cleaner" && cleanerFull) { navigate("/waitlist"); return; }
+
+        await base44.entities.FoundingMember.create({
+          full_name: form.full_name,
+          email: form.email.toLowerCase().trim(),
+          role: form.role,
+          postcode: form.postcode.toUpperCase(),
+          signup_timestamp: new Date().toISOString(),
+          approval_status: "pending",
+        });
+
+        await base44.integrations.Core.SendEmail({
+          from_name: 'HostKeep Digital',
+          to: form.email,
+          subject: 'Thanks for applying — HostKeep Digital Founding Operator Programme 🌊',
+          body: `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
 <body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;">
@@ -133,8 +197,8 @@ export default function Founding() {
             <p style="margin:0 0 24px;">If your spot is confirmed, you will receive a second email from us with everything you need to know.</p>
             <p style="margin:0 0 8px;">In the meantime, follow us for updates on our Cornwall launch:</p>
             <p style="margin:0 0 24px;">
-              <a href="https://www.facebook.com/HostKeepDigital/" target="_blank" style="display:inline-block;margin:0 6px;"><img src="https://cdn-icons-png.flaticon.com/512/124/124010.png" alt="Facebook" width="32" height="32" style="display:block;" /></a>
-              <a href="https://www.instagram.com/hostkeepdigital/" target="_blank" style="display:inline-block;margin:0 6px;"><img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram" width="32" height="32" style="display:block;" /></a>
+              <a href="https://www.facebook.com/HostKeepDigital/" target="_blank" style="display:inline-block;margin:0 6px;"><img src="https://cdn-icons-png.flaticon.com/512/124/124010.png" alt="Facebook" width="32" height="32" style="display:inline-block;" /></a>
+              <a href="https://www.instagram.com/hostkeepdigital/" target="_blank" style="display:inline-block;margin:0 6px;"><img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram" width="32" height="32" style="display:inline-block;" /></a>
             </p>
             <p style="margin:0 0 4px;">The HostKeep Team</p>
             <p style="margin:0;color:#0F766E;">Hello@hostkeepdigital.co.uk</p>
@@ -153,10 +217,10 @@ export default function Founding() {
   </table>
 </body>
 </html>`
-      });
+        });
+      }
 
-      setSuccess(true);
-      base44.entities.FoundingMember.list().then(setMembers);
+      navigate("/founding-thankyou");
     } finally {
       setSubmitting(false);
     }
