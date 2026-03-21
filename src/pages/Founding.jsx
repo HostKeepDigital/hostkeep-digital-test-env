@@ -172,15 +172,12 @@ export default function Founding() {
     const outOfArea = !isCornwallPostcode(f.postcode);
     const firstName = f.full_name.split(' ')[0];
 
-    try {
-      await base44.auth.register({
-        email: f.email.toLowerCase().trim(),
-        password: f.password,
-        full_name: f.full_name,
-      });
-    } catch (_) {
-      // Ignore if account already exists
-    }
+    // Register via backend function to suppress Base44's built-in welcome email
+    await base44.functions.invoke("registerFoundingMember", {
+      email: f.email.toLowerCase().trim(),
+      password: f.password,
+      full_name: f.full_name,
+    });
 
     if (outOfArea) {
       await base44.entities.FoundingMember.create({
