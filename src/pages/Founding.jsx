@@ -110,6 +110,17 @@ export default function Founding() {
 
       const firstName = form.full_name.split(' ')[0];
 
+      // Register the user account
+      try {
+        await base44.auth.register({
+          email: form.email.toLowerCase().trim(),
+          password: form.password,
+          full_name: form.full_name,
+        });
+      } catch (regErr) {
+        // Ignore if account already exists — they may have registered before
+      }
+
       if (outOfArea) {
         // Store as out_of_area
         await base44.entities.FoundingMember.create({
