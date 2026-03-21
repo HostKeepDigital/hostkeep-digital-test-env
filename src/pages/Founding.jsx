@@ -47,6 +47,8 @@ export default function Founding() {
   const [cornwallWarning, setCornwallWarning] = useState(false);
   const [verificationStep, setVerificationStep] = useState(false);
   const [pendingFormData, setPendingFormData] = useState(null);
+  const [verificationMessage, setVerificationMessage] = useState(null);
+  const [verificationShowResend, setVerificationShowResend] = useState(false);
 
   const [form, setForm] = useState({
     full_name: "",
