@@ -108,8 +108,54 @@ export default function Founding() {
         approval_status: "pending",
       });
 
+      const firstName = form.full_name.split(' ')[0];
+      await base44.integrations.Core.SendEmail({
+        from_name: 'HostKeep Digital',
+        to: form.email,
+        subject: 'Thanks for applying — HostKeep Digital Founding Operator Programme 🌊',
+        body: `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:30px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="background:#1E3A5F;padding:32px 40px;text-align:center;">
+            <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:0.5px;">HostKeep Digital</h1>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:40px 40px 32px;color:#333333;font-size:15px;line-height:1.7;">
+            <p style="margin:0 0 16px;">Hi ${firstName},</p>
+            <p style="margin:0 0 16px;">Thank you for applying to become a founding operator on <strong>HostKeep Digital</strong>.</p>
+            <p style="margin:0 0 16px;">We have received your application and our team is reviewing it. Founding spots are limited to 50 operators for our Cornwall launch, and we are working through applications carefully.</p>
+            <p style="margin:0 0 24px;">If your spot is confirmed, you will receive a second email from us with everything you need to know.</p>
+            <p style="margin:0 0 8px;">In the meantime, follow us for updates on our Cornwall launch:</p>
+            <p style="margin:0 0 24px;">
+              <a href="https://www.facebook.com/HostKeepDigital/" target="_blank" style="display:inline-block;margin:0 6px;"><img src="https://cdn-icons-png.flaticon.com/512/124/124010.png" alt="Facebook" width="32" height="32" style="display:block;" /></a>
+              <a href="https://www.instagram.com/hostkeepdigital/" target="_blank" style="display:inline-block;margin:0 6px;"><img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram" width="32" height="32" style="display:block;" /></a>
+            </p>
+            <p style="margin:0 0 4px;">The HostKeep Team</p>
+            <p style="margin:0;color:#0F766E;">Hello@hostkeepdigital.co.uk</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f9f9f9;border-top:1px solid #eeeeee;padding:20px 40px;text-align:center;color:#999999;font-size:12px;line-height:1.8;">
+            HostKeep Digital Ltd | You received this because you applied for a founding operator spot.<br>
+            <a href="#" style="color:#999999;">Unsubscribe</a><br><br>
+            <a href="https://www.facebook.com/HostKeepDigital/" target="_blank" style="display:inline-block;margin:0 6px;"><img src="https://cdn-icons-png.flaticon.com/512/124/124010.png" alt="Facebook" width="32" height="32" style="display:inline-block;" /></a>
+            <a href="https://www.instagram.com/hostkeepdigital/" target="_blank" style="display:inline-block;margin:0 6px;"><img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram" width="32" height="32" style="display:inline-block;" /></a>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+      });
+
       setSuccess(true);
-      // Refresh counts
       base44.entities.FoundingMember.list().then(setMembers);
     } finally {
       setSubmitting(false);
