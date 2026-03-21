@@ -329,20 +329,7 @@ export default function Founding() {
 
         {/* Form */}
         <div className="max-w-2xl mx-auto">
-          {success ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-center py-16 px-8 bg-teal-50 rounded-2xl border-2 border-teal-200"
-            >
-              <CheckCircle className="w-16 h-16 text-teal-600 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Your spot is reserved!</h2>
-              <p className="text-gray-600 max-w-md mx-auto">
-                Your application has been received. Our team will review it shortly and you'll receive a confirmation email once approved.
-              </p>
-            </motion.div>
-          ) : (
-            <motion.div
+          <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
@@ -441,11 +428,13 @@ export default function Founding() {
                   disabled={submitting}
                   className="w-full h-12 bg-teal-600 hover:bg-teal-700 text-white text-base font-semibold"
                 >
-                  {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Reserving your spot...</> : "Claim My Spot"}
+                  {submitting
+                    ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Submitting...</>
+                    : isOutOfArea ? "Register Your Interest" : "Claim My Spot"
+                  }
                 </Button>
               </form>
             </motion.div>
-          )}
         </div>
       </div>
     </div>

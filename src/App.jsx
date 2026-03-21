@@ -221,6 +221,7 @@ const AuthenticatedApp = () => {
           />
         ))}
         <Route path="/pending" element={<Pending />} />
+        <Route path="/founding-thankyou" element={<FoundingThankYou />} />
         <Route path="/founding" element={<Founding />} />
         <Route path="/admin" element={
           <RequireAdmin>
