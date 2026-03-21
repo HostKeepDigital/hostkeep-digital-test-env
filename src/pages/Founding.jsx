@@ -47,6 +47,8 @@ export default function Founding() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [cornwallWarning, setCornwallWarning] = useState(false);
+  const [verificationStep, setVerificationStep] = useState(false);
+  const [pendingFormData, setPendingFormData] = useState(null);
 
   const [form, setForm] = useState({
     full_name: "",
