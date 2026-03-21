@@ -45,7 +45,6 @@ export default function Founding() {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
   const [cornwallWarning, setCornwallWarning] = useState(false);
 
   const [form, setForm] = useState({
