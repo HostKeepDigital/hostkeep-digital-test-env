@@ -134,13 +134,6 @@ export default function SignIn() {
 
                 {/* Footer links */}
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => base44.auth.redirectToLogin(window.location.href)}
-                    className="text-sm text-slate-500 hover:text-slate-700 font-medium transition-colors"
-                  >
-                    Forgot password?
-                  </button>
                   <Link
                     to="/founding"
                     className="text-sm text-slate-500 hover:text-slate-700 transition-colors text-right"

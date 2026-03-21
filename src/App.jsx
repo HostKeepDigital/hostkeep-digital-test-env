@@ -82,7 +82,7 @@ function RequireAdmin({ children }) {
   useEffect(() => {
     if (isLoadingAuth) return;
     if (!isAuthenticated) {
-      window.location.href = `/login?next=${encodeURIComponent(window.location.href)}`;
+      window.location.href = '/Home';
       return;
     }
     base44.auth.me().then(async (u) => {
@@ -153,8 +153,7 @@ function RequireAuth({ children }) {
   if (isLoadingPublicSettings || isLoadingAuth) return null;
   if (isPublic) return children;
   if (!isAuthenticated) {
-    window.location.href = `/login?next=${encodeURIComponent(window.location.href)}`;
-    return null;
+    return <Navigate to="/Home" replace />;
   }
   return children;
 }
@@ -190,8 +189,7 @@ const AuthenticatedApp = () => {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
     } else if (authError.type === 'auth_required') {
-      navigateToLogin();
-      return null;
+      return <Navigate to="/Home" replace />;
     }
   }
 
