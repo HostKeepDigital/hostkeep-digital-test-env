@@ -10,7 +10,6 @@ import EmailVerificationStep from "@/components/founding/EmailVerificationStep";
 
 const HOST_LIMIT = 50;
 const CLEANER_LIMIT = 30;
-
 const CORNWALL_PREFIXES = ["TR", "PL", "EX"];
 
 function isCornwallPostcode(postcode) {
@@ -22,7 +21,6 @@ function SpotsCounter({ used, limit, color }) {
   const remaining = Math.max(0, limit - used);
   const pct = Math.min(100, (used / limit) * 100);
   const isFull = remaining === 0;
-
   return (
     <div className="mt-3">
       <div className="flex justify-between text-sm mb-1">
@@ -95,155 +93,141 @@ export default function Founding() {
 
   const isOutOfArea = form.postcode && !isCornwallPostcode(form.postcode);
 
+  // Step 1: Validate form, check for duplicate, send verification code
   const handleSubmit = async (e) => {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
 
-    const outOfArea = !isCornwallPostcode(form.postcode);
-
     setSubmitting(true);
     try {
-      // Duplicate check
       const existing = await base44.entities.FoundingMember.filter({ email: form.email.toLowerCase().trim() });
       if (existing && existing.length > 0) {
         setErrors({ email: "This email address has already been registered. If you have not received a confirmation email please check your spam folder or contact us at Hello@hostkeepdigital.co.uk" });
         return;
       }
 
-      const firstName = form.full_name.split(' ')[0];
+      await base44.functions.invoke("sendVerificationCode", {
+        email: form.email.toLowerCase().trim(),
+        full_name: form.full_name,
+      });
 
-      // Register the user account
-      try {
-        await base44.auth.register({
-          email: form.email.toLowerCase().trim(),
-          password: form.password,
-          full_name: form.full_name,
-        });
-      } catch (regErr) {
-        // Ignore if account already exists — they may have registered before
-      }
-
-      if (outOfArea) {
-        // Store as out_of_area
-        await base44.entities.FoundingMember.create({
-          full_name: form.full_name,
-          email: form.email.toLowerCase().trim(),
-          role: form.role,
-          postcode: form.postcode.toUpperCase(),
-          signup_timestamp: new Date().toISOString(),
-          approval_status: "out_of_area",
-        });
-
-        await base44.integrations.Core.SendEmail({
-          from_name: 'HostKeep Digital',
-          to: form.email,
-          subject: "We're not in your area yet — but we're coming 🌊",
-          body: `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:30px 0;">
-    <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-        <tr>
-          <td style="background:#1E3A5F;padding:32px 40px;text-align:center;">
-            <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:0.5px;">HostKeep Digital</h1>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:40px 40px 32px;color:#333333;font-size:15px;line-height:1.7;">
-            <p style="margin:0 0 16px;">Hi ${firstName},</p>
-            <p style="margin:0 0 16px;">Thank you for your interest in <strong>HostKeep Digital</strong>.</p>
-            <p style="margin:0 0 16px;">We are currently launching in Cornwall in Summer 2026, but we are expanding UK-wide throughout 2027. We have registered your interest and will be in touch as soon as we launch in your area.</p>
-            <p style="margin:0 0 8px;">Follow us for updates:</p>
-            <p style="margin:0 0 24px;">
-              <a href="https://www.facebook.com/HostKeepDigital/" target="_blank" style="display:inline-block;margin:0 6px;"><img src="https://cdn-icons-png.flaticon.com/512/124/124010.png" alt="Facebook" width="32" height="32" style="display:inline-block;" /></a>
-              <a href="https://www.instagram.com/hostkeepdigital/" target="_blank" style="display:inline-block;margin:0 6px;"><img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram" width="32" height="32" style="display:inline-block;" /></a>
-            </p>
-            <p style="margin:0 0 4px;">The HostKeep Team</p>
-            <p style="margin:0;color:#0F766E;">Hello@hostkeepdigital.co.uk</p>
-          </td>
-        </tr>
-        <tr>
-          <td style="background:#f9f9f9;border-top:1px solid #eeeeee;padding:20px 40px;text-align:center;color:#999999;font-size:12px;line-height:1.8;">
-            HostKeep Digital Ltd | You received this because you registered your interest with HostKeep Digital.<br>
-            <a href="#" style="color:#999999;">Unsubscribe</a><br><br>
-            <a href="https://www.facebook.com/HostKeepDigital/" target="_blank" style="display:inline-block;margin:0 6px;"><img src="https://cdn-icons-png.flaticon.com/512/124/124010.png" alt="Facebook" width="32" height="32" style="display:inline-block;" /></a>
-            <a href="https://www.instagram.com/hostkeepdigital/" target="_blank" style="display:inline-block;margin:0 6px;"><img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram" width="32" height="32" style="display:inline-block;" /></a>
-          </td>
-        </tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`
-        });
-      } else {
-        // Cornwall — founding member application
-        if (form.role === "host" && hostFull) { navigate("/waitlist"); return; }
-        if (form.role === "cleaner" && cleanerFull) { navigate("/waitlist"); return; }
-
-        await base44.entities.FoundingMember.create({
-          full_name: form.full_name,
-          email: form.email.toLowerCase().trim(),
-          role: form.role,
-          postcode: form.postcode.toUpperCase(),
-          signup_timestamp: new Date().toISOString(),
-          approval_status: "pending",
-        });
-
-        await base44.integrations.Core.SendEmail({
-          from_name: 'HostKeep Digital',
-          to: form.email,
-          subject: 'Thanks for applying — HostKeep Digital Founding Operator Programme 🌊',
-          body: `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:30px 0;">
-    <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-        <tr>
-          <td style="background:#1E3A5F;padding:32px 40px;text-align:center;">
-            <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:0.5px;">HostKeep Digital</h1>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:40px 40px 32px;color:#333333;font-size:15px;line-height:1.7;">
-            <p style="margin:0 0 16px;">Hi ${firstName},</p>
-            <p style="margin:0 0 16px;">Thank you for applying to become a founding operator on <strong>HostKeep Digital</strong>.</p>
-            <p style="margin:0 0 16px;">We have received your application and our team is reviewing it. Founding spots are limited to 50 operators for our Cornwall launch, and we are working through applications carefully.</p>
-            <p style="margin:0 0 24px;">If your spot is confirmed, you will receive a second email from us with everything you need to know.</p>
-            <p style="margin:0 0 8px;">In the meantime, follow us for updates on our Cornwall launch:</p>
-            <p style="margin:0 0 24px;">
-              <a href="https://www.facebook.com/HostKeepDigital/" target="_blank" style="display:inline-block;margin:0 6px;"><img src="https://cdn-icons-png.flaticon.com/512/124/124010.png" alt="Facebook" width="32" height="32" style="display:inline-block;" /></a>
-              <a href="https://www.instagram.com/hostkeepdigital/" target="_blank" style="display:inline-block;margin:0 6px;"><img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram" width="32" height="32" style="display:inline-block;" /></a>
-            </p>
-            <p style="margin:0 0 4px;">The HostKeep Team</p>
-            <p style="margin:0;color:#0F766E;">Hello@hostkeepdigital.co.uk</p>
-          </td>
-        </tr>
-        <tr>
-          <td style="background:#f9f9f9;border-top:1px solid #eeeeee;padding:20px 40px;text-align:center;color:#999999;font-size:12px;line-height:1.8;">
-            HostKeep Digital Ltd | You received this because you applied for a founding operator spot.<br>
-            <a href="#" style="color:#999999;">Unsubscribe</a><br><br>
-            <a href="https://www.facebook.com/HostKeepDigital/" target="_blank" style="display:inline-block;margin:0 6px;"><img src="https://cdn-icons-png.flaticon.com/512/124/124010.png" alt="Facebook" width="32" height="32" style="display:inline-block;" /></a>
-            <a href="https://www.instagram.com/hostkeepdigital/" target="_blank" style="display:inline-block;margin:0 6px;"><img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram" width="32" height="32" style="display:inline-block;" /></a>
-          </td>
-        </tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`
-        });
-      }
-
-      navigate("/founding-thankyou");
+      setPendingFormData({ ...form });
+      setVerificationStep(true);
     } finally {
       setSubmitting(false);
     }
+  };
+
+  // Step 2: Called after email code verified — create account, set status, send Email 1
+  const handleVerified = async () => {
+    const f = pendingFormData;
+    const outOfArea = !isCornwallPostcode(f.postcode);
+    const firstName = f.full_name.split(' ')[0];
+
+    try {
+      await base44.auth.register({
+        email: f.email.toLowerCase().trim(),
+        password: f.password,
+        full_name: f.full_name,
+      });
+    } catch (_) {
+      // Ignore if account already exists
+    }
+
+    if (outOfArea) {
+      await base44.entities.FoundingMember.create({
+        full_name: f.full_name,
+        email: f.email.toLowerCase().trim(),
+        role: f.role,
+        postcode: f.postcode.toUpperCase(),
+        signup_timestamp: new Date().toISOString(),
+        approval_status: "out_of_area",
+      });
+
+      await base44.integrations.Core.SendEmail({
+        from_name: 'HostKeep Digital',
+        to: f.email,
+        subject: "We're not in your area yet — but we're coming 🌊",
+        body: `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:30px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+        <tr><td style="background:#1E3A5F;padding:32px 40px;text-align:center;"><h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:0.5px;">HostKeep Digital</h1></td></tr>
+        <tr><td style="padding:40px 40px 32px;color:#333333;font-size:15px;line-height:1.7;">
+          <p style="margin:0 0 16px;">Hi ${firstName},</p>
+          <p style="margin:0 0 16px;">Thank you for your interest in <strong>HostKeep Digital</strong>.</p>
+          <p style="margin:0 0 16px;">We are currently launching in Cornwall in Summer 2026, but we are expanding UK-wide throughout 2027. We have registered your interest and will be in touch as soon as we launch in your area.</p>
+          <p style="margin:0 0 8px;">Follow us for updates:</p>
+          <p style="margin:0 0 24px;">
+            <a href="https://www.facebook.com/HostKeepDigital/" target="_blank" style="display:inline-block;margin:0 6px;"><img src="https://cdn-icons-png.flaticon.com/512/124/124010.png" alt="Facebook" width="32" height="32" /></a>
+            <a href="https://www.instagram.com/hostkeepdigital/" target="_blank" style="display:inline-block;margin:0 6px;"><img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram" width="32" height="32" /></a>
+          </p>
+          <p style="margin:0 0 4px;">The HostKeep Team</p>
+          <p style="margin:0;color:#0F766E;">Hello@hostkeepdigital.co.uk</p>
+        </td></tr>
+        <tr><td style="background:#f9f9f9;border-top:1px solid #eeeeee;padding:20px 40px;text-align:center;color:#999999;font-size:12px;line-height:1.8;">
+          HostKeep Digital Ltd | You received this because you registered your interest with HostKeep Digital.
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+      });
+    } else {
+      if (f.role === "host" && hostFull) { navigate("/waitlist"); return; }
+      if (f.role === "cleaner" && cleanerFull) { navigate("/waitlist"); return; }
+
+      await base44.entities.FoundingMember.create({
+        full_name: f.full_name,
+        email: f.email.toLowerCase().trim(),
+        role: f.role,
+        postcode: f.postcode.toUpperCase(),
+        signup_timestamp: new Date().toISOString(),
+        approval_status: "pending",
+      });
+
+      await base44.integrations.Core.SendEmail({
+        from_name: 'HostKeep Digital',
+        to: f.email,
+        subject: 'Thanks for applying — HostKeep Digital Founding Operator Programme 🌊',
+        body: `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:30px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+        <tr><td style="background:#1E3A5F;padding:32px 40px;text-align:center;"><h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:0.5px;">HostKeep Digital</h1></td></tr>
+        <tr><td style="padding:40px 40px 32px;color:#333333;font-size:15px;line-height:1.7;">
+          <p style="margin:0 0 16px;">Hi ${firstName},</p>
+          <p style="margin:0 0 16px;">Thank you for applying to become a founding operator on <strong>HostKeep Digital</strong>.</p>
+          <p style="margin:0 0 16px;">We have received your application and our team is reviewing it. Founding spots are limited to 50 operators for our Cornwall launch, and we are working through applications carefully.</p>
+          <p style="margin:0 0 24px;">If your spot is confirmed, you will receive a second email from us with everything you need to know.</p>
+          <p style="margin:0 0 8px;">In the meantime, follow us for updates on our Cornwall launch:</p>
+          <p style="margin:0 0 24px;">
+            <a href="https://www.facebook.com/HostKeepDigital/" target="_blank" style="display:inline-block;margin:0 6px;"><img src="https://cdn-icons-png.flaticon.com/512/124/124010.png" alt="Facebook" width="32" height="32" /></a>
+            <a href="https://www.instagram.com/hostkeepdigital/" target="_blank" style="display:inline-block;margin:0 6px;"><img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram" width="32" height="32" /></a>
+          </p>
+          <p style="margin:0 0 4px;">The HostKeep Team</p>
+          <p style="margin:0;color:#0F766E;">Hello@hostkeepdigital.co.uk</p>
+        </td></tr>
+        <tr><td style="background:#f9f9f9;border-top:1px solid #eeeeee;padding:20px 40px;text-align:center;color:#999999;font-size:12px;line-height:1.8;">
+          HostKeep Digital Ltd | You received this because you applied for a founding operator spot.
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+      });
+    }
+
+    navigate("/founding-thankyou");
   };
 
   const field = (key, value) => setForm(f => ({ ...f, [key]: value }));
@@ -287,7 +271,6 @@ export default function Founding() {
 
         {/* Perk cards */}
         <div className="grid md:grid-cols-2 gap-6 mb-16">
-          {/* Host card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -316,7 +299,6 @@ export default function Founding() {
             <SpotsCounter used={hostCount} limit={HOST_LIMIT} color="teal" />
           </motion.div>
 
-          {/* Cleaner card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -347,9 +329,16 @@ export default function Founding() {
           </motion.div>
         </div>
 
-        {/* Form */}
+        {/* Form / Verification step */}
         <div className="max-w-2xl mx-auto">
-          <motion.div
+          {verificationStep ? (
+            <EmailVerificationStep
+              email={pendingFormData.email.toLowerCase().trim()}
+              onVerified={handleVerified}
+              onBack={() => setVerificationStep(false)}
+            />
+          ) : (
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
@@ -427,9 +416,9 @@ export default function Founding() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">I am a...</label>
                   <div className="grid grid-cols-2 gap-3">
                     {[
-                      { value: "host", label: "Host", icon: Home, disabled: hostFull, color: "teal" },
-                      { value: "cleaner", label: "Cleaner", icon: Users, disabled: cleanerFull, color: "blue" },
-                    ].map(({ value, label, icon: Icon, disabled, color }) => (
+                      { value: "host", label: "Host", Icon: Home, disabled: hostFull, color: "teal" },
+                      { value: "cleaner", label: "Cleaner", Icon: Users, disabled: cleanerFull, color: "blue" },
+                    ].map(({ value, label, Icon, disabled, color }) => (
                       <button
                         key={value}
                         type="button"
@@ -438,7 +427,7 @@ export default function Founding() {
                         className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left
                           ${disabled ? "opacity-40 cursor-not-allowed border-gray-200 bg-gray-50" :
                             form.role === value
-                              ? `border-${color}-500 bg-${color}-50 text-${color}-700`
+                              ? color === "teal" ? "border-teal-500 bg-teal-50 text-teal-700" : "border-blue-500 bg-blue-50 text-blue-700"
                               : "border-gray-200 hover:border-gray-300 bg-white text-gray-700"
                           }`}
                       >
@@ -491,12 +480,13 @@ export default function Founding() {
                   className="w-full h-12 bg-teal-600 hover:bg-teal-700 text-white text-base font-semibold"
                 >
                   {submitting
-                    ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Submitting...</>
+                    ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sending verification code...</>
                     : isOutOfArea ? "Register Your Interest" : "Claim My Spot"
                   }
                 </Button>
               </form>
             </motion.div>
+          )}
         </div>
       </div>
     </div>
