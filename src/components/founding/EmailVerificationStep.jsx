@@ -5,12 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Mail, AlertCircle, RefreshCw } from "lucide-react";
 
-export default function EmailVerificationStep({ email, onVerified, onBack }) {
+export default function EmailVerificationStep({ email, onVerified, onBack, message, initialShowResend = false }) {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [resending, setResending] = useState(false);
-  const [resendCooldown, setResendCooldown] = useState(60);
+  const [resendCooldown, setResendCooldown] = useState(initialShowResend ? 0 : 60);
   const inputRef = useRef(null);
 
   useEffect(() => {
