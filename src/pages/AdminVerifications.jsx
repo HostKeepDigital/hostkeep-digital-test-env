@@ -327,9 +327,9 @@ export default function AdminVerifications() {
                           Approve &amp; Email
                         </Button>
                         <Button
-                          onClick={() => rejectFoundingMemberMutation.mutate(member.id)}
-                          variant="destructive"
-                          disabled={rejectFoundingMemberMutation.isPending}
+                         onClick={() => rejectFoundingMemberMutation.mutate(member)}
+                         variant="destructive"
+                         disabled={rejectFoundingMemberMutation.isPending}
                         >
                           <XCircle className="w-4 h-4 mr-2" />
                           Reject

@@ -50,11 +50,15 @@ export default function Founding() {
   const [form, setForm] = useState({
     full_name: "",
     email: "",
+    password: "",
+    confirm_password: "",
     role: "",
     postcode: "",
     terms: false,
   });
   const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     base44.entities.FoundingMember.list().then(setMembers).finally(() => setLoading(false));
