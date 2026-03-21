@@ -39,6 +39,84 @@ export default function AdminVerifications() {
     }
   });
 
+  const { data: pendingFoundingMembers = [] } = useQuery({
+    queryKey: ['pending-founding-members'],
+    queryFn: async () => {
+      return await base44.entities.FoundingMember.filter({ approval_status: 'pending' }, '-signup_timestamp');
+    }
+  });
+
+  const approveFoundingMemberMutation = useMutation({
+    mutationFn: async (member) => {
+      await base44.entities.FoundingMember.update(member.id, { approval_status: 'approved' });
+      const firstName = member.full_name.split(' ')[0];
+      const tierText = member.role === 'host' ? 'Founding Host' : 'Founding Cleaner';
+      await base44.integrations.Core.SendEmail({
+        from_name: 'HostKeep Digital',
+        to: member.email,
+        subject: 'Welcome to HostKeep Digital — Your Founding Spot is Confirmed 🌊',
+        body: `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:30px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+        <!-- Header -->
+        <tr>
+          <td style="background:#1E3A5F;padding:32px 40px;text-align:center;">
+            <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:0.5px;">HostKeep Digital</h1>
+          </td>
+        </tr>
+        <!-- Body -->
+        <tr>
+          <td style="padding:40px 40px 32px;color:#333333;font-size:15px;line-height:1.7;">
+            <p style="margin:0 0 16px;">Hi ${firstName},</p>
+            <p style="margin:0 0 24px;">Your founding operator spot on <strong>HostKeep Digital</strong> has been confirmed.</p>
+            <p style="margin:0 0 12px;">As a founding operator you have secured:</p>
+            <table cellpadding="0" cellspacing="0" style="width:100%;margin-bottom:24px;">
+              <tr><td style="padding:6px 0;color:#0F766E;">&#8212;&nbsp;</td><td style="padding:6px 0;"><strong>0% commission</strong> on every booking, always</td></tr>
+              <tr><td style="padding:6px 0;color:#0F766E;">&#8212;&nbsp;</td><td style="padding:6px 0;"><strong>${tierText}</strong> subscription at your locked founding rate</td></tr>
+              <tr><td style="padding:6px 0;color:#0F766E;">&#8212;&nbsp;</td><td style="padding:6px 0;"><strong>Free access</strong> during the beta period — no payment until go-live</td></tr>
+              <tr><td style="padding:6px 0;color:#0F766E;">&#8212;&nbsp;</td><td style="padding:6px 0;"><strong>Permanent founding operator badge</strong> on your profile</td></tr>
+              <tr><td style="padding:6px 0;color:#0F766E;">&#8212;&nbsp;</td><td style="padding:6px 0;"><strong>Priority access</strong> to the CleanKeep marketplace</td></tr>
+            </table>
+            <p style="margin:0 0 16px;">We are launching in Cornwall in Summer 2026. We will be in touch with next steps as we get closer to launch.</p>
+            <p style="margin:0 0 8px;">Thank you for being part of this from the beginning.</p>
+            <p style="margin:0 0 4px;">The HostKeep Team</p>
+            <p style="margin:0;color:#0F766E;">Hello@hostkeepdigital.co.uk</p>
+          </td>
+        </tr>
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f9f9f9;border-top:1px solid #eeeeee;padding:20px 40px;text-align:center;color:#999999;font-size:12px;line-height:1.6;">
+            HostKeep Digital Ltd | You are receiving this because you signed up as a founding operator.<br>
+            <a href="#" style="color:#999999;">Unsubscribe</a>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pending-founding-members'] });
+      toast.success('Founding member approved and confirmation email sent');
+    }
+  });
+
+  const rejectFoundingMemberMutation = useMutation({
+    mutationFn: async (memberId) => {
+      return await base44.entities.FoundingMember.update(memberId, { approval_status: 'rejected' });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pending-founding-members'] });
+      toast.success('Founding member rejected');
+    }
+  });
+
   const approveDocMutation = useMutation({
     mutationFn: async (docId) => {
       return await base44.entities.VerificationDocuments.update(docId, {
