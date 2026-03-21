@@ -95,26 +95,71 @@ export default function Founding() {
 
   const isOutOfArea = form.postcode && !isCornwallPostcode(form.postcode);
 
+  // Check for existing verification code on email blur (handles returning users)
+  const handleEmailBlur = async () => {
+    const email = form.email.toLowerCase().trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+
+    const codes = await base44.entities.EmailVerificationCode.filter({ email, used: false });
+    if (!codes || codes.length === 0) return;
+
+    // There's an unverified code — check if it's expired
+    const latest = codes.sort((a, b) => new Date(b.created_date) - new Date(a.created_date))[0];
+    const isExpired = new Date(latest.expires_at) < new Date();
+
+    setPendingFormData({ ...form, email });
+    if (isExpired) {
+      setVerificationMessage(
+        <>Your verification code has expired. Click below to receive a new one.</>
+      );
+      setVerificationShowResend(true);
+    } else {
+      setVerificationMessage(
+        <>You have a verification code waiting in your inbox. Enter it below to complete your application.</>
+      );
+      setVerificationShowResend(false);
+    }
+    setVerificationStep(true);
+  };
+
   // Step 1: Validate form, check for duplicate, send verification code
   const handleSubmit = async (e) => {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
 
+    const email = form.email.toLowerCase().trim();
+
     setSubmitting(true);
     try {
-      const existing = await base44.entities.FoundingMember.filter({ email: form.email.toLowerCase().trim() });
+      // Check for existing FoundingMember (fully submitted)
+      const existing = await base44.entities.FoundingMember.filter({ email });
       if (existing && existing.length > 0) {
         setErrors({ email: "This email address has already been registered. If you have not received a confirmation email please check your spam folder or contact us at Hello@hostkeepdigital.co.uk" });
         return;
       }
 
+      // Check for an existing (unverified) verification code
+      const codes = await base44.entities.EmailVerificationCode.filter({ email, used: false });
+      if (codes && codes.length > 0) {
+        // Started before — skip sending new code, take them to verification
+        setPendingFormData({ ...form });
+        setVerificationMessage(
+          <>You have already started an application with this email address. Check your inbox for a verification code or click below to send a new one.</>
+        );
+        setVerificationShowResend(true);
+        setVerificationStep(true);
+        return;
+      }
+
       await base44.functions.invoke("sendVerificationCode", {
-        email: form.email.toLowerCase().trim(),
+        email,
         full_name: form.full_name,
       });
 
       setPendingFormData({ ...form });
+      setVerificationMessage(null);
+      setVerificationShowResend(false);
       setVerificationStep(true);
     } finally {
       setSubmitting(false);
