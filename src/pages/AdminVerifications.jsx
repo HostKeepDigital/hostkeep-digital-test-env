@@ -199,6 +199,57 @@ export default function AdminVerifications() {
             </TabsTrigger>
           </TabsList>
 
+          {/* Founding Members */}
+          <TabsContent value="founding">
+            <div className="grid gap-4">
+              {pendingFoundingMembers.map((member) => (
+                <Card key={member.id}>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="font-semibold text-gray-900">{member.full_name}</span>
+                          <Badge variant="outline" className="capitalize">{member.role}</Badge>
+                          <Badge className="bg-yellow-100 text-yellow-800">Pending Approval</Badge>
+                        </div>
+                        <p className="text-sm text-gray-600">{member.email} &bull; {member.postcode}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Signed up {new Date(member.signup_timestamp || member.created_date).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => approveFoundingMemberMutation.mutate(member)}
+                          className="bg-green-600 hover:bg-green-700"
+                          disabled={approveFoundingMemberMutation.isPending}
+                        >
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Approve &amp; Email
+                        </Button>
+                        <Button
+                          onClick={() => rejectFoundingMemberMutation.mutate(member.id)}
+                          variant="destructive"
+                          disabled={rejectFoundingMemberMutation.isPending}
+                        >
+                          <XCircle className="w-4 h-4 mr-2" />
+                          Reject
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              {pendingFoundingMembers.length === 0 && (
+                <Card>
+                  <CardContent className="p-12 text-center">
+                    <Clock className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                    <p className="text-gray-500">No pending founding member applications</p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
+
           {/* Pending Documents */}
           <TabsContent value="documents">
             <div className="grid gap-4">
