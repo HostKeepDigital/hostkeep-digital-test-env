@@ -73,8 +73,10 @@ export default function EmailVerificationStep({ email, onVerified, onBack, messa
         </div>
         <h2 className="text-2xl font-bold text-gray-900 mb-3">Almost there!</h2>
         <p className="text-gray-600 max-w-sm">
-          We have sent a 6-digit verification code to{" "}
-          <span className="font-semibold text-gray-900">{email}</span>. Please enter it below to complete your application. The code expires in 10 minutes.
+          {message || (
+            <>We have sent a 6-digit verification code to{" "}
+            <span className="font-semibold text-gray-900">{email}</span>. Please enter it below to complete your application. The code expires in 10 minutes.</>
+          )}
         </p>
       </div>
 
