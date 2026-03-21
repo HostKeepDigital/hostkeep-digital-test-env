@@ -111,12 +111,109 @@ export default function AdminVerifications() {
   });
 
   const rejectFoundingMemberMutation = useMutation({
-    mutationFn: async (memberId) => {
-      return await base44.entities.FoundingMember.update(memberId, { approval_status: 'rejected' });
+    mutationFn: async (member) => {
+      // Check if spots are full for their role
+      const allMembers = await base44.entities.FoundingMember.list();
+      const cornwallMembers = allMembers.filter(m => m.approval_status !== 'out_of_area' && m.id !== member.id);
+      const roleCount = cornwallMembers.filter(m => m.role === member.role && (m.approval_status === 'pending' || m.approval_status === 'approved')).length;
+      const limit = member.role === 'host' ? 50 : 30;
+      const isFull = roleCount >= limit;
+
+      const newStatus = isFull ? 'waitlist' : 'rejected';
+      await base44.entities.FoundingMember.update(member.id, { approval_status: newStatus });
+
+      const firstName = member.full_name.split(' ')[0];
+
+      if (isFull) {
+        // Waitlist email
+        await base44.integrations.Core.SendEmail({
+          from_name: 'HostKeep Digital',
+          to: member.email,
+          subject: "You're on the waitlist — HostKeep Digital 🌊",
+          body: `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:30px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="background:#1E3A5F;padding:32px 40px;text-align:center;">
+            <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:0.5px;">HostKeep Digital</h1>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:40px 40px 32px;color:#333333;font-size:15px;line-height:1.7;">
+            <p style="margin:0 0 16px;">Hi ${firstName},</p>
+            <p style="margin:0 0 16px;">Thank you for applying to the <strong>HostKeep Digital Founding Operator Programme</strong>.</p>
+            <p style="margin:0 0 16px;">Unfortunately our founding ${member.role} spots are now fully claimed. We have placed you on our waitlist and you will be first in line if a spot becomes available or when we expand capacity.</p>
+            <p style="margin:0 0 24px;">We will be in touch as soon as something opens up.</p>
+            <p style="margin:0 0 8px;">Follow us for updates:</p>
+            <p style="margin:0 0 24px;">
+              <a href="https://www.facebook.com/HostKeepDigital/" target="_blank" style="display:inline-block;margin:0 6px;"><img src="https://cdn-icons-png.flaticon.com/512/124/124010.png" alt="Facebook" width="32" height="32" /></a>
+              <a href="https://www.instagram.com/hostkeepdigital/" target="_blank" style="display:inline-block;margin:0 6px;"><img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram" width="32" height="32" /></a>
+            </p>
+            <p style="margin:0 0 4px;">The HostKeep Team</p>
+            <p style="margin:0;color:#0F766E;">Hello@hostkeepdigital.co.uk</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f9f9f9;border-top:1px solid #eeeeee;padding:20px 40px;text-align:center;color:#999999;font-size:12px;line-height:1.8;">
+            HostKeep Digital Ltd | You received this because you applied for a founding operator spot.<br>
+            <a href="#" style="color:#999999;">Unsubscribe</a>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+        });
+      } else {
+        // Rejection email
+        await base44.integrations.Core.SendEmail({
+          from_name: 'HostKeep Digital',
+          to: member.email,
+          subject: "Your HostKeep Digital application — an update",
+          body: `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:30px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="background:#1E3A5F;padding:32px 40px;text-align:center;">
+            <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:0.5px;">HostKeep Digital</h1>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:40px 40px 32px;color:#333333;font-size:15px;line-height:1.7;">
+            <p style="margin:0 0 16px;">Hi ${firstName},</p>
+            <p style="margin:0 0 16px;">Thank you for your interest in joining <strong>HostKeep Digital</strong> as a founding operator.</p>
+            <p style="margin:0 0 16px;">After reviewing your application, we are unable to offer you a founding spot at this time. We appreciate you taking the time to apply and hope you will consider joining us when we open more widely.</p>
+            <p style="margin:0 0 24px;">If you have any questions, please do not hesitate to get in touch.</p>
+            <p style="margin:0 0 4px;">The HostKeep Team</p>
+            <p style="margin:0;color:#0F766E;">Hello@hostkeepdigital.co.uk</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f9f9f9;border-top:1px solid #eeeeee;padding:20px 40px;text-align:center;color:#999999;font-size:12px;line-height:1.8;">
+            HostKeep Digital Ltd | You received this because you applied for a founding operator spot.<br>
+            <a href="#" style="color:#999999;">Unsubscribe</a>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pending-founding-members'] });
-      toast.success('Founding member rejected');
+      toast.success('Founding member rejected and notified');
     }
   });
 
