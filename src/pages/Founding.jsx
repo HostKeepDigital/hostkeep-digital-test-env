@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Users, Home, Sparkles, AlertTriangle, Loader2, Eye, EyeOff } from "lucide-react";
+import EmailVerificationStep from "@/components/founding/EmailVerificationStep";
 
 const HOST_LIMIT = 50;
 const CLEANER_LIMIT = 30;
