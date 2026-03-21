@@ -228,7 +228,7 @@ export default function Founding() {
               <CheckCircle className="w-16 h-16 text-teal-600 mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Your spot is reserved!</h2>
               <p className="text-gray-600 max-w-md mx-auto">
-                We've sent a confirmation to <strong>{form.email}</strong>. Our team will be in touch shortly with your next steps to complete your application.
+                Your application has been received. Our team will review it shortly and you'll receive a confirmation email once approved.
               </p>
             </motion.div>
           ) : (

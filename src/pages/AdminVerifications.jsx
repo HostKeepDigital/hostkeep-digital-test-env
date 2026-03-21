@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Shield, CheckCircle, XCircle, AlertTriangle, 
-  User, FileText, Clock, Ban 
+  User, FileText, Clock, Ban, Star
 } from "lucide-react";
 import { toast } from "sonner";
 import { getUserRiskScore } from "@/components/utils/riskHelpers";
