@@ -105,16 +105,7 @@ export default function Founding() {
         role: form.role,
         postcode: form.postcode.toUpperCase(),
         signup_timestamp: new Date().toISOString(),
-      });
-
-      await base44.integrations.Core.SendEmail({
-        to: form.email,
-        subject: "You're a HostKeep Founding Member! 🎉",
-        body: `Hi ${form.full_name},\n\nCongratulations! Your spot as a founding ${form.role} on HostKeep has been reserved.\n\n${
-          form.role === "host"
-            ? "As a founding host, you'll receive £10 off your monthly subscription — forever."
-            : "As a founding cleaner, you'll receive 3 months free membership."
-        }\n\nWe'll be in touch shortly with next steps to complete your application.\n\nWelcome aboard,\nThe HostKeep Team`,
+        approval_status: "pending",
       });
 
       setSuccess(true);
