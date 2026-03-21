@@ -411,6 +411,7 @@ export default function Founding() {
                     type="email"
                     value={form.email}
                     onChange={e => field("email", e.target.value)}
+                    onBlur={handleEmailBlur}
                     placeholder="jane@example.com"
                     className={errors.email ? "border-red-400" : ""}
                   />
