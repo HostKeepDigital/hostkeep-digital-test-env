@@ -60,8 +60,9 @@ export default function Founding() {
     base44.entities.FoundingMember.list().then(setMembers).finally(() => setLoading(false));
   }, []);
 
-  const hostCount = members.filter(m => m.role === "host").length;
-  const cleanerCount = members.filter(m => m.role === "cleaner").length;
+  const cornwallMembers = members.filter(m => m.approval_status !== "out_of_area");
+  const hostCount = cornwallMembers.filter(m => m.role === "host").length;
+  const cleanerCount = cornwallMembers.filter(m => m.role === "cleaner").length;
   const hostFull = hostCount >= HOST_LIMIT;
   const cleanerFull = cleanerCount >= CLEANER_LIMIT;
 
