@@ -295,7 +295,7 @@ export default function HostDashboard() {
                       className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors"
                     >
                       <img 
-                        src={property.photos?.[0] || "https://drive.google.com/uc?export=view&id=1Vr07gcaaC19XEmxcvTbq-DTn8PZKn-_a"} 
+                        src={property.photos?.[0] || "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=200"} 
                         alt={property.title}
                         className="w-16 h-16 rounded-lg object-cover"
                       />

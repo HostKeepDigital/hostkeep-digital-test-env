@@ -134,7 +134,7 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-teal-600 via-teal-700 to-emerald-800 overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://drive.google.com/uc?export=view&id=1dO0GP74-0q34O64CKSL0gGCan9qeELf5')] bg-cover bg-center opacity-20" />
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=1920')] bg-cover bg-center opacity-20" />
         <div className="relative max-w-7xl mx-auto px-4 py-20 md:py-32">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -355,7 +355,7 @@ export default function Home() {
             </div>
             <div className="hidden md:block h-full">
               <img 
-                src="https://drive.google.com/uc?export=view&id=1rRoDfT5XKQW3TtRwulxbIJoo7LJi98gK" 
+                src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800" 
                 alt="Beautiful holiday home"
                 className="w-full h-full object-cover"
               />
