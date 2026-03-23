@@ -10,7 +10,8 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, Bell, CreditCard, Shield, Upload, Loader2, CheckCircle, AlertCircle, Clock, ExternalLink } from "lucide-react";
+import { User, Bell, CreditCard, Upload, Loader2 } from "lucide-react";
+import StripeConnectPanel from "@/components/host/StripeConnectPanel";
 import { toast } from "sonner";
 
 export default function HostSettings() {
