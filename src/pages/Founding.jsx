@@ -289,7 +289,7 @@ export default function Founding() {
     <div className="min-h-screen bg-white">
       {/* Hero */}
       <section className="relative bg-gradient-to-br from-teal-600 via-teal-700 to-emerald-800 overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://drive.google.com/uc?export=view&id=1dO0GP74-0q34O64CKSL0gGCan9qeELf5')] bg-cover bg-center opacity-15" />
+        <div className="absolute inset-0 bg-[url('https://lh3.googleusercontent.com/d/1dO0GP74-0q34O64CKSL0gGCan9qeELf5')] bg-cover bg-center opacity-15" />
         <div className="relative max-w-4xl mx-auto px-4 py-20 text-center text-white">
           <Badge className="bg-white/20 text-white border-0 mb-4 text-sm px-4 py-1">
             <Sparkles className="w-4 h-4 mr-1 inline" /> Limited Time Offer

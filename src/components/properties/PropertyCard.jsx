@@ -32,7 +32,7 @@ export default function PropertyCard({ property, onSave, isAvailable = true, una
   };
   
   const queryClient = useQueryClient();
-  const mainPhoto = property.photos?.[0] || "https://drive.google.com/uc?export=view&id=1Vr07gcaaC19XEmxcvTbq-DTn8PZKn-_a";
+  const mainPhoto = property.photos?.[0] || "https://lh3.googleusercontent.com/d/1Vr07gcaaC19XEmxcvTbq-DTn8PZKn-_a";
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});

@@ -131,7 +131,7 @@ export default function MyBookings() {
             <div className="flex flex-col sm:flex-row">
               <div className="sm:w-48 h-32 sm:h-auto bg-gray-100">
                 <img
-                  src={property?.photos?.[0] || "https://drive.google.com/uc?export=view&id=1Vr07gcaaC19XEmxcvTbq-DTn8PZKn-_a"}
+                  src={property?.photos?.[0] || "https://lh3.googleusercontent.com/d/1Vr07gcaaC19XEmxcvTbq-DTn8PZKn-_a"}
                   alt={property?.title}
                   className="w-full h-full object-cover"
                 />

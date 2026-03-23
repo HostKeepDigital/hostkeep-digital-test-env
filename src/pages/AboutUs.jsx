@@ -191,7 +191,7 @@ export default function AboutUs() {
             </div>
             <div className="relative">
               <img 
-                src="https://drive.google.com/uc?export=view&id=1ngVI8yfXwJXYnSM96Sp21B0soD4SMNOJ" 
+                src="https://lh3.googleusercontent.com/d/1ngVI8yfXwJXYnSM96Sp21B0soD4SMNOJ" 
                 alt="UK Coastline" 
                 className="rounded-2xl shadow-xl"
               />

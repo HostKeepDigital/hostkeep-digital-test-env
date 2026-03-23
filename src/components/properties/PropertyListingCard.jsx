@@ -61,7 +61,7 @@ export default function PropertyListingCard({
       {/* Image Header */}
       <div className="relative h-72 overflow-hidden bg-gray-100">
         <img
-          src={property.photos?.[0] || "https://drive.google.com/uc?export=view&id=1Vr07gcaaC19XEmxcvTbq-DTn8PZKn-_a"}
+          src={property.photos?.[0] || "https://lh3.googleusercontent.com/d/1Vr07gcaaC19XEmxcvTbq-DTn8PZKn-_a"}
           alt={property.title}
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
         />
