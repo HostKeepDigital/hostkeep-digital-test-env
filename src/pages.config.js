@@ -93,7 +93,6 @@ import Subscription from './pages/Subscription';
 import TermsAndConditions from './pages/TermsAndConditions';
 import PostcodeTestConsole from './pages/PostcodeTestConsole';
 import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
 import __Layout from './Layout.jsx';
 
 
@@ -144,7 +143,6 @@ export const PAGES = {
     "TermsAndConditions": TermsAndConditions,
     "PostcodeTestConsole": PostcodeTestConsole,
     "ForgotPassword": ForgotPassword,
-    "ResetPassword": ResetPassword,
 }
 
 export const pagesConfig = {
