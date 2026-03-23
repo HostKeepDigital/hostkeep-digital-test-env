@@ -291,12 +291,7 @@ export default function Subscription() {
               Every plan includes every feature — plans only differ by property count
             </div>
           )}
-          {activeTab === 'cleaner' && (
-            <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-800 px-4 py-2 rounded-full text-sm font-medium">
-              <Star className="w-4 h-4 text-blue-500" />
-              Every plan includes every feature — plans only differ by property count
-            </div>
-          )}
+
         </motion.div>
 
         {subscription && subscription.status === 'active' && !isBetaUser && (
