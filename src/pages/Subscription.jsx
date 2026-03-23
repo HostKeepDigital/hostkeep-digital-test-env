@@ -285,10 +285,18 @@ export default function Subscription() {
           <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-4">
             Pay one flat monthly fee. Keep 100% of your bookings. No commissions. Ever.
           </p>
-          <div className="inline-flex items-center gap-2 bg-teal-50 border border-teal-200 text-teal-800 px-4 py-2 rounded-full text-sm font-medium">
-            <Star className="w-4 h-4 text-teal-500" />
-            Every plan includes every feature — plans only differ by property count
-          </div>
+          {activeTab === 'host' && (
+            <div className="inline-flex items-center gap-2 bg-teal-50 border border-teal-200 text-teal-800 px-4 py-2 rounded-full text-sm font-medium">
+              <Star className="w-4 h-4 text-teal-500" />
+              Every plan includes every feature — plans only differ by property count
+            </div>
+          )}
+          {activeTab === 'cleaner' && (
+            <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-800 px-4 py-2 rounded-full text-sm font-medium">
+              <Star className="w-4 h-4 text-blue-500" />
+              Every plan includes every feature — plans only differ by property count
+            </div>
+          )}
         </motion.div>
 
         {subscription && subscription.status === 'active' && !isBetaUser && (
