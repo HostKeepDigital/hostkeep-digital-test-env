@@ -23,7 +23,7 @@ const PUBLIC_ROUTES = new Set([
   '/CookiePolicy', '/GuestTerms', '/HostTerms', '/CleanerTerms',
   '/DisputePolicy', '/PaymentPolicy', '/RefundPolicy', '/Accessibility',
   '/BecomeHost', '/BecomeCleaner', '/Index', '/LockScreen',
-  '/founding', '/waitlist', '/pending', '/Subscription', '/login',
+  '/founding', '/waitlist', '/pending', '/Subscription', '/login', '/SignIn',
 ]);
 
 // After login, redirect based on role
@@ -186,7 +186,7 @@ const AuthenticatedApp = () => {
   }
 
   // Handle authentication errors (only for non-public routes, never on /login itself)
-  const isLoginRoute = location.pathname === '/login';
+  const isLoginRoute = ['/login', '/Login', '/SignIn'].includes(location.pathname);
   if (!isPublicRoute && !isLoginRoute && authError) {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
@@ -201,6 +201,7 @@ const AuthenticatedApp = () => {
       <Routes>
         <Route path="/login" element={<Navigate to="/SignIn" replace />} />
         <Route path="/Login" element={<Navigate to="/SignIn" replace />} />
+        <Route path="/SignIn" element={<SignIn />} />
         <Route path="/" element={
           <RequireAuth>
             <LayoutWrapper currentPageName="Home">
