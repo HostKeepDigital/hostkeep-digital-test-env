@@ -16,8 +16,8 @@ const PLAN_DISPLAY_NAMES = {
   host_starter_monthly: "Single Property Host",
   host_growth_monthly: "Multi Property Host",
   host_pro_monthly: "Portfolio Host",
-  cleaner_solo_monthly: "CleanKeep Solo",
-  cleaner_pro_monthly: "CleanKeep Solo Plus",
+  cleaner_solo_monthly: "CleanKeep Solo Basic",
+  cleaner_pro_monthly: "CleanKeep Solo Pro",
   cleaner_team_monthly: "CleanKeep Team",
   beta_host_access: "Founding Member (Beta Host)",
   beta_cleaner_access: "Founding Member (Beta Cleaner)",
@@ -84,7 +84,7 @@ const CLEANER_SHARED_FEATURES = [
 const CLEANER_PLANS = [
   {
     id: "cleaner_solo_monthly",
-    name: "CleanKeep Solo",
+    name: "CleanKeep Solo Basic",
     price: 9.99,
     icon: Zap,
     color: "teal",
@@ -99,7 +99,7 @@ const CLEANER_PLANS = [
   },
   {
     id: "cleaner_pro_monthly",
-    name: "CleanKeep Pro",
+    name: "CleanKeep Solo Pro",
     price: 19.99,
     icon: Crown,
     color: "violet",
