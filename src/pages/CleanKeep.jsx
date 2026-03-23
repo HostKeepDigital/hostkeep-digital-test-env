@@ -314,9 +314,9 @@ export default function CleanKeep() {
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <Card className="border-2">
               <CardHeader>
-                <CardTitle className="text-2xl">Basic</CardTitle>
+                <CardTitle className="text-2xl">CleanKeep Solo Basic</CardTitle>
                 <div className="text-4xl font-bold text-gray-900 mt-2">
-                  £5<span className="text-lg text-gray-500">/month</span>
+                  £9.99<span className="text-lg text-gray-500">/month</span>
                 </div>
               </CardHeader>
               <CardContent>
@@ -348,11 +348,11 @@ export default function CleanKeep() {
             <Card className="border-2 border-blue-500 shadow-lg">
               <CardHeader>
                 <CardTitle className="text-2xl flex items-center gap-2">
-                  Pro
+                  CleanKeep Solo Pro
                   <Badge className="bg-blue-600">Popular</Badge>
                 </CardTitle>
                 <div className="text-4xl font-bold text-gray-900 mt-2">
-                  £10<span className="text-lg text-gray-500">/month</span>
+                  £19.99<span className="text-lg text-gray-500">/month</span>
                 </div>
               </CardHeader>
               <CardContent>

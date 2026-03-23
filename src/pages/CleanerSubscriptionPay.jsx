@@ -95,8 +95,8 @@ export default function CleanerSubscriptionPay() {
   }
 
   const planDetails = {
-    basic: { name: 'Basic', price: 5, color: 'blue' },
-    pro: { name: 'Pro', price: 10, color: 'indigo' }
+    basic: { name: 'CleanKeep Solo Basic', price: 9.99, color: 'blue' },
+    pro: { name: 'CleanKeep Solo Pro', price: 19.99, color: 'indigo' }
   };
 
   const planInfo = planDetails[plan] || planDetails.basic;
