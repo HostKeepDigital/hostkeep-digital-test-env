@@ -92,7 +92,6 @@ export default function Layout({ children, currentPageName }) {
       { name: "Properties", icon: Building2, page: "HostProperties" },
       { name: "Bookings", icon: Calendar, page: "HostBookings" },
       { name: "Messages", icon: MessageSquare, page: "HostMessages" },
-      { name: "Settings", icon: Settings, page: "HostSettings" },
       { name: "Cancellation Policies", icon: Shield, page: "HostCancellationPolicies" },
     ];
 
@@ -190,7 +189,7 @@ export default function Layout({ children, currentPageName }) {
   // Guest/Public Layout
   return (
     <AppLockWrapper>
-    <div className="min-h-screen bg-white">
+    <div className="flex flex-col min-h-screen bg-white">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4">
@@ -330,7 +329,9 @@ export default function Layout({ children, currentPageName }) {
       </main>
 
       {/* Footer */}
-      <Footer />
+      <div className="mt-auto">
+        <Footer />
+      </div>
     </div>
     </AppLockWrapper>
   );
