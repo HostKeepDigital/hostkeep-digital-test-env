@@ -177,6 +177,7 @@ export default function Founding() {
       email: f.email.toLowerCase().trim(),
       password: f.password,
       full_name: f.full_name,
+      role: f.role,
     });
 
     if (outOfArea) {
