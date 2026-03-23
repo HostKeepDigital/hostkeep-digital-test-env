@@ -345,7 +345,7 @@ export default function Subscription() {
                 <button
                   onClick={() => setActiveTab('cleaner')}
                   className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                    activeTab === 'cleaner' ? 'bg-teal-600 text-white shadow' : 'text-gray-600 hover:text-gray-900'
+                    activeTab === 'cleaner' ? 'bg-blue-600 text-white shadow' : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
                   <Sparkles className="w-4 h-4" /> Cleaner Plans
@@ -367,25 +367,25 @@ export default function Subscription() {
                   >
                     <Card className={`relative h-full flex flex-col ${
                       plan.popular ? 'border-2 border-violet-500 shadow-lg' : 'border border-gray-200'
-                    } ${isCurrentPlan ? 'ring-2 ring-teal-500' : ''}`}>
+                    } ${isCurrentPlan ? `ring-2 ${activeTab === 'cleaner' ? 'ring-blue-500' : 'ring-teal-500'}` : ''}`}>
                       {plan.popular && (
                         <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-violet-500">
                           Most Popular
                         </Badge>
                       )}
                       {isCurrentPlan && (
-                        <Badge className="absolute -top-3 right-4 bg-teal-500">
+                        <Badge className={`absolute -top-3 right-4 ${activeTab === 'cleaner' ? 'bg-blue-500' : 'bg-teal-500'}`}>
                           Current
                         </Badge>
                       )}
 
                       <CardHeader className="text-center pb-4">
                         <div className={`w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center ${
-                          plan.color === 'teal' ? 'bg-teal-100' :
+                          plan.color === 'teal' ? (activeTab === 'cleaner' ? 'bg-blue-100' : 'bg-teal-100') :
                           plan.color === 'violet' ? 'bg-violet-100' : 'bg-amber-100'
                         }`}>
                           <Icon className={`w-6 h-6 ${
-                            plan.color === 'teal' ? 'text-teal-600' :
+                            plan.color === 'teal' ? (activeTab === 'cleaner' ? 'text-blue-600' : 'text-teal-600') :
                             plan.color === 'violet' ? 'text-violet-600' : 'text-amber-600'
                           }`} />
                         </div>
@@ -406,7 +406,7 @@ export default function Subscription() {
                           {plan.features.map((feature, i) => (
                             <li key={i} className="flex items-start gap-3 text-sm text-gray-600">
                               <CheckCircle className={`w-5 h-5 flex-shrink-0 ${
-                                plan.color === 'teal' ? 'text-teal-500' :
+                                plan.color === 'teal' ? (activeTab === 'cleaner' ? 'text-blue-500' : 'text-teal-500') :
                                 plan.color === 'violet' ? 'text-violet-500' : 'text-amber-500'
                               }`} />
                               {feature}
@@ -425,7 +425,7 @@ export default function Subscription() {
                             className={`w-full ${
                               plan.popular
                                 ? 'bg-violet-600 hover:bg-violet-700'
-                                : 'bg-teal-600 hover:bg-teal-700'
+                                : activeTab === 'cleaner' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-teal-600 hover:bg-teal-700'
                             }`}
                             onClick={() => handleSubscribe(plan.id)}
                             disabled={!!checkoutLoading}
@@ -485,7 +485,7 @@ export default function Subscription() {
               "Cancel anytime"
             ].map((item, i) => (
               <span key={i} className="flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-gray-200">
-                <CheckCircle className="w-4 h-4 text-teal-500" />
+                <CheckCircle className={`w-4 h-4 ${activeTab === 'cleaner' ? 'text-blue-500' : 'text-teal-500'}`} />
                 {item}
               </span>
             ))}
