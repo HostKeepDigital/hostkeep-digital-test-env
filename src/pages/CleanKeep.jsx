@@ -13,19 +13,18 @@ export default function CleanKeep() {
   const [user, setUser] = useState(null);
   const [cleanerProfile, setCleanerProfile] = useState(null);
   const [userRoles, setUserRoles] = useState([]);
+  const [rolesLoading, setRolesLoading] = useState(true);
 
   useEffect(() => {
     base44.auth.me().then(async (u) => {
       setUser(u);
-      // Check if user is a cleaner
       const profiles = await base44.entities.Cleaner.filter({ user_id: u.id });
       if (profiles[0]) setCleanerProfile(profiles[0]);
-      // Get user roles
       if (u?.id) {
-        const roles = await getUserRoles(u.id);
+        const roles = await base44.entities.UserRole.filter({ user_id: u.id });
         setUserRoles(roles);
       }
-    }).catch(() => {});
+    }).catch(() => {}).finally(() => setRolesLoading(false));
   }, []);
   const options = [
     {
@@ -107,26 +106,31 @@ export default function CleanKeep() {
       {/* The Three Pathways */}
       <section className="pb-16 px-4">
         <div className="max-w-6xl mx-auto">
+          {rolesLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="h-10 w-48 bg-gray-200 rounded-lg animate-pulse mx-auto" />
+            </div>
+          ) : null}
           <div className={`grid ${
-            hasRole(userRoles, 'cleaner') && !hasRole(userRoles, 'host')
-            ? 'md:grid-cols-1 max-w-md mx-auto' 
-            : (hasRole(userRoles, 'host') && !hasRole(userRoles, 'cleaner'))
-            ? 'md:grid-cols-2' : 'md:grid-cols-3'
-          } gap-6`}>
+            rolesLoading ? 'hidden' : ''
+          } ${(
             {options.filter(option => {
-              // If user has cleaner role or cleaner profile, hide "Join CleanKeep"
-              if ((hasRole(userRoles, 'cleaner') || cleanerProfile) && option.title === "Join CleanKeep") {
-                return false;
+              if (hasRole(userRoles, 'cleaner') || cleanerProfile) {
+                if (option.title === "Join CleanKeep") return false;
               }
-              // If user is only a host (not a cleaner), show "Find a Cleaner" and "Join CleanKeep"
+              // host-only: only "Find a Cleaner"
               if (hasRole(userRoles, 'host') && !hasRole(userRoles, 'cleaner')) {
-                return option.title === "Find a Cleaner" || option.title === "Join CleanKeep";
+                return option.title === "Find a Cleaner";
               }
-              // If user is only a cleaner (not a host), show only "Cleaner Dashboard"
-              if (hasRole(userRoles, 'cleaner') && !hasRole(userRoles, 'host')) {
+              // cleaner-only: only "Cleaner Dashboard"
+              if ((hasRole(userRoles, 'cleaner') || cleanerProfile) && !hasRole(userRoles, 'host')) {
                 return option.title === "Cleaner Dashboard";
               }
-              // If user is both host and cleaner, show all buttons except "Join CleanKeep"
+              // both host+cleaner: Dashboard + Find a Cleaner
+              if (hasRole(userRoles, 'host') && (hasRole(userRoles, 'cleaner') || cleanerProfile)) {
+                return option.title !== "Join CleanKeep";
+              }
+              // guest: all options
               return true;
             }).map((option, idx) => {
               const shouldHighlight = 
