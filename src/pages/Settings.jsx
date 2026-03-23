@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, Bell, CreditCard, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { useState, useEffect } from "react";
 
 export default function Settings() {
   const [user, setUser] = useState(null);
