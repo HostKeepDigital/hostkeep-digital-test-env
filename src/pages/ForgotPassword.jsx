@@ -15,7 +15,7 @@ export default function ForgotPassword() {
     if (!email) return;
     setLoading(true);
     try {
-      await base44.functions.invoke('sendPasswordReset', { email });
+      await base44.auth.sendPasswordResetEmail(email);
     } catch (_) {
       // Always show success for security
     }
@@ -82,7 +82,8 @@ export default function ForgotPassword() {
                     </div>
                     <h1 className="text-2xl font-bold text-slate-900">Check your inbox</h1>
                     <p className="text-slate-500 text-sm">
-                      If an account exists for <span className="font-medium text-slate-700">{email}</span>, you'll receive a password reset link shortly. Please also check your spam folder.
+                      If an account exists for <span className="font-medium text-slate-700">{email}</span>, you'll receive a password reset link shortly. Please also check your spam folder.<br /><br />
+                      Note: the reset link will take you to a secure page to enter your new password. Once complete you'll be returned to HostKeep automatically.
                     </p>
                   </div>
                   <Link to="/SignIn" className="text-sm text-slate-400 hover:text-teal-600 transition-colors">
