@@ -98,6 +98,12 @@ export default function SignIn() {
                     </div>
                   </div>
 
+                  <div className="text-right">
+                    <Link to="/ForgotPassword" className="text-xs text-slate-400 hover:text-teal-600 transition-colors">
+                      Forgot your password?
+                    </Link>
+                  </div>
+
                   {error && (
                     <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p>
                   )}
