@@ -508,96 +508,12 @@ export default function Home() {
               </ul>
             </div>
 
-            <div className="text-center mb-8">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Flexible, Low-Cost Membership</h3>
-              <p className="text-gray-600">Affordable monthly subscription. No commission. Cancel anytime.</p>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-              {[
-                { 
-                  name: "Basic", 
-                  price: "5", 
-                  features: [
-                    "Public cleaner profile",
-                    "Availability calendar",
-                    "Job notifications",
-                    "Messaging",
-                    "Reviews & ratings"
-                  ] 
-                },
-                { 
-                  name: "Pro", 
-                  price: "10", 
-                  features: [
-                    "Everything in Basic",
-                    "Priority placement in search",
-                    "Auto-accept job option",
-                    "Repeat client management",
-                    "Earnings analytics",
-                    '"Verified Cleaner" badge'
-                  ],
-                  popular: true 
-                }
-              ].map((plan, idx) => (
-                <motion.div
-                  key={plan.name}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.1 }}
-                  className={`bg-white rounded-2xl p-8 border-2 ${plan.popular ? 'border-blue-500 shadow-xl' : 'border-gray-200'} relative hover:shadow-lg transition-shadow`}
-                >
-                  {plan.popular && (
-                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white">Most Popular</Badge>
-                  )}
-                  <h3 className="text-2xl font-bold text-gray-900 mb-3">{plan.name}</h3>
-                  <div className="mb-6">
-                    <span className="text-5xl font-bold text-gray-900">£{plan.price}</span>
-                    <span className="text-gray-500 text-lg">/month</span>
-                  </div>
-                  <ul className="space-y-3 text-gray-700 mb-8">
-                    {plan.features.map((f, i) => (
-                      <li key={i} className="flex items-start gap-3">
-                        <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                        <span>{f}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  {isAuthenticated ? (
-                    hasRole(userRoles, 'cleaner') ? (
-                      <Link to={createPageUrl('CleanerDashboard')}>
-                        <Button 
-                          variant={plan.popular ? "default" : "outline"} 
-                          className={`w-full ${plan.popular ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
-                          size="lg"
-                        >
-                          Go to Dashboard
-                        </Button>
-                      </Link>
-                    ) : (
-                      <Link to={`/Subscription?tab=cleaner`}>
-                        <Button 
-                          variant={plan.popular ? "default" : "outline"} 
-                          className={`w-full ${plan.popular ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
-                          size="lg"
-                        >
-                          Get Started
-                        </Button>
-                      </Link>
-                    )
-                  ) : (
-                    <Link to={`/Subscription?tab=cleaner`}>
-                        <Button 
-                          variant={plan.popular ? "default" : "outline"} 
-                          className={`w-full ${plan.popular ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
-                          size="lg"
-                        >
-                          Get Started
-                        </Button>
-                      </Link>
-                  )}
-                </motion.div>
-              ))}
+            <div className="text-center">
+              <Link to="/Subscription?tab=cleaner">
+                <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-10">
+                  View Cleaner Plans
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
