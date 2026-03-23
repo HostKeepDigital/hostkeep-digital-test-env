@@ -112,14 +112,13 @@ export default function SignIn() {
                 </form>
 
                 {/* Footer links */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-1">
-                  <Link
-                    to="/founding"
-                    className="text-sm text-slate-500 hover:text-slate-700 transition-colors text-right"
-                  >
-                    No account?{" "}
-                    <span className="font-medium text-teal-600 hover:text-teal-700">Become a founding member</span>
-                  </Link>
+                <div className="pt-3 text-center border-t border-slate-100">
+                  <p className="text-sm text-slate-500">
+                    Don't have an account?{" "}
+                    <Link to="/founding" className="font-semibold text-teal-600 hover:text-teal-700 underline underline-offset-2">
+                      Become a founding member
+                    </Link>
+                  </p>
                 </div>
               </div>
             </div>

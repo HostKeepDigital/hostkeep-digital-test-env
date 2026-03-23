@@ -466,7 +466,7 @@ export default function Home() {
                       </li>
                     ))}
                   </ul>
-                  <Link to="/founding" className="block">
+                  <Link to={`/Subscription?tab=host`} className="block">
                     <Button 
                       variant={plan.popular ? "default" : "outline"} 
                       className={`w-full ${plan.popular ? 'bg-teal-600 hover:bg-teal-700' : ''}`}
@@ -575,26 +575,26 @@ export default function Home() {
                         </Button>
                       </Link>
                     ) : (
-                      <Link to="/founding">
+                      <Link to={`/Subscription?tab=cleaner`}>
                         <Button 
                           variant={plan.popular ? "default" : "outline"} 
                           className={`w-full ${plan.popular ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
                           size="lg"
                         >
-                          Become a Cleaner
+                          Get Started
                         </Button>
                       </Link>
                     )
                   ) : (
-                    <Link to="/founding">
-                      <Button 
-                        variant={plan.popular ? "default" : "outline"} 
-                        className={`w-full ${plan.popular ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
-                        size="lg"
-                      >
-                        Join as a Cleaner
-                      </Button>
-                    </Link>
+                    <Link to={`/Subscription?tab=cleaner`}>
+                        <Button 
+                          variant={plan.popular ? "default" : "outline"} 
+                          className={`w-full ${plan.popular ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
+                          size="lg"
+                        >
+                          Get Started
+                        </Button>
+                      </Link>
                   )}
                 </motion.div>
               ))}
