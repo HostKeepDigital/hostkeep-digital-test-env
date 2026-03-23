@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,11 @@ export default function Settings() {
   const [stripeStatus, setStripeStatus] = useState(null);
   const [stripeLoading, setStripeLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const fetchStripeStatus = async () => {
+    const res = await base44.functions.invoke('getStripeConnectStatus', {});
+    setStripeStatus(res.data);
+  };
 
   const [profile, setProfile] = useState({ full_name: "", phone: "", location: "" });
   const [notifications, setNotifications] = useState({
@@ -51,16 +57,27 @@ export default function Settings() {
 
   useEffect(() => {
     if (!hasPaymentsRole || !user) return;
-    base44.functions.invoke('getStripeConnectStatus', {}).then(res => {
-      setStripeStatus(res.data);
-    }).catch(() => {});
+    const urlParams = new URLSearchParams(window.location.search);
+    const stripeReturn = urlParams.get('stripe_return');
+    if (stripeReturn === 'success') {
+      fetchStripeStatus().then(() => {
+        window.history.replaceState({}, '', window.location.pathname);
+        toast.success('Stripe account connected successfully');
+      }).catch(() => {});
+    } else {
+      fetchStripeStatus().catch(() => {});
+    }
   }, [hasPaymentsRole, user]);
 
   const handleSaveProfile = async () => {
     setSaving(true);
-    await base44.auth.updateMe(profile);
+    try {
+      await base44.auth.updateMe(profile);
+      toast.success('Changes saved');
+    } catch {
+      toast.error('Failed to save changes. Please try again.');
+    }
     setSaving(false);
-    toast.success("Changes saved");
   };
 
   const handleNotificationToggle = async (field, value) => {
