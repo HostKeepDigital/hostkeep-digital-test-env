@@ -5,8 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Users, Home, Sparkles, AlertTriangle, Loader2, Eye, EyeOff } from "lucide-react";
-import EmailVerificationStep from "@/components/founding/EmailVerificationStep";
+import { CheckCircle, Users, Home, Sparkles, AlertTriangle, Loader2 } from "lucide-react";
 
 const HOST_LIMIT = 50;
 const CLEANER_LIMIT = 30;
@@ -45,33 +44,25 @@ export default function Founding() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [cornwallWarning, setCornwallWarning] = useState(false);
-  const [verificationStep, setVerificationStep] = useState(false);
-  const [pendingFormData, setPendingFormData] = useState(null);
-  const [verificationMessage, setVerificationMessage] = useState(null);
-  const [verificationShowResend, setVerificationShowResend] = useState(false);
 
   const [form, setForm] = useState({
     full_name: "",
     email: "",
-    password: "",
-    confirm_password: "",
-    role: "",
     postcode: "",
-    terms: false,
+    role: "",
   });
   const [errors, setErrors] = useState({});
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
-    base44.functions.invoke('foundingOps', { op: 'listMembers' })
-      .then(res => setMembers(res.data?.members || []))
+    base44.entities.FoundingMember.list("-signup_timestamp", 500)
+      .then(data => setMembers(data || []))
       .finally(() => setLoading(false));
   }, []);
 
-  const cornwallMembers = members.filter(m => m.approval_status !== "out_of_area");
-  const hostCount = cornwallMembers.filter(m => m.role === "host").length;
-  const cleanerCount = cornwallMembers.filter(m => m.role === "cleaner").length;
+  // Counter only counts approved members
+  const approvedMembers = members.filter(m => m.approval_status === "approved");
+  const hostCount = approvedMembers.filter(m => m.role === "host").length;
+  const cleanerCount = approvedMembers.filter(m => m.role === "cleaner").length;
   const hostFull = hostCount >= HOST_LIMIT;
   const cleanerFull = cleanerCount >= CLEANER_LIMIT;
 
@@ -79,11 +70,8 @@ export default function Founding() {
     const e = {};
     if (!form.full_name.trim()) e.full_name = "Full name is required.";
     if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "A valid email is required.";
-    if (!form.password || form.password.length < 8) e.password = "Password must be at least 8 characters.";
-    if (form.password !== form.confirm_password) e.confirm_password = "Passwords do not match.";
-    if (!form.role) e.role = "Please select a role.";
     if (!form.postcode.trim()) e.postcode = "Postcode is required.";
-    if (!form.terms) e.terms = "You must agree to the terms and conditions.";
+    if (!form.role) e.role = "Please select a role.";
     return e;
   };
 
@@ -97,124 +85,56 @@ export default function Founding() {
 
   const isOutOfArea = form.postcode && !isCornwallPostcode(form.postcode);
 
-  // Check for existing verification code on email blur (handles returning users)
-  const handleEmailBlur = async () => {
-    const email = form.email.toLowerCase().trim();
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+  const field = (key, value) => setForm(f => ({ ...f, [key]: value }));
 
-    const res = await base44.functions.invoke('foundingOps', { op: 'checkEmail', email });
-    const codes = res.data?.codes || [];
-    if (!codes || codes.length === 0) return;
-
-    // There's an unverified code — check if it's expired
-    const latest = codes.sort((a, b) => new Date(b.created_date) - new Date(a.created_date))[0];
-    const isExpired = new Date(latest.expires_at) < new Date();
-
-    setPendingFormData({ ...form, email });
-    if (isExpired) {
-      setVerificationMessage(
-        <>Your verification code has expired. Click below to receive a new one.</>
-      );
-      setVerificationShowResend(true);
-    } else {
-      setVerificationMessage(
-        <>You have a verification code waiting in your inbox. Enter it below to complete your application.</>
-      );
-      setVerificationShowResend(false);
-    }
-    setVerificationStep(true);
-  };
-
-  // Step 1: Validate form, check for duplicate, send verification code
   const handleSubmit = async (e) => {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
 
+    const outOfArea = !isCornwallPostcode(form.postcode);
+    const roleLabel = form.role === "host" ? "Host" : "Cleaner";
+    const firstName = form.full_name.trim().split(" ")[0];
     const email = form.email.toLowerCase().trim();
+    const postcode = form.postcode.toUpperCase().trim();
+    const now = new Date().toISOString();
 
     setSubmitting(true);
     try {
-      const checkRes = await base44.functions.invoke('foundingOps', { op: 'checkEmail', email });
-      const existing = checkRes.data?.existing || [];
-      const codes = checkRes.data?.codes || [];
-
-      if (existing && existing.length > 0) {
-        setErrors({ email: "This email address has already been registered. If you have not received a confirmation email please check your spam folder or contact us at Hello@hostkeepdigital.co.uk" });
-        return;
-      }
-
-      if (codes && codes.length > 0) {
-        setPendingFormData({ ...form });
-        setVerificationMessage(
-          <>You have already started an application with this email address. Check your inbox for a verification code or click below to send a new one.</>
-        );
-        setVerificationShowResend(true);
-        setVerificationStep(true);
-        return;
-      }
-
-      await base44.functions.invoke("sendVerificationCode", {
+      // Step 2 — Create FoundingMember record
+      await base44.entities.FoundingMember.create({
+        full_name: form.full_name.trim(),
         email,
-        full_name: form.full_name,
+        postcode,
+        role: form.role,
+        approval_status: outOfArea ? "out_of_area" : "pending",
+        signup_timestamp: now,
       });
 
-      setPendingFormData({ ...form });
-      setVerificationMessage(null);
-      setVerificationShowResend(false);
-      setVerificationStep(true);
+      if (!outOfArea) {
+        // Step 3 — Send pending email to applicant
+        await base44.integrations.Core.SendEmail({
+          from_name: "HostKeep",
+          to: email,
+          subject: "You're on the list — HostKeep",
+          body: `Hi ${firstName},\n\nThank you for applying to become a Founding ${roleLabel} on HostKeep.\n\nWe're reviewing your application and will be in touch within 24 hours to let you know if you've made it into the beta.\n\nYou don't need to do anything right now.\n\nThe HostKeep Team\nhello@hostkeepdigital.co.uk\n\n---\nFollow us:\nFacebook: facebook.com/HostKeepDigital\nInstagram: @hostkeepdigital`,
+        });
+
+        // Step 4 — Send admin notification email
+        await base44.integrations.Core.SendEmail({
+          from_name: "HostKeep",
+          to: "admin@hostkeepdigital.co.uk",
+          subject: `New Founding Member Application — ${form.full_name.trim()} (${roleLabel})`,
+          body: `A new founding member application has been submitted.\n\nName: ${form.full_name.trim()}\nEmail: ${email}\nPostcode: ${postcode}\nRole: ${roleLabel}\nSubmitted: ${now}\n\nReview this application in the Admin Panel:\nhttps://hostkeepdigital.co.uk/AdminPanel\n\nThe HostKeep Team`,
+        });
+      }
+
+      // Step 5 — Navigate to thank you
+      navigate("/founding-thankyou");
     } finally {
       setSubmitting(false);
     }
   };
-
-  // Step 2: Called after email code verified — create account, set status, send Email 1
-  const handleVerified = async () => {
-    const f = pendingFormData;
-    const outOfArea = !isCornwallPostcode(f.postcode);
-    const firstName = f.full_name.split(' ')[0];
-
-    // Register via backend function to suppress Base44's built-in welcome email
-    await base44.functions.invoke("registerFoundingMember", {
-      email: f.email.toLowerCase().trim(),
-      password: f.password,
-      full_name: f.full_name,
-      role: f.role,
-    });
-
-    if (outOfArea) {
-      await base44.functions.invoke('foundingOps', {
-        op: 'createMember',
-        data: {
-          full_name: f.full_name,
-          email: f.email.toLowerCase().trim(),
-          role: f.role,
-          postcode: f.postcode.toUpperCase(),
-          signup_timestamp: new Date().toISOString(),
-          approval_status: "out_of_area",
-        }
-      });
-    } else {
-      if (f.role === "host" && hostFull) { navigate("/waitlist"); return; }
-      if (f.role === "cleaner" && cleanerFull) { navigate("/waitlist"); return; }
-
-      await base44.functions.invoke('foundingOps', {
-        op: 'createMember',
-        data: {
-          full_name: f.full_name,
-          email: f.email.toLowerCase().trim(),
-          role: f.role,
-          postcode: f.postcode.toUpperCase(),
-          signup_timestamp: new Date().toISOString(),
-          approval_status: "pending",
-        }
-      });
-    }
-
-    navigate("/founding-thankyou");
-  };
-
-  const field = (key, value) => setForm(f => ({ ...f, [key]: value }));
 
   if (loading) {
     return (
@@ -313,167 +233,97 @@ export default function Founding() {
           </motion.div>
         </div>
 
-        {/* Form / Verification step */}
+        {/* Form */}
         <div className="max-w-2xl mx-auto">
-          {verificationStep ? (
-            <EmailVerificationStep
-              email={pendingFormData.email.toLowerCase().trim()}
-              onVerified={handleVerified}
-              onBack={() => setVerificationStep(false)}
-              message={verificationMessage}
-              initialShowResend={verificationShowResend}
-            />
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-white rounded-2xl border-2 border-gray-100 shadow-lg p-8"
-            >
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Claim My Spot</h2>
-              <form onSubmit={handleSubmit} noValidate className="space-y-5">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white rounded-2xl border-2 border-gray-100 shadow-lg p-8"
+          >
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Claim My Spot</h2>
+            <form onSubmit={handleSubmit} noValidate className="space-y-5">
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                  <Input
-                    value={form.full_name}
-                    onChange={e => field("full_name", e.target.value)}
-                    placeholder="Jane Smith"
-                    className={errors.full_name ? "border-red-400" : ""}
-                  />
-                  {errors.full_name && <p className="text-red-500 text-xs mt-1">{errors.full_name}</p>}
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <Input
+                  value={form.full_name}
+                  onChange={e => field("full_name", e.target.value)}
+                  placeholder="Jane Smith"
+                  className={errors.full_name ? "border-red-400" : ""}
+                />
+                {errors.full_name && <p className="text-red-500 text-xs mt-1">{errors.full_name}</p>}
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                  <Input
-                    type="email"
-                    value={form.email}
-                    onChange={e => field("email", e.target.value)}
-                    onBlur={handleEmailBlur}
-                    placeholder="jane@example.com"
-                    className={errors.email ? "border-red-400" : ""}
-                  />
-                  {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                <Input
+                  type="email"
+                  value={form.email}
+                  onChange={e => field("email", e.target.value)}
+                  placeholder="jane@example.com"
+                  className={errors.email ? "border-red-400" : ""}
+                />
+                {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                  <div className="relative">
-                    <Input
-                      type={showPassword ? "text" : "password"}
-                      value={form.password}
-                      onChange={e => field("password", e.target.value)}
-                      placeholder="At least 8 characters"
-                      className={errors.password ? "border-red-400 pr-10" : "pr-10"}
-                    />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Property / Home Postcode</label>
+                <Input
+                  value={form.postcode}
+                  onChange={e => { field("postcode", e.target.value); setCornwallWarning(false); }}
+                  onBlur={handlePostcodeBlur}
+                  placeholder="e.g. TR1 2AB"
+                  className={errors.postcode || cornwallWarning ? "border-amber-400" : ""}
+                />
+                {errors.postcode && <p className="text-red-500 text-xs mt-1">{errors.postcode}</p>}
+                {cornwallWarning && !errors.postcode && (
+                  <div className="mt-2 flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
+                    <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <span>HostKeep is currently launching in Cornwall only. Join our waitlist to be notified when we expand to your area.</span>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">I am a...</label>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { value: "host", label: "Host", Icon: Home, disabled: hostFull, color: "teal" },
+                    { value: "cleaner", label: "Cleaner", Icon: Users, disabled: cleanerFull, color: "blue" },
+                  ].map(({ value, label, Icon, disabled, color }) => (
                     <button
+                      key={value}
                       type="button"
-                      onClick={() => setShowPassword(v => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      disabled={disabled}
+                      onClick={() => !disabled && field("role", value)}
+                      className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left
+                        ${disabled ? "opacity-40 cursor-not-allowed border-gray-200 bg-gray-50" :
+                          form.role === value
+                            ? color === "teal" ? "border-teal-500 bg-teal-50 text-teal-700" : "border-blue-500 bg-blue-50 text-blue-700"
+                            : "border-gray-200 hover:border-gray-300 bg-white text-gray-700"
+                        }`}
                     >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      <Icon className="w-5 h-5 flex-shrink-0" />
+                      <span className="font-medium">{label}{disabled ? " (Full)" : ""}</span>
                     </button>
-                  </div>
-                  {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+                  ))}
                 </div>
+                {errors.role && <p className="text-red-500 text-xs mt-1">{errors.role}</p>}
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
-                  <div className="relative">
-                    <Input
-                      type={showConfirmPassword ? "text" : "password"}
-                      value={form.confirm_password}
-                      onChange={e => field("confirm_password", e.target.value)}
-                      placeholder="Repeat your password"
-                      className={errors.confirm_password ? "border-red-400 pr-10" : "pr-10"}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(v => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                  {errors.confirm_password && <p className="text-red-500 text-xs mt-1">{errors.confirm_password}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">I am a...</label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {[
-                      { value: "host", label: "Host", Icon: Home, disabled: hostFull, color: "teal" },
-                      { value: "cleaner", label: "Cleaner", Icon: Users, disabled: cleanerFull, color: "blue" },
-                    ].map(({ value, label, Icon, disabled, color }) => (
-                      <button
-                        key={value}
-                        type="button"
-                        disabled={disabled}
-                        onClick={() => !disabled && field("role", value)}
-                        className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left
-                          ${disabled ? "opacity-40 cursor-not-allowed border-gray-200 bg-gray-50" :
-                            form.role === value
-                              ? color === "teal" ? "border-teal-500 bg-teal-50 text-teal-700" : "border-blue-500 bg-blue-50 text-blue-700"
-                              : "border-gray-200 hover:border-gray-300 bg-white text-gray-700"
-                          }`}
-                      >
-                        <Icon className="w-5 h-5 flex-shrink-0" />
-                        <span className="font-medium">{label}{disabled ? " (Full)" : ""}</span>
-                      </button>
-                    ))}
-                  </div>
-                  {errors.role && <p className="text-red-500 text-xs mt-1">{errors.role}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Property / Home Postcode</label>
-                  <Input
-                    value={form.postcode}
-                    onChange={e => { field("postcode", e.target.value); setCornwallWarning(false); }}
-                    onBlur={handlePostcodeBlur}
-                    placeholder="e.g. TR1 2AB"
-                    className={errors.postcode || cornwallWarning ? "border-amber-400" : ""}
-                  />
-                  {errors.postcode && <p className="text-red-500 text-xs mt-1">{errors.postcode}</p>}
-                  {cornwallWarning && !errors.postcode && (
-                    <div className="mt-2 flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
-                      <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                      <span>HostKeep is currently launching in Cornwall only. Join our waitlist to be notified when we expand to your area.</span>
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <label className="flex items-start gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={form.terms}
-                      onChange={e => field("terms", e.target.checked)}
-                      className="mt-0.5 w-4 h-4 rounded border-gray-300 text-teal-600"
-                    />
-                    <span className="text-sm text-gray-600">
-                      I agree to the{" "}
-                      <a href="/TermsAndConditions" target="_blank" className="text-teal-600 underline">Terms and Conditions</a>
-                      {" "}and understand this reserves my spot pending approval — no payment is taken today.
-                    </span>
-                  </label>
-                  {errors.terms && <p className="text-red-500 text-xs mt-1">{errors.terms}</p>}
-                </div>
-
-                <Button
-                  type="submit"
-                  disabled={submitting}
-                  className="w-full h-12 bg-teal-600 hover:bg-teal-700 text-white text-base font-semibold"
-                >
-                  {submitting
-                    ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sending verification code...</>
-                    : isOutOfArea ? "Register Your Interest" : "Claim My Spot"
-                  }
-                </Button>
-              </form>
-            </motion.div>
-          )}
+              <Button
+                type="submit"
+                disabled={submitting}
+                className="w-full h-12 bg-teal-600 hover:bg-teal-700 text-white text-base font-semibold"
+              >
+                {submitting
+                  ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Submitting...</>
+                  : isOutOfArea ? "Register Your Interest" : "Claim My Spot"
+                }
+              </Button>
+            </form>
+          </motion.div>
         </div>
       </div>
     </div>

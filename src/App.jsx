@@ -199,7 +199,8 @@ const AuthenticatedApp = () => {
   return (
     <RequirePendingCheck>
       <Routes>
-        <Route path="/login" element={<SignIn />} />
+        <Route path="/login" element={<Navigate to="/SignIn" replace />} />
+        <Route path="/Login" element={<Navigate to="/SignIn" replace />} />
         <Route path="/" element={
           <RequireAuth>
             <LayoutWrapper currentPageName="Home">
