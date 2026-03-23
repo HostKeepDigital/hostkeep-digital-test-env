@@ -15,6 +15,8 @@ import Founding from './pages/Founding';
 import FoundingThankYou from './pages/FoundingThankYou';
 import HowPaymentsWork from './pages/HowPaymentsWork';
 import SignIn from './pages/SignIn';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 // Pages accessible without authentication
 const PUBLIC_ROUTES = new Set([
@@ -23,7 +25,7 @@ const PUBLIC_ROUTES = new Set([
   '/CookiePolicy', '/GuestTerms', '/HostTerms', '/CleanerTerms',
   '/DisputePolicy', '/PaymentPolicy', '/RefundPolicy', '/Accessibility',
   '/BecomeHost', '/BecomeCleaner', '/Index', '/LockScreen',
-  '/founding', '/waitlist', '/pending', '/Subscription', '/login', '/SignIn',
+  '/founding', '/waitlist', '/pending', '/Subscription', '/login', '/SignIn', '/ForgotPassword', '/ResetPassword',
 ]);
 
 // After login, redirect based on role
@@ -207,6 +209,8 @@ const AuthenticatedApp = () => {
         <Route path="/login" element={<Navigate to="/SignIn" replace />} />
         <Route path="/Login" element={<Navigate to="/SignIn" replace />} />
         <Route path="/SignIn" element={<SignIn />} />
+        <Route path="/ForgotPassword" element={<ForgotPassword />} />
+        <Route path="/ResetPassword" element={<ResetPassword />} />
         <Route path="/" element={
           <RequireAuth>
             <LayoutWrapper currentPageName="Home">
