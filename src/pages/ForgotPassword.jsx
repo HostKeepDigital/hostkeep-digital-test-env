@@ -14,13 +14,11 @@ export default function ForgotPassword() {
     e.preventDefault();
     if (!email) return;
     setLoading(true);
-
     try {
-      await base44.auth.sendPasswordResetEmail(email);
+      await base44.functions.invoke('sendPasswordReset', { email });
     } catch (_) {
-      // Silently ignore — always show success for security
+      // Always show success for security
     }
-
     setLoading(false);
     setSubmitted(true);
   };
