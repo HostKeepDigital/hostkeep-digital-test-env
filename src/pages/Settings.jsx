@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,12 +15,26 @@ export default function Settings() {
   const [userRoles, setUserRoles] = useState([]);
   const [stripeStatus, setStripeStatus] = useState(null);
   const [stripeLoading, setStripeLoading] = useState(false);
+  const [stripeStatusLoading, setStripeStatusLoading] = useState(true);
+  const stripeCacheRef = useRef(null);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
 
-  const fetchStripeStatus = async () => {
-    const res = await base44.functions.invoke('getStripeConnectStatus', {});
-    setStripeStatus(res.data?.status || 'not_connected');
+  const fetchStripeStatus = async (forceRefresh = false) => {
+    if (!forceRefresh && stripeCacheRef.current !== null) {
+      setStripeStatus(stripeCacheRef.current);
+      setStripeStatusLoading(false);
+      return;
+    }
+    setStripeStatusLoading(true);
+    try {
+      const res = await base44.functions.invoke('getStripeConnectStatus', {});
+      const status = res.data?.status || 'not_connected';
+      stripeCacheRef.current = status;
+      setStripeStatus(status);
+    } finally {
+      setStripeStatusLoading(false);
+    }
   };
 
   const [profile, setProfile] = useState({ full_name: "", phone: "", location: "" });
@@ -66,12 +80,14 @@ export default function Settings() {
     const urlParams = new URLSearchParams(window.location.search);
     const stripeReturn = urlParams.get('stripe_return');
     if (stripeReturn === 'success') {
-      fetchStripeStatus().then(() => {
+      stripeCacheRef.current = null;
+      fetchStripeStatus(true).then(() => {
         window.history.replaceState({}, '', window.location.pathname);
         toast.success('Stripe verification step completed');
       }).catch(() => {});
     } else if (stripeReturn === 'refresh') {
-      fetchStripeStatus().then(() => {
+      stripeCacheRef.current = null;
+      fetchStripeStatus(true).then(() => {
         window.history.replaceState({}, '', window.location.pathname);
         toast.info('Please complete your Stripe verification');
       }).catch(() => {});
@@ -223,35 +239,44 @@ export default function Settings() {
                   <CardDescription>Connect your Stripe account to receive payments</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-5">
-                  {stripeState === 'C' && (
+                  {stripeStatusLoading ? (
                     <>
-                      <Badge className="bg-green-100 text-green-700 border-green-200 gap-1.5">
-                        <CheckCircle className="w-3.5 h-3.5" /> Stripe Connected
-                      </Badge>
-                      <p className="text-sm text-gray-600">Your account is verified and ready to receive payments.</p>
+                      <div className="h-6 w-40 bg-gray-200 rounded-full animate-pulse" />
+                      <div className="h-10 w-48 bg-gray-200 rounded-lg animate-pulse" />
                     </>
-                  )}
-                  {stripeState === 'B' && (
+                  ) : (
                     <>
-                      <Badge className="bg-amber-100 text-amber-700 border-amber-200 gap-1.5">
-                        <AlertCircle className="w-3.5 h-3.5" /> Verification Incomplete
-                      </Badge>
-                      <p className="text-sm text-gray-600">Your Stripe account is connected but needs additional verification before you can receive payments.</p>
-                      <Button onClick={handleStripeConnect} disabled={stripeLoading} className="bg-teal-600 hover:bg-teal-700">
-                        {stripeLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Loading...</> : "Complete Verification"}
-                      </Button>
-                      <p className="text-sm text-gray-500">Stripe requires identity verification to activate payouts. Click above to complete the remaining steps.</p>
-                    </>
-                  )}
-                  {stripeState === 'A' && (
-                    <>
-                      <Badge className="bg-amber-100 text-amber-700 border-amber-200 gap-1.5">
-                        <AlertCircle className="w-3.5 h-3.5" /> Not Connected
-                      </Badge>
-                      <Button onClick={handleStripeConnect} disabled={stripeLoading} className="bg-teal-600 hover:bg-teal-700">
-                        {stripeLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Connecting...</> : "Connect with Stripe"}
-                      </Button>
-                      <p className="text-sm text-gray-500">You need a Stripe account to receive payments. It's free to set up.</p>
+                      {stripeState === 'C' && (
+                        <>
+                          <Badge className="bg-green-100 text-green-700 border-green-200 gap-1.5">
+                            <CheckCircle className="w-3.5 h-3.5" /> Stripe Connected
+                          </Badge>
+                          <p className="text-sm text-gray-600">Your account is verified and ready to receive payments.</p>
+                        </>
+                      )}
+                      {stripeState === 'B' && (
+                        <>
+                          <Badge className="bg-amber-100 text-amber-700 border-amber-200 gap-1.5">
+                            <AlertCircle className="w-3.5 h-3.5" /> Verification Incomplete
+                          </Badge>
+                          <p className="text-sm text-gray-600">Your Stripe account is connected but needs additional verification before you can receive payments.</p>
+                          <Button onClick={handleStripeConnect} disabled={stripeLoading} className="bg-teal-600 hover:bg-teal-700">
+                            {stripeLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Loading...</> : "Complete Verification"}
+                          </Button>
+                          <p className="text-sm text-gray-500">Stripe requires identity verification to activate payouts. Click above to complete the remaining steps.</p>
+                        </>
+                      )}
+                      {stripeState === 'A' && (
+                        <>
+                          <Badge className="bg-amber-100 text-amber-700 border-amber-200 gap-1.5">
+                            <AlertCircle className="w-3.5 h-3.5" /> Not Connected
+                          </Badge>
+                          <Button onClick={handleStripeConnect} disabled={stripeLoading} className="bg-teal-600 hover:bg-teal-700">
+                            {stripeLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Connecting...</> : "Connect with Stripe"}
+                          </Button>
+                          <p className="text-sm text-gray-500">You need a Stripe account to receive payments. It's free to set up.</p>
+                        </>
+                      )}
                     </>
                   )}
                 </CardContent>
