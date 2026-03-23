@@ -126,6 +126,7 @@ export default function SignIn() {
           </div>
         </div>
       </div>
+      </div>
     </div>
   );
 }
