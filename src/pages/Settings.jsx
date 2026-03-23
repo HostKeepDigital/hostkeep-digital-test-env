@@ -19,7 +19,7 @@ export default function Settings() {
 
   const fetchStripeStatus = async () => {
     const res = await base44.functions.invoke('getStripeConnectStatus', {});
-    setStripeStatus(res.data);
+    setStripeStatus(res.data?.status || 'not_connected');
   };
 
   const [profile, setProfile] = useState({ full_name: "", phone: "", location: "" });
@@ -93,7 +93,7 @@ export default function Settings() {
     setStripeLoading(false);
   };
 
-  const isConnected = stripeStatus?.connected;
+  const isConnected = stripeStatus === 'verified';
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
