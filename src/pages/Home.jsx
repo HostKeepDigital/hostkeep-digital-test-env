@@ -370,7 +370,7 @@ export default function Home() {
           <div className="grid md:grid-cols-2 gap-8 items-center">
             <div className="hidden md:block h-full">
               <img 
-                src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&auto=format&fit=crop&q=80" 
+                src="https://lh3.googleusercontent.com/d/1dO0GP74-0q34O64CKSL0gGCan9qeELf5" 
                 alt="Cornwall coastline"
                 className="w-full h-full object-cover"
               />
