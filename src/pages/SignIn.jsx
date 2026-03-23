@@ -11,6 +11,8 @@ export default function SignIn() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   const nextUrl = new URLSearchParams(window.location.search).get("next") || "/";
 
@@ -31,6 +33,24 @@ export default function SignIn() {
   const handleGoogle = () => {
     setGoogleLoading(true);
     base44.auth.loginWithProvider("google", nextUrl);
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError("Please enter your email address.");
+      return;
+    }
+    setResetLoading(true);
+    setError("");
+    try {
+      await base44.auth.sendPasswordResetEmail(email);
+      setResetSent(true);
+    } catch (_) {
+      // Always show success for security
+      setResetSent(true);
+    } finally {
+      setResetLoading(false);
+    }
   };
 
   return (
@@ -99,13 +119,25 @@ export default function SignIn() {
                   </div>
 
                   <div className="text-right">
-                    <Link to="/ForgotPassword" className="text-xs text-slate-400 hover:text-teal-600 transition-colors">
-                      Forgot your password?
-                    </Link>
+                   <Button
+                     type="button"
+                     variant="ghost"
+                     size="sm"
+                     disabled={resetLoading}
+                     onClick={handleForgotPassword}
+                     className="text-xs text-slate-400 hover:text-teal-600 transition-colors p-0 h-auto font-normal"
+                   >
+                     {resetLoading ? <Loader2 className="h-3 w-3 animate-spin inline mr-1" /> : null}
+                     Forgot your password?
+                   </Button>
                   </div>
 
-                  {error && (
-                    <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p>
+                  {resetSent && (
+                   <p className="text-sm text-teal-600 bg-teal-50 border border-teal-100 rounded-lg px-3 py-2">Check your email for a password reset link.</p>
+                  )}
+
+                  {error && !resetSent && (
+                   <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p>
                   )}
 
                   <Button
