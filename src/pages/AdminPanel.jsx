@@ -8,11 +8,13 @@ const HOST_LIMIT = 50;
 const CLEANER_LIMIT = 30;
 
 const STATUS_COLORS = {
-  pending: "bg-yellow-100 text-yellow-800",
+  pending: "bg-amber-100 text-amber-800",
+  invited: "bg-blue-100 text-blue-800",
+  doc_review: "bg-purple-100 text-purple-800",
   approved: "bg-green-100 text-green-800",
+  waitlist: "bg-gray-100 text-gray-600",
   rejected: "bg-red-100 text-red-800",
   out_of_area: "bg-gray-100 text-gray-700",
-  waitlist: "bg-blue-100 text-blue-800",
 };
 
 export default function AdminPanel() {
@@ -38,30 +40,34 @@ export default function AdminPanel() {
 
   const handleApprove = async (member) => {
     setMemberLoading(member.id, "approve");
-    // 1. Update FoundingMember record
-    await base44.entities.FoundingMember.update(member.id, { approval_status: "approved" });
-
-    // 2. Find Base44 user and update/create UserRole
-    try {
-      const users = await base44.entities.User.list();
-      const user = users.find(u => u.email?.toLowerCase() === member.email?.toLowerCase());
-      if (user) {
-        const existingRoles = await base44.entities.UserRole.filter({ user_id: user.id });
-        if (existingRoles.length > 0) {
-          await base44.entities.UserRole.update(existingRoles[0].id, { approval_status: "approved" });
-        } else {
-          await base44.entities.UserRole.create({ user_id: user.id, role: member.role, approval_status: "approved" });
-        }
-      }
-    } catch (e) { console.error("UserRole update failed", e); }
-
-    // 3. Send confirmation email
     const roleLabel = member.role === "host" ? "Host" : "Cleaner";
+
+    await base44.entities.FoundingMember.update(member.id, { approval_status: "invited" });
+
+    try { await base44.users.inviteUser(member.email, "user"); } catch (e) { console.error("Invite failed", e); }
+
     await base44.integrations.Core.SendEmail({
       from_name: "HostKeep",
       to: member.email,
-      subject: `🎉 You're approved as a Founding ${roleLabel}!`,
-      body: `Hi ${member.full_name},\n\nGreat news — your application to become a Founding ${roleLabel} on HostKeep has been approved!\n\nYou can now log in and get started:\nhttps://hostkeepdigital.co.uk/login\n\nWelcome to the team!\n\nThe HostKeep Team\nHello@hostkeepdigital.co.uk`,
+      subject: "You're approved — Welcome to HostKeep 🎉",
+      body: "Hi " + member.full_name + ",\n\nYour application to become a Founding " + roleLabel + " on HostKeep has been approved!\n\nYou'll receive a separate email shortly with a link to activate your account. Please check your inbox and spam folder and click the link to set up your login.\n\nOnce activated, sign in at:\nhttps://hostkeepdigital.co.uk/SignIn\n\nWelcome to HostKeep — we're glad you're here.\n\nThe HostKeep Team\nhello@hostkeepdigital.co.uk\n\n---\nFollow us:\nFacebook: facebook.com/HostKeepDigital\nInstagram: @hostkeepdigital",
+    });
+
+    setMemberLoading(member.id, null);
+    fetchMembers();
+  };
+
+  const handleWaitlist = async (member) => {
+    setMemberLoading(member.id, "waitlist");
+    const roleLabel = member.role === "host" ? "Host" : "Cleaner";
+
+    await base44.entities.FoundingMember.update(member.id, { approval_status: "waitlist" });
+
+    await base44.integrations.Core.SendEmail({
+      from_name: "HostKeep",
+      to: member.email,
+      subject: "HostKeep — You're on our waitlist",
+      body: "Hi " + member.full_name + ",\n\nThank you for applying to join HostKeep as a Founding " + roleLabel + ".\n\nOur founding spots are currently full but we've added you to our waitlist. You'll be among the first to know when a spot opens up.\n\nThe HostKeep Team\nhello@hostkeepdigital.co.uk\n\n---\nFollow us:\nFacebook: facebook.com/HostKeepDigital\nInstagram: @hostkeepdigital",
     });
 
     setMemberLoading(member.id, null);
@@ -70,37 +76,25 @@ export default function AdminPanel() {
 
   const handleReject = async (member) => {
     setMemberLoading(member.id, "reject");
-    const approvedCount = member.role === "host" ? approvedHosts : approvedCleaners;
-    const limit = member.role === "host" ? HOST_LIMIT : CLEANER_LIMIT;
-    const isFull = approvedCount >= limit;
-    const newStatus = isFull ? "waitlist" : "rejected";
     const roleLabel = member.role === "host" ? "Host" : "Cleaner";
 
-    await base44.entities.FoundingMember.update(member.id, { approval_status: newStatus });
+    await base44.entities.FoundingMember.update(member.id, { approval_status: "rejected" });
 
-    if (isFull) {
-      await base44.integrations.Core.SendEmail({
-        from_name: "HostKeep",
-        to: member.email,
-        subject: `HostKeep Founding ${roleLabel} — You're on the waitlist`,
-        body: `Hi ${member.full_name},\n\nThank you for applying to become a Founding ${roleLabel} on HostKeep.\n\nUnfortunately, our Founding ${roleLabel} spots are currently full. We've added you to our waitlist and will be in touch as soon as a spot becomes available.\n\nThank you for your patience.\n\nThe HostKeep Team\nHello@hostkeepdigital.co.uk`,
-      });
-    } else {
-      await base44.integrations.Core.SendEmail({
-        from_name: "HostKeep",
-        to: member.email,
-        subject: `Your HostKeep Founding ${roleLabel} Application`,
-        body: `Hi ${member.full_name},\n\nThank you for applying to become a Founding ${roleLabel} on HostKeep.\n\nAfter careful review, we're unable to approve your application at this time. We appreciate your interest and hope to welcome you to HostKeep in the future.\n\nIf you have any questions, please don't hesitate to reach out at Hello@hostkeepdigital.co.uk.\n\nThe HostKeep Team`,
-      });
-    }
+    await base44.integrations.Core.SendEmail({
+      from_name: "HostKeep",
+      to: member.email,
+      subject: "Your HostKeep Application",
+      body: "Hi " + member.full_name + ",\n\nThank you for applying to join HostKeep as a Founding " + roleLabel + ".\n\nAfter reviewing your application we're unable to approve it at this time. If you have any questions please contact us at hello@hostkeepdigital.co.uk.\n\nThe HostKeep Team\n\n---\nFollow us:\nFacebook: facebook.com/HostKeepDigital\nInstagram: @hostkeepdigital",
+    });
 
     setMemberLoading(member.id, null);
     fetchMembers();
   };
 
   const pendingMembers = members.filter(m => m.approval_status === "pending");
+  const invitedMembers = members.filter(m => ["invited", "doc_review"].includes(m.approval_status));
   const approvedMembers = members.filter(m => m.approval_status === "approved");
-  const otherMembers = members.filter(m => !["pending", "approved"].includes(m.approval_status));
+  const otherMembers = members.filter(m => !["pending", "invited", "doc_review", "approved"].includes(m.approval_status));
 
   const MemberTable = ({ rows, showActions }) => (
     <div className="overflow-x-auto rounded-xl border border-gray-200">
@@ -146,20 +140,21 @@ export default function AdminPanel() {
                     </Button>
                     <Button
                       size="sm"
+                      variant="outline"
+                      className="h-7 px-3 text-xs border-amber-400 text-amber-700 hover:bg-amber-50"
+                      disabled={!!actionLoading[m.id]}
+                      onClick={() => handleWaitlist(m)}
+                    >
+                      {actionLoading[m.id] === "waitlist" ? "..." : "Waitlist"}
+                    </Button>
+                    <Button
+                      size="sm"
                       variant="destructive"
                       className="h-7 px-3 text-xs"
                       disabled={!!actionLoading[m.id]}
                       onClick={() => handleReject(m)}
                     >
                       {actionLoading[m.id] === "reject" ? "..." : <><X className="w-3 h-3 mr-1" />Reject</>}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-7 px-3 text-xs text-gray-600"
-                      disabled={!!actionLoading[m.id]}
-                    >
-                      <Pause className="w-3 h-3 mr-1" />Hold
                     </Button>
                   </div>
                 </td>
@@ -209,6 +204,15 @@ export default function AdminPanel() {
           </h2>
           <MemberTable rows={pendingMembers} showActions={true} />
         </div>
+
+        {invitedMembers.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold text-gray-800 mb-3">
+              Invited / In Progress <span className="text-blue-600 ml-1">({invitedMembers.length})</span>
+            </h2>
+            <MemberTable rows={invitedMembers} showActions={false} />
+          </div>
+        )}
 
         {/* Approved section */}
         <div className="mb-8">
