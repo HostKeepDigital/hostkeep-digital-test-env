@@ -43,7 +43,7 @@ export default function SignIn() {
     setResetLoading(true);
     setError("");
     try {
-      await base44.auth.sendPasswordResetEmail(email);
+      await base44.functions.invoke('sendPublicPasswordReset', { email });
       setResetSent(true);
     } catch (_) {
       // Always show success for security
