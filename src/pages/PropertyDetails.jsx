@@ -349,7 +349,7 @@ export default function PropertyDetails() {
 
   const photos = property?.photos?.length > 0 
     ? property.photos 
-    : ["https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800"];
+    : ["https://drive.google.com/uc?export=view&id=1Vr07gcaaC19XEmxcvTbq-DTn8PZKn-_a"];
 
   const numNights = nights ? parseInt(nights) : 0;
   const checkOut = checkIn && numNights ? format(addDays(parseISO(checkIn), numNights), "yyyy-MM-dd") : "";

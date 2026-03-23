@@ -34,7 +34,15 @@ export default function SignIn() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
+    <div className="min-h-screen flex">
+      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
+        <img src="https://drive.google.com/uc?export=view&id=1ZmljdO7m9HdHdT_KKSa0S-p2e9ctR5BU" alt="Looe Bridge, Cornwall" className="w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-transparent" />
+        <div className="absolute bottom-8 left-8 text-white">
+          <p className="text-sm font-medium opacity-80">Looe, Cornwall</p>
+        </div>
+      </div>
+      <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
       <div className="w-full max-w-md">
         <div className="relative overflow-hidden border-0 shadow-2xl bg-white/95 backdrop-blur-sm rounded-2xl">
           {/* Top accent bar */}
