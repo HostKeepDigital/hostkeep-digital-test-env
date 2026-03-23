@@ -94,8 +94,11 @@ export default function CleanerDashboard() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-1">
-                Welcome back, {cleanerProfile.business_name}!
+                Welcome back, {user?.full_name?.split(' ')[0] || user?.full_name || 'there'}!
               </h1>
+              {cleanerProfile.business_name && (
+                <p className="text-sm text-gray-500">{cleanerProfile.business_name}</p>
+              )}
               <p className="text-gray-600">Manage your cleaning jobs and profile</p>
             </div>
             {cleanerProfile.subscription_plan === 'pro' && (
@@ -116,7 +119,7 @@ export default function CleanerDashboard() {
                     <div className="text-sm text-amber-700">Subscribe to start receiving job requests</div>
                   </div>
                 </div>
-                <Link to={createPageUrl('CleanerSubscription')}>
+                <Link to="/Subscription?role=cleaner">
                   <Button className="bg-amber-600 hover:bg-amber-700">
                     View Plans
                   </Button>
