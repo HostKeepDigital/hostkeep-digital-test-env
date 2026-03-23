@@ -9,7 +9,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, Bell, CreditCard, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { useState, useEffect } from "react";
 
 export default function Settings() {
   const [user, setUser] = useState(null);
