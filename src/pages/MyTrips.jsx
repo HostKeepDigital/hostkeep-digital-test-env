@@ -160,7 +160,7 @@ export default function MyTrips() {
             <div className="flex flex-col sm:flex-row">
               <div className="sm:w-56 h-40 sm:h-auto bg-gray-100 relative">
                 <img
-                  src={property.photos?.[0] || "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400"}
+                  src={property.photos?.[0] || "https://drive.google.com/uc?export=view&id=1Vr07gcaaC19XEmxcvTbq-DTn8PZKn-_a"}
                   alt={property.title}
                   className="w-full h-full object-cover"
                 />
@@ -232,7 +232,7 @@ export default function MyTrips() {
             <div className="flex flex-col sm:flex-row">
               <div className="sm:w-56 h-40 sm:h-auto bg-gray-100">
                 <img
-                  src={property?.photos?.[0] || "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400"}
+                  src={property?.photos?.[0] || "https://drive.google.com/uc?export=view&id=1Vr07gcaaC19XEmxcvTbq-DTn8PZKn-_a"}
                   alt={property?.title}
                   className="w-full h-full object-cover"
                 />
