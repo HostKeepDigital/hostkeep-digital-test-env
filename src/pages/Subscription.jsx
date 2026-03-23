@@ -67,6 +67,20 @@ const HOST_PLANS = [
   },
 ];
 
+const CLEANER_SHARED_FEATURES = [
+  "Cleaner profile listing",
+  "Job management",
+  "Host messaging",
+  "Availability calendar",
+  "Email notifications",
+  "Portfolio showcase",
+  "Priority placement in search",
+  "Auto-accept job option",
+  "Repeat client management",
+  "Earnings analytics",
+  '"Verified Cleaner" badge',
+];
+
 const CLEANER_PLANS = [
   {
     id: "cleaner_solo_monthly",
@@ -85,19 +99,12 @@ const CLEANER_PLANS = [
   },
   {
     id: "cleaner_pro_monthly",
-    name: "CleanKeep Solo Plus",
+    name: "CleanKeep Pro",
     price: 19.99,
     icon: Crown,
     color: "violet",
     popular: true,
-    features: [
-      "Cleaner profile listing",
-      "Job management",
-      "Host messaging",
-      "Availability calendar",
-      "Email notifications",
-      "Portfolio showcase",
-    ],
+    features: CLEANER_SHARED_FEATURES,
   },
   {
     id: "cleaner_team_monthly",
@@ -106,12 +113,7 @@ const CLEANER_PLANS = [
     icon: Rocket,
     color: "amber",
     features: [
-      "Cleaner profile listing",
-      "Job management",
-      "Host messaging",
-      "Availability calendar",
-      "Email notifications",
-      "Portfolio showcase",
+      ...CLEANER_SHARED_FEATURES,
       "Team management",
       "Multiple staff profiles",
     ],
