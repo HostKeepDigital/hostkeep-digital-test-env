@@ -75,7 +75,7 @@ import HostCancellationPolicies from './pages/HostCancellationPolicies';
 import HostDashboard from './pages/HostDashboard';
 import HostMessages from './pages/HostMessages';
 import HostProperties from './pages/HostProperties';
-import HostSettings from './pages/HostSettings';
+import Settings from './pages/Settings';
 import HostTerms from './pages/HostTerms';
 import HostVerification from './pages/HostVerification';
 import Index from './pages/Index';
@@ -124,7 +124,7 @@ export const PAGES = {
     "HostDashboard": HostDashboard,
     "HostMessages": HostMessages,
     "HostProperties": HostProperties,
-    "HostSettings": HostSettings,
+    "Settings": Settings,
     "HostTerms": HostTerms,
     "HostVerification": HostVerification,
     "Index": Index,

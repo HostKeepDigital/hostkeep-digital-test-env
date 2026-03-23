@@ -28,7 +28,7 @@ import AppLockWrapper from "@/components/AppLockWrapper";
 const PUBLIC_PAGES = ["Pay"];
 
 // Host dashboard pages
-const HOST_PAGES = ["HostDashboard", "HostBookings", "HostProperties", "HostMessages", "HostSettings", "CreateProperty", "EditProperty"];
+const HOST_PAGES = ["HostDashboard", "HostBookings", "HostProperties", "HostMessages", "CreateProperty", "EditProperty"];
 
 const GUEST_PAGES = ["Home", "Search", "PropertyDetails", "MyTrips", "GuestMessages", "GuestProfile", "BecomeHost", "BecomeCleaner"];
 
@@ -273,7 +273,7 @@ export default function Layout({ children, currentPageName }) {
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuItem asChild>
-                      <Link to={createPageUrl('HostSettings')} className="flex items-center gap-2">
+                      <Link to={createPageUrl('Settings')} className="flex items-center gap-2">
                         <Settings className="w-4 h-4" /> Settings
                       </Link>
                     </DropdownMenuItem>
