@@ -60,7 +60,7 @@ export default function Settings() {
     setSaving(true);
     await base44.auth.updateMe(profile);
     setSaving(false);
-    toast.success("Profile saved");
+    toast.success("Changes saved");
   };
 
   const handleNotificationToggle = async (field, value) => {

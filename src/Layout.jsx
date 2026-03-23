@@ -28,7 +28,7 @@ import AppLockWrapper from "@/components/AppLockWrapper";
 const PUBLIC_PAGES = ["Pay"];
 
 // Host dashboard pages
-const HOST_PAGES = ["HostDashboard", "HostBookings", "HostProperties", "HostMessages", "CreateProperty", "EditProperty"];
+const HOST_PAGES = ["HostDashboard", "HostBookings", "HostProperties", "HostMessages", "HostCancellationPolicies", "CreateProperty", "EditProperty"];
 
 const GUEST_PAGES = ["Home", "Search", "PropertyDetails", "MyTrips", "GuestMessages", "GuestProfile", "BecomeHost", "BecomeCleaner"];
 

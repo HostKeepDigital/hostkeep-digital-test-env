@@ -36,8 +36,8 @@ Deno.serve(async (req) => {
 
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
-      refresh_url: `${origin}/HostSettings?stripe_return=refresh`,
-      return_url: `${origin}/HostSettings?stripe_return=success`,
+      refresh_url: `https://hostkeepdigital.co.uk/Settings?stripe_return=refresh`,
+      return_url: `https://hostkeepdigital.co.uk/Settings?stripe_return=success`,
       type: 'account_onboarding',
     });
 
