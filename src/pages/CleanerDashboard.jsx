@@ -119,7 +119,7 @@ export default function CleanerDashboard() {
                     <div className="text-sm text-amber-700">Subscribe to start receiving job requests</div>
                   </div>
                 </div>
-                <Link to="/Subscription?tab=cleaner">
+                <Link to={createPageUrl('Subscription') + '?tab=cleaner'}>
                   <Button className="bg-amber-600 hover:bg-amber-700">
                     View Plans
                   </Button>
