@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Shield, Check, X, Pause, RefreshCw } from "lucide-react";
+import { Shield, Check, X, RefreshCw } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
