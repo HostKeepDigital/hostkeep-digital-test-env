@@ -19,49 +19,32 @@ export default function ResetPassword() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setError('');
 
     if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
+      setError('Password must be at least 8 characters.');
       return;
     }
     if (password !== confirm) {
-      setError("Passwords do not match.");
+      setError('Passwords do not match.');
       return;
     }
 
     setLoading(true);
     try {
-      await base44.auth.confirmPasswordReset(token, password);
-
-      // Send confirmation email (best-effort)
-      try {
-        const user = await base44.auth.me();
-        if (user?.email) {
-          await base44.integrations.Core.SendEmail({
-            from_name: "HostKeep",
-            to: user.email,
-            subject: "Your HostKeep password has been updated",
-            html: buildEmail({
-              heading: "Your password has been updated",
-              body: "Your HostKeep password has been successfully changed.<br><br>You can now sign in with your new password.<br><br>If you did not make this change, please contact us immediately at hello@hostkeepdigital.co.uk",
-              buttonText: "Sign In",
-              buttonUrl: "https://hostkeepdigital.co.uk/SignIn",
-            }),
-          });
-        }
-      } catch (_) {
-        // Silently ignore email errors
-      }
-
-      setSuccess(true);
-    } catch (err) {
-      const msg = err?.message?.toLowerCase() || "";
-      if (msg.includes("expired") || msg.includes("invalid") || msg.includes("token")) {
+      const result = await base44.functions.invoke(
+        'verifyPasswordReset',
+        { token, newPassword: password }
+      );
+      if (result?.error === 'expired_token') {
+        setExpired(true);
+      } else if (result?.error === 'invalid_token') {
         setExpired(true);
       } else {
-        setError(err?.message || "Something went wrong. Please try again.");
+        setSuccess(true);
       }
+    } catch (err) {
+      setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }

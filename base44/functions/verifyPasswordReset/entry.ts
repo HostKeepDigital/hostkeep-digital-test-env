@@ -2,54 +2,63 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
-  const { email } = await req.json();
+  const { token, newPassword } = await req.json();
 
-  if (!email) {
-    return Response.json({ success: true });
+  if (!token || !newPassword) {
+    return Response.json({ 
+      success: false, 
+      error: 'invalid_token' 
+    });
   }
 
-  // Step 1 — Find user by email
-  const users = await base44.asServiceRole.entities.User.filter({ 
-    email: email.toLowerCase().trim() 
+  // Step 1 — Find token record
+  const records = await base44.asServiceRole.entities.PasswordResetToken.filter({ 
+    token: token,
+    used: false
   });
+  const record = records?.[0];
+
+  if (!record) {
+    return Response.json({ 
+      success: false, 
+      error: 'invalid_token' 
+    });
+  }
+
+  // Step 2 — Check expiry
+  if (new Date() > new Date(record.expires_at)) {
+    return Response.json({ 
+      success: false, 
+      error: 'expired_token' 
+    });
+  }
+
+  // Step 3 — Find user
+  const users = await base44.asServiceRole.entities.User.filter({ id: record.user_id });
   const user = users?.[0];
 
-  // Always return success — never reveal if account exists
   if (!user) {
-    return Response.json({ success: true });
+    return Response.json({ 
+      success: false, 
+      error: 'invalid_token' 
+    });
   }
 
-  // Step 2 — Invalidate previous tokens
-  const existing = await base44.asServiceRole.entities.PasswordResetToken.filter({ 
-    user_id: user.id,
-    used: false 
-  });
-  for (const t of existing) {
-    await base44.asServiceRole.entities.PasswordResetToken.update(t.id, { used: true });
-  }
+  // Step 4 — Update password
+  await base44.asServiceRole.entities.User.update(
+    user.id, { password: newPassword }
+  );
 
-  // Step 3 — Generate token
-  const token = crypto.randomUUID() + '-' + crypto.randomUUID();
+  // Step 5 — Mark token as used
+  await base44.asServiceRole.entities.PasswordResetToken.update(
+    record.id, { used: true }
+  );
 
-  // Step 4 — Store token with 1 hour expiry
-  const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
-
-  await base44.asServiceRole.entities.PasswordResetToken.create({
-    user_id: user.id,
-    email: user.email,
-    token: token,
-    expires_at: expiresAt,
-    used: false,
-  });
-
-  // Step 5 — Build reset URL
-  const resetUrl = 'https://hostkeepdigital.co.uk/ResetPassword?token=' + token;
-
-  // Step 6 — Send branded email
+  // Step 6 — Send confirmation email
   await base44.asServiceRole.integrations.Core.SendEmail({
     from_name: 'HostKeep',
-    to: email,
-    subject: 'Reset your HostKeep password',
+    to: user.email,
+    subject: 'Your HostKeep password has been updated',
     body: `<!DOCTYPE html>
 <html>
 <head>
@@ -68,15 +77,15 @@ Deno.serve(async (req) => {
         </tr>
         <tr>
           <td style="padding:40px 40px 32px 40px;">
-            <h1 style="margin:0 0 16px 0;font-size:22px;font-weight:bold;color:#111827;">Reset your password</h1>
+            <h1 style="margin:0 0 16px 0;font-size:22px;font-weight:bold;color:#111827;">Your password has been updated</h1>
             <p style="font-size:15px;line-height:1.7;color:#374151;margin:0 0 28px 0;">
-              We received a request to reset the password for your HostKeep account.<br><br>
-              Click the button below to choose a new password. This link will expire in <strong>1 hour</strong>.<br><br>
-              If you did not request a password reset you can safely ignore this email — your password has not been changed.
+              Your HostKeep password has been successfully changed.<br><br>
+              You can now sign in with your new password.<br><br>
+              If you did not make this change, please contact us immediately at hello@hostkeepdigital.co.uk
             </p>
             <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:8px;">
               <tr><td align="center">
-                <a href="${resetUrl}" style="display:inline-block;background-color:#0d9488;color:#ffffff;font-size:15px;font-weight:bold;text-decoration:none;padding:14px 32px;border-radius:8px;">Reset My Password</a>
+                <a href="https://hostkeepdigital.co.uk/SignIn" style="display:inline-block;background-color:#0d9488;color:#ffffff;font-size:15px;font-weight:bold;text-decoration:none;padding:14px 32px;border-radius:8px;">Sign In</a>
               </td></tr>
             </table>
           </td>
