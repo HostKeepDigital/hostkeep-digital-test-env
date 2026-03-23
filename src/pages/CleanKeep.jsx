@@ -110,27 +110,26 @@ export default function CleanKeep() {
             <div className="flex justify-center py-8">
               <div className="h-10 w-48 bg-gray-200 rounded-lg animate-pulse mx-auto" />
             </div>
-          ) : null}
+          ) : (
           <div className={`grid ${
-            rolesLoading ? 'hidden' : ''
-          } ${(
+            hasRole(userRoles, 'cleaner') && !hasRole(userRoles, 'host')
+            ? 'md:grid-cols-1 max-w-md mx-auto' 
+            : (hasRole(userRoles, 'host') && !hasRole(userRoles, 'cleaner'))
+            ? 'md:grid-cols-1 max-w-md mx-auto' : 'md:grid-cols-3'
+          } gap-6`}>
             {options.filter(option => {
               if (hasRole(userRoles, 'cleaner') || cleanerProfile) {
                 if (option.title === "Join CleanKeep") return false;
               }
-              // host-only: only "Find a Cleaner"
               if (hasRole(userRoles, 'host') && !hasRole(userRoles, 'cleaner')) {
                 return option.title === "Find a Cleaner";
               }
-              // cleaner-only: only "Cleaner Dashboard"
               if ((hasRole(userRoles, 'cleaner') || cleanerProfile) && !hasRole(userRoles, 'host')) {
                 return option.title === "Cleaner Dashboard";
               }
-              // both host+cleaner: Dashboard + Find a Cleaner
               if (hasRole(userRoles, 'host') && (hasRole(userRoles, 'cleaner') || cleanerProfile)) {
                 return option.title !== "Join CleanKeep";
               }
-              // guest: all options
               return true;
             }).map((option, idx) => {
               const shouldHighlight = 
