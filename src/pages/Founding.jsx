@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { buildEmail } from "@/lib/emailTemplate";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
@@ -117,7 +118,10 @@ export default function Founding() {
           from_name: "HostKeep",
           to: email,
           subject: "You're on the list — HostKeep",
-          body: `Hi ${firstName},\n\nThank you for applying to become a Founding ${roleLabel} on HostKeep.\n\nWe're reviewing your application and will be in touch within 24 hours to let you know if you've made it into the beta.\n\nYou don't need to do anything right now.\n\nThe HostKeep Team\nhello@hostkeepdigital.co.uk\n\n---\nFollow us:\nFacebook: facebook.com/HostKeepDigital\nInstagram: @hostkeepdigital`,
+          html: buildEmail({
+            heading: "You're on the list!",
+            body: `Thank you for applying to become a Founding ${roleLabel} on HostKeep.<br><br>We're reviewing your application and will be in touch within 24 hours to let you know if you've made it into the beta.<br><br>You don't need to do anything right now.`,
+          }),
         });
 
         // Step 4 — Send admin notification email
@@ -125,7 +129,12 @@ export default function Founding() {
           from_name: "HostKeep",
           to: "admin@hostkeepdigital.co.uk",
           subject: `New Founding Member Application — ${form.full_name.trim()} (${roleLabel})`,
-          body: `A new founding member application has been submitted.\n\nName: ${form.full_name.trim()}\nEmail: ${email}\nPostcode: ${postcode}\nRole: ${roleLabel}\nSubmitted: ${now}\n\nReview this application in the Admin Panel:\nhttps://hostkeepdigital.co.uk/AdminPanel\n\nThe HostKeep Team`,
+          html: buildEmail({
+            heading: "New Founding Member Application",
+            body: `A new founding member application has been submitted.<br><br><strong>Name:</strong> ${form.full_name.trim()}<br><strong>Email:</strong> ${email}<br><strong>Postcode:</strong> ${postcode}<br><strong>Role:</strong> ${roleLabel}<br><strong>Submitted:</strong> ${now}`,
+            buttonText: "Review in Admin Panel",
+            buttonUrl: "https://hostkeepdigital.co.uk/AdminPanel",
+          }),
         });
       }
 

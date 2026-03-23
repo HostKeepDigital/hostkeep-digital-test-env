@@ -21,32 +21,6 @@ export default function ForgotPassword() {
       // Silently ignore — always show success for security
     }
 
-    try {
-      await base44.integrations.Core.SendEmail({
-        to: email,
-        subject: "Reset your HostKeep password",
-        body: `Hi,
-
-We received a request to reset the password for your HostKeep account.
-
-You'll receive a separate email shortly containing a secure link to reset your password. Please check your inbox and spam folder.
-
-The link will expire after 1 hour. If you didn't request a password reset, you can safely ignore this email — your password has not been changed.
-
-If you need help, contact us at:
-hello@hostkeepdigital.co.uk
-
-The HostKeep Team
-
----
-Follow us:
-Facebook: facebook.com/HostKeepDigital
-Instagram: @hostkeepdigital`,
-      });
-    } catch (_) {
-      // Silently ignore email errors
-    }
-
     setLoading(false);
     setSubmitted(true);
   };

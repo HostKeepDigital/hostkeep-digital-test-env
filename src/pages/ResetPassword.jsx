@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { buildEmail } from "@/lib/emailTemplate";
 import { Link, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -38,24 +39,15 @@ export default function ResetPassword() {
         const user = await base44.auth.me();
         if (user?.email) {
           await base44.integrations.Core.SendEmail({
+            from_name: "HostKeep",
             to: user.email,
             subject: "Your HostKeep password has been updated",
-            body: `Hi,
-
-Your HostKeep password has been successfully updated.
-
-You can now sign in with your new password at:
-https://hostkeepdigital.co.uk/SignIn
-
-If you did not make this change, please contact us immediately at:
-hello@hostkeepdigital.co.uk
-
-The HostKeep Team
-
----
-Follow us:
-Facebook: facebook.com/HostKeepDigital
-Instagram: @hostkeepdigital`,
+            html: buildEmail({
+              heading: "Your password has been updated",
+              body: "Your HostKeep password has been successfully changed.<br><br>You can now sign in with your new password.<br><br>If you did not make this change, please contact us immediately at hello@hostkeepdigital.co.uk",
+              buttonText: "Sign In",
+              buttonUrl: "https://hostkeepdigital.co.uk/SignIn",
+            }),
           });
         }
       } catch (_) {

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { buildEmail } from "@/lib/emailTemplate";
 import { Shield, Check, X, RefreshCw } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -49,8 +50,13 @@ export default function AdminPanel() {
     await base44.integrations.Core.SendEmail({
       from_name: "HostKeep",
       to: member.email,
-      subject: "You're approved — Welcome to HostKeep 🎉",
-      body: "Hi " + member.full_name + ",\n\nYour application to become a Founding " + roleLabel + " on HostKeep has been approved!\n\nYou'll receive a separate email shortly with a link to activate your account. Please check your inbox and spam folder and click the link to set up your login.\n\nOnce activated, sign in at:\nhttps://hostkeepdigital.co.uk/SignIn\n\nWelcome to HostKeep — we're glad you're here.\n\nThe HostKeep Team\nhello@hostkeepdigital.co.uk\n\n---\nFollow us:\nFacebook: facebook.com/HostKeepDigital\nInstagram: @hostkeepdigital",
+      subject: "You're approved — Welcome to HostKeep",
+      html: buildEmail({
+        heading: "You're approved — welcome to HostKeep!",
+        body: `Your application to become a Founding ${roleLabel} on HostKeep has been approved.<br><br>You'll receive a separate email shortly with a link to activate your account. Please check your inbox and spam folder.<br><br>Once activated, you can sign in and get started.`,
+        buttonText: "Sign In to HostKeep",
+        buttonUrl: "https://hostkeepdigital.co.uk/SignIn",
+      }),
     });
 
     setMemberLoading(member.id, null);
@@ -67,7 +73,10 @@ export default function AdminPanel() {
       from_name: "HostKeep",
       to: member.email,
       subject: "HostKeep — You're on our waitlist",
-      body: "Hi " + member.full_name + ",\n\nThank you for applying to join HostKeep as a Founding " + roleLabel + ".\n\nOur founding spots are currently full but we've added you to our waitlist. You'll be among the first to know when a spot opens up.\n\nThe HostKeep Team\nhello@hostkeepdigital.co.uk\n\n---\nFollow us:\nFacebook: facebook.com/HostKeepDigital\nInstagram: @hostkeepdigital",
+      html: buildEmail({
+        heading: "You're on our waitlist",
+        body: `Thank you for applying to join HostKeep as a Founding ${roleLabel}.<br><br>Our founding spots are currently full, but we've added you to our waitlist. You'll be among the first to know when a spot opens up.<br><br>Thank you for your patience.`,
+      }),
     });
 
     setMemberLoading(member.id, null);
@@ -84,7 +93,10 @@ export default function AdminPanel() {
       from_name: "HostKeep",
       to: member.email,
       subject: "Your HostKeep Application",
-      body: "Hi " + member.full_name + ",\n\nThank you for applying to join HostKeep as a Founding " + roleLabel + ".\n\nAfter reviewing your application we're unable to approve it at this time. If you have any questions please contact us at hello@hostkeepdigital.co.uk.\n\nThe HostKeep Team\n\n---\nFollow us:\nFacebook: facebook.com/HostKeepDigital\nInstagram: @hostkeepdigital",
+      html: buildEmail({
+        heading: "Your HostKeep Application",
+        body: `Thank you for applying to join HostKeep as a Founding ${roleLabel}.<br><br>After reviewing your application, we're unable to approve it at this time.<br><br>If you have any questions please don't hesitate to get in touch.`,
+      }),
     });
 
     setMemberLoading(member.id, null);
