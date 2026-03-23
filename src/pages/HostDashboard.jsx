@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import StripeStatusBanner from "@/components/host/StripeStatusBanner";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
@@ -139,6 +140,9 @@ export default function HostDashboard() {
             </Button>
           </div>
         </div>
+
+        {/* Stripe Status Banner */}
+        <StripeStatusBanner user={user} />
 
         {/* Config Warnings */}
         {propertiesWithDeadDays.length > 0 && (

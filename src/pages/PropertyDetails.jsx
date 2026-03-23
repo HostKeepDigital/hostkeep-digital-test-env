@@ -131,6 +131,9 @@ export default function PropertyDetails() {
     enabled: !!property?.owner_id,
   });
 
+  const hostStripeVerified = host?.stripe_connect_status === 'verified';
+  const bookingBlocked = property?.status === 'published' && host && !hostStripeVerified;
+
   const { data: propertyBookings = [] } = useQuery({
     queryKey: ['property-bookings', propertyId],
     queryFn: async () => {
@@ -1211,6 +1214,12 @@ export default function PropertyDetails() {
                 {getPriceBreakdownUI()}
 
                 {/* CTA Button */}
+                {bookingBlocked ? (
+                  <div className="w-full bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+                    <AlertCircle className="w-5 h-5 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm text-gray-600">This property is not yet able to accept bookings.</p>
+                  </div>
+                ) : (
                 <Dialog open={showBookingDialog} onOpenChange={setShowBookingDialog}>
                   <DialogTrigger asChild>
                     <Button className="w-full h-10 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg text-sm" disabled={!checkIn || !nights}>
@@ -1282,7 +1291,9 @@ export default function PropertyDetails() {
                 </Dialog>
 
                 <p className="text-center text-xs text-gray-500 text-[11px]">You won't be charged until the host approves</p>
-              </CardContent>
+                </Dialog>
+                )}
+                </CardContent>
             </Card>
           </div>
         </div>
@@ -1295,6 +1306,11 @@ export default function PropertyDetails() {
             <p className="text-xs text-gray-500">From</p>
             <span className="text-2xl font-bold text-gray-900">£{displayStartingRate}</span>
           </div>
+          {bookingBlocked ? (
+            <div className="flex-1 text-center">
+              <p className="text-sm text-gray-500">Not accepting bookings yet</p>
+            </div>
+          ) : (
           <Dialog open={showBookingDialog} onOpenChange={setShowBookingDialog}>
             <DialogTrigger asChild>
               <Button className="flex-1 h-11 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg">
@@ -1412,6 +1428,7 @@ export default function PropertyDetails() {
               </div>
             </DialogContent>
           </Dialog>
+          )}
         </div>
       </div>
     </div>

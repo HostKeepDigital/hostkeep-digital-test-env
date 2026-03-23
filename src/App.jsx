@@ -13,6 +13,7 @@ import AdminPanel from './pages/AdminPanel';
 import Pending from './pages/Pending';
 import Founding from './pages/Founding';
 import FoundingThankYou from './pages/FoundingThankYou';
+import HowPaymentsWork from './pages/HowPaymentsWork';
 import SignIn from './pages/SignIn';
 
 // Pages accessible without authentication
@@ -223,6 +224,11 @@ const AuthenticatedApp = () => {
         <Route path="/pending" element={<Pending />} />
         <Route path="/founding-thankyou" element={<FoundingThankYou />} />
         <Route path="/founding" element={<Founding />} />
+        <Route path="/HowPaymentsWork" element={
+          <LayoutWrapper currentPageName="HowPaymentsWork">
+            <HowPaymentsWork />
+          </LayoutWrapper>
+        } />
         <Route path="/admin" element={
           <RequireAdmin>
             <LayoutWrapper currentPageName="AdminPanel">
