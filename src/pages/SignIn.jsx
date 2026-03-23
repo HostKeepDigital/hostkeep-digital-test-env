@@ -43,8 +43,16 @@ export default function SignIn() {
     setResetLoading(true);
     setError("");
     try {
-      await base44.functions.invoke('sendPublicPasswordReset', { email });
-      setResetSent(true);
+      const response = await fetch('/api/functions/sendPublicPasswordReset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      if (response.ok) {
+        setResetSent(true);
+      } else {
+        setResetSent(true); // Always show success for security
+      }
     } catch (_) {
       // Always show success for security
       setResetSent(true);
