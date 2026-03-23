@@ -364,156 +364,62 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Subscription Section */}
-      <section className="bg-gray-50 py-20">
-        <div className="max-w-7xl mx-auto px-4">
-          {/* FOR HOSTS */}
-          <div className="mb-20">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">For Hosts</h2>
-              <p className="text-xl text-gray-700 mb-6 max-w-3xl mx-auto">
-                List your property. Keep 100% of bookings. Pay one flat monthly fee. No commission on your bookings. Ever.
+      {/* CleanKeep CTA Section */}
+      <section className="max-w-7xl mx-auto px-4 py-16">
+        <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl overflow-hidden">
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            <div className="hidden md:block h-full">
+              <img 
+                src="https://images.unsplash.com/photo-1568303586715-7f2f4e68e5c3?w=800&auto=format&fit=crop" 
+                alt="Cornwall coastline"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="p-8 md:p-12 text-white">
+              <Badge className="bg-white/20 text-white border-0 mb-4">For Cleaners</Badge>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                Get consistent work.<br />Keep 100% of earnings.
+              </h2>
+              <p className="text-blue-100 text-lg mb-6">
+                Join CleanKeep and connect directly with holiday home owners in Cornwall. Set your rates, build your reputation.
               </p>
-              <ul className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 text-left max-w-4xl mx-auto mb-8">
+              <ul className="space-y-3 mb-8">
                 {[
-                  "Direct payments to your account",
-                  "Full control over your listings",
-                  "Built-in messaging & calendar",
-                  "No hidden fees or surprises"
+                  "Professional public profile",
+                  "Availability calendar & messaging",
+                  "Build your reputation with reviews",
+                  "No commission on your earnings"
                 ].map((feature, idx) => (
-                  <li key={idx} className="flex items-center gap-2 text-gray-700">
-                    <CheckCircle className="w-5 h-5 text-teal-600 flex-shrink-0" />
+                  <li key={idx} className="flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-blue-300" />
                     <span>{feature}</span>
                   </li>
                 ))}
               </ul>
               {isAuthenticated ? (
-                hasRole(userRoles, 'host') ? (
-                  <Link to={createPageUrl('HostDashboard')}>
-                    <Button size="lg" className="bg-teal-600 hover:bg-teal-700 text-white mb-12">
-                      Go to Host Dashboard
+                hasRole(userRoles, 'cleaner') ? (
+                  <Link to={createPageUrl('CleanerDashboard')}>
+                    <Button size="lg" className="bg-white text-blue-700 hover:bg-blue-50">
+                      Go to Cleaner Dashboard
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                   </Link>
                 ) : (
-                  <Link to={createPageUrl('BecomeHost')}>
-                    <Button size="lg" className="bg-teal-600 hover:bg-teal-700 text-white mb-12">
-                      Become a Host
+                  <Link to="/founding">
+                    <Button size="lg" className="bg-white text-blue-700 hover:bg-blue-50">
+                      Become a Cleaner
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                   </Link>
                 )
               ) : (
                 <Link to="/founding">
-                  <Button size="lg" className="bg-teal-600 hover:bg-teal-700 text-white mb-12">
-                    Become a Host
+                  <Button size="lg" className="bg-white text-blue-700 hover:bg-blue-50">
+                    Become a Cleaner
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </Link>
               )}
-            </div>
-
-            {!(isAuthenticated && hasRole(userRoles, 'host')) && (
-              <>
-                <div className="text-center mb-8">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Simple, Transparent Pricing</h3>
-                  <p className="text-gray-600">Choose the plan that works for you. No commissions, no hidden fees.</p>
-                </div>
-
-                <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-              {[
-                { 
-                  name: "Basic", 
-                  price: "25", 
-                  properties: "1 property", 
-                  features: ["Calendar management", "Direct bookings", "Messaging"] 
-                },
-                { 
-                  name: "Pro", 
-                  price: "49", 
-                  properties: "Up to 5 properties", 
-                  features: ["Everything in Basic", "Priority support", "Analytics dashboard"], 
-                  popular: true 
-                },
-                { 
-                  name: "Premium", 
-                  price: "79", 
-                  properties: "Unlimited properties", 
-                  features: ["Everything in Pro", "Featured listings", "API access"] 
-                }
-              ].map((plan, idx) => (
-                <motion.div
-                  key={plan.name}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.1 }}
-                  className={`bg-white rounded-2xl p-8 border-2 ${plan.popular ? 'border-teal-500 shadow-xl' : 'border-gray-200'} relative hover:shadow-lg transition-shadow`}
-                >
-                  {plan.popular && (
-                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-teal-600 text-white">Most Popular</Badge>
-                  )}
-                  <h3 className="text-2xl font-bold text-gray-900 mb-3">{plan.name}</h3>
-                  <div className="mb-4">
-                    <span className="text-5xl font-bold text-gray-900">£{plan.price}</span>
-                    <span className="text-gray-500 text-lg">/month</span>
-                  </div>
-                  <p className="text-gray-600 font-medium mb-6">{plan.properties}</p>
-                  <ul className="space-y-3 text-gray-700 mb-8">
-                    {plan.features.map((f, i) => (
-                      <li key={i} className="flex items-start gap-3">
-                        <CheckCircle className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                        <span>{f}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Link to={`/Subscription?tab=host`} className="block">
-                    <Button 
-                      variant={plan.popular ? "default" : "outline"} 
-                      className={`w-full ${plan.popular ? 'bg-teal-600 hover:bg-teal-700' : ''}`}
-                      size="lg"
-                    >
-                      Get Started
-                    </Button>
-                  </Link>
-                </motion.div>
-              ))}
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Divider */}
-          <div className="border-t border-gray-200 my-16"></div>
-
-          {/* FOR CLEANERS */}
-          <div>
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">For Cleaners</h2>
-              <p className="text-xl text-gray-700 mb-6 max-w-3xl mx-auto">
-                Join CleanKeep and connect directly with holiday home owners. Set your rates. Get consistent work. No commission taken from your earnings.
-              </p>
-              <ul className="grid md:grid-cols-2 lg:grid-cols-5 gap-4 text-left max-w-5xl mx-auto mb-8">
-                {[
-                  "Professional public profile",
-                  "Availability calendar",
-                  "Direct messaging with hosts",
-                  "Build your reputation with reviews",
-                  "Keep 100% of what you earn"
-                ].map((feature, idx) => (
-                  <li key={idx} className="flex items-start gap-2 text-gray-700">
-                    <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-sm">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="text-center">
-              <Link to="/Subscription?tab=cleaner">
-                <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-10">
-                  View Cleaner Plans
-                </Button>
-              </Link>
             </div>
           </div>
         </div>
