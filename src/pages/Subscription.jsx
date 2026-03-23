@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { createPageUrl } from "@/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, useNavigate } from "react-router-dom";
+import { getUserRoles, hasRole } from "@/components/utils/roleHelpers";
 
 // Lookup key → display name map
 const PLAN_DISPLAY_NAMES = {
@@ -200,6 +201,21 @@ export default function Subscription() {
     (r.approval_status || '').toLowerCase() === 'pending'
   );
 
+  // Role-based logic
+  const isHost = hasRole(userRoles, 'host');
+  const isCleaner = hasRole(userRoles, 'cleaner');
+  const showHostTab = isHost && !isCleaner;
+  const showCleanerTab = isCleaner && !isHost;
+  const showBothTabs = (isHost && isCleaner) || (!isHost && !isCleaner);
+
+  // Set default tab based on roles
+  useEffect(() => {
+    if (userRoles && userRoles.length > 0) {
+      if (showHostTab && activeTab !== 'host') setActiveTab('host');
+      if (showCleanerTab && activeTab !== 'cleaner') setActiveTab('cleaner');
+    }
+  }, [showHostTab, showCleanerTab]);
+
   const [checkoutLoading, setCheckoutLoading] = useState(null);
 
   const handleSubscribe = async (planId) => {
@@ -332,26 +348,28 @@ export default function Subscription() {
         {!isBetaUser && (
           <>
             {/* Plan type tabs */}
-            <div className="flex justify-center mb-8">
-              <div className="flex bg-white border border-gray-200 rounded-xl p-1 gap-1">
-                <button
-                  onClick={() => setActiveTab('host')}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                    activeTab === 'host' ? 'bg-teal-600 text-white shadow' : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  <Building2 className="w-4 h-4" /> Host Plans
-                </button>
-                <button
-                  onClick={() => setActiveTab('cleaner')}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                    activeTab === 'cleaner' ? 'bg-blue-600 text-white shadow' : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  <Sparkles className="w-4 h-4" /> Cleaner Plans
-                </button>
-              </div>
-            </div>
+                {showBothTabs ? (
+                  <div className="flex justify-center mb-8">
+                    <div className="flex bg-white border border-gray-200 rounded-xl p-1 gap-1">
+                      <button
+                        onClick={() => setActiveTab('host')}
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                          activeTab === 'host' ? 'bg-teal-600 text-white shadow' : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                      >
+                        <Building2 className="w-4 h-4" /> Host Plans
+                      </button>
+                      <button
+                        onClick={() => setActiveTab('cleaner')}
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                          activeTab === 'cleaner' ? 'bg-blue-600 text-white shadow' : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                      >
+                        <Sparkles className="w-4 h-4" /> Cleaner Plans
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
 
             <div className="grid md:grid-cols-3 gap-6">
               {(activeTab === 'host' ? HOST_PLANS : CLEANER_PLANS).map((plan, idx) => {

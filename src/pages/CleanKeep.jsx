@@ -26,6 +26,11 @@ export default function CleanKeep() {
       }
     }).catch(() => {}).finally(() => setRolesLoading(false));
   }, []);
+  // Role-based logic
+  const isHost = hasRole(userRoles, 'host');
+  const isCleaner = hasRole(userRoles, 'cleaner');
+  const isGuest = !isHost && !isCleaner;
+
   const options = [
     {
       icon: Search,
@@ -34,7 +39,8 @@ export default function CleanKeep() {
       buttonText: "Browse Cleaners",
       route: "CleanerMarketplace",
       isPrimary: false,
-      highlightForHost: true
+      highlightForHost: true,
+      showFor: (h, c) => h || isGuest // Show for hosts and guests
     },
     {
       icon: UserPlus,
@@ -43,7 +49,8 @@ export default function CleanKeep() {
       buttonText: "Become a Cleaner",
       route: "CleanerSignup",
       isPrimary: false,
-      highlightForHost: false
+      highlightForHost: false,
+      showFor: (h, c) => isGuest // Only show for guests
     },
     {
       icon: LayoutDashboard,
@@ -53,7 +60,8 @@ export default function CleanKeep() {
       route: "CleanerDashboard",
       isPrimary: false,
       requiresAuth: true,
-      highlightForCleaner: true
+      highlightForCleaner: true,
+      showFor: (h, c) => c // Only show for cleaners
     }
   ];
 
@@ -117,21 +125,7 @@ export default function CleanKeep() {
             : (hasRole(userRoles, 'host') && !hasRole(userRoles, 'cleaner'))
             ? 'md:grid-cols-1 max-w-md mx-auto' : 'md:grid-cols-3'
           } gap-6`}>
-            {options.filter(option => {
-              if (hasRole(userRoles, 'cleaner') || cleanerProfile) {
-                if (option.title === "Join CleanKeep") return false;
-              }
-              if (hasRole(userRoles, 'host') && !hasRole(userRoles, 'cleaner')) {
-                return option.title === "Find a Cleaner";
-              }
-              if ((hasRole(userRoles, 'cleaner') || cleanerProfile) && !hasRole(userRoles, 'host')) {
-                return option.title === "Cleaner Dashboard";
-              }
-              if (hasRole(userRoles, 'host') && (hasRole(userRoles, 'cleaner') || cleanerProfile)) {
-                return option.title !== "Join CleanKeep";
-              }
-              return true;
-            }).map((option, idx) => {
+            {options.filter(option => option.showFor(isHost, isCleaner || !!cleanerProfile)).map((option, idx) => {
               const shouldHighlight = 
                 (option.highlightForHost && hasRole(userRoles, 'host')) || 
                 (option.highlightForCleaner && cleanerProfile);

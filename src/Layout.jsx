@@ -278,14 +278,14 @@ export default function Layout({ children, currentPageName }) {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    {!hasRole(userRoles, 'host') && (
+                    {!hasRole(userRoles, 'host') && !hasRole(userRoles, 'cleaner') && (
                       <DropdownMenuItem asChild>
                         <Link to={createPageUrl('BecomeHost')} className="flex items-center gap-2 text-teal-600">
                           <Building2 className="w-4 h-4" /> Become a Host
                         </Link>
                       </DropdownMenuItem>
                     )}
-                    {!hasRole(userRoles, 'cleaner') && (
+                    {!hasRole(userRoles, 'cleaner') && !hasRole(userRoles, 'host') && (
                       <DropdownMenuItem asChild>
                         <Link to={createPageUrl('BecomeCleaner')} className="flex items-center gap-2 text-blue-600">
                           <Users className="w-4 h-4" /> Become a Cleaner
