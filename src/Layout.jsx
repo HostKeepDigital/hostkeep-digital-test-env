@@ -322,7 +322,7 @@ export default function Layout({ children, currentPageName }) {
       </header>
 
       {/* Main Content */}
-      <main className="pt-16">
+      <main className="flex-1 pt-16">
         <NavigationContext.Provider value={setNavBlocker}>
           {children}
         </NavigationContext.Provider>
