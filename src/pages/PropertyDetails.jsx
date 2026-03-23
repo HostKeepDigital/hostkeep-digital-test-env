@@ -1220,79 +1220,75 @@ export default function PropertyDetails() {
                     <p className="text-sm text-gray-600">This property is not yet able to accept bookings.</p>
                   </div>
                 ) : (
-                <Dialog open={showBookingDialog} onOpenChange={setShowBookingDialog}>
-                  <DialogTrigger asChild>
-                    <Button className="w-full h-10 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg text-sm" disabled={!checkIn || !nights}>
-                      Request to Book
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Complete your booking</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 mt-4">
-                      <div>
-                        <Label className="font-medium">Full Name *</Label>
-                        <Input
-                          value={guestName}
-                          onChange={(e) => { setGuestName(e.target.value); setErrors(prev => ({...prev, guestName: null})) }}
-                          placeholder="John Smith"
-                          className={`mt-1 ${errors.guestName ? 'border-red-500' : ''}`}
-                        />
-                        {errors.guestName && <p className="text-xs text-red-500 mt-1">{errors.guestName}</p>}
-                      </div>
-                      <div>
-                        <Label className="font-medium">Email *</Label>
-                        <Input
-                          type="email"
-                          value={guestEmail}
-                          onChange={(e) => { setGuestEmail(e.target.value); setErrors(prev => ({...prev, guestEmail: null})) }}
-                          placeholder="john@example.com"
-                          className={`mt-1 ${errors.guestEmail ? 'border-red-500' : ''}`}
-                        />
-                        {errors.guestEmail && <p className="text-xs text-red-500 mt-1">{errors.guestEmail}</p>}
-                      </div>
-                      <div>
-                        <Label className="font-medium">Phone</Label>
-                        <Input
-                          value={guestPhone}
-                          onChange={(e) => { setGuestPhone(e.target.value); setErrors(prev => ({...prev, guestPhone: null})) }}
-                          placeholder="+44 7123 456789"
-                          className={`mt-1 ${errors.guestPhone ? 'border-red-500' : ''}`}
-                        />
-                        {errors.guestPhone && <p className="text-xs text-red-500 mt-1">{errors.guestPhone}</p>}
-                      </div>
-                      <div>
-                        <Label className="font-medium">Message to host</Label>
-                        <Textarea
-                          value={guestMessage}
-                          onChange={(e) => setGuestMessage(e.target.value)}
-                          placeholder="Tell the host about yourself..."
-                          rows={3}
-                          className="mt-1"
-                        />
-                      </div>
-                      
-                      {getAcknowledgementsUI()}
-
-                      <Button 
-                        className="w-full h-11 bg-teal-600 hover:bg-teal-700 text-white font-semibold mt-4"
-                        onClick={handleBooking}
-                        disabled={bookingMutation.isPending}
-                      >
-                        {bookingMutation.isPending ? (
-                          <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...</>
-                        ) : (
-                          "Confirm Booking Request"
-                        )}
+                  <Dialog open={showBookingDialog} onOpenChange={setShowBookingDialog}>
+                    <DialogTrigger asChild>
+                      <Button className="w-full h-10 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg text-sm" disabled={!checkIn || !nights}>
+                        Request to Book
                       </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-
-                <p className="text-center text-xs text-gray-500 text-[11px]">You won't be charged until the host approves</p>
-                </Dialog>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Complete your booking</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4 mt-4">
+                        <div>
+                          <Label className="font-medium">Full Name *</Label>
+                          <Input
+                            value={guestName}
+                            onChange={(e) => { setGuestName(e.target.value); setErrors(prev => ({...prev, guestName: null})) }}
+                            placeholder="John Smith"
+                            className={`mt-1 ${errors.guestName ? 'border-red-500' : ''}`}
+                          />
+                          {errors.guestName && <p className="text-xs text-red-500 mt-1">{errors.guestName}</p>}
+                        </div>
+                        <div>
+                          <Label className="font-medium">Email *</Label>
+                          <Input
+                            type="email"
+                            value={guestEmail}
+                            onChange={(e) => { setGuestEmail(e.target.value); setErrors(prev => ({...prev, guestEmail: null})) }}
+                            placeholder="john@example.com"
+                            className={`mt-1 ${errors.guestEmail ? 'border-red-500' : ''}`}
+                          />
+                          {errors.guestEmail && <p className="text-xs text-red-500 mt-1">{errors.guestEmail}</p>}
+                        </div>
+                        <div>
+                          <Label className="font-medium">Phone</Label>
+                          <Input
+                            value={guestPhone}
+                            onChange={(e) => { setGuestPhone(e.target.value); setErrors(prev => ({...prev, guestPhone: null})) }}
+                            placeholder="+44 7123 456789"
+                            className={`mt-1 ${errors.guestPhone ? 'border-red-500' : ''}`}
+                          />
+                          {errors.guestPhone && <p className="text-xs text-red-500 mt-1">{errors.guestPhone}</p>}
+                        </div>
+                        <div>
+                          <Label className="font-medium">Message to host</Label>
+                          <Textarea
+                            value={guestMessage}
+                            onChange={(e) => setGuestMessage(e.target.value)}
+                            placeholder="Tell the host about yourself..."
+                            rows={3}
+                            className="mt-1"
+                          />
+                        </div>
+                        {getAcknowledgementsUI()}
+                        <Button
+                          className="w-full h-11 bg-teal-600 hover:bg-teal-700 text-white font-semibold mt-4"
+                          onClick={handleBooking}
+                          disabled={bookingMutation.isPending}
+                        >
+                          {bookingMutation.isPending ? (
+                            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...</>
+                          ) : (
+                            "Confirm Booking Request"
+                          )}
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 )}
+                <p className="text-center text-xs text-gray-500 text-[11px]">You won't be charged until the host approves</p>
                 </CardContent>
             </Card>
           </div>
