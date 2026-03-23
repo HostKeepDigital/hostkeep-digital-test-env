@@ -172,6 +172,11 @@ const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
   const location = useLocation();
 
+  // Immediately redirect /login to /SignIn before any loading gates
+  if (location.pathname === '/login' || location.pathname === '/Login') {
+    return <Navigate to="/SignIn" replace />;
+  }
+
   // Check if the current route is public BEFORE any auth loading gate
   const basePath = '/' + location.pathname.replace(/^\/+/, '').split('/')[0];
   const isPublicRoute = PUBLIC_ROUTES.has(basePath) || PUBLIC_ROUTES.has(location.pathname);
