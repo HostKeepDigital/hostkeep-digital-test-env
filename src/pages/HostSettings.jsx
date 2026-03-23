@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, Bell, CreditCard, Shield, Upload, Loader2 } from "lucide-react";
+import { User, Bell, CreditCard, Shield, Upload, Loader2, CheckCircle, AlertCircle, Clock, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
 export default function HostSettings() {
@@ -275,50 +275,7 @@ export default function HostSettings() {
           </TabsContent>
 
           <TabsContent value="payments">
-            <Card>
-              <CardHeader>
-                <CardTitle>Payment Settings</CardTitle>
-                <CardDescription>
-                  Configure how you receive payments from guests
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                  <div className="flex items-start gap-3">
-                    <Shield className="w-5 h-5 text-amber-600 mt-0.5" />
-                    <div>
-                      <p className="font-medium text-amber-900">Direct Payments</p>
-                      <p className="text-sm text-amber-700">
-                        Guests pay you directly via bank transfer. You keep 100% of your bookings - 
-                        we never touch your booking money.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="font-medium text-gray-900 mb-4">Your Bank Details</h3>
-                  <p className="text-sm text-gray-500 mb-4">
-                    These details will be shown to guests when they make a payment. 
-                    Configure this in your property settings or booking confirmation emails.
-                  </p>
-                  <Button variant="outline">
-                    Configure Payment Instructions
-                  </Button>
-                </div>
-
-                <div className="pt-4 border-t border-gray-100">
-                  <h3 className="font-medium text-gray-900 mb-4">Future: Stripe Connect</h3>
-                  <p className="text-sm text-gray-500 mb-4">
-                    Coming soon: Accept card payments directly through Stripe. 
-                    Funds will be deposited directly to your bank account.
-                  </p>
-                  <Button disabled variant="outline">
-                    Connect Stripe (Coming Soon)
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <StripeConnectPanel user={user} />
           </TabsContent>
         </Tabs>
       </div>
