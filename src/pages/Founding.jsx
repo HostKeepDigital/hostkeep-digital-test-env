@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { buildEmail } from "@/lib/emailTemplate";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
@@ -41,7 +40,8 @@ function SpotsCounter({ used, limit, color }) {
 
 export default function Founding() {
   const navigate = useNavigate();
-  const [members, setMembers] = useState([]);
+  const [hostCount, setHostCount] = useState(0);
+  const [cleanerCount, setCleanerCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [cornwallWarning, setCornwallWarning] = useState(false);
@@ -55,15 +55,15 @@ export default function Founding() {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    base44.entities.FoundingMember.list("-signup_timestamp", 500)
-      .then(data => setMembers(data || []))
+    base44.functions.invoke('getFoundingCounts', {})
+      .then(res => {
+        setHostCount(res.data?.hostCount || 0);
+        setCleanerCount(res.data?.cleanerCount || 0);
+      })
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
-  // Counter only counts approved members
-  const approvedMembers = members.filter(m => m.approval_status === "approved");
-  const hostCount = approvedMembers.filter(m => m.role === "host").length;
-  const cleanerCount = approvedMembers.filter(m => m.role === "cleaner").length;
   const hostFull = hostCount >= HOST_LIMIT;
   const cleanerFull = cleanerCount >= CLEANER_LIMIT;
 
@@ -92,64 +92,21 @@ export default function Founding() {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
-
-    const outOfArea = !isCornwallPostcode(form.postcode);
-    const roleLabel = form.role === "host" ? "Host" : "Cleaner";
-    const firstName = form.full_name.trim().split(" ")[0];
-    const email = form.email.toLowerCase().trim();
-    const postcode = form.postcode.toUpperCase().trim();
-    const now = new Date().toISOString();
-
     setSubmitting(true);
     try {
-      // Step 2 — Create FoundingMember record
-      await base44.entities.FoundingMember.create({
+      const result = await base44.functions.invoke('registerFoundingMember', {
         full_name: form.full_name.trim(),
-        email,
-        postcode,
+        email: form.email.toLowerCase().trim(),
+        postcode: form.postcode.toUpperCase().trim(),
         role: form.role,
-        approval_status: outOfArea ? "out_of_area" : "pending",
-        signup_timestamp: now,
       });
-
-      if (!outOfArea) {
-        // Step 3 — Send pending email to applicant
-        try {
-          await base44.integrations.Core.SendEmail({
-            from_name: "HostKeep",
-            to: email,
-            subject: "You're on the list — HostKeep",
-            body: buildEmail({
-              heading: "You're on the list!",
-              body: `Thank you for applying to become a Founding ${roleLabel} on HostKeep.<br><br>We're reviewing your application and will be in touch within 24 hours to let you know if you've made it into the beta.<br><br>You don't need to do anything right now.`,
-            }),
-          });
-        } catch (emailErr) {
-          console.error("Applicant email failed:", emailErr);
-        }
-
-        // Step 4 — Send admin notification email
-        try {
-          await base44.integrations.Core.SendEmail({
-            from_name: "HostKeep",
-            to: "admin@hostkeepdigital.co.uk",
-            subject: `New Founding Member Application — ${form.full_name.trim()} (${roleLabel})`,
-            body: buildEmail({
-              heading: "New Founding Member Application",
-              body: `A new founding member application has been submitted.<br><br><strong>Name:</strong> ${form.full_name.trim()}<br><strong>Email:</strong> ${email}<br><strong>Postcode:</strong> ${postcode}<br><strong>Role:</strong> ${roleLabel}<br><strong>Submitted:</strong> ${now}`,
-              buttonText: "Review in Admin Panel",
-              buttonUrl: "https://hostkeepdigital.co.uk/AdminPanel",
-            }),
-          });
-        } catch (emailErr) {
-          console.error("Admin email failed:", emailErr);
-        }
+      if (result?.data?.error === 'duplicate_email') {
+        setErrors({ email: 'This email has already been registered.' });
+        return;
       }
-
-      // Step 5 — Navigate to thank you
-      navigate("/founding-thankyou");
-    } catch (err) {
-      console.error("Submission failed:", err);
+      navigate('/founding-thankyou');
+    } catch (_) {
+      navigate('/founding-thankyou');
     } finally {
       setSubmitting(false);
     }

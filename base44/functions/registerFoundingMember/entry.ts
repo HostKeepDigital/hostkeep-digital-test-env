@@ -1,51 +1,56 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
-// Creates a user account via service role to avoid triggering
-// Base44's built-in verification email (we handle email ourselves).
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
+  const { full_name, email, postcode, role } = await req.json();
 
-  const { email, password, full_name, role } = await req.json();
-
-  if (!email || !password || !full_name) {
+  if (!full_name || !email || !postcode || !role) {
     return Response.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
-  try {
-    await base44.auth.register({
-      email: email.toLowerCase().trim(),
-      password,
-      full_name,
-      skip_welcome_email: true,
-    });
+  const outOfArea = !['TR','PL','EX'].some(p =>
+    postcode.trim().toUpperCase().replace(/\s+/g,'').startsWith(p)
+  );
 
-    // Create a pending UserRole for this user so they land on /pending after login
-    if (role) {
-      try {
-        const users = await base44.asServiceRole.entities.User.list();
-        const newUser = users.find(u => u.email?.toLowerCase() === email.toLowerCase().trim());
-        if (newUser) {
-          const existingRoles = await base44.asServiceRole.entities.UserRole.filter({ user_id: newUser.id });
-          if (existingRoles.length === 0) {
-            await base44.asServiceRole.entities.UserRole.create({
-              user_id: newUser.id,
-              role: role,
-              approval_status: 'pending',
-            });
-          }
-        }
-      } catch (roleErr) {
-        console.error('UserRole creation failed:', roleErr.message);
-      }
-    }
-
-    return Response.json({ ok: true });
-  } catch (err) {
-    // If user already exists, that's fine — treat as success
-    const msg = err?.message || '';
-    if (msg.includes('already') || msg.includes('exists') || msg.includes('duplicate')) {
-      return Response.json({ ok: true });
-    }
-    return Response.json({ error: msg }, { status: 500 });
+  // Check for duplicate email
+  const existing = await base44.asServiceRole.entities.FoundingMember.filter({
+    email: email.toLowerCase().trim()
+  });
+  if (existing && existing.length > 0) {
+    return Response.json({ error: 'duplicate_email' });
   }
+
+  // Create FoundingMember record
+  await base44.asServiceRole.entities.FoundingMember.create({
+    full_name: full_name.trim(),
+    email: email.toLowerCase().trim(),
+    postcode: postcode.toUpperCase().trim(),
+    role,
+    approval_status: outOfArea ? 'out_of_area' : 'pending',
+    signup_timestamp: new Date().toISOString(),
+  });
+
+  const roleLabel = role === 'host' ? 'Host' : 'Cleaner';
+
+  if (!outOfArea) {
+    try {
+      await base44.asServiceRole.integrations.Core.SendEmail({
+        from_name: 'HostKeep',
+        to: email.toLowerCase().trim(),
+        subject: "You're on the list — HostKeep",
+        body: `Thank you for applying to become a Founding ${roleLabel} on HostKeep. We are reviewing your application and will be in touch within 24 hours. You do not need to do anything right now.`,
+      });
+    } catch (_) {}
+
+    try {
+      await base44.asServiceRole.integrations.Core.SendEmail({
+        from_name: 'HostKeep',
+        to: 'admin@hostkeepdigital.co.uk',
+        subject: `New Founding Member Application — ${full_name.trim()} (${roleLabel})`,
+        body: `New application submitted.\n\nName: ${full_name.trim()}\nEmail: ${email}\nPostcode: ${postcode}\nRole: ${roleLabel}`,
+      });
+    } catch (_) {}
+  }
+
+  return Response.json({ success: true, out_of_area: outOfArea });
 });
