@@ -89,8 +89,8 @@ Deno.serve(async (req) => {
         from_name: 'HostKeep',
         to: email.toLowerCase().trim(),
         subject: "You're on the list — HostKeep",
-        body: buildHtmlEmail(
-          "You're on the list!",
+        html: buildHtmlEmail(
+        "You're on the list!",
           `<p>Hi ${full_name.trim()},</p>
            <p>Thank you for applying to become a Founding ${roleLabel} on HostKeep. We're reviewing your application and will be in touch within 24 hours to let you know if you've made it into the beta.</p>
            <p>You don't need to do anything right now.</p>`
@@ -104,8 +104,8 @@ Deno.serve(async (req) => {
         from_name: 'HostKeep',
         to: 'admin@hostkeepdigital.co.uk',
         subject: `New Founding Member Application — ${full_name.trim()} (${roleLabel})`,
-        body: buildHtmlEmail(
-          'New Founding Member Application',
+        html: buildHtmlEmail(
+        'New Founding Member Application',
           `<p>A new founding member application has been submitted.</p>
            <p><strong>Name:</strong> ${full_name.trim()}<br>
            <strong>Email:</strong> ${email}<br>
