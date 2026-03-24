@@ -111,7 +111,7 @@ export default function Founding() {
       setSubmitting(false);
     }
     if (!isDuplicate) {
-      navigate('/FoundingThankYou');
+      navigate('/founding-thankyou');
     }
   };
 
