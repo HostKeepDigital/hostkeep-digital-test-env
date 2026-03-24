@@ -20,7 +20,7 @@ export default function FoundingThankYou() {
           <br /><br />
           You don't need to do anything else.
         </p>
-        <Link to="/Home">
+        <Link to="/home">
           <Button className="bg-teal-600 hover:bg-teal-700 text-white px-8 h-11">
             Back to Home
           </Button>
