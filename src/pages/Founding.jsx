@@ -93,6 +93,7 @@ export default function Founding() {
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setSubmitting(true);
+    let isDuplicate = false;
     try {
       const result = await base44.functions.invoke('registerFoundingMember', {
         full_name: form.full_name.trim(),
@@ -101,14 +102,16 @@ export default function Founding() {
         role: form.role,
       });
       if (result?.data?.error === 'duplicate_email') {
+        isDuplicate = true;
         setErrors({ email: 'This email has already been registered.' });
-        return;
       }
-      navigate('/founding-thankyou');
     } catch (_) {
-      navigate('/founding-thankyou');
+      // Ignore errors — always redirect unless duplicate
     } finally {
       setSubmitting(false);
+    }
+    if (!isDuplicate) {
+      navigate('/founding-thankyou');
     }
   };
 
