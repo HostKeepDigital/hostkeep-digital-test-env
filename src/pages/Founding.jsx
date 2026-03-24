@@ -114,32 +114,42 @@ export default function Founding() {
 
       if (!outOfArea) {
         // Step 3 — Send pending email to applicant
-        await base44.integrations.Core.SendEmail({
-          from_name: "HostKeep",
-          to: email,
-          subject: "You're on the list — HostKeep",
-          body: buildEmail({
-            heading: "You're on the list!",
-            body: `Thank you for applying to become a Founding ${roleLabel} on HostKeep.<br><br>We're reviewing your application and will be in touch within 24 hours to let you know if you've made it into the beta.<br><br>You don't need to do anything right now.`,
-          }),
-        });
+        try {
+          await base44.integrations.Core.SendEmail({
+            from_name: "HostKeep",
+            to: email,
+            subject: "You're on the list — HostKeep",
+            body: buildEmail({
+              heading: "You're on the list!",
+              body: `Thank you for applying to become a Founding ${roleLabel} on HostKeep.<br><br>We're reviewing your application and will be in touch within 24 hours to let you know if you've made it into the beta.<br><br>You don't need to do anything right now.`,
+            }),
+          });
+        } catch (emailErr) {
+          console.error("Applicant email failed:", emailErr);
+        }
 
         // Step 4 — Send admin notification email
-        await base44.integrations.Core.SendEmail({
-          from_name: "HostKeep",
-          to: "admin@hostkeepdigital.co.uk",
-          subject: `New Founding Member Application — ${form.full_name.trim()} (${roleLabel})`,
-          body: buildEmail({
-            heading: "New Founding Member Application",
-            body: `A new founding member application has been submitted.<br><br><strong>Name:</strong> ${form.full_name.trim()}<br><strong>Email:</strong> ${email}<br><strong>Postcode:</strong> ${postcode}<br><strong>Role:</strong> ${roleLabel}<br><strong>Submitted:</strong> ${now}`,
-            buttonText: "Review in Admin Panel",
-            buttonUrl: "https://hostkeepdigital.co.uk/AdminPanel",
-          }),
-        });
+        try {
+          await base44.integrations.Core.SendEmail({
+            from_name: "HostKeep",
+            to: "admin@hostkeepdigital.co.uk",
+            subject: `New Founding Member Application — ${form.full_name.trim()} (${roleLabel})`,
+            body: buildEmail({
+              heading: "New Founding Member Application",
+              body: `A new founding member application has been submitted.<br><br><strong>Name:</strong> ${form.full_name.trim()}<br><strong>Email:</strong> ${email}<br><strong>Postcode:</strong> ${postcode}<br><strong>Role:</strong> ${roleLabel}<br><strong>Submitted:</strong> ${now}`,
+              buttonText: "Review in Admin Panel",
+              buttonUrl: "https://hostkeepdigital.co.uk/AdminPanel",
+            }),
+          });
+        } catch (emailErr) {
+          console.error("Admin email failed:", emailErr);
+        }
       }
 
       // Step 5 — Navigate to thank you
       navigate("/founding-thankyou");
+    } catch (err) {
+      console.error("Submission failed:", err);
     } finally {
       setSubmitting(false);
     }
