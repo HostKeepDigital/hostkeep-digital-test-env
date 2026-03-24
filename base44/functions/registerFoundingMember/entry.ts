@@ -82,21 +82,25 @@ Deno.serve(async (req) => {
 
   const roleLabel = role === 'host' ? 'Host' : 'Cleaner';
 
-  if (!outOfArea) {
-    // Applicant confirmation email
-    try {
-      await base44.asServiceRole.integrations.Core.SendEmail({
-        from_name: 'HostKeep',
-        to: email.toLowerCase().trim(),
-        subject: "You're on the list — HostKeep",
-        body: buildHtmlEmail(
+if (!outOfArea) {
+  // Applicant confirmation email
+  try {
+    await base44.asServiceRole.integrations.Core.SendEmail({
+      from_email: "hello@hostkeepdigital.co.uk",
+      from_name: "HostKeep",
+      to: email.toLowerCase().trim(),
+      subject: "You're on the list — HostKeep",
+      body: buildHtmlEmail(
         "You're on the list!",
-          `<p>Hi ${full_name.trim()},</p>
-           <p>Thank you for applying to become a Founding ${roleLabel} on HostKeep. We're reviewing your application and will be in touch within 24 hours to let you know if you've made it into the beta.</p>
-           <p>You don't need to do anything right now.</p>`
-        ),
-      });
-    } catch (_) {}
+        `<p>Hi ${full_name.trim()},</p>
+         <p>Thank you for applying to become a Founding ${roleLabel} on HostKeep. We're reviewing your application and will be in touch within 24 hours to let you know if you've made it into the beta.</p>
+         <p>You don't need to do anything right now.</p>`
+      ),
+    });
+  } catch (err) {
+    console.error("USER EMAIL FAILED:", err);
+}
+
 
     // Admin notification email
     try {
