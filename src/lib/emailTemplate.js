@@ -25,7 +25,7 @@ export function buildEmail({ heading, body, buttonText, buttonUrl }) {
           <tr>
             <td style="background-color:#1E3A5F;padding:32px 40px;text-align:center;">
               <img
-                src="https://drive.google.com/uc?export=view&id=1yazuu-6sWc7hEOpyTncZpt-P9Cd-UOt1"
+                src="https://i.ibb.co/6cwz6PzN/Host-Keep-Digital-Navy-Background.png"
                 alt="HostKeep Digital"
                 width="200"
                 style="display:block;margin:0 auto;max-width:200px;height:auto;"
