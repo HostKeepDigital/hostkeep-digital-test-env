@@ -45,7 +45,7 @@ export default function AdminPanel() {
 
     await base44.entities.FoundingMember.update(
       member.id,
-      { approval_status: "invited" }
+      { approval_status: "approved" }
     );
 
     try {
