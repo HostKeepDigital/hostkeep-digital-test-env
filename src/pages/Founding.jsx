@@ -111,7 +111,16 @@ export default function Founding() {
       setSubmitting(false);
     }
     if (!isDuplicate) {
-      navigate('/founding-thankyou');
+      if (!isDuplicate) {
+
+  // 1. Send the verification code email
+  await base44.functions.invoke("sendVerificationCode", {
+    email: form.email.toLowerCase().trim(),
+  });
+
+  // 2. Redirect the user to the verification page
+  navigate(`/verify-email?email=${encodeURIComponent(form.email.toLowerCase().trim())}`);
+}
     }
   };
 
