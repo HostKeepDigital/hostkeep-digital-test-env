@@ -120,6 +120,14 @@ export default function AdminPanel() {
     fetchMembers();
   };
 
+  const handleDelete = async (member) => {
+  if (!window.confirm('Delete ' + member.full_name + '? This cannot be undone.')) return;
+  setMemberLoading(member.id, "delete");
+  await base44.entities.FoundingMember.delete(member.id);
+  setMemberLoading(member.id, null);
+  fetchMembers();
+};
+
   const pendingMembers = members.filter(m => m.approval_status === "pending");
   const invitedMembers = members.filter(m => ["invited", "doc_review"].includes(m.approval_status));
   const approvedMembers = members.filter(m => m.approval_status === "approved");
@@ -184,6 +192,15 @@ export default function AdminPanel() {
                       onClick={() => handleReject(m)}
                     >
                       {actionLoading[m.id] === "reject" ? "..." : <><X className="w-3 h-3 mr-1" />Reject</>}
+                    </Button>
+                    <Button
+                       size="sm"
+                       variant="outline"
+                       className="h-7 px-3 text-xs border-gray-300 text-gray-500 hover:bg-gray-50"
+                       disabled={!!actionLoading[m.id]}
+                       onClick={() => handleDelete(m)}
+                    >
+                       {actionLoading[m.id] === "delete" ? "..." : "Delete"}
                     </Button>
                   </div>
                 </td>
