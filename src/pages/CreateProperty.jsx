@@ -32,6 +32,7 @@ const STEPS = [
   { id: 4, title: "Photos", icon: Image, description: "Show off your space" },
   { id: 5, title: "Pricing", icon: PoundSterling, description: "Set your rates" },
   { id: 6, title: "Booking Rules", icon: Calendar, description: "Day-based restrictions (optional)" },
+  { id: 7, title: "Verification", icon: FileText, description: "Prove property ownership" },
 ];
 
 const PROPERTY_TYPES = [
@@ -132,7 +133,9 @@ export default function CreateProperty() {
       seasons: [],
       date_overrides: {}
     },
-    status: "draft"
+    status: "draft",
+    existing_listing_url: "",
+    verification_document: null,
   });
 
   useEffect(() => {
@@ -286,12 +289,13 @@ export default function CreateProperty() {
       case 3: return formData.postcode && formData.latitude && formData.longitude && formData.location?.street;
       case 4: return formData.photos.length >= 5 && getDuplicatePhotos().length === 0;
       case 5: return formData.nightly_rate > 0;
-      case 6: return !!formData.cancellation_policy_id; // Cancellation policy is required
+      case 6: return !!formData.cancellation_policy_id;
+      case 7: return formData.existing_listing_url.trim().length > 0 || formData.verification_document !== null;
       default: return true;
     }
   };
 
-  const handleSubmit = async (publish = false) => {
+  const handleSubmit = async () => {
     // Check subscription before creating property
     const subscriptions = await base44.entities.Subscription.filter({ 
       user_id: user.id,
@@ -306,7 +310,6 @@ export default function CreateProperty() {
       localStorage.setItem('pendingPropertyDraft', JSON.stringify({
         ...formData,
         owner_id: user.id,
-        publish: publish
       }));
       
       toast.info("Please select a subscription plan to continue");
@@ -319,7 +322,9 @@ export default function CreateProperty() {
     createMutation.mutate({
       ...formData,
       ...locationData,
-      status: publish ? 'published' : 'draft'
+      status: 'draft',
+      existing_listing_url: formData.existing_listing_url,
+      verification_document: formData.verification_document,
     });
   };
 
@@ -725,6 +730,69 @@ export default function CreateProperty() {
                 />
               </div>
             )}
+
+            {/* Step 7: Verification */}
+            {currentStep === 7 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Property Verification</CardTitle>
+                  <CardDescription>Provide proof that you own or manage this property. Choose one option below.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div>
+                    <Label htmlFor="listing-url">Existing Listing URL</Label>
+                    <Input
+                      id="listing-url"
+                      value={formData.existing_listing_url}
+                      onChange={(e) => handleChange("existing_listing_url", e.target.value)}
+                      placeholder="e.g. airbnb.co.uk/rooms/12345 or booking.com/..."
+                      className="mt-1"
+                    />
+                    <p className="text-sm text-gray-400 mt-1">Paste a link to your property on Airbnb, Booking.com, or your own website.</p>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <div className="flex-1 h-px bg-gray-200" />
+                    <span className="text-sm text-gray-400 font-medium">OR</span>
+                    <div className="flex-1 h-px bg-gray-200" />
+                  </div>
+
+                  <div>
+                    <Label>Upload Proof Document</Label>
+                    <div className="mt-1 border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-teal-300 transition-colors">
+                      <input
+                        type="file"
+                        accept="image/*,.pdf"
+                        className="hidden"
+                        id="verification-doc-upload"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          setIsUploading(true);
+                          const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                          handleChange("verification_document", file_url);
+                          setIsUploading(false);
+                          e.target.value = '';
+                        }}
+                      />
+                      <label htmlFor="verification-doc-upload" className="cursor-pointer">
+                        {isUploading ? (
+                          <Loader2 className="w-10 h-10 mx-auto mb-3 text-teal-600 animate-spin" />
+                        ) : formData.verification_document ? (
+                          <Check className="w-10 h-10 mx-auto mb-3 text-teal-600" />
+                        ) : (
+                          <Upload className="w-10 h-10 mx-auto mb-3 text-gray-400" />
+                        )}
+                        <p className="text-gray-600 font-medium">
+                          {isUploading ? "Uploading..." : formData.verification_document ? "Document uploaded — click to replace" : "Click to upload document"}
+                        </p>
+                      </label>
+                    </div>
+                    <p className="text-sm text-gray-400 mt-2">Utility bill, council tax bill, land registry document, purchase invoice, or holiday park pitch agreement. Must match the postcode entered above.</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </motion.div>
         </AnimatePresence>
 
@@ -761,26 +829,17 @@ export default function CreateProperty() {
               <ChevronRight className="w-4 h-4" />
             </Button>
           ) : (
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => handleSubmit(false)}
-                disabled={createMutation.isPending}
-              >
-                Save as Draft
-              </Button>
-              <Button
-                onClick={() => handleSubmit(true)}
-                disabled={createMutation.isPending || !canProceed()}
-                className="bg-teal-600 hover:bg-teal-700"
-              >
-                {createMutation.isPending ? (
-                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
-                ) : (
-                  "Publish Property"
-                )}
-              </Button>
-            </div>
+            <Button
+              onClick={() => handleSubmit()}
+              disabled={createMutation.isPending || !canProceed()}
+              className="bg-teal-600 hover:bg-teal-700"
+            >
+              {createMutation.isPending ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
+              ) : (
+                "Submit for Review"
+              )}
+            </Button>
           )}
         </div>
       </div>
