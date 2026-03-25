@@ -1,37 +1,30 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
   const { email, code } = await req.json();
 
   if (!email || !code) {
-    return Response.json({ error: 'Email and code are required' }, { status: 400 });
+    return Response.json({ valid: false });
   }
 
-  const records = await base44.asServiceRole.entities.EmailVerificationCode.filter({
-    email: email.toLowerCase().trim(),
-    used: false,
-  });
+  const records = await base44.asServiceRole.entities.EmailVerificationCode.filter({ email });
 
   if (!records || records.length === 0) {
-    return Response.json({ valid: false, reason: 'no_code' });
+    return Response.json({ valid: false });
   }
 
-  // Find the most recent unused code matching
-  const match = records
-    .filter(r => r.code === code)
-    .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))[0];
+  const record = records[0];
 
-  if (!match) {
-    return Response.json({ valid: false, reason: 'incorrect' });
+  if (record.code !== code) {
+    return Response.json({ valid: false });
   }
 
-  if (new Date() > new Date(match.expires_at)) {
-    return Response.json({ valid: false, reason: 'expired' });
+  if (new Date(record.expires_at) < new Date()) {
+    return Response.json({ valid: false });
   }
 
-  // Mark as used
-  await base44.asServiceRole.entities.EmailVerificationCode.update(match.id, { used: true });
+  await base44.asServiceRole.entities.EmailVerificationCode.delete(record.id);
 
   return Response.json({ valid: true });
 });
