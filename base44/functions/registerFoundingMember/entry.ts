@@ -1,5 +1,34 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+
+async function sendResendEmail(to, subject, html, from_name = "HostKeep", from_email = "hello@hostkeepdigital.co.uk") {
+  const fromAddress = `${from_name} <${from_email}>`;
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${RESEND_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: fromAddress,
+      to: [to],
+      subject,
+      html,
+    }),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    console.error("RESEND ERROR:", data);
+    throw new Error("Resend failed");
+  }
+
+  return data;
+}
+
 const LOGO_URL = 'https://drive.google.com/uc?export=view&id=1yazuu-6sWc7hEOpyTncZpt-P9Cd-UOt1';
 const FB_ICON = 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Facebook_Logo_%282019%29.png/600px-Facebook_Logo_%282019%29.png';
 const IG_ICON = 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Instagram_icon.png/600px-Instagram_icon.png';
