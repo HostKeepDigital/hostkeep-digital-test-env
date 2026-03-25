@@ -49,7 +49,7 @@ export default function AdminPanel() {
     );
 
     try {
-      await base44.integrations.functions.invoke('sendEmail', {
+       await base44.functions.invoke('sendEmail', {
         from_name: "HostKeep",
         to: member.email,
         subject: "You're approved — Welcome to HostKeep",
