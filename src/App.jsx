@@ -53,10 +53,19 @@ function PostLoginRedirect() {
   const { Pages } = pagesConfig;
   const HomePage = Pages['Home'];
 
-  useEffect(() => {
+useEffect(() => {
     if (!isAuthenticated || isLoadingAuth) return;
     base44.auth.me().then(async (u) => {
       if (u?.id) {
+        // Check if this user is a founding member and create their role if needed
+        try {
+          await base44.functions.invoke('checkFoundingStatus', {
+            email: u.email,
+            user_id: u.id,
+          });
+        } catch (_) {}
+
+        // Now fetch roles (including any just created above)
         const roles = await base44.entities.UserRole.filter({ user_id: u.id });
         setRedirect(getRoleRedirect(roles));
       } else {
