@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
-const LOGO_URL = 'https://i.ibb.co/6cwz6PzN/Host-Keep-Digital-Navy-Background.png';
+const LOGO_URL = 'https://drive.google.com/uc?export=view&id=1yazuu-6sWc7hEOpyTncZpt-P9Cd-UOt1';
 const FB_ICON = 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Facebook_Logo_%282019%29.png/600px-Facebook_Logo_%282019%29.png';
 const IG_ICON = 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Instagram_icon.png/600px-Instagram_icon.png';
 
@@ -115,7 +115,7 @@ if (!outOfArea) {
            <strong>Email:</strong> ${email}<br>
            <strong>Postcode:</strong> ${postcode}<br>
            <strong>Role:</strong> ${roleLabel}</p>
-           <p><a href="https://hostkeepdigital.co.uk/Admin" style="display:inline-block;background-color:#1E3A5F;color:#ffffff;font-size:15px;font-weight:bold;text-decoration:none;padding:14px 32px;border-radius:8px;">Review in Admin Panel</a></p>`
+           <p><a href="https://hostkeepdigital.co.uk/AdminPanel" style="display:inline-block;background-color:#1E3A5F;color:#ffffff;font-size:15px;font-weight:bold;text-decoration:none;padding:14px 32px;border-radius:8px;">Review in Admin Panel</a></p>`
         ),
       });
     } catch (_) {}
