@@ -3,7 +3,6 @@ import { buildEmail } from "@/lib/emailTemplate";
 import { Shield, Check, X, RefreshCw } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 
 const HOST_LIMIT = 50;
 const CLEANER_LIMIT = 30;
@@ -39,40 +38,24 @@ export default function AdminPanel() {
 
   const setMemberLoading = (id, val) => setActionLoading(p => ({ ...p, [id]: val }));
 
+  // ⭐ CLEAN, CORRECT APPROVE FUNCTION
   const handleApprove = async (member) => {
     setMemberLoading(member.id, "approve");
-    const roleLabel = member.role === "host" ? "Host" : "Cleaner";
 
+    // 1. Update founding member status
     await base44.entities.FoundingMember.update(
       member.id,
-      { approval_status: "invited" }
+      { approval_status: "approved" }
     );
 
-    const handleApprove = async (member) => {
-  setMemberLoading(member.id, "approve");
-
-  // 1. Update founding member status
-  await base44.entities.FoundingMember.update(
-    member.id,
-    { approval_status: "approved" }
-  );
-
-  // 2. Trigger password setup email
-  try {
-    await base44.functions.invoke("sendpasswordsreset", {
-      email: member.email
-    });
-  } catch (e) {
-    console.error("Password setup email failed", e);
-  }
-
-  setMemberLoading(member.id, null);
-  fetchMembers();
-};
-
-await base44.functions.invoke("sendpasswordsreset", {
-  email: member.email
-});
+    // 2. Trigger password setup email
+    try {
+      await base44.functions.invoke("sendpasswordsreset", {
+        email: member.email
+      });
+    } catch (e) {
+      console.error("Password setup email failed", e);
+    }
 
     setMemberLoading(member.id, null);
     fetchMembers();
@@ -84,7 +67,7 @@ await base44.functions.invoke("sendpasswordsreset", {
 
     await base44.entities.FoundingMember.update(member.id, { approval_status: "waitlist" });
 
-await base44.functions.invoke('sendEmail', {
+    await base44.functions.invoke('sendEmail', {
       to: member.email,
       subject: "HostKeep — You're on our waitlist",
       html: buildEmail({
@@ -103,7 +86,7 @@ await base44.functions.invoke('sendEmail', {
 
     await base44.entities.FoundingMember.update(member.id, { approval_status: "rejected" });
 
-await base44.functions.invoke('sendEmail', {
+    await base44.functions.invoke('sendEmail', {
       to: member.email,
       subject: "Your HostKeep Application",
       html: buildEmail({
@@ -117,12 +100,12 @@ await base44.functions.invoke('sendEmail', {
   };
 
   const handleDelete = async (member) => {
-  if (!window.confirm('Delete ' + member.full_name + '? This cannot be undone.')) return;
-  setMemberLoading(member.id, "delete");
-  await base44.entities.FoundingMember.delete(member.id);
-  setMemberLoading(member.id, null);
-  fetchMembers();
-};
+    if (!window.confirm('Delete ' + member.full_name + '? This cannot be undone.')) return;
+    setMemberLoading(member.id, "delete");
+    await base44.entities.FoundingMember.delete(member.id);
+    setMemberLoading(member.id, null);
+    fetchMembers();
+  };
 
   const pendingMembers = members.filter(m => m.approval_status === "pending");
   const invitedMembers = members.filter(m => ["invited", "doc_review"].includes(m.approval_status));
@@ -134,9 +117,13 @@ await base44.functions.invoke('sendEmail', {
       <table className="w-full text-sm">
         <thead className="bg-gray-50">
           <tr>
-            {["Full Name", "Email", "Role", "Postcode", "Status", "Signed Up", showActions ? "Actions" : null].filter(Boolean).map(h => (
-              <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{h}</th>
-            ))}
+            {["Full Name", "Email", "Role", "Postcode", "Status", "Signed Up", showActions ? "Actions" : null]
+              .filter(Boolean)
+              .map(h => (
+                <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  {h}
+                </th>
+              ))}
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100 bg-white">
@@ -190,13 +177,13 @@ await base44.functions.invoke('sendEmail', {
                       {actionLoading[m.id] === "reject" ? "..." : <><X className="w-3 h-3 mr-1" />Reject</>}
                     </Button>
                     <Button
-                       size="sm"
-                       variant="outline"
-                       className="h-7 px-3 text-xs border-gray-300 text-gray-500 hover:bg-gray-50"
-                       disabled={!!actionLoading[m.id]}
-                       onClick={() => handleDelete(m)}
+                      size="sm"
+                      variant="outline"
+                      className="h-7 px-3 text-xs border-gray-300 text-gray-500 hover:bg-gray-50"
+                      disabled={!!actionLoading[m.id]}
+                      onClick={() => handleDelete(m)}
                     >
-                       {actionLoading[m.id] === "delete" ? "..." : "Delete"}
+                      {actionLoading[m.id] === "delete" ? "..." : "Delete"}
                     </Button>
                   </div>
                 </td>
@@ -211,6 +198,7 @@ await base44.functions.invoke('sendEmail', {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
+
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
