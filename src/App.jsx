@@ -14,6 +14,7 @@ import Pending from './pages/Pending';
 import Founding from './pages/Founding';
 import FoundingThankYou from './pages/FoundingThankYou';
 import HowPaymentsWork from './pages/HowPaymentsWork';
+import VerifyEmail from './pages/VerifyEmail';
 import SignIn from './pages/SignIn';
 import ForgotPassword from './pages/ForgotPassword';
 
@@ -242,6 +243,7 @@ const AuthenticatedApp = () => {
         <Route path="/pending" element={<Pending />} />
         <Route path="/founding-thankyou" element={<FoundingThankYou />} />
         <Route path="/founding" element={<Founding />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/HowPaymentsWork" element={
           <LayoutWrapper currentPageName="HowPaymentsWork">
             <HowPaymentsWork />
