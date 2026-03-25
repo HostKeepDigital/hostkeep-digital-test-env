@@ -49,11 +49,11 @@ export default function AdminPanel() {
     );
 
     try {
-      await base44.integrations.Core.SendEmail({
+      await base44.integrations.functions.invoke('sendEmail', {
         from_name: "HostKeep",
         to: member.email,
         subject: "You're approved — Welcome to HostKeep",
-        body: buildEmail({
+        html: buildEmail({
           heading: "You're approved!",
           body: "Your application to become a Founding "
             + roleLabel
@@ -86,11 +86,10 @@ export default function AdminPanel() {
 
     await base44.entities.FoundingMember.update(member.id, { approval_status: "waitlist" });
 
-    await base44.integrations.Core.SendEmail({
-      from_name: "HostKeep",
+await base44.functions.invoke('sendEmail', {
       to: member.email,
       subject: "HostKeep — You're on our waitlist",
-      body: buildEmail({
+      html: buildEmail({
         heading: "You're on our waitlist",
         body: `Thank you for applying to join HostKeep as a Founding ${roleLabel}.<br><br>Our founding spots are currently full, but we've added you to our waitlist. You'll be among the first to know when a spot opens up.<br><br>Thank you for your patience.`,
       }),
@@ -106,11 +105,10 @@ export default function AdminPanel() {
 
     await base44.entities.FoundingMember.update(member.id, { approval_status: "rejected" });
 
-    await base44.integrations.Core.SendEmail({
-      from_name: "HostKeep",
+await base44.functions.invoke('sendEmail', {
       to: member.email,
       subject: "Your HostKeep Application",
-      body: buildEmail({
+      html: buildEmail({
         heading: "Your HostKeep Application",
         body: `Thank you for applying to join HostKeep as a Founding ${roleLabel}.<br><br>After reviewing your application, we're unable to approve it at this time.<br><br>If you have any questions please don't hesitate to get in touch.`,
       }),
