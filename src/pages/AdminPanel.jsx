@@ -43,21 +43,38 @@ export default function AdminPanel() {
     setMemberLoading(member.id, "approve");
     const roleLabel = member.role === "host" ? "Host" : "Cleaner";
 
-    await base44.entities.FoundingMember.update(member.id, { approval_status: "invited" });
+    await base44.entities.FoundingMember.update(
+      member.id,
+      { approval_status: "invited" }
+    );
 
-    try { await base44.users.inviteUser(member.email, "user"); } catch (e) { console.error("Invite failed", e); }
-
-    await base44.integrations.Core.SendEmail({
-      from_name: "HostKeep",
-      to: member.email,
-      subject: "You're approved — Welcome to HostKeep",
-      html: buildEmail({
-        heading: "You're approved — welcome to HostKeep!",
-        body: `Your application to become a Founding ${roleLabel} on HostKeep has been approved.<br><br>You'll receive a separate email shortly with a link to activate your account. Please check your inbox and spam folder.<br><br>Once activated, you can sign in and get started.`,
-        buttonText: "Sign In to HostKeep",
-        buttonUrl: "https://hostkeepdigital.co.uk/SignIn",
-      }),
-    });
+    try {
+      await base44.integrations.Core.SendEmail({
+        from_name: "HostKeep",
+        to: member.email,
+        subject: "You're approved — Welcome to HostKeep",
+        body: buildEmail({
+          heading: "You're approved!",
+          body: "Your application to become a Founding "
+            + roleLabel
+            + " on HostKeep has been approved.<br><br>"
+            + "To get started, go to <strong>"
+            + "hostkeepdigital.co.uk/login</strong> "
+            + "and click <strong>Sign Up</strong>.<br><br>"
+            + "Important: use this exact email address "
+            + "to sign up: <strong>" + member.email
+            + "</strong><br><br>"
+            + "Once signed in, you can set up your "
+            + (member.role === "host"
+              ? "first property."
+              : "cleaner profile."),
+          buttonText: "Sign Up Now",
+          buttonUrl: "https://hostkeepdigital.co.uk/login",
+        }),
+      });
+    } catch (e) {
+      console.error("Email failed", e);
+    }
 
     setMemberLoading(member.id, null);
     fetchMembers();
