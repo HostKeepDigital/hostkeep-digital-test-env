@@ -48,6 +48,32 @@ export default function AdminPanel() {
       { approval_status: "invited" }
     );
 
+    const handleApprove = async (member) => {
+  setMemberLoading(member.id, "approve");
+
+  // 1. Update founding member status
+  await base44.entities.FoundingMember.update(
+    member.id,
+    { approval_status: "approved" }
+  );
+
+  // 2. Trigger password setup email
+  try {
+    await base44.functions.invoke("sendpasswordsreset", {
+      email: member.email
+    });
+  } catch (e) {
+    console.error("Password setup email failed", e);
+  }
+
+  setMemberLoading(member.id, null);
+  fetchMembers();
+};
+
+await base44.functions.invoke("sendpasswordsreset", {
+  email: member.email
+});
+
     setMemberLoading(member.id, null);
     fetchMembers();
   };
