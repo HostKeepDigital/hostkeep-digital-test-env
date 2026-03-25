@@ -48,34 +48,6 @@ export default function AdminPanel() {
       { approval_status: "invited" }
     );
 
-    try {
-       await base44.functions.invoke('sendEmail', {
-        from_name: "HostKeep",
-        to: member.email,
-        subject: "You're approved — Welcome to HostKeep",
-        html: buildEmail({
-          heading: "You're approved!",
-          body: "Your application to become a Founding "
-            + roleLabel
-            + " on HostKeep has been approved.<br><br>"
-            + "To get started, go to <strong>"
-            + "hostkeepdigital.co.uk/login</strong> "
-            + "and click <strong>Sign Up</strong>.<br><br>"
-            + "Important: use this exact email address "
-            + "to sign up: <strong>" + member.email
-            + "</strong><br><br>"
-            + "Once signed in, you can set up your "
-            + (member.role === "host"
-              ? "first property."
-              : "cleaner profile."),
-          buttonText: "Sign Up Now",
-          buttonUrl: "https://hostkeepdigital.co.uk/login",
-        }),
-      });
-    } catch (e) {
-      console.error("Email failed", e);
-    }
-
     setMemberLoading(member.id, null);
     fetchMembers();
   };
