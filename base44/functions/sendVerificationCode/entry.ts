@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
   // Send the verification email
   const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
-async function sendResendEmail(to: string, subject: string, html: string) {
+async function sendResendEmail(to, subject, html) {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
