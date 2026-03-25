@@ -55,7 +55,7 @@ export default function Founding() {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    base44.functions.invoke('getFoundingCounts', {})
+    base44.functions.invoke("getFoundingCounts", {})
       .then(res => {
         setHostCount(res.data?.hostCount || 0);
         setCleanerCount(res.data?.cleanerCount || 0);
@@ -92,35 +92,36 @@ export default function Founding() {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
+
     setSubmitting(true);
     let isDuplicate = false;
+
     try {
-      const result = await base44.functions.invoke('registerFoundingMember', {
+      const result = await base44.functions.invoke("registerFoundingMember", {
         full_name: form.full_name.trim(),
         email: form.email.toLowerCase().trim(),
         postcode: form.postcode.toUpperCase().trim(),
         role: form.role,
       });
-      if (result?.data?.error === 'duplicate_email') {
+
+      if (result?.data?.error === "duplicate_email") {
         isDuplicate = true;
-        setErrors({ email: 'This email has already been registered.' });
+        setErrors({ email: "This email has already been registered." });
+      }
+
+      if (!isDuplicate) {
+        // 1. Send the verification code email
+        await base44.functions.invoke("sendVerificationCode", {
+          email: form.email.toLowerCase().trim(),
+        });
+
+        // 2. Redirect the user to the verification page
+        navigate(`/verify-email?email=${encodeURIComponent(form.email.toLowerCase().trim())}`);
       }
     } catch (_) {
       // Ignore errors — always redirect unless duplicate
     } finally {
       setSubmitting(false);
-    }
-    if (!isDuplicate) {
-      if (!isDuplicate) {
-
-  // 1. Send the verification code email
-  await base44.functions.invoke("sendVerificationCode", {
-    email: form.email.toLowerCase().trim(),
-  });
-
-  // 2. Redirect the user to the verification page
-  navigate(`/verify-email?email=${encodeURIComponent(form.email.toLowerCase().trim())}`);
-}
     }
   };
 
@@ -160,7 +161,6 @@ export default function Founding() {
       </section>
 
       <div className="max-w-5xl mx-auto px-4 py-16">
-
         {/* Perk cards */}
         <div className="grid md:grid-cols-2 gap-6 mb-16">
           <motion.div
@@ -231,7 +231,6 @@ export default function Founding() {
           >
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Claim My Spot</h2>
             <form onSubmit={handleSubmit} noValidate className="space-y-5">
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
                 <Input
