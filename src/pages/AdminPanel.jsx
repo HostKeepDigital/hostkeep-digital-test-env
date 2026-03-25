@@ -256,7 +256,7 @@ export default function AdminPanel() {
             <h2 className="text-lg font-semibold text-gray-800 mb-3">
               Invited / In Progress <span className="text-blue-600 ml-1">({invitedMembers.length})</span>
             </h2>
-            <MemberTable rows={invitedMembers} showActions={false} />
+            <MemberTable rows={invitedMembers} showActions={true} />
           </div>
         )}
 
@@ -265,7 +265,7 @@ export default function AdminPanel() {
           <h2 className="text-lg font-semibold text-gray-800 mb-3">
             Approved <span className="text-green-600 ml-1">({approvedMembers.length})</span>
           </h2>
-          <MemberTable rows={approvedMembers} showActions={false} />
+          <MemberTable rows={approvedMembers} showActions={true} />
         </div>
 
         {/* Other (rejected / waitlist / out of area) */}
@@ -274,7 +274,7 @@ export default function AdminPanel() {
             <h2 className="text-lg font-semibold text-gray-800 mb-3">
               Rejected / Waitlist / Out of Area <span className="text-gray-500 ml-1">({otherMembers.length})</span>
             </h2>
-            <MemberTable rows={otherMembers} showActions={false} />
+            <MemberTable rows={otherMembers} showActions={true} />
           </div>
         )}
       </div>
