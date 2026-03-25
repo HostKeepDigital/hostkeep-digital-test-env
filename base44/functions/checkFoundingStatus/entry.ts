@@ -31,13 +31,18 @@ Deno.serve(async (req) => {
   const hasRole = existingRoles?.some(r => 
     r.role === member.role
   );
-
-  if (!hasRole) {
+  
+if (!hasRole) {
     await base44.asServiceRole.entities.UserRole
       .create({
         user_id: user_id,
         role: member.role,
         approval_status: 'approved',
+      });
+
+    await base44.asServiceRole.entities.FoundingMember
+      .update(member.id, { 
+        user_id: user_id 
       });
   }
 
