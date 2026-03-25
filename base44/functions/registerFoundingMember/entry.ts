@@ -102,20 +102,19 @@ await sendResendEmail(
 
     // Admin notification email
     try {
-      await base44.asServiceRole.integrations.Core.SendEmail({
-        from_name: 'HostKeep',
-        to: 'admin@hostkeepdigital.co.uk',
-        subject: `New Founding Member Application — ${full_name.trim()} (${roleLabel})`,
-        body: buildHtmlEmail(
-        'New Founding Member Application',
+      await sendResendEmail(
+        'admin@hostkeepdigital.co.uk',
+        `New Founding Member Application — ${full_name.trim()} (${roleLabel})`,
+        buildHtmlEmail(
+          'New Founding Member Application',
           `<p>A new founding member application has been submitted.</p>
            <p><strong>Name:</strong> ${full_name.trim()}<br>
            <strong>Email:</strong> ${email}<br>
            <strong>Postcode:</strong> ${postcode}<br>
            <strong>Role:</strong> ${roleLabel}</p>
            <p><a href="https://hostkeepdigital.co.uk/AdminPanel" style="display:inline-block;background-color:#1E3A5F;color:#ffffff;font-size:15px;font-weight:bold;text-decoration:none;padding:14px 32px;border-radius:8px;">Review in Admin Panel</a></p>`
-        ),
-      });
+        )
+      );
     } catch (_) {}
   }
 
