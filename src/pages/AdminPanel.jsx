@@ -1,6 +1,14 @@
 import { useState, useEffect } from "react";
 import { buildEmail } from "@/lib/emailTemplate";
-import { Shield, Check, X, RefreshCw, Users, Clock, UserCheck, Hourglass } from "lucide-react";
+import {
+  Shield,
+  Check,
+  X,
+  RefreshCw,
+  Clock,
+  UserCheck,
+  Hourglass,
+} from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 
@@ -38,7 +46,10 @@ export default function AdminPanel() {
 
   const fetchMembers = async () => {
     setLoading(true);
-    const data = await base44.entities.FoundingMember.list("-signup_timestamp", 500);
+    const data = await base44.entities.FoundingMember.list(
+      "-signup_timestamp",
+      500
+    );
     setMembers(data);
     setLoading(false);
   };
@@ -168,9 +179,15 @@ export default function AdminPanel() {
   };
 
   // FILTERS
-  const interestMembers = members.filter((m) => m.approval_status === "interest");
-  const pendingMembers = members.filter((m) => m.approval_status === "pending");
-  const invitedMembers = members.filter((m) => m.approval_status === "invited");
+  const interestMembers = members.filter(
+    (m) => m.approval_status === "interest"
+  );
+  const pendingMembers = members.filter(
+    (m) => m.approval_status === "pending"
+  );
+  const invitedMembers = members.filter(
+    (m) => m.approval_status === "invited"
+  );
   const passwordProtectedMembers = members.filter(
     (m) => m.approval_status === "password_protected"
   );
@@ -380,7 +397,9 @@ export default function AdminPanel() {
               <h1 className="text-lg font-bold text-gray-900 leading-tight">
                 Admin Panel
               </h1>
-              <p className="text-xs text-gray-400">Founding member management</p>
+              <p className="text-xs text-gray-400">
+                Founding member management
+              </p>
             </div>
           </div>
 
@@ -442,10 +461,10 @@ export default function AdminPanel() {
                 <s.icon className={`w-4 h-4 ${s.color}`} />
               </div>
               <div>
-                <p className="text-xs text-gray-400 leading-tight">{s.label}</p>
-                <p
-                  className={`text-xl font-bold ${s.color} leading-tight`}
-                >
+                <p className="text-xs text-gray-400 leading-tight">
+                  {s.label}
+                </p>
+                <p className={`text-xl font-bold ${s.color} leading-tight`}>
                   {s.value}
                 </p>
               </div>
@@ -504,4 +523,35 @@ export default function AdminPanel() {
               count={approvedMembers.length}
               accent="green"
             >
-              <MemberTable members={approvedMembers} showActions
+              <MemberTable members={approvedMembers} showActions />
+            </Section>
+
+            <Section
+              title="Waitlist"
+              count={waitlistMembers.length}
+              accent="orange"
+            >
+              <MemberTable members={waitlistMembers} showActions />
+            </Section>
+
+            <Section
+              title="Rejected"
+              count={rejectedMembers.length}
+              accent="red"
+            >
+              <MemberTable members={rejectedMembers} showActions />
+            </Section>
+
+            <Section
+              title="Out of Area"
+              count={outOfAreaMembers.length}
+              accent="gray"
+            >
+              <MemberTable members={outOfAreaMembers} showActions />
+            </Section>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
