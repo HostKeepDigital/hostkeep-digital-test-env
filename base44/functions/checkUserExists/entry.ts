@@ -14,18 +14,21 @@ Deno.serve(async (req) => {
       email: normalisedEmail,
       approval_status: "Invited"
     });
+    console.log("DEBUG: FoundingMember:", fm);
 
     // Check Cleaner
     const cleaners = await base44.asServiceRole.entities.Cleaner.filter({
       email: normalisedEmail,
       approval_status: "Invited"
     });
+    console.log("DEBUG: Cleaner:", cleaners);
 
     // Check Host
     const hosts = await base44.asServiceRole.entities.Host.filter({
       email: normalisedEmail,
       approval_status: "Invited"
     });
+  console.log("DEBUG: Host:", hosts);
 
     const exists =
       (fm && fm.length > 0) ||
@@ -37,8 +40,4 @@ Deno.serve(async (req) => {
     console.error("checkUserExists error:", err);
     return Response.json({ exists: false });
   }
-
-  console.log("DEBUG: FoundingMember:", fm);
-  console.log("DEBUG: Cleaner:", cleaners);
-  console.log("DEBUG: Host:", hosts);
 });
