@@ -17,6 +17,7 @@ import HowPaymentsWork from './pages/HowPaymentsWork';
 import VerifyEmail from './pages/VerifyEmail';
 import SignIn from './pages/SignIn';
 import ForgotPassword from './pages/ForgotPassword';
+import CreatePassword from './pages/CreatePassword';
 
 // Pages accessible without authentication
 const PUBLIC_ROUTES = new Set([
@@ -219,6 +220,7 @@ const AuthenticatedApp = () => {
         <Route path="/Login" element={<Navigate to="/SignIn" replace />} />
         <Route path="/SignIn" element={<SignIn />} />
         <Route path="/ForgotPassword" element={<ForgotPassword />} />
+        <Route path="/CreatePassword" element={<CreatePassword />} />
         <Route path="/" element={
           <RequireAuth>
             <LayoutWrapper currentPageName="Home">
