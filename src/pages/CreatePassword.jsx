@@ -9,14 +9,14 @@ export default function CreatePassword() {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const [error, setError] = useState("");
-  const [emailValid, setEmailValid] = useState<null | boolean>(null); // null = untouched, true/false = checked
-  const [step, setStep] = useState<"form" | "success">("form"); // form → success
+  const [emailValid, setEmailValid] = useState(null); // null = untouched, true/false = checked // null = untouched, true/false = checked
+  const [step, setStep] = useState("form"); // form → success // form → success
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Check if email exists via Base44 SDK
-  const checkEmailExists = async (email: string) => {
+  const checkEmailExists = async (email) => {
     try {
       const res = await base44.functions.invoke("checkUserExists", { email });
       return res.data?.exists === true;
@@ -25,7 +25,7 @@ export default function CreatePassword() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
