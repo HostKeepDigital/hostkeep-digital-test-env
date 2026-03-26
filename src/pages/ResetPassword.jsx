@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Home, Eye, EyeOff, Mail } from "lucide-react";
+import { base44 } from "@/api/base44Client";
 
 export default function ResetPassword() {
   const token = new URLSearchParams(window.location.search).get("token");
@@ -35,13 +36,7 @@ export default function ResetPassword() {
     setEmailLoading(true);
 
     try {
-      const res = await fetch("/api/functions/sendPasswordReset", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      // Always show success (security best practice)
+      await base44.functions.invoke('sendPasswordReset', { email });
       setEmailSent(true);
     } catch (_) {
       setEmailSent(true);
@@ -75,31 +70,23 @@ export default function ResetPassword() {
     setResetLoading(true);
 
     try {
-      const res = await fetch("/api/functions/verifyPasswordReset", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          token,
-          newPassword: password,
-        }),
-      });
-
-      const data = await res.json();
+      const res = await base44.functions.invoke('verifyPasswordReset', { token, newPassword: password });
+      const data = res.data;
 
       if (!data.success) {
-        if (data.error === "invalid_token") {
-          setResetError("This reset link is invalid or has already been used.");
-        } else if (data.error === "expired_token") {
-          setResetError("This reset link has expired. Please request a new one.");
+        if (data.error === 'invalid_token') {
+          setResetError('This reset link is invalid or has already been used.');
+        } else if (data.error === 'expired_token') {
+          setResetError('This reset link has expired. Please request a new one.');
         } else {
-          setResetError("Unable to reset password. Please try again.");
+          setResetError('Unable to reset password. Please try again.');
         }
         return;
       }
 
-      setStep("success");
+      setStep('success');
     } catch (err) {
-      setResetError("Something went wrong. Please try again.");
+      setResetError('Something went wrong. Please try again.');
     } finally {
       setResetLoading(false);
     }
