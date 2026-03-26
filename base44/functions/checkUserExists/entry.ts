@@ -37,4 +37,8 @@ Deno.serve(async (req) => {
     console.error("checkUserExists error:", err);
     return Response.json({ exists: false });
   }
+
+  console.log("DEBUG: FoundingMember:", fm);
+  console.log("DEBUG: Cleaner:", cleaners);
+  console.log("DEBUG: Host:", hosts);
 });
