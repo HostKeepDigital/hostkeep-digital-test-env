@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
       email: normalisedEmail,
       approval_status: "Invited"
     });
-  console.log("DEBUG: Host:", hosts);
+    console.log("DEBUG: Host:", hosts);
 
     const exists =
       (fm && fm.length > 0) ||
