@@ -17,19 +17,19 @@ Deno.serve(async (req) => {
     // Check FoundingMember
     const fm = await base44.asServiceRole.entities.FoundingMember.filter({
       email: normalisedEmail,
-      approval_status: "Invited",
+      approval_status: "invited",
     });
 
     // Check Cleaner
     const cleaners = await base44.asServiceRole.entities.Cleaner.filter({
       email: normalisedEmail,
-      approval_status: "Invited",
+      approval_status: "invited",
     });
 
     // Check Host
     const hosts = await base44.asServiceRole.entities.Host.filter({
       email: normalisedEmail,
-      approval_status: "Invited",
+      approval_status: "invited",
     });
 
     const exists =
