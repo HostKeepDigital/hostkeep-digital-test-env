@@ -9,9 +9,10 @@ Deno.serve(async (req) => {
   }
 
   // Step 1 — Find user by email
-  const users = await base44.asServiceRole.entities.User.filter({ 
-    email: email.toLowerCase().trim() 
+  const users = await base44.asServiceRole.entities.User.filter({
+    email: email.toLowerCase().trim()
   });
+
   const user = users?.[0];
 
   // Always return success — never reveal if account exists
@@ -19,13 +20,17 @@ Deno.serve(async (req) => {
     return Response.json({ success: true });
   }
 
-  // Step 2 — Invalidate previous tokens
-  const existing = await base44.asServiceRole.entities.PasswordResetToken.filter({ 
+  // Step 2 — Invalidate previous tokens (correct update syntax)
+  const existing = await base44.asServiceRole.entities.PasswordResetToken.filter({
     user_id: user.id,
-    used: false 
+    used: false
   });
+
   for (const t of existing) {
-    await base44.asServiceRole.entities.PasswordResetToken.update(t.id, { used: true });
+    await base44.asServiceRole.entities.PasswordResetToken.update({
+      id: t.id,
+      used: true
+    });
   }
 
   // Step 3 — Generate token
@@ -37,15 +42,15 @@ Deno.serve(async (req) => {
   await base44.asServiceRole.entities.PasswordResetToken.create({
     user_id: user.id,
     email: user.email,
-    token: token,
+    token,
     expires_at: expiresAt,
-    used: false,
+    used: false
   });
 
   // Step 5 — Build reset URL
-  const resetUrl = 'https://hostkeepdigital.co.uk/ResetPassword?token=' + token;
+  const resetUrl = `https://hostkeepdigital.co.uk/ResetPassword?token=${token}`;
 
-  // Step 6 — Send branded email
+  // Step 6 — Send branded email (correct: use html:)
   await base44.asServiceRole.integrations.Core.SendEmail({
     from_name: 'HostKeep',
     to: email,
