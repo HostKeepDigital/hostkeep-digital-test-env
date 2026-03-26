@@ -49,11 +49,13 @@ export default function AdminPanel() {
 
   const setMemberLoading = (id, val) => setActionLoading(p => ({ ...p, [id]: val }));
 
+  // ───────────────────────────────────────────────
+  // APPROVE EMAIL
+  // ───────────────────────────────────────────────
   const handleApprove = async (member) => {
     setMemberLoading(member.id, "approve");
     const roleLabel = member.role === "host" ? "Host" : "Cleaner";
 
-    // KEY FIX: move to "invited" instead of "approved"
     await base44.entities.FoundingMember.update(member.id, { approval_status: "invited" });
 
     try {
@@ -62,8 +64,20 @@ export default function AdminPanel() {
         to: member.email,
         subject: "You're approved — Welcome to HostKeep",
         html: buildEmail({
-          heading: "Welcome to HostKeep!",
-          body: `Congratulations! Your application to join HostKeep as a Founding ${roleLabel} has been approved.<br><br>You can now sign in and get started.`,
+          heading: "You're approved!",
+          body: `
+            Your application to become a Founding ${roleLabel} on HostKeep has been approved.<br><br>
+            To get started, go to <strong>hostkeepdigital.co.uk/login</strong> and click <strong>Sign Up</strong>.<br><br>
+            Important: use this exact email address to sign up:<br>
+            <strong>${member.email}</strong><br><br>
+            Once signed in, you can set up your ${
+              member.role === "host"
+                ? "first property."
+                : "cleaner profile."
+            }
+          `,
+          buttonText: "Sign Up Now",
+          buttonUrl: "https://hostkeepdigital.co.uk/login",
         }),
       });
     } catch (e) {
@@ -74,6 +88,9 @@ export default function AdminPanel() {
     fetchMembers();
   };
 
+  // ───────────────────────────────────────────────
+  // WAITLIST EMAIL
+  // ───────────────────────────────────────────────
   const handleWaitlist = async (member) => {
     setMemberLoading(member.id, "waitlist");
     const roleLabel = member.role === "host" ? "Host" : "Cleaner";
@@ -85,7 +102,12 @@ export default function AdminPanel() {
       subject: "HostKeep — You're on our waitlist",
       html: buildEmail({
         heading: "You're on our waitlist",
-        body: `Thank you for applying to join HostKeep as a Founding ${roleLabel}.<br><br>Our founding spots are currently full, but we've added you to our waitlist. You'll be among the first to know when a spot opens up.<br><br>Thank you for your patience.`,
+        body: `
+          Thank you for applying to join HostKeep as a Founding ${roleLabel}.<br><br>
+          Our founding spots are currently full, but we've added you to our waitlist.<br><br>
+          You'll be among the first to know when a spot opens up.<br><br>
+          Thank you for your patience and interest in HostKeep.
+        `,
       }),
     });
 
@@ -93,6 +115,9 @@ export default function AdminPanel() {
     fetchMembers();
   };
 
+  // ───────────────────────────────────────────────
+  // REJECT EMAIL
+  // ───────────────────────────────────────────────
   const handleReject = async (member) => {
     setMemberLoading(member.id, "reject");
     const roleLabel = member.role === "host" ? "Host" : "Cleaner";
@@ -110,7 +135,14 @@ export default function AdminPanel() {
       subject: "Your HostKeep Application",
       html: buildEmail({
         heading: "Your HostKeep Application",
-        body: `Thank you for applying to join HostKeep as a Founding ${roleLabel}.<br><br>After reviewing your application, we are unable to approve it at this time.<br><br><strong>Reason:</strong><br>${note.trim()}<br><br>If you have any questions please contact us at hello@hostkeepdigital.co.uk.`,
+        body: `
+          Thank you for applying to join HostKeep as a Founding ${roleLabel}.<br><br>
+          After reviewing your application, we are unable to approve it at this time.<br><br>
+          <strong>Reason:</strong><br>
+          ${note.trim()}<br><br>
+          If you have any questions, please contact us at
+          <a href="mailto:hello@hostkeepdigital.co.uk" style="color:#0d9488;">hello@hostkeepdigital.co.uk</a>.
+        `,
       }),
     });
 
@@ -118,6 +150,9 @@ export default function AdminPanel() {
     fetchMembers();
   };
 
+  // ───────────────────────────────────────────────
+  // DELETE MEMBER
+  // ───────────────────────────────────────────────
   const handleDelete = async (member) => {
     if (!window.confirm('Delete ' + member.full_name + '? This cannot be undone.')) return;
     setMemberLoading(member.id, "delete");
@@ -126,7 +161,9 @@ export default function AdminPanel() {
     fetchMembers();
   };
 
-  // ── Section filters (all 9 in order) ──────────────────────────────────────
+  // ───────────────────────────────────────────────
+  // FILTERS
+  // ───────────────────────────────────────────────
   const interestMembers              = members.filter(m => m.approval_status === "interest");
   const pendingMembers               = members.filter(m => m.approval_status === "pending");
   const invitedMembers               = members.filter(m => m.approval_status === "invited");
@@ -140,7 +177,9 @@ export default function AdminPanel() {
   const hostCount    = approvedMembers.filter(m => m.role === "host").length;
   const cleanerCount = approvedMembers.filter(m => m.role === "cleaner").length;
 
-  // ── MemberTable (structure preserved exactly, styling refreshed) ───────────
+  // ───────────────────────────────────────────────
+  // MEMBER TABLE
+  // ───────────────────────────────────────────────
   const MemberTable = ({ members: rows, showActions = false }) => (
     <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
       <table className="w-full text-sm">
@@ -231,7 +270,9 @@ export default function AdminPanel() {
     </div>
   );
 
-  // ── Section wrapper ────────────────────────────────────────────────────────
+  // ───────────────────────────────────────────────
+  // SECTION WRAPPER
+  // ───────────────────────────────────────────────
   const Section = ({ title, count, children, accent = "gray" }) => {
     const dotColors = {
       gray:   "bg-gray-300",
@@ -255,6 +296,9 @@ export default function AdminPanel() {
     );
   };
 
+  // ───────────────────────────────────────────────
+  // RENDER
+  // ───────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Top bar */}
@@ -303,47 +347,38 @@ export default function AdminPanel() {
         ) : (
           <div className="space-y-8">
 
-            {/* 1 — Interest */}
             <Section title="Interest / Sign-Ups" count={interestMembers.length} accent="gray">
               <MemberTable members={interestMembers} showActions />
             </Section>
 
-            {/* 2 — Pending */}
             <Section title="Pending Applications" count={pendingMembers.length} accent="amber">
               <MemberTable members={pendingMembers} showActions />
             </Section>
 
-            {/* 3 — Invited */}
             <Section title="Invited" count={invitedMembers.length} accent="blue">
               <MemberTable members={invitedMembers} showActions />
             </Section>
 
-            {/* 4 — Password Protected */}
             <Section title="Password Protected" count={passwordProtectedMembers.length} accent="indigo">
               <MemberTable members={passwordProtectedMembers} showActions />
             </Section>
 
-            {/* 5 — Awaiting Document Verification */}
             <Section title="Awaiting Document Verification" count={awaitingDocMembers.length} accent="purple">
               <MemberTable members={awaitingDocMembers} showActions />
             </Section>
 
-            {/* 6 — Approved */}
             <Section title="Approved" count={approvedMembers.length} accent="green">
               <MemberTable members={approvedMembers} showActions />
             </Section>
 
-            {/* 7 — Waitlist */}
             <Section title="Waitlist" count={waitlistMembers.length} accent="orange">
               <MemberTable members={waitlistMembers} showActions />
             </Section>
 
-            {/* 8 — Rejected */}
             <Section title="Rejected" count={rejectedMembers.length} accent="red">
               <MemberTable members={rejectedMembers} showActions />
             </Section>
 
-            {/* 9 — Out of Area */}
             <Section title="Out of Area" count={outOfAreaMembers.length} accent="gray">
               <MemberTable members={outOfAreaMembers} showActions />
             </Section>
