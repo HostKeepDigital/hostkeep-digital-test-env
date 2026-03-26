@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { base44 } from "@/api/base44Client";
 import { Home } from "lucide-react";
 
 export default function CreatePassword() {
@@ -11,16 +12,11 @@ export default function CreatePassword() {
   const [emailValid, setEmailValid] = useState(null); // null = untouched, true/false = checked
   const [step, setStep] = useState("form"); // form → success
 
-  // Check if email exists in Base44 User table
+  // Check if email exists via Base44 SDK
   const checkEmailExists = async (email) => {
     try {
-      const res = await fetch("https://api.base44.com/functions/checkUserExists", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      const data = await res.json();
-      return data.exists === true;
+      const res = await base44.functions.invoke("checkUserExists", { email });
+      return res.data?.exists === true;
     } catch {
       return false;
     }
