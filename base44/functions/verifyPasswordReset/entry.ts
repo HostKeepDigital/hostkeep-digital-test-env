@@ -41,20 +41,36 @@ Deno.serve(async (req) => {
     return Response.json({ success: false, error: 'expired_token' });
   }
 
-  // Step 3 - Update the user's password (same pattern as createonboardingpassword)
+  const email = record.email;
+
+  // Step 3 - Delete existing user account (same pattern as createonboardingpassword in reverse)
   try {
-    await base44.asServiceRole.entities.User.update(record.user_id, { password: newPassword });
+    const existingUsers = await base44.asServiceRole.entities.User.filter({ email });
+    for (const u of existingUsers) {
+      await base44.asServiceRole.entities.User.delete(u.id);
+    }
   } catch (e) {
-    console.error('Password update error:', e.message);
+    console.error('Delete user error:', e.message);
     return Response.json({ success: false, error: 'update_failed' });
   }
 
-  // Step 4 - Delete the used token
+  // Step 4 - Recreate user with new password (same as createonboardingpassword)
+  try {
+    await base44.asServiceRole.entities.User.create({
+      email,
+      password: newPassword,
+    });
+  } catch (e) {
+    console.error('Create user error:', e.message);
+    return Response.json({ success: false, error: 'update_failed' });
+  }
+
+  // Step 5 - Delete the used token
   await base44.asServiceRole.entities.PasswordResetToken.delete(record.id);
 
-  // Step 5 - Send confirmation email (non-fatal)
+  // Step 6 - Send confirmation email (non-fatal)
   try {
-    await sendConfirmationEmail(record.email);
+    await sendConfirmationEmail(email);
   } catch (_) {}
 
   return Response.json({ success: true });
