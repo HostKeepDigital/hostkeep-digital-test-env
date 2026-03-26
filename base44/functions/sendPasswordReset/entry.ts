@@ -2,6 +2,12 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 
+function generateToken() {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 async function sendBrandedEmail({ to, resetUrl }) {
   const html = `<!DOCTYPE html>
 <html>
@@ -71,32 +77,48 @@ Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
   const { email } = await req.json();
 
+  // Always return success to prevent email enumeration
   if (!email) {
     return Response.json({ success: true });
   }
 
   const normalizedEmail = email.toLowerCase().trim();
 
-  // Use Base44's platform reset - generates a real auth token
-  let platformToken;
   try {
-    const result = await base44.auth.resetPasswordRequest(normalizedEmail);
-    console.log('Platform reset result:', JSON.stringify(result));
-    platformToken = result?.token || result?.reset_token || result?.resetToken;
-  } catch (e) {
-    console.error('Reset request error:', e.message);
-    return Response.json({ success: true });
-  }
+    // Find the user account
+    const users = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
+    const user = users?.[0];
 
-  console.log('Platform token received:', platformToken ? 'yes' : 'no');
-
-  if (platformToken) {
-    const resetUrl = `https://hostkeepdigital.co.uk/ResetPassword?token=${platformToken}`;
-    try {
-      await sendBrandedEmail({ to: normalizedEmail, resetUrl });
-    } catch (e) {
-      console.error('Email send error:', e.message);
+    if (!user) {
+      // Don't reveal whether email exists
+      return Response.json({ success: true });
     }
+
+    // Delete any existing tokens for this user to ensure uniqueness
+    const existingTokens = await base44.asServiceRole.entities.PasswordResetToken.filter({ email: normalizedEmail });
+    for (const t of existingTokens) {
+      await base44.asServiceRole.entities.PasswordResetToken.delete(t.id);
+    }
+
+    // Generate a unique token
+    const token = generateToken();
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hour
+
+    // Store token in DB
+    await base44.asServiceRole.entities.PasswordResetToken.create({
+      user_id: user.id,
+      email: normalizedEmail,
+      token,
+      expires_at: expiresAt,
+      used: false,
+    });
+
+    // Send branded email
+    const resetUrl = `https://hostkeepdigital.co.uk/ResetPassword?token=${token}`;
+    await sendBrandedEmail({ to: normalizedEmail, resetUrl });
+
+  } catch (e) {
+    console.error('sendPasswordReset error:', e.message);
   }
 
   return Response.json({ success: true });

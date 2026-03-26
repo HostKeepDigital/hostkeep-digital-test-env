@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
     return Response.json({ success: false, error: 'invalid_token' });
   }
 
-  // Step 1 - Find our custom token record
+  // Step 1 - Find the token record
   const records = await base44.asServiceRole.entities.PasswordResetToken.filter({ token, used: false });
   const record = records?.[0];
 
@@ -37,25 +37,12 @@ Deno.serve(async (req) => {
 
   // Step 2 - Check expiry
   if (new Date() > new Date(record.expires_at)) {
+    await base44.asServiceRole.entities.PasswordResetToken.delete(record.id);
     return Response.json({ success: false, error: 'expired_token' });
   }
 
-  const email = record.email;
-
-  // Step 3 - Use Base44's built-in platform reset flow to actually change the password:
-  // 1. Request a platform reset token for this email
-  // 2. Get that token from our DB
-  // 3. Use base44.auth.resetPassword to complete it
+  // Step 3 - Update the user's password (same pattern as createonboardingpassword)
   try {
-    // Trigger platform to generate a reset token (will send a platform email, but we suppress concern)
-    await base44.auth.resetPasswordRequest(email);
-
-    // Wait briefly for token to be created
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    // We can't read platform tokens directly - use a different approach:
-    // updateMe requires auth context. Instead mark our token used and return partial success.
-    // The real password update: inject via User entity update
     await base44.asServiceRole.entities.User.update(record.user_id, { password: newPassword });
   } catch (e) {
     console.error('Password update error:', e.message);
@@ -65,12 +52,10 @@ Deno.serve(async (req) => {
   // Step 4 - Delete the used token
   await base44.asServiceRole.entities.PasswordResetToken.delete(record.id);
 
-  // Step 5 - Send confirmation email
+  // Step 5 - Send confirmation email (non-fatal)
   try {
-    await sendConfirmationEmail(email);
-  } catch (_) {
-    // Non-fatal
-  }
+    await sendConfirmationEmail(record.email);
+  } catch (_) {}
 
   return Response.json({ success: true });
 });
