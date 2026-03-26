@@ -9,8 +9,8 @@ export default function CreatePassword() {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const [error, setError] = useState("");
-  const [emailValid, setEmailValid] = useState(null); // null = untouched, true/false = checked // null = untouched, true/false = checked
-  const [step, setStep] = useState("form"); // form → success // form → success
+  const [emailValid, setEmailValid] = useState(null); // null = untouched, true/false = checked
+  const [step, setStep] = useState("form"); // form → success
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -57,7 +57,7 @@ export default function CreatePassword() {
             Password created successfully
           </h1>
           <p className="text-gray-600 mb-6 text-sm">
-            Your password has been accepted.  
+            Your password has been accepted.
             Next brick: we will redirect you into onboarding.
           </p>
           <Link to="/SignIn" className="text-teal-600 font-medium">
@@ -124,7 +124,7 @@ export default function CreatePassword() {
               />
               <button
                 type="button"
-                onClick={() => setShowPassword((v) => !v)}
+                onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -153,7 +153,7 @@ export default function CreatePassword() {
               />
               <button
                 type="button"
-                onClick={() => setShowConfirmPassword((v) => !v)}
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
               >
                 {showConfirmPassword ? (
