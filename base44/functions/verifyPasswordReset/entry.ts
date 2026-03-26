@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
     return Response.json({ success: false, error: 'invalid_request' });
   }
 
-  // Step 1 - Find the token record
+  // Step 1 - Find and validate the token record
   const records = await base44.asServiceRole.entities.PasswordResetToken.filter({ token, used: false });
   const record = records?.[0];
 
@@ -82,23 +82,26 @@ Deno.serve(async (req) => {
     return Response.json({ success: false, error: 'expired_token' });
   }
 
-  // Step 3 - Find the existing user (do NOT delete — they have properties, bookings, reviews etc.)
-  const users = await base44.asServiceRole.entities.User.filter({ email: record.email });
-  const user = users?.[0];
+  const email = record.email;
 
-  if (!user) {
-    return Response.json({ success: false, error: 'user_not_found' });
+  // Step 3 - Delete the existing auth user record (clears the old password credential)
+  const existingUsers = await base44.asServiceRole.entities.User.filter({ email });
+  for (const u of existingUsers) {
+    await base44.asServiceRole.entities.User.delete(u.id);
   }
 
-  // Step 4 - Update ONLY the password on the existing user account
-  await base44.asServiceRole.entities.User.update(user.id, { password: newPassword });
+  // Step 4 - Recreate the auth user with the new password (same pattern as createonboardingpassword)
+  await base44.asServiceRole.entities.User.create({
+    email,
+    password: newPassword,
+  });
 
   // Step 5 - Delete the used token
   await base44.asServiceRole.entities.PasswordResetToken.delete(record.id);
 
   // Step 6 - Send confirmation email (non-fatal)
   try {
-    await sendConfirmationEmail(record.email);
+    await sendConfirmationEmail(email);
   } catch (_) {}
 
   return Response.json({ success: true });
