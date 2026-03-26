@@ -12,12 +12,13 @@ Deno.serve(async (req) => {
 
     const normalisedEmail = email.toLowerCase().trim();
 
-    // Look for a User with this email
-    const users = await base44.asServiceRole.entities.User.filter({
+    // Look for an invited Founding Member with this email
+    const members = await base44.asServiceRole.entities.FoundingMember.filter({
       email: normalisedEmail,
+      approval_status: "invited",
     });
 
-    const exists = users && users.length > 0;
+    const exists = members && members.length > 0;
 
     return Response.json({ exists });
   } catch (err) {
