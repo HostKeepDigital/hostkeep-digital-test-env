@@ -13,7 +13,48 @@ async function sendConfirmationEmail(to) {
       from: 'HostKeep <hello@hostkeepdigital.co.uk>',
       to,
       subject: 'Your HostKeep password has been updated',
-      html: '<html><body style="font-family:Arial,sans-serif;background:#f4f4f5;padding:40px 20px;"><table width="100%"><tr><td align="center"><table width="600" style="background:#fff;border-radius:12px;overflow:hidden;"><tr><td style="background:#0d9488;padding:32px 40px;text-align:center;"><span style="color:#fff;font-size:24px;font-weight:bold;">HostKeep</span></td></tr><tr><td style="padding:40px;"><h1 style="color:#111827;font-size:22px;">Your password has been updated</h1><p style="color:#374151;font-size:15px;line-height:1.7;">Your HostKeep password has been successfully changed. You can now sign in with your new password.<br><br>If you did not make this change, please contact us immediately at <a href="mailto:hello@hostkeepdigital.co.uk">hello@hostkeepdigital.co.uk</a></p><p style="text-align:center;"><a href="https://hostkeepdigital.co.uk/SignIn" style="display:inline-block;background:#0d9488;color:#fff;font-size:15px;font-weight:bold;text-decoration:none;padding:14px 32px;border-radius:8px;">Sign In</a></p></td></tr></table></td></tr></table></body></html>',
+      html: `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background-color:#f4f4f5;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f5;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:12px;overflow:hidden;max-width:600px;width:100%;">
+        <tr>
+          <td style="background-color:#0d9488;padding:32px 40px;text-align:center;">
+            <span style="color:#ffffff;font-size:24px;font-weight:bold;letter-spacing:-0.5px;">HostKeep</span><br>
+            <span style="color:#99f6e4;font-size:13px;">hostkeepdigital.co.uk</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:40px 40px 32px 40px;">
+            <h1 style="margin:0 0 16px 0;font-size:22px;font-weight:bold;color:#111827;">Your password has been updated</h1>
+            <p style="font-size:15px;line-height:1.7;color:#374151;margin:0 0 28px 0;">
+              Your HostKeep password was successfully changed. You can now sign in with your new password.<br><br>
+              If you did not make this change, please contact us immediately at 
+              <a href="mailto:hello@hostkeepdigital.co.uk" style="color:#0d9488;">hello@hostkeepdigital.co.uk</a>.
+            </p>
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr><td align="center">
+                <a href="https://hostkeepdigital.co.uk/SignIn" style="display:inline-block;background-color:#0d9488;color:#ffffff;font-size:15px;font-weight:bold;text-decoration:none;padding:14px 32px;border-radius:8px;">Sign In</a>
+              </td></tr>
+            </table>
+          </td>
+        </tr>
+        <tr><td style="padding:0 40px;"><hr style="border:none;border-top:1px solid #e5e7eb;margin:0;"></td></tr>
+        <tr>
+          <td style="padding:28px 40px;text-align:center;">
+            <p style="margin:0 0 8px 0;font-size:13px;color:#6b7280;">© 2026 HostKeep Digital Ltd</p>
+            <p style="margin:0;font-size:13px;">
+              <a href="mailto:hello@hostkeepdigital.co.uk" style="color:#0d9488;text-decoration:none;">hello@hostkeepdigital.co.uk</a>
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
     }),
   });
   return res.json();
@@ -24,7 +65,7 @@ Deno.serve(async (req) => {
   const { token, newPassword } = await req.json();
 
   if (!token || !newPassword) {
-    return Response.json({ success: false, error: 'invalid_token' });
+    return Response.json({ success: false, error: 'invalid_request' });
   }
 
   // Step 1 - Find the token record
@@ -41,36 +82,23 @@ Deno.serve(async (req) => {
     return Response.json({ success: false, error: 'expired_token' });
   }
 
-  const email = record.email;
+  // Step 3 - Find the existing user (do NOT delete — they have properties, bookings, reviews etc.)
+  const users = await base44.asServiceRole.entities.User.filter({ email: record.email });
+  const user = users?.[0];
 
-  // Step 3 - Delete existing user account (same pattern as createonboardingpassword in reverse)
-  try {
-    const existingUsers = await base44.asServiceRole.entities.User.filter({ email });
-    for (const u of existingUsers) {
-      await base44.asServiceRole.entities.User.delete(u.id);
-    }
-  } catch (e) {
-    console.error('Delete user error:', e.message);
-    return Response.json({ success: false, error: 'update_failed' });
+  if (!user) {
+    return Response.json({ success: false, error: 'user_not_found' });
   }
 
-  // Step 4 - Recreate user with new password (same as createonboardingpassword)
-  try {
-    await base44.asServiceRole.entities.User.create({
-      email,
-      password: newPassword,
-    });
-  } catch (e) {
-    console.error('Create user error:', e.message);
-    return Response.json({ success: false, error: 'update_failed' });
-  }
+  // Step 4 - Update ONLY the password on the existing user account
+  await base44.asServiceRole.entities.User.update(user.id, { password: newPassword });
 
   // Step 5 - Delete the used token
   await base44.asServiceRole.entities.PasswordResetToken.delete(record.id);
 
   // Step 6 - Send confirmation email (non-fatal)
   try {
-    await sendConfirmationEmail(email);
+    await sendConfirmationEmail(record.email);
   } catch (_) {}
 
   return Response.json({ success: true });
