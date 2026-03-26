@@ -2,84 +2,10 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 
-async function sendEmail({ to, subject, html }) {
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${RESEND_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      from: 'HostKeep <hello@hostkeepdigital.co.uk>',
-      to,
-      subject,
-      html,
-    }),
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Resend error: ${err}`);
-  }
-  return res.json();
-}
-
-Deno.serve(async (req) => {
-  const base44 = createClientFromRequest(req);
-  const { email } = await req.json();
-
-  if (!email) {
-    return Response.json({ success: true });
-  }
-
-  // Step 1 — Find user by email
-  const users = await base44.asServiceRole.entities.User.filter({
-    email: email.toLowerCase().trim()
-  });
-
-  const user = users?.[0];
-
-  // Always return success — never reveal if account exists
-  if (!user) {
-    return Response.json({ success: true });
-  }
-
-  // Step 2 — Invalidate previous tokens (correct update syntax)
-  const existing = await base44.asServiceRole.entities.PasswordResetToken.filter({
-    user_id: user.id,
-    used: false
-  });
-
-  for (const t of existing) {
-    await base44.asServiceRole.entities.PasswordResetToken.update(t.id, { used: true });
-  }
-
-  // Step 3 — Generate token
-  const token = crypto.randomUUID() + '-' + crypto.randomUUID();
-
-  // Step 4 — Store token with 1 hour expiry
-  const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
-
-  await base44.asServiceRole.entities.PasswordResetToken.create({
-    user_id: user.id,
-    email: user.email,
-    token,
-    expires_at: expiresAt,
-    used: false
-  });
-
-  // Step 5 — Build reset URL
-  const resetUrl = `https://hostkeepdigital.co.uk/ResetPassword?token=${token}`;
-
-  // Step 6 — Send branded email via Resend
-  await sendEmail({
-    to: email,
-    subject: 'Reset your HostKeep password',
-    html: `<!DOCTYPE html>
+async function sendBrandedEmail({ to, resetUrl }) {
+  const html = `<!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
 <body style="margin:0;padding:0;background-color:#f4f4f5;font-family:Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f5;padding:40px 20px;">
     <tr><td align="center">
@@ -105,21 +31,12 @@ Deno.serve(async (req) => {
             </table>
           </td>
         </tr>
-        <tr>
-          <td style="padding:0 40px;">
-            <hr style="border:none;border-top:1px solid #e5e7eb;margin:0;">
-          </td>
-        </tr>
+        <tr><td style="padding:0 40px;"><hr style="border:none;border-top:1px solid #e5e7eb;margin:0;"></td></tr>
         <tr>
           <td style="padding:28px 40px;text-align:center;">
             <p style="margin:0 0 8px 0;font-size:13px;color:#6b7280;">© 2026 HostKeep Digital Ltd</p>
-            <p style="margin:0 0 16px 0;font-size:13px;">
-              <a href="mailto:hello@hostkeepdigital.co.uk" style="color:#0d9488;text-decoration:none;">hello@hostkeepdigital.co.uk</a>
-            </p>
-            <p style="margin:0 0 6px 0;font-size:13px;color:#6b7280;font-weight:bold;">Follow us</p>
             <p style="margin:0;font-size:13px;">
-              <a href="https://facebook.com/HostKeepDigital" style="color:#0d9488;text-decoration:none;margin-right:16px;">Facebook</a>
-              <a href="https://instagram.com/hostkeepdigital" style="color:#0d9488;text-decoration:none;">Instagram</a>
+              <a href="mailto:hello@hostkeepdigital.co.uk" style="color:#0d9488;text-decoration:none;">hello@hostkeepdigital.co.uk</a>
             </p>
           </td>
         </tr>
@@ -127,8 +44,60 @@ Deno.serve(async (req) => {
     </td></tr>
   </table>
 </body>
-</html>`
+</html>`;
+
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: 'HostKeep <hello@hostkeepdigital.co.uk>',
+      to,
+      subject: 'Reset your HostKeep password',
+      html,
+    }),
   });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Resend error: ${err}`);
+  }
+  return res.json();
+}
+
+Deno.serve(async (req) => {
+  const base44 = createClientFromRequest(req);
+  const { email } = await req.json();
+
+  if (!email) {
+    return Response.json({ success: true });
+  }
+
+  const normalizedEmail = email.toLowerCase().trim();
+
+  // Use Base44's platform reset - generates a real auth token
+  let platformToken;
+  try {
+    const result = await base44.auth.resetPasswordRequest(normalizedEmail);
+    console.log('Platform reset result:', JSON.stringify(result));
+    platformToken = result?.token || result?.reset_token || result?.resetToken;
+  } catch (e) {
+    console.error('Reset request error:', e.message);
+    return Response.json({ success: true });
+  }
+
+  console.log('Platform token received:', platformToken ? 'yes' : 'no');
+
+  if (platformToken) {
+    const resetUrl = `https://hostkeepdigital.co.uk/ResetPassword?token=${platformToken}`;
+    try {
+      await sendBrandedEmail({ to: normalizedEmail, resetUrl });
+    } catch (e) {
+      console.error('Email send error:', e.message);
+    }
+  }
 
   return Response.json({ success: true });
 });
