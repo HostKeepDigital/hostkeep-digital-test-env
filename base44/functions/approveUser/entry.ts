@@ -36,9 +36,9 @@ Deno.serve(async (req) => {
 
     const member = members[0];
 
-    // Approve the FoundingMember
+    // Set to 'invited' so the CreatePassword page validation passes
     await base44.asServiceRole.entities.FoundingMember.update(member_id, {
-      approval_status: "approved",
+      approval_status: "invited",
     });
 
     // Send approval email to the invited user

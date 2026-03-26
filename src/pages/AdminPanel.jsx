@@ -61,24 +61,14 @@ export default function AdminPanel() {
   const setMemberLoading = (id, val) =>
     setActionLoading((p) => ({ ...p, [id]: val }));
 
-  // APPROVE — NEW FLOW
+  // APPROVE — calls backend which sets status to 'invited' and sends CreatePassword email
   const handleApprove = async (member) => {
     setMemberLoading(member.id, "approve");
-
     try {
-      // Update FoundingMember status
-      await base44.entities.FoundingMember.update(member.id, {
-        approval_status: "approved",
-      });
-
-      // Call your new backend approval function
-      await base44.functions.invoke("approveUsers", {
-        member_id: member.id,
-      });
+      await base44.functions.invoke("approveUser", { member_id: member.id });
     } catch (e) {
       console.error("Approval failed", e);
     }
-
     setMemberLoading(member.id, null);
     fetchMembers();
   };
