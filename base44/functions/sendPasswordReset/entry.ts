@@ -1,5 +1,28 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
+const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+
+async function sendEmail({ to, subject, html }) {
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: 'HostKeep <hello@hostkeepdigital.co.uk>',
+      to,
+      subject,
+      html,
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Resend error: ${err}`);
+  }
+  return res.json();
+}
+
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
   const { email } = await req.json();
@@ -27,10 +50,7 @@ Deno.serve(async (req) => {
   });
 
   for (const t of existing) {
-    await base44.asServiceRole.entities.PasswordResetToken.update({
-      id: t.id,
-      used: true
-    });
+    await base44.asServiceRole.entities.PasswordResetToken.update(t.id, { used: true });
   }
 
   // Step 3 — Generate token
@@ -50,9 +70,8 @@ Deno.serve(async (req) => {
   // Step 5 — Build reset URL
   const resetUrl = `https://hostkeepdigital.co.uk/ResetPassword?token=${token}`;
 
-  // Step 6 — Send branded email (correct: use html:)
-  await base44.asServiceRole.integrations.Core.SendEmail({
-    from_name: 'HostKeep',
+  // Step 6 — Send branded email via Resend
+  await sendEmail({
     to: email,
     subject: 'Reset your HostKeep password',
     html: `<!DOCTYPE html>
