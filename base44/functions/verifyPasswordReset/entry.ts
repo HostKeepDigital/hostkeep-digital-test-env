@@ -5,61 +5,68 @@ Deno.serve(async (req) => {
   const { token, newPassword } = await req.json();
 
   if (!token || !newPassword) {
-    return Response.json({ 
-      success: false, 
-      error: 'invalid_token' 
+    return Response.json({
+      success: false,
+      error: 'invalid_token'
     });
   }
 
   // Step 1 — Find token record
-  const records = await base44.asServiceRole.entities.PasswordResetToken.filter({ 
-    token: token,
+  const records = await base44.asServiceRole.entities.PasswordResetToken.filter({
+    token,
     used: false
   });
+
   const record = records?.[0];
 
   if (!record) {
-    return Response.json({ 
-      success: false, 
-      error: 'invalid_token' 
+    return Response.json({
+      success: false,
+      error: 'invalid_token'
     });
   }
 
   // Step 2 — Check expiry
   if (new Date() > new Date(record.expires_at)) {
-    return Response.json({ 
-      success: false, 
-      error: 'expired_token' 
+    return Response.json({
+      success: false,
+      error: 'expired_token'
     });
   }
 
   // Step 3 — Find user
-  const users = await base44.asServiceRole.entities.User.filter({ id: record.user_id });
+  const users = await base44.asServiceRole.entities.User.filter({
+    id: record.user_id
+  });
+
   const user = users?.[0];
 
   if (!user) {
-    return Response.json({ 
-      success: false, 
-      error: 'invalid_token' 
+    return Response.json({
+      success: false,
+      error: 'invalid_token'
     });
   }
 
-  // Step 4 — Update password
-  await base44.asServiceRole.entities.User.update(
-    user.id, { password: newPassword }
-  );
+  // Step 4 — Update password (correct syntax)
+  await base44.asServiceRole.entities.User.update({
+    id: user.id,
+    password: newPassword
+  });
 
-  // Step 5 — Mark token as used
-  await base44.asServiceRole.entities.PasswordResetToken.update(
-    record.id, { used: true }
-  );
+  // Step 5 — Mark token as used (correct syntax)
+  await base44.asServiceRole.entities.PasswordResetToken.update({
+    id: record.id,
+    used: true
+  });
 
   // Step 6 — Send confirmation email
-  await base44.asServiceRole.integrations.Core.SendEmail({
-    from_name: 'HostKeep',
-    to: user.email,
-    subject: 'Your HostKeep password has been updated',
-    body: `<!DOCTYPE html>
+  try {
+    await base44.asServiceRole.integrations.Core.SendEmail({
+      from_name: 'HostKeep',
+      to: user.email,
+      subject: 'Your HostKeep password has been updated',
+      body: `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -113,7 +120,10 @@ Deno.serve(async (req) => {
   </table>
 </body>
 </html>`
-  });
+    });
+  } catch (_) {
+    // Non-fatal — password still updated
+  }
 
   return Response.json({ success: true });
 });
