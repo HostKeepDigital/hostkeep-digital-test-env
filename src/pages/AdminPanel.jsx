@@ -214,7 +214,7 @@ export default function AdminPanel() {
 
   // MEMBER TABLE
   const MemberTable = ({ members: rows, showActions = false }) => (
-    <div className="max-h-[280px] overflow-y-auto scroll-area rounded-xl border border-gray-200 bg-white">
+    <div className="max-h-[230px] overflow-y-auto scroll-area rounded-xl border border-gray-200 bg-white">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-gray-100 bg-gray-50">
