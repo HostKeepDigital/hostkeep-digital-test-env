@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Home } from "lucide-react";
+import { Home, Eye, EyeOff } from "lucide-react";
 
 export default function CreatePassword() {
   const [email, setEmail] = useState("");
@@ -9,11 +9,14 @@ export default function CreatePassword() {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const [error, setError] = useState("");
-  const [emailValid, setEmailValid] = useState(null); // null = untouched, true/false = checked
-  const [step, setStep] = useState("form"); // form → success
+  const [emailValid, setEmailValid] = useState<null | boolean>(null); // null = untouched, true/false = checked
+  const [step, setStep] = useState<"form" | "success">("form"); // form → success
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Check if email exists via Base44 SDK
-  const checkEmailExists = async (email) => {
+  const checkEmailExists = async (email: string) => {
     try {
       const res = await base44.functions.invoke("checkUserExists", { email });
       return res.data?.exists === true;
@@ -22,7 +25,7 @@ export default function CreatePassword() {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -105,17 +108,28 @@ export default function CreatePassword() {
             <label className="block text-xs font-medium text-gray-700 mb-1">
               Password
             </label>
-            <input
-              type="password"
-              required
-              minLength={8}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className={`w-full border rounded-lg px-3 py-2 text-sm ${
-                error && password !== confirmPassword ? "border-red-500" : "border-gray-200"
-              }`}
-              placeholder="Choose a secure password"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                minLength={8}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={`w-full border rounded-lg px-3 py-2 text-sm ${
+                  error && password !== confirmPassword
+                    ? "border-red-500"
+                    : "border-gray-200"
+                }`}
+                placeholder="Choose a secure password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
 
           {/* Confirm Password */}
@@ -123,22 +137,35 @@ export default function CreatePassword() {
             <label className="block text-xs font-medium text-gray-700 mb-1">
               Retype password
             </label>
-            <input
-              type="password"
-              required
-              minLength={8}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className={`w-full border rounded-lg px-3 py-2 text-sm ${
-                error && password !== confirmPassword ? "border-red-500" : "border-gray-200"
-              }`}
-              placeholder="Retype your password"
-            />
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                required
+                minLength={8}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className={`w-full border rounded-lg px-3 py-2 text-sm ${
+                  error && password !== confirmPassword
+                    ? "border-red-500"
+                    : "border-gray-200"
+                }`}
+                placeholder="Retype your password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+              >
+                {showConfirmPassword ? (
+                  <EyeOff size={18} />
+                ) : (
+                  <Eye size={18} />
+                )}
+              </button>
+            </div>
           </div>
 
-          {error && (
-            <p className="text-sm text-red-500">{error}</p>
-          )}
+          {error && <p className="text-sm text-red-500">{error}</p>}
 
           <button
             type="submit"
@@ -149,7 +176,10 @@ export default function CreatePassword() {
         </form>
 
         <div className="mt-6 text-center">
-          <Link to="/SignIn" className="text-sm text-teal-600 hover:text-teal-700">
+          <Link
+            to="/SignIn"
+            className="text-sm text-teal-600 hover:text-teal-700"
+          >
             ← Back to Sign In
           </Link>
         </div>
