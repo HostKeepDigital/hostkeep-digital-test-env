@@ -5,20 +5,32 @@ Deno.serve(async (req) => {
 
   try {
     const { email } = await req.json();
-
-    if (!email) {
-      return Response.json({ exists: false });
-    }
+    if (!email) return Response.json({ exists: false });
 
     const normalisedEmail = email.toLowerCase().trim();
 
-    // Look for an invited Founding Member with this email
-    const members = await base44.asServiceRole.entities.FoundingMember.filter({
+    // Check FoundingMember
+    const fm = await base44.asServiceRole.entities.FoundingMember.filter({
       email: normalisedEmail,
-      approval_status: "invited",
+      approval_status: "Invited"
     });
 
-    const exists = members && members.length > 0;
+    // Check Cleaner
+    const cleaners = await base44.asServiceRole.entities.Cleaner.filter({
+      email: normalisedEmail,
+      approval_status: "Invited"
+    });
+
+    // Check Host
+    const hosts = await base44.asServiceRole.entities.Host.filter({
+      email: normalisedEmail,
+      approval_status: "Invited"
+    });
+
+    const exists =
+      (fm && fm.length > 0) ||
+      (cleaners && cleaners.length > 0) ||
+      (hosts && hosts.length > 0);
 
     return Response.json({ exists });
   } catch (err) {
