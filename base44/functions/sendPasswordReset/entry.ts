@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
     from_name: 'HostKeep',
     to: email,
     subject: 'Reset your HostKeep password',
-    body: `<!DOCTYPE html>
+    html: `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
