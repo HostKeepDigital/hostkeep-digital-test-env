@@ -61,39 +61,22 @@ export default function AdminPanel() {
   const setMemberLoading = (id, val) =>
     setActionLoading((p) => ({ ...p, [id]: val }));
 
-  // APPROVE
+  // APPROVE — NEW FLOW
   const handleApprove = async (member) => {
     setMemberLoading(member.id, "approve");
-    const roleLabel = member.role === "host" ? "Host" : "Cleaner";
-
-    await base44.entities.FoundingMember.update(member.id, {
-      approval_status: "invited",
-    });
 
     try {
-      await base44.functions.invoke("sendEmail", {
-        from_name: "HostKeep",
-        to: member.email,
-        subject: "You're approved — Welcome to HostKeep",
-        html: buildEmail({
-          heading: "You're approved!",
-          body: `
-            Your application to become a Founding ${roleLabel} on HostKeep has been approved.<br><br>
-            To get started, go to <strong>hostkeepdigital.co.uk/login</strong> and click <strong>Sign Up</strong>.<br><br>
-            Important: use this exact email address to sign up:<br>
-            <strong>${member.email}</strong><br><br>
-            Once signed in, you can set up your ${
-              member.role === "host"
-                ? "first property."
-                : "cleaner profile."
-            }
-          `,
-          buttonText: "Sign Up Now",
-          buttonUrl: "https://hostkeepdigital.co.uk/login",
-        }),
+      // Update FoundingMember status
+      await base44.entities.FoundingMember.update(member.id, {
+        approval_status: "approved",
+      });
+
+      // Call your new backend approval function
+      await base44.functions.invoke("approveUsers", {
+        member_id: member.id,
       });
     } catch (e) {
-      console.error("Approval email failed", e);
+      console.error("Approval failed", e);
     }
 
     setMemberLoading(member.id, null);
@@ -103,7 +86,6 @@ export default function AdminPanel() {
   // WAITLIST
   const handleWaitlist = async (member) => {
     setMemberLoading(member.id, "waitlist");
-    const roleLabel = member.role === "host" ? "Host" : "Cleaner";
 
     await base44.entities.FoundingMember.update(member.id, {
       approval_status: "waitlist",
@@ -115,10 +97,9 @@ export default function AdminPanel() {
       html: buildEmail({
         heading: "You're on our waitlist",
         body: `
-          Thank you for applying to join HostKeep as a Founding ${roleLabel}.<br><br>
+          Thank you for applying to join HostKeep.<br><br>
           Our founding spots are currently full, but we've added you to our waitlist.<br><br>
-          You'll be among the first to know when a spot opens up.<br><br>
-          Thank you for your patience and interest in HostKeep.
+          You'll be among the first to know when a spot opens up.
         `,
       }),
     });
@@ -130,7 +111,6 @@ export default function AdminPanel() {
   // REJECT
   const handleReject = async (member) => {
     setMemberLoading(member.id, "reject");
-    const roleLabel = member.role === "host" ? "Host" : "Cleaner";
 
     const note = window.prompt(
       `Please enter a rejection reason for ${member.full_name}:`
@@ -150,7 +130,7 @@ export default function AdminPanel() {
       html: buildEmail({
         heading: "Your HostKeep Application",
         body: `
-          Thank you for applying to join HostKeep as a Founding ${roleLabel}.<br><br>
+          Thank you for applying to join HostKeep.<br><br>
           After reviewing your application, we are unable to approve it at this time.<br><br>
           <strong>Reason:</strong><br>
           ${note.trim()}<br><br>
@@ -172,6 +152,7 @@ export default function AdminPanel() {
       )
     )
       return;
+
     setMemberLoading(member.id, "delete");
     await base44.entities.FoundingMember.delete(member.id);
     setMemberLoading(member.id, null);
@@ -274,6 +255,7 @@ export default function AdminPanel() {
                   ? new Date(m.signup_timestamp).toLocaleDateString("en-GB")
                   : "—"}
               </td>
+
               {showActions && (
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-1.5 flex-wrap">
@@ -419,59 +401,6 @@ export default function AdminPanel() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Stats row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-          {[
-            {
-              icon: Clock,
-              label: "Awaiting Review",
-              value: pendingMembers.length,
-              color: "text-amber-500",
-              bg: "bg-amber-50",
-            },
-            {
-              icon: UserCheck,
-              label: `Hosts Approved`,
-              value: `${hostCount} / ${HOST_LIMIT}`,
-              color: "text-teal-600",
-              bg: "bg-teal-50",
-            },
-            {
-              icon: UserCheck,
-              label: `Cleaners Approved`,
-              value: `${cleanerCount} / ${CLEANER_LIMIT}`,
-              color: "text-purple-600",
-              bg: "bg-purple-50",
-            },
-            {
-              icon: Hourglass,
-              label: "Waitlisted",
-              value: waitlistMembers.length,
-              color: "text-orange-500",
-              bg: "bg-orange-50",
-            },
-          ].map((s) => (
-            <div
-              key={s.label}
-              className="bg-white rounded-xl border border-gray-100 p-4 flex items-center gap-3"
-            >
-              <div
-                className={`w-9 h-9 rounded-lg ${s.bg} flex items-center justify-center flex-shrink-0`}
-              >
-                <s.icon className={`w-4 h-4 ${s.color}`} />
-              </div>
-              <div>
-                <p className="text-xs text-gray-400 leading-tight">
-                  {s.label}
-                </p>
-                <p className={`text-xl font-bold ${s.color} leading-tight`}>
-                  {s.value}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-
         {loading ? (
           <div className="text-center py-20 text-gray-300 text-sm">
             Loading members...
