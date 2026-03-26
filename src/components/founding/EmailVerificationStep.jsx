@@ -37,10 +37,30 @@ export default function EmailVerificationStep({ email, onVerified, onBack, messa
     }
     setVerifying(true);
     setError("");
+
     const res = await base44.functions.invoke("verifyEmailCode", { email, code });
     const data = res.data;
     setVerifying(false);
+
     if (data?.valid) {
+      // 🔹 NEW: move member from "interest" to "pending" after successful verification
+      try {
+        const members = await base44.entities.FoundingMember.filter({
+          email: email.toLowerCase().trim(),
+        });
+
+        if (members && members.length > 0) {
+          const member = members[0];
+          if (member.approval_status === "interest") {
+            await base44.entities.FoundingMember.update(member.id, {
+              approval_status: "pending",
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Failed to update approval_status to pending after verification:", err);
+      }
+
       onVerified();
     } else {
       setError("Incorrect or expired code. Please try again or request a new code.");
@@ -74,8 +94,10 @@ export default function EmailVerificationStep({ email, onVerified, onBack, messa
         <h2 className="text-2xl font-bold text-gray-900 mb-3">Almost there!</h2>
         <p className="text-gray-600 max-w-sm">
           {message || (
-            <>We have sent a 6-digit verification code to{" "}
-            <span className="font-semibold text-gray-900">{email}</span>. Please enter it below to complete your application. The code expires in 10 minutes.</>
+            <>
+              We have sent a 6-digit verification code to{" "}
+              <span className="font-semibold text-gray-900">{email}</span>. Please enter it below to complete your application. The code expires in 10 minutes.
+            </>
           )}
         </p>
       </div>
@@ -105,7 +127,13 @@ export default function EmailVerificationStep({ email, onVerified, onBack, messa
           disabled={verifying || code.length !== 6}
           className="w-full h-12 bg-teal-600 hover:bg-teal-700 text-white text-base font-semibold"
         >
-          {verifying ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Verifying...</> : "Verify & Complete Application"}
+          {verifying ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Verifying...
+            </>
+          ) : (
+            "Verify & Complete Application"
+          )}
         </Button>
 
         <div className="flex items-center justify-between pt-2">
@@ -124,11 +152,15 @@ export default function EmailVerificationStep({ email, onVerified, onBack, messa
             className="flex items-center gap-1.5 text-sm text-teal-600 hover:text-teal-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {resending ? (
-              <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Sending...</>
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" /> Sending...
+              </>
             ) : resendCooldown > 0 ? (
               `Resend code in ${resendCooldown}s`
             ) : (
-              <><RefreshCw className="w-3.5 h-3.5" /> Resend code</>
+              <>
+                <RefreshCw className="w-3.5 h-3.5" /> Resend code
+              </>
             )}
           </button>
         </div>
