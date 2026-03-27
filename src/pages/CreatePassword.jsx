@@ -35,7 +35,7 @@ export default function CreatePassword() {
       return;
     }
 
-    // 2. Email must exist in HostKeep
+    // 2. Email must be an invited founding member
     const exists = await checkEmailExists(email);
     if (!exists) {
       setEmailValid(false);
@@ -45,7 +45,17 @@ export default function CreatePassword() {
 
     setEmailValid(true);
 
-    // 3. Move to success screen (next brick will call Base44)
+    // 3. Actually create the user account
+    const res = await base44.functions.invoke("createonboardingpassword", { email, password });
+    if (res.data?.error === "user_already_exists") {
+      setError("An account already exists for this email. Please sign in.");
+      return;
+    }
+    if (!res.data?.success) {
+      setError("Something went wrong. Please try again.");
+      return;
+    }
+
     setStep("success");
   };
 

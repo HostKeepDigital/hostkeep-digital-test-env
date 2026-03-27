@@ -54,6 +54,9 @@ Deno.serve(async (req) => {
     // Send branded approval email via Resend
     const createPasswordUrl = `https://hostkeepdigital.co.uk/CreatePassword?email=${encodeURIComponent(member.email)}`;
 
+    // Also create the UserRole so they're ready when they sign up
+    // (User account is created when they set their password via CreatePassword page)
+
     await sendEmail({
       to: member.email,
       subject: "You're approved — Create your HostKeep password",
