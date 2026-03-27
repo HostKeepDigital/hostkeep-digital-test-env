@@ -47,7 +47,9 @@ export default function Founding() {
   const [cornwallWarning, setCornwallWarning] = useState(false);
 
   const [form, setForm] = useState({
-    full_name: "",
+    forename: "",
+    middle_name: "",
+    surname: "",
     email: "",
     postcode: "",
     role: "",
@@ -67,9 +69,12 @@ export default function Founding() {
   const hostFull = hostCount >= HOST_LIMIT;
   const cleanerFull = cleanerCount >= CLEANER_LIMIT;
 
+  const getFullName = () => [form.forename.trim(), form.middle_name.trim(), form.surname.trim()].filter(Boolean).join(" ");
+
   const validate = () => {
     const e = {};
-    if (!form.full_name.trim()) e.full_name = "Full name is required.";
+    if (!form.forename.trim()) e.forename = "Forename is required.";
+    if (!form.surname.trim()) e.surname = "Surname is required.";
     if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "A valid email is required.";
     if (!form.postcode.trim()) e.postcode = "Postcode is required.";
     if (!form.role) e.role = "Please select a role.";
@@ -98,7 +103,7 @@ export default function Founding() {
 
     try {
       const result = await base44.functions.invoke("registerFoundingMember", {
-        full_name: form.full_name.trim(),
+        full_name: getFullName(),
         email: form.email.toLowerCase().trim(),
         postcode: form.postcode.toUpperCase().trim(),
         role: form.role,
@@ -231,15 +236,35 @@ export default function Founding() {
           >
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Claim My Spot</h2>
             <form onSubmit={handleSubmit} noValidate className="space-y-5">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Forename <span className="text-red-500">*</span></label>
+                  <Input
+                    value={form.forename}
+                    onChange={e => field("forename", e.target.value)}
+                    placeholder="Jane"
+                    className={errors.forename ? "border-red-400" : ""}
+                  />
+                  {errors.forename && <p className="text-red-500 text-xs mt-1">{errors.forename}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Middle Name <span className="text-gray-400 font-normal">(optional)</span></label>
+                  <Input
+                    value={form.middle_name}
+                    onChange={e => field("middle_name", e.target.value)}
+                    placeholder="Marie"
+                  />
+                </div>
+              </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Surname <span className="text-red-500">*</span></label>
                 <Input
-                  value={form.full_name}
-                  onChange={e => field("full_name", e.target.value)}
-                  placeholder="Jane Smith"
-                  className={errors.full_name ? "border-red-400" : ""}
+                  value={form.surname}
+                  onChange={e => field("surname", e.target.value)}
+                  placeholder="Smith"
+                  className={errors.surname ? "border-red-400" : ""}
                 />
-                {errors.full_name && <p className="text-red-500 text-xs mt-1">{errors.full_name}</p>}
+                {errors.surname && <p className="text-red-500 text-xs mt-1">{errors.surname}</p>}
               </div>
 
               <div>
