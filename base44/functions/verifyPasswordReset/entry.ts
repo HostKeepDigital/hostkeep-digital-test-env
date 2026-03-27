@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
   }
 
   // Step 4 - Update ONLY the password on the existing user account
-  await base44.asServiceRole.entities.User.update(user.id, { password: newPassword });
+  await base44.asServiceRole.auth.updateUser(user.id, { password: newPassword });
 
   // Step 5 - Delete the used token
   await base44.asServiceRole.entities.PasswordResetToken.delete(record.id);
