@@ -23,6 +23,18 @@ async function sendEmail({ to, subject, html }) {
   return res.json();
 }
 
+function generateToken() {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+function generateTempPassword() {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
 
@@ -46,20 +58,51 @@ Deno.serve(async (req) => {
       return Response.json({ error: "FoundingMember not found" }, { status: 404 });
     }
 
-    // Set to 'invited' so CreatePassword page validation passes
+    const normalisedEmail = member.email.toLowerCase().trim();
+
+    // Check if a User already exists for this email
+    let user;
+    const existingUsers = await base44.asServiceRole.entities.User.filter({ email: normalisedEmail });
+    if (existingUsers?.[0]) {
+      user = existingUsers[0];
+    } else {
+      // Create the User account immediately with a temporary random password
+      const tempPassword = generateTempPassword();
+      user = await base44.asServiceRole.entities.User.create({
+        email: normalisedEmail,
+        full_name: member.full_name || normalisedEmail,
+        password: tempPassword,
+      });
+    }
+
+    // Set FoundingMember to 'invited'
     await base44.asServiceRole.entities.FoundingMember.update(member_id, {
       approval_status: "invited",
     });
 
-    // Send branded approval email via Resend
-    const createPasswordUrl = `https://hostkeepdigital.co.uk/CreatePassword?email=${encodeURIComponent(member.email)}`;
+    // Generate a password reset token so they can set their own password
+    const token = generateToken();
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24 hours
 
-    // Also create the UserRole so they're ready when they sign up
-    // (User account is created when they set their password via CreatePassword page)
+    // Invalidate any existing tokens for this user
+    const existingTokens = await base44.asServiceRole.entities.PasswordResetToken.filter({ user_id: user.id, used: false });
+    for (const t of existingTokens) {
+      await base44.asServiceRole.entities.PasswordResetToken.update(t.id, { used: true });
+    }
+
+    await base44.asServiceRole.entities.PasswordResetToken.create({
+      user_id: user.id,
+      email: normalisedEmail,
+      token,
+      expires_at: expiresAt,
+      used: false,
+    });
+
+    const setPasswordUrl = `https://hostkeepdigital.co.uk/ResetPassword?token=${token}`;
 
     await sendEmail({
-      to: member.email,
-      subject: "You're approved — Create your HostKeep password",
+      to: normalisedEmail,
+      subject: "You're approved — Set your HostKeep password",
       html: `
         <!DOCTYPE html>
         <html>
@@ -74,13 +117,16 @@ Deno.serve(async (req) => {
                 Hi ${member.full_name || "there"},
               </p>
               <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px;">
-                Your HostKeep application has been reviewed and approved. To activate your account, please create your password using the button below.
+                Your HostKeep application has been reviewed and approved. Your account has been created — click the button below to set your password and get started.
               </p>
-              <a href="${createPasswordUrl}"
+              <a href="${setPasswordUrl}"
                  style="display:inline-block;background:#0d9488;color:#ffffff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;">
-                Create Your Password
+                Set Your Password
               </a>
-              <p style="color:#6b7280;font-size:13px;margin-top:32px;">
+              <p style="color:#6b7280;font-size:13px;margin-top:24px;">
+                This link expires in 24 hours. If you didn't expect this email, you can ignore it.
+              </p>
+              <p style="color:#6b7280;font-size:13px;margin-top:8px;">
                 Welcome to HostKeep — we're excited to have you onboard!
               </p>
             </div>
@@ -95,7 +141,7 @@ Deno.serve(async (req) => {
       `,
     });
 
-    return Response.json({ success: true, message: "Member approved and email sent." });
+    return Response.json({ success: true, message: "Member approved, account created, and email sent." });
   } catch (err) {
     console.error("approveUser error:", err);
     return Response.json({ error: String(err) }, { status: 500 });
