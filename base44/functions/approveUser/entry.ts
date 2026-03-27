@@ -66,13 +66,12 @@ Deno.serve(async (req) => {
     if (existingUsers?.[0]) {
       user = existingUsers[0];
     } else {
-      // Create the User account immediately with a temporary random password
-      const tempPassword = generateTempPassword();
-      user = await base44.asServiceRole.entities.User.create({
-        email: normalisedEmail,
-        full_name: member.full_name || normalisedEmail,
-        password: tempPassword,
-      });
+      // Invite the user via the platform auth system (creates a real auth account)
+      await base44.asServiceRole.users.inviteUser(normalisedEmail, "user");
+      // Fetch the newly created user record
+      const newUsers = await base44.asServiceRole.entities.User.filter({ email: normalisedEmail });
+      user = newUsers?.[0];
+      if (!user) throw new Error("User creation failed — record not found after invite");
     }
 
     // Set FoundingMember to 'invited'
