@@ -126,7 +126,7 @@ Deno.serve(async (req) => {
     // ------------------------------------------------------
     // 7) Send invitation email (Resend)
     // ------------------------------------------------------
-    const inviteUrl = `https://hostkeepdigital.co.uk/Onboarding?token=${passwordToken}`;
+    const inviteUrl = `https://hostkeepdigital.co.uk/CreatePassword?token=${passwordToken}`;
     await sendInvitationEmail(user.email, inviteUrl);
 
     return Response.json({ success: true });
