@@ -18,22 +18,29 @@ export default function CreatePassword() {
   // 1) Validate onboarding token
   useEffect(() => {
     async function validate() {
-      const res = await fetch("/functions/validateOnboardingToken", {
-        method: "POST",
-        body: JSON.stringify({ token }),
-      });
+      try {
+        const res = await fetch("/functions/validateOnboardingToken", {
+          method: "POST",
+          body: JSON.stringify({ token }),
+        });
 
-      const data = await res.json();
+        const data = await res.json();
 
-      if (!data.success) {
-        setError("This onboarding link is invalid or expired.");
+        // FIX: validator returns { valid: true/false }
+        if (!data.valid) {
+          setError("This onboarding link is invalid or expired.");
+          setLoading(false);
+          return;
+        }
+
+        setEmail(data.email);
+        setValid(true);
         setLoading(false);
-        return;
-      }
 
-      setEmail(data.email);
-      setValid(true);
-      setLoading(false);
+      } catch (err) {
+        setError("Unable to validate onboarding link.");
+        setLoading(false);
+      }
     }
 
     validate();
@@ -56,6 +63,7 @@ export default function CreatePassword() {
 
     const data = await res.json();
 
+    // FIX: backend returns { success: true/false }
     if (!data.success) {
       setError("Unable to create your account. Please try again.");
       return;
