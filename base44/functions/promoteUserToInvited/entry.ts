@@ -106,6 +106,8 @@ function generateToken() {
   return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+
+
 // ------------------------------------------------------
 // MAIN FUNCTION — Approve + Email
 // ------------------------------------------------------
@@ -126,6 +128,15 @@ Deno.serve(async (req) => {
     // Create onboarding token
     const token = generateToken();
     const inviteUrl = `https://hostkeepdigital.co.uk/CreatePassword?token=${token}`;
+
+    // Create token entity for onboarding flow
+await base44.asServiceRole.entities.OnboardingPasswordToken.create({
+  token,
+  user_id: null,
+  expires_at: new Date(Date.now() + 86400000).toISOString(),
+  used: false,
+});
+
 
     // Update FoundingMember
     await base44.asServiceRole.entities.FoundingMember.update(member_id, {
