@@ -6,7 +6,6 @@ Deno.serve(async (req) => {
   try {
     const { email, password } = await req.json();
 
-    // Basic validation
     if (!email || !password) {
       return Response.json(
         { success: false, error: "missing_fields" },
@@ -43,7 +42,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 3) Create Base44 Auth user
+    // 3) Create Base44 Auth user (this is required for loginViaEmailPassword)
     const user = await base44.asServiceRole.entities.User.create({
       email: normalisedEmail,
       password,
@@ -51,13 +50,13 @@ Deno.serve(async (req) => {
 
     // 4) Update founding member → password_protected
     await base44.asServiceRole.entities.FoundingMember.update(member.id, {
-      user_id: user.id, // remove if your schema doesn't have this field
+      user_id: user.id,
       approval_status: "password_protected",
     });
 
     return Response.json({ success: true });
   } catch (err) {
-    console.error("createonboardingpassword error", err);
+    console.error("createOnboardingPassword error", err);
     return Response.json(
       { success: false, error: "server_error" },
       { status: 500 }
