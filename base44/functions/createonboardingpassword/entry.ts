@@ -1,52 +1,68 @@
 import { createClientFromRequest } from "npm:@base44/sdk";
 
 Deno.serve(async (req) => {
+  const base44 = createClientFromRequest(req).asServiceRole;
+
   try {
-    // ⭐ Critical: allow this function to run without a logged‑in user
-    const base44 = createClientFromRequest(req).asServiceRole;
+    const { email, password } = await req.json();
 
-    const { token } = await req.json();
-
-    if (!token) {
+    if (!email || !password) {
       return Response.json(
-        { valid: false, error: "missing_token" },
+        { success: false, error: "missing_fields" },
         { status: 400 }
       );
     }
 
-    // Look up the invited founding member by onboarding token
+    const normalisedEmail = email.toLowerCase().trim();
+
     const members = await base44.entities.FoundingMember.filter({
-      onboarding_token: token,
-      approval_status: "invited",
+      email: normalisedEmail,
     });
 
     const member = members?.[0];
 
     if (!member) {
       return Response.json(
-        { valid: false, error: "invalid_token" },
+        { success: false, error: "not_found" },
         { status: 400 }
       );
     }
 
-    // Check expiry
-    if (new Date(member.onboarding_expires_at) < new Date()) {
+    const allowed = ["invited", "email_verified", "awaiting_password"];
+
+    if (!allowed.includes(member.approval_status)) {
       return Response.json(
-        { valid: false, error: "expired" },
+        { success: false, error: "wrong_state" },
         { status: 400 }
       );
     }
 
-    // Return the email so the frontend can prefill the field
-    return Response.json({
-      valid: true,
-      email: member.email.toLowerCase().trim(),
+    const existingUsers = await base44.entities.User.filter({
+      email: normalisedEmail,
     });
 
+    if (existingUsers?.length > 0) {
+      return Response.json(
+        { success: false, error: "user_already_exists" },
+        { status: 400 }
+      );
+    }
+
+    const user = await base44.entities.User.create({
+      email: normalisedEmail,
+      password,
+    });
+
+    await base44.entities.FoundingMember.update(member.id, {
+      user_id: user.id,
+      approval_status: "password_protected",
+    });
+
+    return Response.json({ success: true });
+
   } catch (err) {
-    console.error("validateOnboardingToken error:", err);
     return Response.json(
-      { valid: false, error: "server_error" },
+      { success: false, error: "server_error" },
       { status: 500 }
     );
   }
