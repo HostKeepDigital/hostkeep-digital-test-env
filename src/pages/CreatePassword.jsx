@@ -56,14 +56,14 @@ export default function CreatePassword() {
       return;
     }
 
-    const res = await fetch("/functions/createOnboardingPassword", {
+    // FIX: match backend filename exactly
+    const res = await fetch("/functions/createonboardpassword", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
 
     const data = await res.json();
 
-    // FIX: backend returns { success: true/false }
     if (!data.success) {
       setError("Unable to create your account. Please try again.");
       return;
