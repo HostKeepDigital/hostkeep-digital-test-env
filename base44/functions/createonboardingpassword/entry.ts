@@ -1,9 +1,11 @@
-import { createClientFromRequest } from "npm:@base44/sdk";
+import { createClientFromRequest } from "npm:@base44/sdk@0.8.23";
 
 Deno.serve(async (req) => {
-  const base44 = createClientFromRequest(req).asServiceRole;
-
   try {
+    // Two clients: auth (for register) + service role (for entities)
+    const base44 = createClientFromRequest(req);
+    const serviceRole = base44.asServiceRole;
+
     const { email, password } = await req.json();
 
     if (!email || !password) {
@@ -15,19 +17,11 @@ Deno.serve(async (req) => {
 
     const normalisedEmail = email.toLowerCase().trim();
 
-    // SAFE lookup wrapper to avoid Base44 throwing 500
-    let member = null;
-    try {
-      const members = await base44.entities.FoundingMember.filter({
-        email: normalisedEmail,
-      });
-      member = members?.[0];
-    } catch (err) {
-      return Response.json(
-        { success: false, error: "not_found" },
-        { status: 400 }
-      );
-    }
+    // 1) Find founding member
+    const members = await serviceRole.entities.FoundingMember.filter({
+      email: normalisedEmail,
+    });
+    const member = members?.[0];
 
     if (!member) {
       return Response.json(
@@ -37,7 +31,6 @@ Deno.serve(async (req) => {
     }
 
     const allowed = ["invited", "email_verified", "awaiting_password"];
-
     if (!allowed.includes(member.approval_status)) {
       return Response.json(
         { success: false, error: "wrong_state" },
@@ -45,11 +38,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check if user already exists
-    const existingUsers = await base44.entities.User.filter({
+    // 2) Check no existing user
+    const existingUsers = await serviceRole.entities.User.filter({
       email: normalisedEmail,
     });
-
     if (existingUsers?.length > 0) {
       return Response.json(
         { success: false, error: "user_already_exists" },
@@ -57,21 +49,19 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Create user
-    const user = await base44.entities.User.create({
-      email: normalisedEmail,
-      password,
-    });
+    // 3) Register the user via auth API (correct method for email+password creation)
+    const user = await base44.auth.register({ email: normalisedEmail, password });
 
-    // Update founding member
-    await base44.entities.FoundingMember.update(member.id, {
-      user_id: user.id,
+    // 4) Update FoundingMember record
+    await serviceRole.entities.FoundingMember.update(member.id, {
+      user_id: user?.id,
       approval_status: "password_protected",
     });
 
     return Response.json({ success: true });
 
   } catch (err) {
+    console.error("createonboardingpassword error:", err);
     return Response.json(
       { success: false, error: "server_error" },
       { status: 500 }
