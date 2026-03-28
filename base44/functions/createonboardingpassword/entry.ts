@@ -51,8 +51,11 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 3) Update the user's password and mark email as verified
-    await serviceRole.entities.User.update(user.id, { password, email_verified: true });
+    // 3) Update the user's password via dedicated auth method
+    await serviceRole.auth.changeUserPassword(user.id, password);
+
+    // 4) Mark email as verified on the User entity
+    await serviceRole.entities.User.update(user.id, { email_verified: true });
 
     // 4) Update FoundingMember record
     await serviceRole.entities.FoundingMember.update(member.id, {
