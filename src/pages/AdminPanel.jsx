@@ -5,15 +5,9 @@ import {
   Check,
   X,
   RefreshCw,
-  Clock,
-  UserCheck,
-  Hourglass,
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-
-const HOST_LIMIT = 50;
-const CLEANER_LIMIT = 30;
 
 const STATUS_COLORS = {
   interest: "bg-gray-100 text-gray-600",
@@ -61,11 +55,13 @@ export default function AdminPanel() {
   const setMemberLoading = (id, val) =>
     setActionLoading((p) => ({ ...p, [id]: val }));
 
-  // APPROVE — calls backend which sets status to 'invited' and sends CreatePassword email
+  // APPROVE — now calls promoteUserToInvited
   const handleApprove = async (member) => {
     setMemberLoading(member.id, "approve");
     try {
-      await base44.functions.invoke("approveUser", { member_id: member.id });
+      await base44.functions.invoke("promoteUserToInvited", {
+        member_id: member.id,
+      });
     } catch (e) {
       console.error("Approval failed", e);
     }
@@ -177,11 +173,6 @@ export default function AdminPanel() {
   const outOfAreaMembers = members.filter(
     (m) => m.approval_status === "out_of_area"
   );
-
-  const hostCount = approvedMembers.filter((m) => m.role === "host").length;
-  const cleanerCount = approvedMembers.filter(
-    (m) => m.role === "cleaner"
-  ).length;
 
   // MEMBER TABLE
   const MemberTable = ({ members: rows, showActions = false }) => (
