@@ -3,20 +3,17 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 
 async function sendConfirmationEmail(to) {
-  if (!RESEND_API_KEY) return;
-
-  try {
-    await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: 'HostKeep <hello@hostkeepdigital.co.uk>',
-        to,
-        subject: 'Your HostKeep password has been updated',
-        html: `<!DOCTYPE html>
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: 'HostKeep <hello@hostkeepdigital.co.uk>',
+      to,
+      subject: 'Your HostKeep password has been updated',
+      html: `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
 <body style="margin:0;padding:0;background-color:#f4f4f5;font-family:Arial,sans-serif;">
@@ -58,86 +55,51 @@ async function sendConfirmationEmail(to) {
   </table>
 </body>
 </html>`,
-      }),
-    });
-  } catch (_) {
-    // Non-fatal: reset still succeeds even if email fails
-  }
+    }),
+  });
+  return res.json();
 }
 
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
+  const { token, newPassword } = await req.json();
 
-  try {
-    const { token, newPassword } = await req.json();
-
-    if (!token || !newPassword) {
-      return Response.json(
-        { success: false, error: 'invalid_request' },
-        { status: 400 }
-      );
-    }
-
-    // 1) Look up reset token
-    const tokens = await base44.asServiceRole.entities.PasswordResetToken.filter({
-      token,
-      used: false,
-    });
-    const record = tokens?.[0];
-
-    if (!record) {
-      return Response.json(
-        { success: false, error: 'invalid_token' },
-        { status: 400 }
-      );
-    }
-
-    // 2) Check expiry
-    if (new Date() > new Date(record.expires_at)) {
-      await base44.asServiceRole.entities.PasswordResetToken.delete(record.id);
-      return Response.json(
-        { success: false, error: 'expired_token' },
-        { status: 400 }
-      );
-    }
-
-    // 3) Look up user by ID (safer than email)
-    const users = await base44.asServiceRole.entities.User.filter({
-      id: record.user_id,
-    });
-    const user = users?.[0];
-
-    if (!user) {
-      await base44.asServiceRole.entities.PasswordResetToken.delete(record.id);
-      return Response.json(
-        { success: false, error: 'user_not_found' },
-        { status: 400 }
-      );
-    }
-
-    // 4) Update password via Base44 auth (matches loginViaEmailPassword)
-    await base44.asServiceRole.auth.updateUser(user.id, {
-      password: newPassword,
-    });
-
-    // 5) Mark token as used
-    await base44.asServiceRole.entities.PasswordResetToken.update(record.id, {
-      used: true,
-    });
-
-    // 6) Send confirmation email
-    if (record.email) {
-      await sendConfirmationEmail(record.email);
-    } else if (user.email) {
-      await sendConfirmationEmail(user.email);
-    }
-
-    return Response.json({ success: true });
-  } catch (err) {
-    console.error('verifyPasswordReset error', err);
-    return Response.json(
-      { success: false, error: 'server_error' },
-      { status: 500 }
-    );
+  if (!token || !newPassword) {
+    return Response.json({ success: false, error: 'invalid_request' });
   }
+
+  // Step 1 - Find the token record
+  const records = await base44.asServiceRole.entities.PasswordResetToken.filter({ token, used: false });
+  const record = records?.[0];
+
+  if (!record) {
+    return Response.json({ success: false, error: 'invalid_token' });
+  }
+
+  // Step 2 - Check expiry
+  if (new Date() > new Date(record.expires_at)) {
+    await base44.asServiceRole.entities.PasswordResetToken.delete(record.id);
+    return Response.json({ success: false, error: 'expired_token' });
+  }
+
+  // Step 3 - Find the existing user (do NOT delete — they have properties, bookings, reviews etc.)
+  const users = await base44.asServiceRole.entities.User.filter({ email: record.email });
+  const user = users?.[0];
+
+  if (!user) {
+    return Response.json({ success: false, error: 'user_not_found' });
+  }
+
+  // Step 4 - Update the user's password via auth (required because login uses loginViaEmailPassword)
+  await base44.asServiceRole.auth.updateUser(user.id, { password: newPassword });
+
+  // Step 5 - Delete the used token
+  await base44.asServiceRole.entities.PasswordResetToken.delete(record.id);
+
+  // Step 6 - Send confirmation email (non-fatal)
+  try {
+    await sendConfirmationEmail(record.email);
+  } catch (_) {}
+
+  return Response.json({ success: true });
 });
