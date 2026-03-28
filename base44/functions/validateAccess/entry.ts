@@ -1,80 +1,75 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+// functions/validateAccess.ts
+// Base44 route access control
 
-// Access validation function
-const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes
-const MAX_ATTEMPTS = 5;
-const failedAttempts = new Map();
+import { createClientFromRequest } from "npm:@base44/sdk@0.8.23";
 
 Deno.serve(async (req) => {
-  const base44 = createClientFromRequest(req);
-  
   try {
-    const { token, challenge } = await req.json();
-    const clientIp = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
-    
-    // Simple anti-bot check
-    if (!challenge || challenge !== 'human') {
-      return Response.json({ 
-        success: false, 
-        error: 'Access denied'
-      }, { status: 403 });
+    const url = new URL(req.url);
+    const path = url.pathname;
+
+    // PUBLIC ROUTES
+    const PUBLIC_PATHS = [
+      "/",
+      "/Home",
+      "/SignIn",
+      "/ForgotPassword",
+      "/CreatePassword",
+      "/ResetPassword",
+      "/founding",
+      "/waitlist",
+      "/pending",
+      "/Subscription",
+      "/AboutUs",
+      "/LegalCentre",
+      "/TermsAndConditions",
+      "/PrivacyPolicy",
+      "/CookiePolicy",
+      "/GuestTerms",
+      "/HostTerms",
+      "/CleanerTerms",
+      "/DisputePolicy",
+      "/PaymentPolicy",
+      "/RefundPolicy",
+      "/Accessibility",
+      "/BecomeHost",
+      "/BecomeCleaner",
+      "/Search",
+      "/PropertyDetails",
+      "/Pay",
+
+      // Onboarding validator must be public
+      "/functions/validateOnboardingToken"
+    ];
+
+    // Allow wildcard for CreatePassword?token=...
+    if (path.startsWith("/CreatePassword")) {
+      return Response.json({ allowed: true });
     }
-    
-    // Rate limiting
-    const attemptKey = clientIp;
-    const now = Date.now();
-    const attempts = failedAttempts.get(attemptKey) || [];
-    const recentAttempts = attempts.filter(time => now - time < RATE_LIMIT_WINDOW);
-    
-    if (recentAttempts.length >= MAX_ATTEMPTS) {
-      return Response.json({ 
-        success: false, 
-        error: 'Too many attempts'
-      }, { status: 429 });
+
+    // Explicit public paths
+    if (PUBLIC_PATHS.includes(path)) {
+      return Response.json({ allowed: true });
     }
-    
-    // Validate token
-    const storedToken = Deno.env.get('LOCK_ACCESS_TOKEN');
-    
-    if (!storedToken || !token) {
-      recentAttempts.push(now);
-      failedAttempts.set(attemptKey, recentAttempts);
-      return Response.json({ 
-        success: false, 
-        error: 'Access denied'
-      }, { status: 401 });
+
+    // PROTECTED ROUTES
+    const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+
+    if (!user?.id) {
+      return Response.json(
+        { allowed: false, reason: "auth_required" },
+        { status: 401 }
+      );
     }
-    
-    // Normalize both tokens for comparison (trim whitespace)
-    const normalizedToken = token.trim();
-    const normalizedStoredToken = storedToken.trim();
-    
-    if (normalizedToken === normalizedStoredToken) {
-      // Clear failed attempts on success
-      failedAttempts.delete(attemptKey);
-      
-      // Generate session token
-      const sessionToken = crypto.randomUUID();
-      
-      return Response.json({ 
-        success: true,
-        sessionToken
-      });
-    }
-    
-    // Invalid token
-    recentAttempts.push(now);
-    failedAttempts.set(attemptKey, recentAttempts);
-    
-    return Response.json({ 
-      success: false, 
-      error: 'Access denied'
-    }, { status: 401 });
-    
-  } catch (error) {
-    return Response.json({ 
-      success: false, 
-      error: 'Access denied'
-    }, { status: 500 });
+
+    return Response.json({ allowed: true });
+
+  } catch (err) {
+    console.error("validateAccess error:", err);
+    return Response.json(
+      { allowed: false, reason: "server_error" },
+      { status: 500 }
+    );
   }
 });
