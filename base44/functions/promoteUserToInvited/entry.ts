@@ -34,17 +34,22 @@ async function sendInvitationEmail(to, fullName, roleLabel) {
         <td style="padding:40px 40px 32px 40px;">
           <h1 style="margin:0 0 16px 0;font-size:22px;font-weight:bold;color:#111827;">You're approved!</h1>
           <div style="font-size:15px;line-height:1.7;color:#374151;">
-            <p>Hi ${fullName || "there"},</p>
-            <p>Your application to become a Founding ${roleLabel} on HostKeep has been approved.</p>
-            <p>To get started, go to <strong>hostkeepdigital.co.uk/login</strong> and click <strong>Sign Up</strong>.</p>
-            <p>Important: use this exact email address to sign up: <strong>${to}</strong></p>
-            <p>Once signed in, you can set up your ${roleLabel === "Host" ? "first property." : "cleaner profile."}</p>
-            <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;">
-              <tr><td align="center">
-                <a href="https://hostkeepdigital.co.uk/login" style="display:inline-block;background-color:#0d9488;color:#ffffff;font-size:15px;font-weight:bold;text-decoration:none;padding:14px 32px;border-radius:8px;">Sign Up Now</a>
-              </td></tr>
-            </table>
-          </div>
+          <p>Hi ${fullName || "there"},</p>
+          <p>Your application to become a Founding ${roleLabel} on HostKeep has been approved.</p>
+          <p>To get started, click the button below to create your password and activate your account.</p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;">
+            <tr><td align="center">
+              <a href="${inviteUrl}"
+              style="display:inline-block;background-color:#0d9488;color:#ffffff;font-size:15px;font-weight:bold;text-decoration:none;padding:14px 32px;border-radius:8px;">
+              Create Your Password
+              </a>
+            </td></tr>
+          </table>
+          <p style="margin-top:24px;">This link is unique to you and expires in 24 hours.</p>
+          <p>Once your password is set, you can begin setting up your 
+    ${roleLabel === "Host" ? "first property." : "cleaner profile."}
+  </p>
+</div>
         </td>
       </tr>
       <tr>
