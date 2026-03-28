@@ -92,7 +92,9 @@ async function sendInvitationEmail(to, fullName, roleLabel, inviteUrl) {
 </html>`,
       }),
     });
-  } catch (_) {}
+  } catch (_) {
+    // Email failure should NOT block approval
+  }
 }
 
 // ------------------------------------------------------
@@ -105,7 +107,7 @@ function generateToken() {
 }
 
 // ------------------------------------------------------
-// MAIN FUNCTION — Approve + Email + Token Entity
+// MAIN FUNCTION — Approve + Email
 // ------------------------------------------------------
 Deno.serve(async (req) => {
   try {
@@ -125,17 +127,11 @@ Deno.serve(async (req) => {
     const token = generateToken();
     const inviteUrl = `https://hostkeepdigital.co.uk/CreatePassword?token=${token}`;
 
-    // ⭐ RESTORED: Create token entity
-    await base44.asServiceRole.entities.OnboardingPasswordToken.create({
-      user_id: null, // user not created yet
-      token,
-      expires_at: new Date(Date.now() + 86400000).toISOString(),
-      used: false,
-    });
-
     // Update FoundingMember
     await base44.asServiceRole.entities.FoundingMember.update(member_id, {
       approval_status: "invited",
+      onboarding_token: token,
+      onboarding_expires_at: new Date(Date.now() + 86400000).toISOString(),
     });
 
     const roleLabel = member.role === "host" ? "Host" : "Cleaner";
