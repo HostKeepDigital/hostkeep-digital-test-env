@@ -57,7 +57,7 @@ export default function CreatePassword() {
     }
 
     // FIX: match backend filename exactly
-    const res = await fetch("/functions/createonboardpassword", {
+    const res = await fetch("/functions/createonboardingpassword", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
