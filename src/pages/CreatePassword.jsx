@@ -26,7 +26,6 @@ export default function CreatePassword() {
 
         const data = await res.json();
 
-        // FIX: validator returns { valid: true/false }
         if (!data.valid) {
           setError("This onboarding link is invalid or expired.");
           setLoading(false);
