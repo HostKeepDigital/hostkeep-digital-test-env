@@ -61,7 +61,7 @@ export default function CreatePassword() {
     const res = await fetch("/functions/createonboardingpassword", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email }),
     });
 
     const data = await res.json();
@@ -71,7 +71,7 @@ export default function CreatePassword() {
       return;
     }
 
-    window.location.href = "/SignIn?onboarding=complete";
+    window.location.href = `/ResetPassword?token=${data.resetToken}`;
   }
 
   if (loading) {
