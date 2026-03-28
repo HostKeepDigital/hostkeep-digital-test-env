@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
 
     // 4) Update founding member → password_protected
     await base44.asServiceRole.entities.FoundingMember.update(member.id, {
-      user_id: user.id, // remove if your schema doesn't have this field
+      user_id: user.id,
       approval_status: "password_protected",
     });
 
