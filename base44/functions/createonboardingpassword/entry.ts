@@ -1,7 +1,8 @@
 import { createClientFromRequest } from "npm:@base44/sdk";
 
 Deno.serve(async (req) => {
-  const base44 = createClientFromRequest(req);
+  // ⭐ Critical: elevate to service role so this function can run publicly
+  const base44 = createClientFromRequest(req).asServiceRole;
 
   try {
     console.log("🔵 createonboardingpassword: request received");
@@ -21,7 +22,7 @@ Deno.serve(async (req) => {
     console.log("📧 Normalised email:", normalisedEmail);
 
     // Fetch founding member
-    const members = await base44.asServiceRole.entities.FoundingMember.filter({
+    const members = await base44.entities.FoundingMember.filter({
       email: normalisedEmail,
     });
 
@@ -53,7 +54,7 @@ Deno.serve(async (req) => {
     }
 
     // Check if user already exists
-    const existingUsers = await base44.asServiceRole.entities.User.filter({
+    const existingUsers = await base44.entities.User.filter({
       email: normalisedEmail,
     });
 
@@ -69,7 +70,7 @@ Deno.serve(async (req) => {
 
     // Create user
     console.log("🛠 Creating user…");
-    const user = await base44.asServiceRole.entities.User.create({
+    const user = await base44.entities.User.create({
       email: normalisedEmail,
       password,
     });
@@ -78,7 +79,7 @@ Deno.serve(async (req) => {
 
     // Update founding member
     console.log("🛠 Updating FoundingMember…");
-    await base44.asServiceRole.entities.FoundingMember.update(member.id, {
+    await base44.entities.FoundingMember.update(member.id, {
       user_id: user.id,
       approval_status: "password_protected",
     });
