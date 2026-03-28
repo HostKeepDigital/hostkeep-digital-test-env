@@ -20,8 +20,9 @@ export default function CreatePassword() {
   useEffect(() => {
     async function validate() {
       try {
-        const res = await fetch("/functions/validateOnboardingToken", {
+        const res = await fetch("/functions/validateonboardingtoken", {
           method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token }),
         });
 
@@ -33,7 +34,7 @@ export default function CreatePassword() {
           return;
         }
 
-        // ⭐ Email returned from backend
+        // Email returned from backend
         setEmail(data.email);
         setValid(true);
         setLoading(false);
@@ -59,6 +60,7 @@ export default function CreatePassword() {
 
     const res = await fetch("/functions/createonboardingpassword", {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
 
