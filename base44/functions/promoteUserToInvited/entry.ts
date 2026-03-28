@@ -130,12 +130,12 @@ Deno.serve(async (req) => {
     const inviteUrl = `https://hostkeepdigital.co.uk/CreatePassword?token=${token}`;
 
     // Create token entity for onboarding flow
-await base44.asServiceRole.entities.OnboardingPasswordToken.create({
-  token,
-  user_id: null,
-  expires_at: new Date(Date.now() + 86400000).toISOString(),
-  used: false,
-});
+    await base44.asServiceRole.entities.OnboardingPasswordToken.create({
+     token,
+      user_id: null,
+     expires_at: new Date(Date.now() + 86400000).toISOString(),
+      used: false,
+    });
 
 
     // Update FoundingMember
