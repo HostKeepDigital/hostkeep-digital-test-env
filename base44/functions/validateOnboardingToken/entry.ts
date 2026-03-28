@@ -9,7 +9,6 @@ Deno.serve(async (req) => {
       return Response.json({ valid: false, error: "missing_token" }, { status: 400 });
     }
 
-    // Look up the FoundingMember with this token
     const members = await base44.asServiceRole.entities.FoundingMember.filter({
       onboarding_token: token,
       approval_status: "invited",
@@ -21,12 +20,15 @@ Deno.serve(async (req) => {
       return Response.json({ valid: false, error: "invalid_token" }, { status: 400 });
     }
 
-    // Check expiry
     if (new Date(member.onboarding_expires_at) < new Date()) {
       return Response.json({ valid: false, error: "expired" }, { status: 400 });
     }
 
-    return Response.json({ valid: true });
+    // ⭐ Return the email so the frontend can display it
+    return Response.json({
+      valid: true,
+      email: member.email.toLowerCase().trim(),
+    });
 
   } catch (err) {
     console.error("validateOnboardingToken error:", err);
