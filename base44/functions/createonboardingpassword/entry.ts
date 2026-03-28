@@ -1,16 +1,15 @@
-import { createClientFromRequest } from "npm:@base44/sdk@0.8.23";
+import { createClientFromRequest } from "npm:@base44/sdk";
 
-function generateToken(length = 48) {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  const bytes = crypto.getRandomValues(new Uint8Array(length));
-  return Array.from(bytes).map((b) => chars[b % chars.length]).join("");
+function generateToken() {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
 Deno.serve(async (req) => {
-  try {
-    const base44 = createClientFromRequest(req);
-    const serviceRole = base44.asServiceRole;
+  const base44 = createClientFromRequest(req).asServiceRole;
 
+  try {
     const { email } = await req.json();
 
     if (!email) {
@@ -19,9 +18,14 @@ Deno.serve(async (req) => {
 
     const normalisedEmail = email.toLowerCase().trim();
 
-    // 1) Find founding member and validate status
-    const members = await serviceRole.entities.FoundingMember.filter({ email: normalisedEmail });
-    const member = members?.[0];
+    // Validate founding member exists and is in the right state
+    let member = null;
+    try {
+      const members = await base44.entities.FoundingMember.filter({ email: normalisedEmail });
+      member = members?.[0];
+    } catch (err) {
+      return Response.json({ success: false, error: "not_found" }, { status: 400 });
+    }
 
     if (!member) {
       return Response.json({ success: false, error: "not_found" }, { status: 400 });
@@ -32,40 +36,40 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: "wrong_state" }, { status: 400 });
     }
 
-    // 2) Find existing user
-    const existingUsers = await serviceRole.entities.User.filter({ email: normalisedEmail });
+    // User already exists — created by approveUser
+    const existingUsers = await base44.entities.User.filter({ email: normalisedEmail });
     const user = existingUsers?.[0];
 
     if (!user) {
       return Response.json({ success: false, error: "user_not_found" }, { status: 400 });
     }
 
-    // 3) Generate a password reset token (same mechanism as sendPasswordReset)
-    const token = generateToken();
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hour
-
-    // Invalidate any existing reset tokens for this email
-    const existing = await serviceRole.entities.PasswordResetToken.filter({ email: normalisedEmail });
-    for (const t of existing) {
-      await serviceRole.entities.PasswordResetToken.delete(t.id);
+    // Clear any existing reset tokens for this email
+    const existingTokens = await base44.entities.PasswordResetToken.filter({ email: normalisedEmail });
+    for (const t of existingTokens) {
+      await base44.entities.PasswordResetToken.delete(t.id);
     }
 
-    await serviceRole.entities.PasswordResetToken.create({
+    // Generate a password reset token
+    const token = generateToken();
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+
+    await base44.entities.PasswordResetToken.create({
+      user_id: user.id,
       email: normalisedEmail,
       token,
       expires_at: expiresAt,
+      used: false,
     });
 
-    // 4) Mark founding member as password_protected
-    await serviceRole.entities.FoundingMember.update(member.id, {
-      user_id: user.id,
+    // Update founding member status
+    await base44.entities.FoundingMember.update(member.id, {
       approval_status: "password_protected",
     });
 
     return Response.json({ success: true, resetToken: token });
 
   } catch (err) {
-    console.error("createonboardingpassword error:", err);
     return Response.json({ success: false, error: "server_error" }, { status: 500 });
   }
 });
