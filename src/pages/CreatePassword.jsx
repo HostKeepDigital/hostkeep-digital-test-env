@@ -20,7 +20,7 @@ export default function CreatePassword() {
   useEffect(() => {
     async function validate() {
       try {
-        const res = await fetch("/functions/validateonboardingtoken", {
+        const res = await fetch("/functions/validateOnboardingToken", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token }),
