@@ -38,19 +38,21 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 2) Check no existing user
+    // 2) Find existing user (created by approveUser)
     const existingUsers = await serviceRole.entities.User.filter({
       email: normalisedEmail,
     });
-    if (existingUsers?.length > 0) {
+    const user = existingUsers?.[0];
+
+    if (!user) {
       return Response.json(
-        { success: false, error: "user_already_exists" },
+        { success: false, error: "user_not_found" },
         { status: 400 }
       );
     }
 
-    // 3) Register the user via auth API (correct method for email+password creation)
-    const user = await base44.auth.register({ email: normalisedEmail, password });
+    // 3) Update the user's password
+    await serviceRole.entities.User.update(user.id, { password });
 
     // 4) Update FoundingMember record
     await serviceRole.entities.FoundingMember.update(member.id, {
