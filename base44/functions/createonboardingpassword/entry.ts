@@ -15,11 +15,19 @@ Deno.serve(async (req) => {
 
     const normalisedEmail = email.toLowerCase().trim();
 
-    const members = await base44.entities.FoundingMember.filter({
-      email: normalisedEmail,
-    });
-
-    const member = members?.[0];
+    // SAFE lookup wrapper to avoid Base44 throwing 500
+    let member = null;
+    try {
+      const members = await base44.entities.FoundingMember.filter({
+        email: normalisedEmail,
+      });
+      member = members?.[0];
+    } catch (err) {
+      return Response.json(
+        { success: false, error: "not_found" },
+        { status: 400 }
+      );
+    }
 
     if (!member) {
       return Response.json(
@@ -37,6 +45,7 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Check if user already exists
     const existingUsers = await base44.entities.User.filter({
       email: normalisedEmail,
     });
@@ -48,11 +57,13 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Create user
     const user = await base44.entities.User.create({
       email: normalisedEmail,
       password,
     });
 
+    // Update founding member
     await base44.entities.FoundingMember.update(member.id, {
       user_id: user.id,
       approval_status: "password_protected",
