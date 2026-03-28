@@ -2,9 +2,9 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.23";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
-// ------------------------------
-// Helper: Send invitation email
-// ------------------------------
+// ------------------------------------------------------
+// Base44 Helper: Send invitation email via Resend
+// ------------------------------------------------------
 async function sendInvitationEmail(to, inviteUrl) {
   if (!RESEND_API_KEY) return;
 
@@ -31,18 +31,18 @@ async function sendInvitationEmail(to, inviteUrl) {
   }
 }
 
-// ------------------------------
-// Helper: Generate secure token
-// ------------------------------
+// ------------------------------------------------------
+// Base44 Helper: Generate secure token
+// ------------------------------------------------------
 function generateToken() {
   const bytes = new Uint8Array(32);
   crypto.getRandomValues(bytes);
   return Array.from(bytes).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-// ------------------------------
-// MAIN FUNCTION
-// ------------------------------
+// ------------------------------------------------------
+// MAIN FUNCTION — Base44 serverless entry point
+// ------------------------------------------------------
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
 
@@ -56,7 +56,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 1) Load user
+    // ------------------------------------------------------
+    // 1) Load user from Base44 Entities
+    // ------------------------------------------------------
     const users = await base44.asServiceRole.entities.User.filter({ id: user_id });
     const user = users?.[0];
 
@@ -67,15 +69,19 @@ Deno.serve(async (req) => {
       );
     }
 
+    // ------------------------------------------------------
     // 2) Prevent banned users from being invited
-    if (user.status && user.status.startsWith("banned")) {
+    // ------------------------------------------------------
+    if (user.approval_status && user.approval_status.startsWith("banned")) {
       return Response.json(
         { success: false, error: "user_banned" },
         { status: 400 }
       );
     }
 
+    // ------------------------------------------------------
     // 3) Prevent duplicate invitations
+    // ------------------------------------------------------
     if (user.approval_status === "invited") {
       return Response.json(
         { success: false, error: "already_invited" },
@@ -83,7 +89,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 4) Create email verification token
+    // ------------------------------------------------------
+    // 4) Create email verification token (Base44 Entities)
+    // ------------------------------------------------------
     const emailToken = generateToken();
     const emailExpires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
@@ -95,7 +103,9 @@ Deno.serve(async (req) => {
       used: false,
     });
 
-    // 5) Create onboarding password token
+    // ------------------------------------------------------
+    // 5) Create onboarding password token (Base44 Entities)
+    // ------------------------------------------------------
     const passwordToken = generateToken();
     const passwordExpires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
@@ -106,12 +116,16 @@ Deno.serve(async (req) => {
       used: false,
     });
 
-    // 6) Update user → invited
+    // ------------------------------------------------------
+    // 6) Update user → invited (Base44 Entities)
+    // ------------------------------------------------------
     await base44.asServiceRole.entities.User.update(user_id, {
       approval_status: "invited",
     });
 
-    // 7) Send invitation email
+    // ------------------------------------------------------
+    // 7) Send invitation email (Resend)
+    // ------------------------------------------------------
     const inviteUrl = `https://hostkeepdigital.co.uk/Onboarding?token=${passwordToken}`;
     await sendInvitationEmail(user.email, inviteUrl);
 
