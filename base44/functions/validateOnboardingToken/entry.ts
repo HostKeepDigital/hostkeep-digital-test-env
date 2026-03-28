@@ -13,12 +13,20 @@ Deno.serve(async (req) => {
       );
     }
 
-    const members = await base44.entities.FoundingMember.filter({
-      onboarding_token: token,
-      approval_status: "invited",
-    });
+    let member = null;
 
-    const member = members?.[0];
+    try {
+      const members = await base44.entities.FoundingMember.filter({
+        onboarding_token: token,
+        approval_status: "invited",
+      });
+      member = members?.[0];
+    } catch (err) {
+      return Response.json(
+        { valid: false, error: "invalid_token" },
+        { status: 400 }
+      );
+    }
 
     if (!member) {
       return Response.json(
