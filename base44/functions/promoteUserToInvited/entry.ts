@@ -99,6 +99,19 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: "member_not_found" }, { status: 404 });
     }
 
+    const email = member.email.toLowerCase().trim();
+
+    // Ensure User entity exists so createonboardingpassword can find it
+    const existingUsers = await base44.asServiceRole.entities.User.filter({ email });
+    if (!existingUsers?.[0]) {
+      await base44.asServiceRole.entities.User.create({
+        email,
+        full_name: member.full_name || email,
+        password: generateToken(),
+      });
+    }
+
+    // Generate onboarding token and store on FoundingMember
     const token = generateToken();
     const inviteUrl = `https://hostkeepdigital.co.uk/CreatePassword?token=${token}`;
 
@@ -109,7 +122,7 @@ Deno.serve(async (req) => {
     });
 
     const roleLabel = member.role === "host" ? "Host" : "Cleaner";
-    await sendInvitationEmail(member.email, member.full_name, roleLabel, inviteUrl);
+    await sendInvitationEmail(email, member.full_name, roleLabel, inviteUrl);
 
     return Response.json({ success: true });
 
