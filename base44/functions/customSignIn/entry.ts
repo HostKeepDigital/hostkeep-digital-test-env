@@ -19,13 +19,12 @@ Deno.serve(async (req) => {
     if (!email || !password) {
       return Response.json(
         { success: false, error: "missing_fields" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     const normalisedEmail = email.toLowerCase().trim();
 
-    // Look up stored credentials
     const credentials = await serviceRole.entities.UserCredentials.filter({
       email: normalisedEmail,
     });
@@ -34,22 +33,20 @@ Deno.serve(async (req) => {
     if (!cred) {
       return Response.json(
         { success: false, error: "invalid_credentials" },
-        { status: 401 },
+        { status: 401 }
       );
     }
 
-    // Hash incoming password and compare
     const salt = Deno.env.get("HASH_SALT") || "";
     const incomingHash = await hashPassword(password, salt);
 
     if (incomingHash !== cred.password_hash) {
       return Response.json(
         { success: false, error: "invalid_credentials" },
-        { status: 401 },
+        { status: 401 }
       );
     }
 
-    // Determine role and founding_member_id
     let role = null;
     let founding_member_id = null;
 
@@ -82,21 +79,16 @@ Deno.serve(async (req) => {
       if (guests?.[0]) role = "guest";
     }
 
-    // Create session token
     const session_token = crypto.randomUUID();
 
-    // STR‑grade expiry: admin 12h, app 30d, web 24h
     const isApp = is_app === true;
     let expiresAt;
 
     if (role === "founding_member") {
-      // Admin / high‑privilege
       expiresAt = new Date(Date.now() + 12 * 60 * 60 * 1000);
     } else if (isApp) {
-      // App users
       expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
     } else {
-      // Web users
       expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
     }
 
@@ -122,7 +114,7 @@ Deno.serve(async (req) => {
     console.error("customSignIn error:", err);
     return Response.json(
       { success: false, error: "server_error" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 });
