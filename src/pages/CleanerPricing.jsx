@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
@@ -7,24 +6,25 @@ import { ArrowLeft } from "lucide-react";
 import { createPageUrl } from "@/utils";
 import { useNavigate } from "react-router-dom";
 import CleanerPricingManager from "@/components/cleaners/CleanerPricingManager";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function CleanerPricing() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const { user, isAuthenticated } = useAuth(); // ← custom auth
 
-  useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
-  }, []);
-
+  // Load cleaner profile
   const { data: cleanerProfile, isLoading } = useQuery({
-    queryKey: ['cleaner-profile', user?.id],
+    queryKey: ["cleaner-profile", user?.id],
     queryFn: async () => {
-      const profiles = await base44.entities.Cleaner.filter({ user_id: user?.id });
+      const profiles = await base44.entities.Cleaner.filter({
+        user_id: user?.id,
+      });
       return profiles[0];
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && isAuthenticated,
   });
 
+  // Loading state
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -33,12 +33,13 @@ export default function CleanerPricing() {
     );
   }
 
+  // No profile found
   if (!cleanerProfile) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-600 mb-4">Cleaner profile not found</p>
-          <Button onClick={() => navigate(createPageUrl('CleanerDashboard'))}>
+          <Button onClick={() => navigate(createPageUrl("CleanerDashboard"))}>
             Back to Dashboard
           </Button>
         </div>
@@ -46,6 +47,7 @@ export default function CleanerPricing() {
     );
   }
 
+  // Main UI
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
@@ -54,9 +56,9 @@ export default function CleanerPricing() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate(createPageUrl('CleanerDashboard'))}
+          <Button
+            variant="ghost"
+            onClick={() => navigate(createPageUrl("CleanerDashboard"))}
             className="mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
