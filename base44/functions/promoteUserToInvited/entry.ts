@@ -5,12 +5,14 @@ const LOGO_URL = "https://i.ibb.co/6cwz6PzN/Host-Keep-Digital-Navy-Background.pn
 const FB_ICON = "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Facebook_Logo_%282019%29.png/600px-Facebook_Logo_%282019%29.png";
 const IG_ICON = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Instagram_icon.png/600px-Instagram_icon.png";
 
-// ------------------------------------------------------
-// Send onboarding email
-// ------------------------------------------------------
-async function sendInvitationEmail(to, fullName, roleLabel, inviteUrl) {
-  if (!RESEND_API_KEY) return;
+function generateToken() {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
 
+async function sendInvitationEmail(to: string, fullName: string, roleLabel: string, inviteUrl: string) {
+  if (!RESEND_API_KEY) return;
   try {
     await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -37,36 +39,25 @@ async function sendInvitationEmail(to, fullName, roleLabel, inviteUrl) {
       <tr>
         <td style="padding:40px 40px 32px 40px;">
           <h1 style="margin:0 0 16px 0;font-size:22px;font-weight:bold;color:#111827;">You're approved!</h1>
-
           <div style="font-size:15px;line-height:1.7;color:#374151;">
             <p>Hi ${fullName || "there"},</p>
-
             <p>Your application to become a Founding ${roleLabel} on HostKeep has been approved.</p>
-
-            <p>To get started, click the button below to create your password and activate your account.</p>
-
+            <p>Click the button below to create your password and activate your account.</p>
             <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;">
               <tr><td align="center">
-                <a href="${inviteUrl}"
-                   style="display:inline-block;background-color:#0d9488;color:#ffffff;font-size:15px;font-weight:bold;text-decoration:none;padding:14px 32px;border-radius:8px;">
+                <a href="${inviteUrl}" style="display:inline-block;background-color:#0d9488;color:#ffffff;font-size:15px;font-weight:bold;text-decoration:none;padding:14px 32px;border-radius:8px;">
                   Create Your Password
                 </a>
               </td></tr>
             </table>
-
             <p style="margin-top:24px;">This link is unique to you and expires in 24 hours.</p>
-
-            <p>Once your password is set, you can begin setting up your ${
-              roleLabel === "Host" ? "first property." : "cleaner profile."
-            }</p>
+            <p>Once your password is set, you can begin setting up your ${roleLabel === "Host" ? "first property." : "cleaner profile."}</p>
           </div>
         </td>
       </tr>
-
       <tr>
         <td style="padding:0 40px;"><hr style="border:none;border-top:1px solid #e5e7eb;margin:0;"></td>
       </tr>
-
       <tr>
         <td style="padding:28px 40px;text-align:center;">
           <p style="margin:0 0 8px 0;font-size:13px;color:#6b7280;">© 2026 HostKeep Digital Ltd</p>
@@ -84,7 +75,6 @@ async function sendInvitationEmail(to, fullName, roleLabel, inviteUrl) {
           </p>
         </td>
       </tr>
-
     </table>
   </td></tr>
 </table>
@@ -95,18 +85,6 @@ async function sendInvitationEmail(to, fullName, roleLabel, inviteUrl) {
   } catch (_) {}
 }
 
-// ------------------------------------------------------
-// Generate secure token
-// ------------------------------------------------------
-function generateToken() {
-  const bytes = new Uint8Array(32);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-// ------------------------------------------------------
-// MAIN FUNCTION — Approve + Email
-// ------------------------------------------------------
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -121,11 +99,9 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: "member_not_found" }, { status: 404 });
     }
 
-    // Create onboarding token
     const token = generateToken();
     const inviteUrl = `https://hostkeepdigital.co.uk/CreatePassword?token=${token}`;
 
-    // Store token on FoundingMember (your actual schema)
     await base44.asServiceRole.entities.FoundingMember.update(member_id, {
       approval_status: "invited",
       onboarding_token: token,
@@ -133,8 +109,6 @@ Deno.serve(async (req) => {
     });
 
     const roleLabel = member.role === "host" ? "Host" : "Cleaner";
-
-    // Send email
     await sendInvitationEmail(member.email, member.full_name, roleLabel, inviteUrl);
 
     return Response.json({ success: true });
