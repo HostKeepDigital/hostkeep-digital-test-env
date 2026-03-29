@@ -74,11 +74,7 @@ export default function CleanerMarketplace() {
       selectedDate,
     ],
     queryFn: async () => {
-    let query = {
-    subscription_status: "active",
-    status: "active"
-};
-
+      let query = {
         subscription_status: "active",
         status: "active",
       };
