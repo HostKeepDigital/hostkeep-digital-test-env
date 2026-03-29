@@ -1,46 +1,67 @@
-import { useState, useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Building2, CheckCircle2, Home, DollarSign, Calendar } from "lucide-react";
-import { toast } from "sonner";
-import { addUserRole, getUserRoles, hasRole } from "@/components/utils/roleHelpers";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import {
+  Building2,
+  DollarSign,
+  Home,
+  Calendar,
+} from "lucide-react";
+import { useAuth } from "@/lib/AuthContext";
+import { hasRole } from "@/components/utils/roleHelpers";
 
 export default function BecomeHost() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-  const [userRoles, setUserRoles] = useState([]);
-  const [isUpgrading, setIsUpgrading] = useState(false);
+
+  // Pull from your custom auth system
+  const { user, roles, isAuthenticated } = useAuth();
 
   useEffect(() => {
-    base44.auth.me().then(async (userData) => {
-      setUser(userData);
-      if (userData?.id) {
-        const roles = await getUserRoles(userData.id);
-        setUserRoles(roles);
-        
-        // If already a host, redirect
-        if (hasRole(roles, 'host')) {
-          navigate(createPageUrl('HostDashboard'));
-        }
-      }
-    }).catch(() => {
-      base44.auth.redirectToLogin(window.location.pathname);
-    });
-  }, []);
+    // If not logged in → redirect to SignIn
+    if (!isAuthenticated) {
+      navigate("/SignIn");
+      return;
+    }
+
+    // If already a host → redirect to dashboard
+    if (hasRole(roles, "host")) {
+      navigate(createPageUrl("HostDashboard"));
+    }
+  }, [isAuthenticated, roles, navigate]);
 
   const handleUpgrade = () => {
-    navigate(createPageUrl('CreateProperty'));
+    navigate(createPageUrl("CreateProperty"));
   };
 
   const benefits = [
-    { icon: DollarSign, title: "Earn Extra Income", description: "Turn your property into a profitable rental" },
-    { icon: Calendar, title: "Flexible Schedule", description: "You control when your property is available" },
-    { icon: Home, title: "Easy Management", description: "Simple tools to manage bookings and guests" },
-    { icon: Building2, title: "Professional Support", description: "Get help from our support team anytime" }
+    {
+      icon: DollarSign,
+      title: "Earn Extra Income",
+      description: "Turn your property into a profitable rental",
+    },
+    {
+      icon: Calendar,
+      title: "Flexible Schedule",
+      description: "You control when your property is available",
+    },
+    {
+      icon: Home,
+      title: "Easy Management",
+      description: "Simple tools to manage bookings and guests",
+    },
+    {
+      icon: Building2,
+      title: "Professional Support",
+      description: "Get help from our support team anytime",
+    },
   ];
 
   return (
@@ -50,7 +71,9 @@ export default function BecomeHost() {
           <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Building2 className="w-8 h-8 text-teal-600" />
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Become a Host</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Become a Host
+          </h1>
           <p className="text-xl text-gray-600">
             Start earning by sharing your property with travelers
           </p>
@@ -65,8 +88,12 @@ export default function BecomeHost() {
                     <benefit.icon className="w-6 h-6 text-teal-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 mb-1">{benefit.title}</h3>
-                    <p className="text-sm text-gray-600">{benefit.description}</p>
+                    <h3 className="font-semibold text-gray-900 mb-1">
+                      {benefit.title}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {benefit.description}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -82,7 +109,7 @@ export default function BecomeHost() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button 
+            <Button
               onClick={handleUpgrade}
               size="lg"
               className="bg-teal-600 hover:bg-teal-700"
