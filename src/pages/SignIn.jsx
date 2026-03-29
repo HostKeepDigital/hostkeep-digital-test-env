@@ -1,4 +1,5 @@
 import { useState } from "react";
+import "./index.css";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
