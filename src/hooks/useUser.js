@@ -1,44 +1,44 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { api } from "../utils/api";
+import { logout } from "../utils/logout";
 
 export function useUser() {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
-  const [foundingMemberId, setFoundingMemberId] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("session_token");
+    async function loadUser() {
+      try {
+        const expiresAt = localStorage.getItem("session_expires_at");
+        if (expiresAt && new Date(expiresAt) < new Date()) {
+          logout();
+          return;
+        }
 
-    if (!token) {
-      setIsAuthenticated(false);
-      setLoading(false);
-      return;
+        const data = await api("/functions/checkSession", {});
+        if (!data || !data.authenticated) {
+          setUser(null);
+          setRole(null);
+          return;
+        }
+
+        setUser({
+          email: data.email,
+          founding_member_id: data.founding_member_id || null,
+        });
+        setRole(data.role || null);
+      } catch (err) {
+        console.error("useUser error:", err);
+        setUser(null);
+        setRole(null);
+      } finally {
+        setLoading(false);
+      }
     }
 
-    fetch("/functions/getUserFromSession", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ session_token: token }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          setIsAuthenticated(true);
-          setUser(data.user);
-          setRole(data.role);
-          setFoundingMemberId(data.founding_member_id);
-        } else {
-          setIsAuthenticated(false);
-        }
-      })
-      .catch(() => {
-        setIsAuthenticated(false);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+    loadUser();
   }, []);
 
-  return { user, role, foundingMemberId, isAuthenticated, loading };
+  return { user, role, loading };
 }
