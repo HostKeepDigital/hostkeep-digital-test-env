@@ -1,56 +1,87 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { getUserRoles, hasRole } from "@/components/utils/roleHelpers";
+import { hasRole } from "@/components/utils/roleHelpers";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { motion } from "framer-motion";
-import { Sparkles, Search, UserPlus, LayoutDashboard, ArrowRight, CheckCircle, Shield, MessageSquare, Star, TrendingUp } from "lucide-react";
+import {
+  Sparkles,
+  Search,
+  UserPlus,
+  LayoutDashboard,
+  ArrowRight,
+  CheckCircle,
+  Shield,
+  MessageSquare,
+  Star,
+  TrendingUp,
+} from "lucide-react";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function CleanKeep() {
-  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+
+  // Pull from your custom auth system
+  const { user, roles, isAuthenticated } = useAuth();
+
   const [cleanerProfile, setCleanerProfile] = useState(null);
-  const [userRoles, setUserRoles] = useState([]);
   const [rolesLoading, setRolesLoading] = useState(true);
 
   useEffect(() => {
-    base44.auth.me().then(async (u) => {
-      setUser(u);
-      const profiles = await base44.entities.Cleaner.filter({ user_id: u.id });
-      if (profiles[0]) setCleanerProfile(profiles[0]);
-      if (u?.id) {
-        const roles = await base44.entities.UserRole.filter({ user_id: u.id });
-        setUserRoles(roles);
+    const load = async () => {
+      if (!isAuthenticated || !user?.id) {
+        setRolesLoading(false);
+        return;
       }
-    }).catch(() => {}).finally(() => setRolesLoading(false));
-  }, []);
+
+      // Load cleaner profile
+      const profiles = await base44.entities.Cleaner.filter({
+        user_id: user.id,
+      });
+      if (profiles[0]) setCleanerProfile(profiles[0]);
+
+      setRolesLoading(false);
+    };
+
+    load();
+  }, [isAuthenticated, user]);
+
   // Role-based logic
-  const isHost = hasRole(userRoles, 'host');
-  const isCleaner = hasRole(userRoles, 'cleaner');
+  const isHost = hasRole(roles, "host");
+  const isCleaner = hasRole(roles, "cleaner");
   const isGuest = !isHost && !isCleaner;
 
   const options = [
     {
       icon: Search,
       title: "Find a Cleaner",
-      description: "Browse local, vetted cleaners. Check reviews. Hire with confidence.",
+      description:
+        "Browse local, vetted cleaners. Check reviews. Hire with confidence.",
       buttonText: "Browse Cleaners",
       route: "CleanerMarketplace",
-      isPrimary: false,
+      requiresAuth: false,
       highlightForHost: true,
-      showFor: (h, c) => h || isGuest // Show for hosts and guests
+      showFor: (h, c) => h || isGuest,
     },
     {
       icon: UserPlus,
       title: "Join CleanKeep",
-      description: "Create your profile, set your rates, and connect with holiday home owners.",
+      description:
+        "Create your profile, set your rates, and connect with holiday home owners.",
       buttonText: "Become a Cleaner",
       route: "CleanerSignup",
-      isPrimary: false,
+      requiresAuth: true,
       highlightForHost: false,
-      showFor: (h, c) => isGuest // Only show for guests
+      showFor: () => isGuest,
     },
     {
       icon: LayoutDashboard,
@@ -58,19 +89,18 @@ export default function CleanKeep() {
       description: "Manage jobs, availability, and messages.",
       buttonText: "Go to Dashboard",
       route: "CleanerDashboard",
-      isPrimary: false,
       requiresAuth: true,
       highlightForCleaner: true,
-      showFor: (h, c) => c // Only show for cleaners
-    }
+      showFor: (h, c) => c,
+    },
   ];
 
   const handleNavigation = (route, requiresAuth) => {
-    if (requiresAuth && !user) {
-      base44.auth.redirectToLogin(createPageUrl(route));
-    } else {
-      window.location.href = createPageUrl(route);
+    if (requiresAuth && !isAuthenticated) {
+      navigate("/SignIn");
+      return;
     }
+    navigate(createPageUrl(route));
   };
 
   return (
@@ -85,13 +115,15 @@ export default function CleanKeep() {
           >
             <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-white rounded-full shadow-sm border border-blue-100">
               <Sparkles className="w-4 h-4 text-blue-600" />
-              <span className="text-sm font-medium text-blue-700">The Cleaner Network by HostKeep</span>
+              <span className="text-sm font-medium text-blue-700">
+                The Cleaner Network by HostKeep
+              </span>
             </div>
-            
+
             <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-4">
               CleanKeep
             </h1>
-            
+
             <p className="text-xl text-gray-500 mb-8">
               The Cleaner Network by HostKeep
             </p>
@@ -105,7 +137,8 @@ export default function CleanKeep() {
             </div>
 
             <p className="text-base text-gray-600 max-w-2xl mx-auto leading-relaxed">
-              CleanKeep connects reliable cleaners with independent UK holiday home owners who need trusted, professional support.
+              CleanKeep connects reliable cleaners with independent UK holiday
+              home owners who need trusted, professional support.
             </p>
           </motion.div>
         </div>
@@ -119,53 +152,69 @@ export default function CleanKeep() {
               <div className="h-10 w-48 bg-gray-200 rounded-lg animate-pulse mx-auto" />
             </div>
           ) : (
-          <div className={`grid ${
-            hasRole(userRoles, 'cleaner') && !hasRole(userRoles, 'host')
-            ? 'md:grid-cols-1 max-w-md mx-auto' 
-            : (hasRole(userRoles, 'host') && !hasRole(userRoles, 'cleaner'))
-            ? 'md:grid-cols-1 max-w-md mx-auto' : 'md:grid-cols-3'
-          } gap-6`}>
-            {options.filter(option => option.showFor(isHost, isCleaner || !!cleanerProfile)).map((option, idx) => {
-              const shouldHighlight = 
-                (option.highlightForHost && hasRole(userRoles, 'host')) || 
-                (option.highlightForCleaner && cleanerProfile);
-              
-              return (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.1 }}
-                >
-                  <Card className={`h-full hover:shadow-xl transition-all duration-300 border-2 group cursor-pointer ${
-                    shouldHighlight 
-                      ? 'border-blue-500 bg-blue-50/50' 
-                      : 'hover:border-blue-300'
-                  }`}>
-                    <CardHeader className="text-center pb-4">
-                      <div className={`mx-auto w-16 h-16 rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                        <option.icon className="w-8 h-8 text-blue-600" />
-                      </div>
-                      <CardTitle className="text-lg mb-2">{option.title}</CardTitle>
-                      <CardDescription className="text-sm">
-                        {option.description}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="pt-2">
-                      <Button 
-                        className="w-full bg-blue-600 hover:bg-blue-700"
-                        size="lg"
-                        onClick={() => handleNavigation(option.route, option.requiresAuth)}
+            <div
+              className={`grid ${
+                isCleaner && !isHost
+                  ? "md:grid-cols-1 max-w-md mx-auto"
+                  : isHost && !isCleaner
+                  ? "md:grid-cols-1 max-w-md mx-auto"
+                  : "md:grid-cols-3"
+              } gap-6`}
+            >
+              {options
+                .filter((option) =>
+                  option.showFor(isHost, isCleaner || !!cleanerProfile)
+                )
+                .map((option, idx) => {
+                  const shouldHighlight =
+                    (option.highlightForHost && isHost) ||
+                    (option.highlightForCleaner && cleanerProfile);
+
+                  return (
+                    <motion.div
+                      key={idx}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.1 }}
+                    >
+                      <Card
+                        className={`h-full hover:shadow-xl transition-all duration-300 border-2 group cursor-pointer ${
+                          shouldHighlight
+                            ? "border-blue-500 bg-blue-50/50"
+                            : "hover:border-blue-300"
+                        }`}
                       >
-                        {option.buttonText}
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </div>
+                        <CardHeader className="text-center pb-4">
+                          <div className="mx-auto w-16 h-16 rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                            <option.icon className="w-8 h-8 text-blue-600" />
+                          </div>
+                          <CardTitle className="text-lg mb-2">
+                            {option.title}
+                          </CardTitle>
+                          <CardDescription className="text-sm">
+                            {option.description}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="pt-2">
+                          <Button
+                            className="w-full bg-blue-600 hover:bg-blue-700"
+                            size="lg"
+                            onClick={() =>
+                              handleNavigation(
+                                option.route,
+                                option.requiresAuth
+                              )
+                            }
+                          >
+                            {option.buttonText}
+                            <ArrowRight className="w-4 h-4 ml-2" />
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  );
+                })}
+            </div>
           )}
         </div>
       </section>
@@ -183,7 +232,9 @@ export default function CleanKeep() {
           <div className="grid md:grid-cols-2 gap-8 mb-12">
             <Card>
               <CardHeader>
-                <CardTitle className="text-xl">Hosts struggle to find:</CardTitle>
+                <CardTitle className="text-xl">
+                  Hosts struggle to find:
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3 text-gray-700">
@@ -209,7 +260,9 @@ export default function CleanKeep() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-xl">Cleaners struggle to find:</CardTitle>
+                <CardTitle className="text-xl">
+                  Cleaners struggle to find:
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3 text-gray-700">
@@ -236,7 +289,8 @@ export default function CleanKeep() {
 
           <div className="text-center">
             <p className="text-lg text-gray-600 mb-4">
-              There has never been a simple, low-cost platform connecting the two.
+              There has never been a simple, low-cost platform connecting the
+              two.
             </p>
             <p className="text-2xl font-bold text-blue-600">
               CleanKeep changes that.
@@ -252,7 +306,8 @@ export default function CleanKeep() {
             A Dedicated Cleaning Marketplace Inside HostKeep
           </h2>
           <p className="text-lg text-gray-600 mb-8">
-            CleanKeep is fully integrated into the HostKeep platform — connecting you directly with active holiday home owners.
+            CleanKeep is fully integrated into the HostKeep platform — connecting
+            you directly with active holiday home owners.
           </p>
 
           <Card className="text-left">
@@ -261,34 +316,20 @@ export default function CleanKeep() {
             </CardHeader>
             <CardContent>
               <ul className="grid md:grid-cols-2 gap-3">
-               <li className="flex items-center gap-2">
-                 <CheckCircle className="w-5 h-5 text-blue-500" />
-                 <span>Professional public profile</span>
-               </li>
-               <li className="flex items-center gap-2">
-                 <CheckCircle className="w-5 h-5 text-blue-500" />
-                 <span>Availability calendar</span>
-               </li>
-               <li className="flex items-center gap-2">
-                 <CheckCircle className="w-5 h-5 text-blue-500" />
-                 <span>Job notifications</span>
-               </li>
-               <li className="flex items-center gap-2">
-                 <CheckCircle className="w-5 h-5 text-blue-500" />
-                 <span>Direct messaging with hosts</span>
-               </li>
-               <li className="flex items-center gap-2">
-                 <CheckCircle className="w-5 h-5 text-blue-500" />
-                 <span>Reviews & ratings</span>
-               </li>
-               <li className="flex items-center gap-2">
-                 <CheckCircle className="w-5 h-5 text-blue-500" />
-                 <span>Full control over your pricing</span>
-               </li>
-               <li className="flex items-center gap-2">
-                 <CheckCircle className="w-5 h-5 text-blue-500" />
-                 <span>Repeat client management</span>
-               </li>
+                {[
+                  "Professional public profile",
+                  "Availability calendar",
+                  "Job notifications",
+                  "Direct messaging with hosts",
+                  "Reviews & ratings",
+                  "Full control over your pricing",
+                  "Repeat client management",
+                ].map((item, idx) => (
+                  <li key={idx} className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-blue-500" />
+                    <span>{item}</span>
+                  </li>
+                ))}
               </ul>
               <p className="text-center text-lg font-semibold text-gray-900 mt-6">
                 No middleman. No commission taken from your work.
@@ -310,31 +351,24 @@ export default function CleanKeep() {
               <CardHeader>
                 <CardTitle className="text-2xl">CleanKeep Solo Basic</CardTitle>
                 <div className="text-4xl font-bold text-gray-900 mt-2">
-                  £9.99<span className="text-lg text-gray-500">/month</span>
+                  £9.99
+                  <span className="text-lg text-gray-500">/month</span>
                 </div>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-blue-500" />
-                    <span>Public cleaner profile</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-blue-500" />
-                    <span>Availability calendar</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-blue-500" />
-                    <span>Job notifications</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-blue-500" />
-                    <span>Messaging</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-blue-500" />
-                    <span>Reviews & ratings</span>
-                  </li>
+                  {[
+                    "Public cleaner profile",
+                    "Availability calendar",
+                    "Job notifications",
+                    "Messaging",
+                    "Reviews & ratings",
+                  ].map((item, idx) => (
+                    <li key={idx} className="flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5 text-blue-500" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
                 </ul>
               </CardContent>
             </Card>
@@ -346,31 +380,24 @@ export default function CleanKeep() {
                   <Badge className="bg-blue-600">Popular</Badge>
                 </CardTitle>
                 <div className="text-4xl font-bold text-gray-900 mt-2">
-                  £19.99<span className="text-lg text-gray-500">/month</span>
+                  £19.99
+                  <span className="text-lg text-gray-500">/month</span>
                 </div>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-blue-500" />
-                    <span className="font-medium">Priority placement in search</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-blue-500" />
-                    <span className="font-medium">Auto-accept job option</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-blue-500" />
-                    <span className="font-medium">Repeat client management tools</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-blue-500" />
-                    <span className="font-medium">Earnings analytics</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-blue-500" />
-                    <span className="font-medium">"Verified Cleaner" badge</span>
-                  </li>
+                  {[
+                    "Priority placement in search",
+                    "Auto-accept job option",
+                    "Repeat client management tools",
+                    "Earnings analytics",
+                    '"Verified Cleaner" badge',
+                  ].map((item, idx) => (
+                    <li key={idx} className="flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5 text-blue-500" />
+                      <span className="font-medium">{item}</span>
+                    </li>
+                  ))}
                 </ul>
               </CardContent>
             </Card>
@@ -394,23 +421,27 @@ export default function CleanKeep() {
               {
                 step: "1",
                 title: "Create Your Profile",
-                description: "Add your bio, service area, rates, availability, and photos of past work."
+                description:
+                  "Add your bio, service area, rates, availability, and photos of past work.",
               },
               {
                 step: "2",
                 title: "Get Found by Hosts",
-                description: "Hosts browse local cleaners directly through the Cleaner Marketplace."
+                description:
+                  "Hosts browse local cleaners directly through the Cleaner Marketplace.",
               },
               {
                 step: "3",
                 title: "Accept Jobs",
-                description: "Receive notifications when bookings require cleaning."
+                description:
+                  "Receive notifications when bookings require cleaning.",
               },
               {
                 step: "4",
                 title: "Build Your Reputation",
-                description: "Earn reviews and grow long-term client relationships."
-              }
+                description:
+                  "Earn reviews and grow long-term client relationships.",
+              },
             ].map((item, idx) => (
               <Card key={idx}>
                 <CardHeader>
@@ -433,17 +464,24 @@ export default function CleanKeep() {
         <div className="max-w-4xl mx-auto space-y-16">
           {/* Cleaner Dashboard */}
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">Cleaner Dashboard</h2>
-            <p className="text-lg text-gray-600 mb-6">Your control centre includes:</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-6">
+              Cleaner Dashboard
+            </h2>
+            <p className="text-lg text-gray-600 mb-6">
+              Your control centre includes:
+            </p>
             <div className="grid md:grid-cols-2 gap-4">
               {[
                 "Availability calendar",
                 "Job requests & confirmations",
                 "Messaging system",
                 "Earnings tracking",
-                "Review management"
+                "Review management",
               ].map((item, idx) => (
-                <div key={idx} className="flex items-center gap-2 p-4 bg-white rounded-lg">
+                <div
+                  key={idx}
+                  className="flex items-center gap-2 p-4 bg-white rounded-lg"
+                >
                   <CheckCircle className="w-5 h-5 text-blue-500" />
                   <span className="text-gray-700">{item}</span>
                 </div>
@@ -480,7 +518,9 @@ export default function CleanKeep() {
           {/* Fair Merit-Based Review System */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-2xl text-center">Fair, Merit-Based Review System</CardTitle>
+              <CardTitle className="text-2xl text-center">
+                Fair, Merit-Based Review System
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-2 gap-6">
@@ -523,9 +563,12 @@ export default function CleanKeep() {
                 "Direct working relationships",
                 "Repeat bookings",
                 "Flexible schedule",
-                "Professional positioning (not gig-economy style)"
+                "Professional positioning (not gig-economy style)",
               ].map((item, idx) => (
-                <div key={idx} className="flex items-center gap-3 p-4 bg-white rounded-lg text-left">
+                <div
+                  key={idx}
+                  className="flex items-center gap-3 p-4 bg-white rounded-lg text-left"
+                >
                   <CheckCircle className="w-6 h-6 text-blue-500 flex-shrink-0" />
                   <span className="text-gray-700">{item}</span>
                 </div>
@@ -535,8 +578,6 @@ export default function CleanKeep() {
               One additional cleaning job per month easily covers the subscription.
             </p>
           </div>
-
-
         </div>
       </section>
 
@@ -549,11 +590,13 @@ export default function CleanKeep() {
           <p className="text-xl mb-8 text-blue-100">
             Join CleanKeep today and connect with trusted holiday home owners near you.
           </p>
-          <Link to={createPageUrl('CleanerSignup')}>
-            <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-4">
-              Start Free Trial
-            </Button>
-          </Link>
+          <Button
+            size="lg"
+            className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-4"
+            onClick={() => handleNavigation("CleanerSignup", true)}
+          >
+            Start Free Trial
+          </Button>
         </div>
       </section>
     </div>
