@@ -1,6 +1,7 @@
 export async function logout() {
   const token = localStorage.getItem("session_token");
 
+  // Attempt to invalidate the session on the backend
   if (token) {
     try {
       await fetch("/functions/logoutSession", {
@@ -13,7 +14,10 @@ export async function logout() {
     }
   }
 
+  // Clear all local session data
   localStorage.removeItem("session_token");
   localStorage.removeItem("session_expires_at");
+
+  // Hard redirect to signin (clears React state)
   window.location.href = "/signin";
 }
