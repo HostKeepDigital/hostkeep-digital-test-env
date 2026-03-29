@@ -50,33 +50,36 @@ Deno.serve(async (req) => {
     let role = null;
     let founding_member_id = null;
 
+    // Check FoundingMember
     const members = await serviceRole.entities.FoundingMember.filter({
       email: normalisedEmail,
     });
     if (members?.[0]) {
-      role = members[0].role;
       founding_member_id = members[0].id;
     }
 
-    if (!role) {
-      const hosts = await serviceRole.entities.Host.filter({
-        email: normalisedEmail,
-      });
-      if (hosts?.[0]) role = "host";
+    // Resolve role via UserRole (approved) using Base44 User entity
+    try {
+      const users = await serviceRole.entities.User.filter({ email: normalisedEmail });
+      const userId = users?.[0]?.id;
+      if (userId) {
+        const userRoles = await serviceRole.entities.UserRole.filter({ user_id: userId });
+        const approved = userRoles.filter(r => (r.approval_status || '').toLowerCase() === 'approved');
+        const priority = ['admin', 'host', 'cleaner'];
+        for (const p of priority) {
+          if (approved.some(r => r.role === p)) { role = p; break; }
+        }
+        if (!role && approved.some(r => r.role === 'guest')) role = 'guest';
+      }
+    } catch (_) {}
+
+    // Fall back to FoundingMember role
+    if (!role && members?.[0]?.role) {
+      role = members[0].role;
     }
 
     if (!role) {
-      const cleaners = await serviceRole.entities.Cleaner.filter({
-        email: normalisedEmail,
-      });
-      if (cleaners?.[0]) role = "cleaner";
-    }
-
-    if (!role) {
-      const guests = await serviceRole.entities.Guest.filter({
-        email: normalisedEmail,
-      });
-      if (guests?.[0]) role = "guest";
+      role = "guest";
     }
 
     const session_token = crypto.randomUUID();
