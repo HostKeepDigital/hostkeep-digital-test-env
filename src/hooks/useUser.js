@@ -10,23 +10,28 @@ export function useUser() {
   useEffect(() => {
     async function loadUser() {
       try {
+        // Proactive expiry check (frontend)
         const expiresAt = localStorage.getItem("session_expires_at");
         if (expiresAt && new Date(expiresAt) < new Date()) {
           logout();
           return;
         }
 
+        // Validate session with backend
         const data = await api("/functions/checkSession", {});
+
         if (!data || !data.authenticated) {
           setUser(null);
           setRole(null);
           return;
         }
 
+        // Hydrate user + role
         setUser({
           email: data.email,
           founding_member_id: data.founding_member_id || null,
         });
+
         setRole(data.role || null);
       } catch (err) {
         console.error("useUser error:", err);
