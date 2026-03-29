@@ -32,6 +32,7 @@ export default function SignIn() {
       }
 
       localStorage.setItem("session_token", data.session_token);
+
       if (data.expires_at) {
         localStorage.setItem("session_expires_at", data.expires_at);
       }
@@ -46,7 +47,7 @@ export default function SignIn() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
       <form
         onSubmit={handleSubmit}
         className="bg-white p-8 rounded-xl shadow-md space-y-4 w-full max-w-md"
