@@ -14,5 +14,6 @@ export async function logout() {
   }
 
   localStorage.removeItem("session_token");
+  localStorage.removeItem("session_expires_at");
   window.location.href = "/signin";
 }
