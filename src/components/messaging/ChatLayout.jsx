@@ -1,87 +1,100 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
 import { AnimatePresence, motion } from "framer-motion";
 import ConversationList from "./ConversationList";
 import ChatWindow from "./ChatWindow";
 import { Loader2 } from "lucide-react";
+import { useAuth } from "@/lib/AuthContext";
+import { base44 } from "@/api/base44Client"; // still needed for Message entity
 
 export default function ChatLayout({ role = "host" }) {
-  const [user, setUser] = useState(null);
+  const { user } = useAuth(); // custom auth user
   const [selectedConversationId, setSelectedConversationId] = useState(null);
-
-  useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
-  }, []);
 
   const queryClient = useQueryClient();
 
+  // Subscribe to message updates
   useEffect(() => {
     if (!user?.id) return;
+
     const unsubscribe = base44.entities.Message.subscribe((event) => {
-      if (event.type === 'create' || event.type === 'update') {
-        if (event.data.sender_id === user.id || event.data.receiver_id === user.id) {
-          queryClient.invalidateQueries({ queryKey: ['messages'] });
+      if (event.type === "create" || event.type === "update") {
+        if (
+          event.data.sender_id === user.id ||
+          event.data.receiver_id === user.id
+        ) {
+          queryClient.invalidateQueries({ queryKey: ["messages"] });
         }
       }
     });
+
     return unsubscribe;
   }, [user?.id, queryClient]);
 
   // Fetch Messages and Group into Conversations
   const { data: messages = [], isLoading } = useQuery({
-    queryKey: ['messages', user?.id],
+    queryKey: ["messages", user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
-      // Fetch sent and received messages
-      const sent = await base44.entities.Message.filter({ sender_id: user.id });
-      const received = await base44.entities.Message.filter({ receiver_id: user.id });
-      // Merge and sort
-      return [...sent, ...received].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+
+      const sent = await base44.entities.Message.filter({
+        sender_id: user.id,
+      });
+
+      const received = await base44.entities.Message.filter({
+        receiver_id: user.id,
+      });
+
+      return [...sent, ...received].sort(
+        (a, b) => new Date(a.created_date) - new Date(b.created_date)
+      );
     },
     enabled: !!user?.id,
-    // Poll every 5 seconds for simple real-time updates if websockets fail/aren't fully setup
-    refetchInterval: 5000 
+    refetchInterval: 5000, // fallback polling
   });
 
   // Group messages into conversations
   const conversations = messages.reduce((acc, msg) => {
-    // Determine conversation ID (if not set on message, fallback to grouping by other party + context)
-    // Here we assume conversation_id is set or we derive a unique key
-    const convId = msg.conversation_id || `legacy_${[msg.sender_id, msg.receiver_id].sort().join('_')}`;
-    
+    const convId =
+      msg.conversation_id ||
+      `legacy_${[msg.sender_id, msg.receiver_id].sort().join("_")}`;
+
     if (!acc[convId]) {
       const isMe = msg.sender_id === user?.id;
       const otherPartyId = isMe ? msg.receiver_id : msg.sender_id;
-      const otherPartyName = isMe ? (msg.receiver_name || "User") : (msg.sender_name || "User");
-      
+      const otherPartyName = isMe
+        ? msg.receiver_name || "User"
+        : msg.sender_name || "User";
+
       acc[convId] = {
         id: convId,
         messages: [],
         otherPartyId,
         otherPartyName,
-        otherPartyImage: null, // Would fetch profile image separately
+        otherPartyImage: null,
         bookingId: msg.booking_id,
         jobId: msg.job_id,
         propertyId: msg.property_id,
-        propertyName: "Property", // Placeholder, would need to fetch property details
+        propertyName: "Property",
         lastMessage: null,
         unreadCount: 0,
       };
     }
-    
+
     acc[convId].messages.push(msg);
-    acc[convId].lastMessage = msg; // Since messages are sorted by date, last pushed is last message
-    
+    acc[convId].lastMessage = msg;
+
     if (!msg.read && msg.receiver_id === user?.id) {
       acc[convId].unreadCount++;
     }
-    
+
     return acc;
   }, {});
 
-  const conversationList = Object.values(conversations).sort((a, b) => 
-    new Date(b.lastMessage?.created_date) - new Date(a.lastMessage?.created_date)
+  const conversationList = Object.values(conversations).sort(
+    (a, b) =>
+      new Date(b.lastMessage?.created_date) -
+      new Date(a.lastMessage?.created_date)
   );
 
   const selectedConversation = conversations[selectedConversationId];
@@ -104,7 +117,7 @@ export default function ChatLayout({ role = "host" }) {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -300, opacity: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className={`w-full md:w-80 h-full absolute md:relative z-10`}
+            className="w-full md:w-80 h-full absolute md:relative z-10"
           >
             <ConversationList
               conversations={conversationList}
