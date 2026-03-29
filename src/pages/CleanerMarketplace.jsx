@@ -1,86 +1,125 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { format } from "date-fns";
-import { 
-  Search, MapPin, Star, Shield, Clock, TrendingUp, 
-  Award, CheckCircle, Filter, Sparkles, Calendar as CalendarIcon
+import {
+  Search,
+  MapPin,
+  Star,
+  Shield,
+  Clock,
+  TrendingUp,
+  Award,
+  CheckCircle,
+  Filter,
+  Sparkles,
+  Calendar as CalendarIcon,
 } from "lucide-react";
 import CleanerCard from "@/components/cleaners/CleanerCard";
 import { createPageUrl } from "@/utils";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function CleanerMarketplace() {
+  const { user, isAuthenticated } = useAuth(); // ← custom auth
+
   const [searchLocation, setSearchLocation] = useState("");
   const [minRating, setMinRating] = useState(0);
   const [maxPrice, setMaxPrice] = useState(200);
   const [verified, setVerified] = useState("all");
   const [sortBy, setSortBy] = useState("rating");
   const [selectedDate, setSelectedDate] = useState(null);
-  const [user, setUser] = useState(null);
 
-  useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
-  }, []);
-
+  // Load availabilities for a specific date
   const { data: availabilities = [] } = useQuery({
-    queryKey: ['cleaner-availabilities', selectedDate],
+    queryKey: ["cleaner-availabilities", selectedDate],
     queryFn: async () => {
       if (!selectedDate) return [];
-      const dateStr = format(selectedDate, 'yyyy-MM-dd');
-      return await base44.entities.CleanerAvailability.filter({ date: dateStr, available: true });
+      const dateStr = format(selectedDate, "yyyy-MM-dd");
+      return await base44.entities.CleanerAvailability.filter({
+        date: dateStr,
+        available: true,
+      });
     },
     enabled: !!selectedDate,
   });
 
+  // Load cleaners with filters
   const { data: cleaners = [], isLoading } = useQuery({
-    queryKey: ['cleaners', searchLocation, minRating, maxPrice, verified, sortBy, selectedDate],
+    queryKey: [
+      "cleaners",
+      searchLocation,
+      minRating,
+      maxPrice,
+      verified,
+      sortBy,
+      selectedDate,
+    ],
     queryFn: async () => {
-      let query = { subscription_status: 'active', status: 'active' };
-      
-      if (verified === 'verified') {
+      let query: any = {
+        subscription_status: "active",
+        status: "active",
+      };
+
+      if (verified === "verified") {
         query.verified = true;
       }
-      
+
       const results = await base44.entities.Cleaner.filter(query);
-      
-      // Filter by price and rating
-      let filtered = results.filter(c => {
-        const meetsRating = c.average_rating >= minRating;
-        const meetsPrice = c.base_price <= maxPrice;
+
+      // Filter by rating + price
+      let filtered = results.filter((c) => {
+        const meetsRating = (c.average_rating || 0) >= minRating;
+        const meetsPrice = (c.base_price || 0) <= maxPrice;
         return meetsRating && meetsPrice;
       });
 
-      // Filter by date availability
+      // Filter by availability
       if (selectedDate && availabilities.length > 0) {
-        const availableCleanerIds = availabilities.map(a => a.cleaner_id);
-        filtered = filtered.filter(c => availableCleanerIds.includes(c.id));
+        const availableCleanerIds = availabilities.map((a) => a.cleaner_id);
+        filtered = filtered.filter((c) => availableCleanerIds.includes(c.id));
       }
-      
-      // Sort results
+
+      // Sort
       filtered.sort((a, b) => {
-        if (sortBy === 'rating') return (b.average_rating || 0) - (a.average_rating || 0);
-        if (sortBy === 'price_low') return (a.base_price || 0) - (b.base_price || 0);
-        if (sortBy === 'price_high') return (b.base_price || 0) - (a.base_price || 0);
-        if (sortBy === 'jobs') return (b.total_jobs || 0) - (a.total_jobs || 0);
+        if (sortBy === "rating")
+          return (b.average_rating || 0) - (a.average_rating || 0);
+        if (sortBy === "price_low")
+          return (a.base_price || 0) - (b.base_price || 0);
+        if (sortBy === "price_high")
+          return (b.base_price || 0) - (a.base_price || 0);
+        if (sortBy === "jobs")
+          return (b.total_jobs || 0) - (a.total_jobs || 0);
         return 0;
       });
-      
-      // Pro cleaners get priority
+
+      // Pro cleaners first
       filtered.sort((a, b) => {
-        if (a.subscription_plan === 'pro' && b.subscription_plan !== 'pro') return -1;
-        if (b.subscription_plan === 'pro' && a.subscription_plan !== 'pro') return 1;
+        if (a.subscription_plan === "pro" && b.subscription_plan !== "pro")
+          return -1;
+        if (b.subscription_plan === "pro" && a.subscription_plan !== "pro")
+          return 1;
         return 0;
       });
-      
+
       return filtered;
     },
   });
@@ -98,9 +137,13 @@ export default function CleanerMarketplace() {
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
               <Sparkles className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">CleanKeep Marketplace</h1>
+            <h1 className="text-3xl font-bold text-gray-900">
+              CleanKeep Marketplace
+            </h1>
           </div>
-          <p className="text-gray-600">Find trusted cleaners for your properties</p>
+          <p className="text-gray-600">
+            Find trusted cleaners for your properties
+          </p>
         </motion.div>
 
         {/* Filters */}
@@ -110,8 +153,11 @@ export default function CleanerMarketplace() {
           className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8"
         >
           <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
+            {/* Date */}
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">Date Needed</label>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Date Needed
+              </label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -122,7 +168,9 @@ export default function CleanerMarketplace() {
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {selectedDate ? format(selectedDate, "MMM d, yyyy") : "Any date"}
+                    {selectedDate
+                      ? format(selectedDate, "MMM d, yyyy")
+                      : "Any date"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -135,9 +183,9 @@ export default function CleanerMarketplace() {
                   />
                   {selectedDate && (
                     <div className="p-3 border-t">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         className="w-full"
                         onClick={() => setSelectedDate(null)}
                       >
@@ -149,8 +197,11 @@ export default function CleanerMarketplace() {
               </Popover>
             </div>
 
+            {/* Location */}
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">Location</label>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Location
+              </label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
@@ -162,9 +213,15 @@ export default function CleanerMarketplace() {
               </div>
             </div>
 
+            {/* Min Rating */}
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">Min Rating</label>
-              <Select value={minRating.toString()} onValueChange={(val) => setMinRating(Number(val))}>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Min Rating
+              </label>
+              <Select
+                value={minRating.toString()}
+                onValueChange={(val) => setMinRating(Number(val))}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -177,8 +234,11 @@ export default function CleanerMarketplace() {
               </Select>
             </div>
 
+            {/* Verification */}
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">Verification</label>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Verification
+              </label>
               <Select value={verified} onValueChange={setVerified}>
                 <SelectTrigger>
                   <SelectValue />
@@ -190,8 +250,11 @@ export default function CleanerMarketplace() {
               </Select>
             </div>
 
+            {/* Sort */}
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">Sort By</label>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Sort By
+              </label>
               <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger>
                   <SelectValue />
@@ -206,6 +269,7 @@ export default function CleanerMarketplace() {
             </div>
           </div>
 
+          {/* Price Slider */}
           <div>
             <label className="text-sm font-medium text-gray-700 mb-2 block">
               Max Price: £{maxPrice}
@@ -224,20 +288,23 @@ export default function CleanerMarketplace() {
         {/* Results */}
         <div className="mb-4 flex items-center justify-between">
           <p className="text-gray-600">
-            {cleaners.length} {cleaners.length === 1 ? 'cleaner' : 'cleaners'} found
+            {cleaners.length} {cleaners.length === 1 ? "cleaner" : "cleaners"}{" "}
+            found
           </p>
         </div>
 
         {isLoading ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map(i => (
+            {[1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="h-96 bg-white rounded-xl animate-pulse" />
             ))}
           </div>
         ) : cleaners.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-xl">
             <Search className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">No cleaners found matching your criteria</p>
+            <p className="text-gray-500">
+              No cleaners found matching your criteria
+            </p>
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
