@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      const res = await fetch("/functions/getSession", {
+      const res = await fetch("/functions/checkSession", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ session_token }),
