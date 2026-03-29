@@ -1,220 +1,98 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Home, Mail, Lock, Loader2 } from "lucide-react";
 
 export default function SignIn() {
-  const navigate = useNavigate();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
 
-  // Track failed login attempts
-  const [failedAttempts, setFailedAttempts] = useState(0);
-
-  const nextUrl =
-    new URLSearchParams(window.location.search).get("next") || "/";
-
-  const handleEmailLogin = async (e) => {
+  async function handleSubmit(e) {
     e.preventDefault();
-    setError("");
+    setError(null);
     setLoading(true);
 
     try {
+      const isApp = localStorage.getItem("is_app") === "true";
+
       const res = await fetch("/functions/customSignIn", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          email,
+          password,
+          is_app: isApp,
+        }),
       });
 
       const data = await res.json();
 
       if (!data.success) {
-        throw new Error(data.error || "invalid_credentials");
+        setError(data.error || "login_failed");
+        return;
       }
 
-      // Store session token
       localStorage.setItem("session_token", data.session_token);
+      if (data.expires_at) {
+        localStorage.setItem("session_expires_at", data.expires_at);
+      }
 
-      // Reset failed attempts on success
-      setFailedAttempts(0);
-
-      // Redirect
-      window.location.href = nextUrl;
+      window.location.href = "/";
     } catch (err) {
-      setFailedAttempts((prev) => prev + 1);
-      setError(
-        err?.message || "Invalid email or password. Please try again."
-      );
+      console.error("SignIn error:", err);
+      setError("server_error");
     } finally {
       setLoading(false);
     }
-  };
-
-  // Google login disabled for now
-  const handleGoogle = () => {
-    setGoogleLoading(true);
-    setTimeout(() => {
-      setGoogleLoading(false);
-      alert("Google login will be re-enabled after custom auth migration.");
-    }, 600);
-  };
+  }
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left image panel */}
-      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
-        <img
-          src="https://lh3.googleusercontent.com/d/1ZmljdO7m9HdHdT_KKSa0S-p2e9ctR5BU"
-          alt="Looe Bridge, Cornwall"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-transparent" />
-        <div className="absolute bottom-8 left-8 text-white">
-          <p className="text-sm font-medium opacity-80">
-            Boscastle, Cornwall
+    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white p-8 rounded-xl shadow-md space-y-4 w-full max-w-md"
+      >
+        <h1 className="text-2xl font-bold text-gray-900">Sign in</h1>
+
+        {error && (
+          <p className="text-sm text-red-600">
+            {error}
           </p>
+        )}
+
+        <div className="space-y-1">
+          <label className="block text-sm font-medium text-gray-700">
+            Email
+          </label>
+          <input
+            type="email"
+            className="w-full border rounded-md px-3 py-2 text-sm"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+          />
         </div>
-      </div>
 
-      {/* Right login panel */}
-      <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
-        <div className="w-full max-w-md">
-          <div className="relative overflow-hidden border-0 shadow-2xl bg-white/95 backdrop-blur-sm rounded-2xl">
-            {/* Accent bar */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-teal-400 via-teal-500 to-teal-400" />
-
-            <div className="p-8 sm:p-10 md:pt-12 md:pb-10 md:px-10">
-              <div className="flex flex-col items-center text-center space-y-6 sm:space-y-8">
-                {/* Logo */}
-                <Link to="/" className="flex items-center gap-3 group">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
-                    <Home className="w-6 h-6 text-white" />
-                  </div>
-                  <span className="text-2xl font-bold text-slate-900">
-                    HostKeep
-                  </span>
-                </Link>
-
-                <div className="space-y-2">
-                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-                    Welcome back
-                  </h1>
-                  <p className="text-slate-500 text-sm sm:text-base font-medium">
-                    Sign in to your account
-                  </p>
-                </div>
-
-                <div className="w-full space-y-4">
-                  {/* Email/password form */}
-                  <form onSubmit={handleEmailLogin} className="space-y-4">
-                    {/* Email */}
-                    <div className="space-y-1.5 text-left">
-                      <label
-                        className="text-sm font-medium text-slate-700"
-                        htmlFor="email"
-                      >
-                        Email
-                      </label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                        <Input
-                          id="email"
-                          type="email"
-                          placeholder="you@example.com"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          required
-                          className="pl-10 h-11 sm:h-12 bg-slate-50/50 border-slate-200 focus:border-teal-400 focus:ring-teal-400 rounded-xl"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Password */}
-                    <div className="space-y-1.5 text-left">
-                      <label
-                        className="text-sm font-medium text-slate-700"
-                        htmlFor="password"
-                      >
-                        Password
-                      </label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                        <Input
-                          id="password"
-                          type="password"
-                          placeholder="••••••••"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          required
-                          className="pl-10 h-11 sm:h-12 bg-slate-50/50 border-slate-200 focus:border-teal-400 focus:ring-teal-400 rounded-xl"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Forgot password */}
-                    <div className="text-right">
-                      <button
-                        type="button"
-                        onClick={() => navigate("/ResetPassword")}
-                        className="text-xs text-slate-400 hover:text-teal-600 transition-colors p-0 h-auto font-normal"
-                      >
-                        Forgot your password?
-                      </button>
-                    </div>
-
-                    {/* Error message */}
-                    {error && (
-                      <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
-                        {error}
-                      </p>
-                    )}
-
-                    {/* 5‑attempt warning */}
-                    {failedAttempts >= 5 && (
-                      <p className="text-sm text-amber-600 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
-                        Having trouble signing in? If you’ve forgotten your
-                        password, you can reset it using the “Forgot your
-                        password?” link above.
-                      </p>
-                    )}
-
-                    {/* Submit */}
-                    <Button
-                      type="submit"
-                      disabled={loading || googleLoading}
-                      className="w-full h-11 sm:h-12 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-xl transition-all duration-200"
-                    >
-                      {loading ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        "Sign in"
-                      )}
-                    </Button>
-                  </form>
-
-                  {/* Footer */}
-                  <div className="pt-3 text-center border-t border-slate-100">
-                    <p className="text-sm text-slate-500">
-                      Don't have an account?{" "}
-                      <Link
-                        to="/founding"
-                        className="font-semibold text-teal-600 hover:text-teal-700 underline underline-offset-2"
-                      >
-                        Become a founding member
-                      </Link>
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+        <div className="space-y-1">
+          <label className="block text-sm font-medium text-gray-700">
+            Password
+          </label>
+          <input
+            type="password"
+            className="w-full border rounded-md px-3 py-2 text-sm"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+          />
         </div>
-      </div> 
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-black text-white py-2 rounded-md text-sm font-medium disabled:opacity-60"
+        >
+          {loading ? "Signing in..." : "Sign in"}
+        </button>
+      </form>
     </div>
   );
 }
