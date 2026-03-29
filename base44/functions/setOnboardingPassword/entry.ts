@@ -12,6 +12,50 @@ function generateToken() {
   return crypto.randomUUID();
 }
 
+async function findUserByEmail(serviceRole, email) {
+  // 1. FoundingMember (beta users)
+  const fm = await serviceRole.entities.FoundingMember.filter({ email });
+  if (fm && fm.length > 0) {
+    return {
+      user: fm[0],
+      role: fm[0].role || "host",
+      founding_member_id: fm[0].id,
+    };
+  }
+
+  // 2. Host
+  const hosts = await serviceRole.entities.Host.filter({ email });
+  if (hosts && hosts.length > 0) {
+    return {
+      user: hosts[0],
+      role: "host",
+      founding_member_id: null,
+    };
+  }
+
+  // 3. Cleaner
+  const cleaners = await serviceRole.entities.Cleaner.filter({ email });
+  if (cleaners && cleaners.length > 0) {
+    return {
+      user: cleaners[0],
+      role: "cleaner",
+      founding_member_id: null,
+    };
+  }
+
+  // 4. Guest
+  const guests = await serviceRole.entities.Guest.filter({ email });
+  if (guests && guests.length > 0) {
+    return {
+      user: guests[0],
+      role: "guest",
+      founding_member_id: null,
+    };
+  }
+
+  return null;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -20,24 +64,31 @@ Deno.serve(async (req) => {
     const { email, password } = await req.json();
 
     if (!email || !password) {
-      return Response.json({ success: false, error: "missing_fields" }, { status: 400 });
+      return Response.json(
+        { success: false, error: "missing_fields" },
+        { status: 400 }
+      );
     }
 
     const normalisedEmail = email.toLowerCase().trim();
 
-    // Hash the password
+    // Hash password
     const salt = Deno.env.get("HASH_SALT") || "";
     const password_hash = await hashPassword(password, salt);
 
-    // Look up the FoundingMember to get founding_member_id and role
-    const members = await serviceRole.entities.FoundingMember.filter({ email: normalisedEmail });
-    const member = members?.[0];
+    // Find user across all possible user types
+    const userLookup = await findUserByEmail(serviceRole, normalisedEmail);
 
-    const founding_member_id = member?.id || null;
-    const role = member?.role || null;
+    if (!userLookup) {
+      return Response.json(
+        { success: false, error: "user_not_found" },
+        { status: 404 }
+      );
+    }
 
-    // Insert into UserCredentials
-    const now = new Date().toISOString();
+    const { role, founding_member_id } = userLookup;
+
+    // Store credentials
     await serviceRole.entities.UserCredentials.create({
       email: normalisedEmail,
       password_hash,
@@ -67,6 +118,9 @@ Deno.serve(async (req) => {
 
   } catch (err) {
     console.error("setOnboardingPassword error:", err);
-    return Response.json({ success: false, error: "server_error" }, { status: 500 });
+    return Response.json(
+      { success: false, error: "server_error" },
+      { status: 500 }
+    );
   }
 });
