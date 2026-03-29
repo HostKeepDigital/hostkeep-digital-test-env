@@ -91,20 +91,7 @@ Deno.serve(async (req) => {
   }
 
   // Step 4 - Update the user's password via auth (required because login uses loginViaEmailPassword)
-// Step 4 - Delete and recreate user with new password
-  await base44.asServiceRole.entities.User.delete(user.id);
-  const newUser = await base44.asServiceRole.entities.User.create({
-   email: record.email,
-    password: newPassword,
-    full_name: user.full_name || record.email,
-    email_verified: true,
-});
-
-// Link FoundingMember to new user ID
-const members = await base44.asServiceRole.entities.FoundingMember.filter({ email: record.email });
-if (members?.[0]) {
-  await base44.asServiceRole.entities.FoundingMember.update(members[0].id, { user_id: newUser.id });
-}
+  await base44.asServiceRole.auth.updateUser(user.id, { password: newPassword });
 
   // Step 5 - Delete the used token
   await base44.asServiceRole.entities.PasswordResetToken.delete(record.id);
