@@ -59,9 +59,9 @@ export default function CreatePassword() {
     }
 
     const res = await fetch("/functions/createonboardingpassword", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
+     method: "POST",
+     headers: { "Content-Type": "application/json" },
+     body: JSON.stringify({ email }),
     });
 
     const data = await res.json();
@@ -70,6 +70,22 @@ export default function CreatePassword() {
       setError("Unable to create your account. Please try again.");
       return;
     }
+
+// Use the password they already entered — no redirect needed
+const resetRes = await fetch("/functions/verifyPasswordReset", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ token: data.resetToken, newPassword: password }),
+});
+
+const resetData = await resetRes.json();
+
+if (!resetData.success) {
+  setError("Unable to set your password. Please try again.");
+  return;
+}
+
+window.location.href = "/SignIn";
 
     window.location.href = `/ResetPassword?token=${data.resetToken}`;
   }
