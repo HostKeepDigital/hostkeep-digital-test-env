@@ -87,7 +87,7 @@ if (!resetData.success) {
 
 window.location.href = "/SignIn";
 
-    window.location.href = `/ResetPassword?token=${data.resetToken}`;
+
   }
 
   if (loading) {
