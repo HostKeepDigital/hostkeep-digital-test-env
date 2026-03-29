@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Home, Mail, Lock, Loader2 } from "lucide-react";
@@ -14,7 +13,7 @@ export default function SignIn() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  // NEW: Track failed login attempts
+  // Track failed login attempts
   const [failedAttempts, setFailedAttempts] = useState(0);
 
   const nextUrl =
@@ -26,11 +25,25 @@ export default function SignIn() {
     setLoading(true);
 
     try {
-      await base44.auth.loginViaEmailPassword(email, password);
+      const res = await fetch("/functions/customSignIn", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        throw new Error(data.error || "invalid_credentials");
+      }
+
+      // Store session token
+      localStorage.setItem("session_token", data.session_token);
 
       // Reset failed attempts on success
       setFailedAttempts(0);
 
+      // Redirect
       window.location.href = nextUrl;
     } catch (err) {
       setFailedAttempts((prev) => prev + 1);
@@ -42,9 +55,13 @@ export default function SignIn() {
     }
   };
 
+  // Google login disabled for now
   const handleGoogle = () => {
     setGoogleLoading(true);
-    base44.auth.loginWithProvider("google", nextUrl);
+    setTimeout(() => {
+      setGoogleLoading(false);
+      alert("Google login will be re-enabled after custom auth migration.");
+    }, 600);
   };
 
   return (
@@ -139,7 +156,7 @@ export default function SignIn() {
                       </div>
                     </div>
 
-                    {/* Forgot password → navigate to ResetPassword */}
+                    {/* Forgot password */}
                     <div className="text-right">
                       <button
                         type="button"
@@ -157,7 +174,7 @@ export default function SignIn() {
                       </p>
                     )}
 
-                    {/* NEW: 5‑attempt warning */}
+                    {/* 5‑attempt warning */}
                     {failedAttempts >= 5 && (
                       <p className="text-sm text-amber-600 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
                         Having trouble signing in? If you’ve forgotten your
