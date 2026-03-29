@@ -1,46 +1,67 @@
-import { useState, useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Sparkles, CheckCircle2, Clock, DollarSign, MapPin } from "lucide-react";
-import { toast } from "sonner";
-import { addUserRole, getUserRoles, hasRole } from "@/components/utils/roleHelpers";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import {
+  Sparkles,
+  DollarSign,
+  Clock,
+  MapPin,
+} from "lucide-react";
+import { useAuth } from "@/lib/AuthContext";
+import { hasRole } from "@/components/utils/roleHelpers";
 
 export default function BecomeCleaner() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-  const [userRoles, setUserRoles] = useState([]);
-  const [isUpgrading, setIsUpgrading] = useState(false);
+
+  // Pull from your custom auth system
+  const { user, roles, isAuthenticated } = useAuth();
 
   useEffect(() => {
-    base44.auth.me().then(async (userData) => {
-      setUser(userData);
-      if (userData?.id) {
-        const roles = await getUserRoles(userData.id);
-        setUserRoles(roles);
-        
-        // If already a cleaner, redirect to signup if no profile
-        if (hasRole(roles, 'cleaner')) {
-          navigate(createPageUrl('CleanerDashboard'));
-        }
-      }
-    }).catch(() => {
-      base44.auth.redirectToLogin(window.location.pathname);
-    });
-  }, []);
+    // If not logged in → redirect to SignIn
+    if (!isAuthenticated) {
+      navigate("/SignIn");
+      return;
+    }
+
+    // If already a cleaner → redirect to dashboard
+    if (hasRole(roles, "cleaner")) {
+      navigate(createPageUrl("CleanerDashboard"));
+    }
+  }, [isAuthenticated, roles, navigate]);
 
   const handleUpgrade = () => {
-    navigate(createPageUrl('CleanerSignup'));
+    navigate(createPageUrl("CleanerSignup"));
   };
 
   const benefits = [
-    { icon: DollarSign, title: "Great Earnings", description: "Set your own prices and earn on your schedule" },
-    { icon: Clock, title: "Flexible Hours", description: "Choose when and where you want to work" },
-    { icon: MapPin, title: "Local Jobs", description: "Find cleaning jobs in your area" },
-    { icon: Sparkles, title: "Growth Opportunities", description: "Build your reputation and grow your business" }
+    {
+      icon: DollarSign,
+      title: "Great Earnings",
+      description: "Set your own prices and earn on your schedule",
+    },
+    {
+      icon: Clock,
+      title: "Flexible Hours",
+      description: "Choose when and where you want to work",
+    },
+    {
+      icon: MapPin,
+      title: "Local Jobs",
+      description: "Find cleaning jobs in your area",
+    },
+    {
+      icon: Sparkles,
+      title: "Growth Opportunities",
+      description: "Build your reputation and grow your business",
+    },
   ];
 
   return (
@@ -50,9 +71,12 @@ export default function BecomeCleaner() {
           <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Sparkles className="w-8 h-8 text-blue-600" />
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Become a Cleaner</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Become a Cleaner
+          </h1>
           <p className="text-xl text-gray-600">
-            Join CleanKeep and start earning by helping hosts keep their properties spotless
+            Join CleanKeep and start earning by helping hosts keep their
+            properties spotless
           </p>
         </div>
 
@@ -65,8 +89,12 @@ export default function BecomeCleaner() {
                     <benefit.icon className="w-6 h-6 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 mb-1">{benefit.title}</h3>
-                    <p className="text-sm text-gray-600">{benefit.description}</p>
+                    <h3 className="font-semibold text-gray-900 mb-1">
+                      {benefit.title}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {benefit.description}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -82,7 +110,7 @@ export default function BecomeCleaner() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button 
+            <Button
               onClick={handleUpgrade}
               size="lg"
               className="bg-blue-600 hover:bg-blue-700"
