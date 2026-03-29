@@ -11,7 +11,7 @@ function generateToken() {
   return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-async function sendInvitationEmail(to: string, fullName: string, roleLabel: string, inviteUrl: string) {
+async function sendInvitationEmail(to, fullName, roleLabel, inviteUrl) {
   if (!RESEND_API_KEY) return;
   try {
     await fetch("https://api.resend.com/emails", {
