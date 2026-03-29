@@ -54,11 +54,12 @@ export async function addRiskEvent(userId, eventType, description = "") {
   }
 
   // Auto-suspend if score >= 100
-  if (riskScore.score >= 100) {
-    await base44.auth.updateMe({ account_status: "suspended" });
-  } else if (riskScore.risk_level === "high") {
-    await base44.auth.updateMe({ account_status: "pending_review" });
-  } else if (riskScore.risk_level === "medium") {
+if (riskScore.score >= 100) {
+  await base44.entities.User.update(userId, { account_status: "suspended" });
+} else if (riskScore.risk_level === "high") {
+  await base44.entities.User.update(userId, { account_status: "pending_review" });
+
+
     // Flag for admin review (handled in admin dashboard)
   }
 
