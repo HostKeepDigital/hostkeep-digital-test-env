@@ -200,7 +200,7 @@ export default function FoundingHost() {
             </div>
             <div>
               <div className="bg-[#1E3A5F] rounded-2xl p-6 text-white h-full">
-                <span className="inline-block bg-[#0d9488]/20 border border-[#0d9488]/30 text-[#0d9488] text-xs font-semibold uppercase tracking-wider rounded-full px-3 py-1 mb-4">Founding Host Benefits</span>
+                <span className="inline-block bg-[#0d9488]/25 border border-[#2dd4bf]/50 text-[#2dd4bf] text-xs font-semibold uppercase tracking-wider rounded-full px-3 py-1 mb-4">Founding Host Benefits</span>
                 <p className="text-2xl font-black text-[#0d9488] mb-0.5">£19<span className="text-base font-semibold text-white/50">/month</span></p>
                 <p className="text-white/40 text-xs mb-5">Standard price is £29/month. Founding rate locked permanently.</p>
                 <div className="space-y-2.5">
