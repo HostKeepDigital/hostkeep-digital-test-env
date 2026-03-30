@@ -20,6 +20,8 @@ import SignIn from "./pages/SignIn";
 import ForgotPassword from "./pages/ForgotPassword";
 import CreatePassword from "./pages/CreatePassword";
 import ResetPassword from "./pages/ResetPassword";
+import FoundingHost from "./pages/FoundingHost";
+import FoundingCleaner from "./pages/FoundingCleaner";
 
 // Pages accessible without authentication
 const PUBLIC_ROUTES = new Set([
@@ -300,6 +302,8 @@ const AuthenticatedApp = () => {
         <Route path="/pending" element={<Pending />} />
         <Route path="/founding-thankyou" element={<FoundingThankYou />} />
         <Route path="/founding" element={<Founding />} />
+        <Route path="/foundinghost" element={<FoundingHost />} />
+        <Route path="/foundingcleaner" element={<FoundingCleaner />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route
           path="/HowPaymentsWork"
