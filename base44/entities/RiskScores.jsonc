@@ -1,0 +1,33 @@
+{
+  "name": "RiskScores",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "User reference"
+    },
+    "score": {
+      "type": "number",
+      "default": 0,
+      "description": "Total risk score"
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "default": "low",
+      "description": "Calculated risk level"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last score update timestamp"
+    }
+  },
+  "required": [
+    "user_id"
+  ]
+}

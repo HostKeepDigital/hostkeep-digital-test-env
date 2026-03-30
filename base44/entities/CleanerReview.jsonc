@@ -1,0 +1,57 @@
+{
+  "name": "CleanerReview",
+  "type": "object",
+  "properties": {
+    "job_id": {
+      "type": "string",
+      "description": "Completed job reference"
+    },
+    "cleaner_id": {
+      "type": "string",
+      "description": "Cleaner being reviewed"
+    },
+    "host_id": {
+      "type": "string",
+      "description": "Host who left review"
+    },
+    "property_id": {
+      "type": "string"
+    },
+    "rating": {
+      "type": "number",
+      "description": "Overall rating 1-5"
+    },
+    "quality_rating": {
+      "type": "number",
+      "description": "Cleaning quality 1-5"
+    },
+    "reliability_rating": {
+      "type": "number",
+      "description": "Reliability 1-5"
+    },
+    "communication_rating": {
+      "type": "number",
+      "description": "Communication 1-5"
+    },
+    "comment": {
+      "type": "string"
+    },
+    "would_recommend": {
+      "type": "boolean",
+      "default": true
+    },
+    "cleaner_response": {
+      "type": "string"
+    },
+    "visible": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "job_id",
+    "cleaner_id",
+    "host_id",
+    "rating"
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "name": "VerificationDocuments",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "User reference"
+    },
+    "document_type": {
+      "type": "string",
+      "enum": [
+        "government_id",
+        "selfie",
+        "utility_bill",
+        "bank_statement"
+      ],
+      "description": "Type of document"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "Document file URL"
+    },
+    "verification_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected"
+      ],
+      "default": "pending",
+      "description": "Verification status"
+    },
+    "reviewed_by_admin_id": {
+      "type": "string",
+      "description": "Admin who reviewed the document"
+    },
+    "rejection_reason": {
+      "type": "string",
+      "description": "Reason for rejection if applicable"
+    }
+  },
+  "required": [
+    "user_id",
+    "document_type",
+    "file_url"
+  ]
+}

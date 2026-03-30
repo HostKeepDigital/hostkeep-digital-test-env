@@ -1,0 +1,57 @@
+{
+  "name": "CancellationLog",
+  "type": "object",
+  "properties": {
+    "booking_id": {
+      "type": "string"
+    },
+    "cancelled_by": {
+      "type": "string"
+    },
+    "cancellation_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "check_in_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "days_before_check_in": {
+      "type": "number"
+    },
+    "applied_policy_name": {
+      "type": "string"
+    },
+    "original_nightly_total": {
+      "type": "number"
+    },
+    "original_cleaning_fee": {
+      "type": "number"
+    },
+    "original_service_fee": {
+      "type": "number"
+    },
+    "accommodation_refund": {
+      "type": "number"
+    },
+    "cleaning_fee_refund": {
+      "type": "number"
+    },
+    "service_fee_refund": {
+      "type": "number"
+    },
+    "total_refund_amount": {
+      "type": "number"
+    },
+    "host_payout_adjustment": {
+      "type": "number"
+    },
+    "platform_fee_clawback": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "booking_id",
+    "total_refund_amount"
+  ]
+}

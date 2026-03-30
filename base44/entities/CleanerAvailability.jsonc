@@ -1,0 +1,46 @@
+{
+  "name": "CleanerAvailability",
+  "type": "object",
+  "properties": {
+    "cleaner_id": {
+      "type": "string",
+      "description": "Cleaner reference"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "available": {
+      "type": "boolean",
+      "default": true
+    },
+    "time_slots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "time": {
+            "type": "string"
+          },
+          "available": {
+            "type": "boolean"
+          }
+        }
+      },
+      "description": "Specific time availability"
+    },
+    "max_jobs": {
+      "type": "number",
+      "default": 3,
+      "description": "Max jobs for this day"
+    },
+    "booked_jobs": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "cleaner_id",
+    "date"
+  ]
+}

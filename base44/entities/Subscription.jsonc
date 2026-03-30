@@ -1,0 +1,61 @@
+{
+  "name": "Subscription",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "User ID of subscriber"
+    },
+    "plan": {
+      "type": "string",
+      "enum": [
+        "basic",
+        "pro",
+        "premium"
+      ],
+      "description": "Subscription plan"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "cancelled",
+        "expired",
+        "trial"
+      ],
+      "default": "trial"
+    },
+    "price_monthly": {
+      "type": "number"
+    },
+    "max_properties": {
+      "type": "number",
+      "description": "Maximum properties allowed"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "trial_ends": {
+      "type": "string",
+      "format": "date"
+    },
+    "stripe_subscription_id": {
+      "type": "string"
+    },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "user_id",
+    "plan"
+  ]
+}

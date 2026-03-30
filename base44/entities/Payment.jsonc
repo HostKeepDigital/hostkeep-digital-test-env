@@ -1,0 +1,43 @@
+{
+  "name": "Payment",
+  "type": "object",
+  "properties": {
+    "booking_id": {
+      "type": "string",
+      "description": "Reference to the booking"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Payment amount"
+    },
+    "payment_method": {
+      "type": "string",
+      "enum": [
+        "bank_transfer",
+        "card",
+        "cash",
+        "other"
+      ],
+      "description": "Payment method used"
+    },
+    "payment_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of payment"
+    },
+    "reference": {
+      "type": "string",
+      "description": "Payment reference or transaction ID"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Payment notes"
+    }
+  },
+  "required": [
+    "booking_id",
+    "amount",
+    "payment_method",
+    "payment_date"
+  ]
+}

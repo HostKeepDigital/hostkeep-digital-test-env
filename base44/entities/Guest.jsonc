@@ -1,0 +1,61 @@
+{
+  "name": "Guest",
+  "type": "object",
+  "properties": {
+    "full_name": {
+      "type": "string",
+      "description": "Guest's full name"
+    },
+    "email": {
+      "type": "string",
+      "description": "Guest email (unique)"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Guest phone number"
+    },
+    "address": {
+      "type": "string",
+      "description": "Guest address"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "vip",
+        "blacklisted"
+      ],
+      "default": "standard",
+      "description": "Guest status"
+    },
+    "total_stays": {
+      "type": "number",
+      "default": 0,
+      "description": "Total completed stays"
+    },
+    "last_stay_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of last completed stay"
+    },
+    "incident_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Total incidents"
+    },
+    "high_risk": {
+      "type": "boolean",
+      "default": false,
+      "description": "High risk flag (3+ incidents)"
+    },
+    "deleted": {
+      "type": "boolean",
+      "default": false,
+      "description": "Soft delete flag"
+    }
+  },
+  "required": [
+    "full_name",
+    "email"
+  ]
+}

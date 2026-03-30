@@ -1,0 +1,301 @@
+{
+  "name": "Property",
+  "type": "object",
+  "properties": {
+    "owner_id": {
+      "type": "string",
+      "description": "User ID of property owner"
+    },
+    "title": {
+      "type": "string",
+      "description": "Property listing title"
+    },
+    "property_type": {
+      "type": "string",
+      "enum": [
+        "lodges",
+        "house",
+        "chalet",
+        "caravan",
+        "cabin",
+        "bungalow",
+        "apartment"
+      ],
+      "description": "Type of property"
+    },
+    "location_id": {
+      "type": "string",
+      "description": "Reference to UKLocation for autocomplete"
+    },
+    "postcode": {
+      "type": "string",
+      "description": "Full UK postcode (indexed)"
+    },
+    "postcode_district": {
+      "type": "string",
+      "description": "Postcode district for filtering (e.g., PL13)"
+    },
+    "postcode_area": {
+      "type": "string",
+      "description": "Postcode area for grouping (e.g., PL)"
+    },
+    "town": {
+      "type": "string",
+      "description": "Official post town from UK postcode dataset"
+    },
+    "county": {
+      "type": "string",
+      "description": "County from UK postcode dataset"
+    },
+    "country": {
+      "type": "string",
+      "enum": [
+        "England",
+        "Scotland",
+        "Wales",
+        "Northern Ireland"
+      ],
+      "default": "England",
+      "description": "UK constituent country"
+    },
+    "latitude": {
+      "type": "number",
+      "description": "Latitude from postcode dataset"
+    },
+    "longitude": {
+      "type": "number",
+      "description": "Longitude from postcode dataset"
+    },
+    "location": {
+      "type": "object",
+      "properties": {
+        "street": {
+          "type": "string"
+        },
+        "locality": {
+          "type": "string"
+        }
+      },
+      "description": "Street-level address details"
+    },
+    "guest_capacity": {
+      "type": "number",
+      "description": "Maximum guests"
+    },
+    "bedrooms": {
+      "type": "number"
+    },
+    "bathrooms": {
+      "type": "number"
+    },
+    "photos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Photo URLs"
+    },
+    "nightly_rate": {
+      "type": "number"
+    },
+    "cleaning_fee": {
+      "type": "number",
+      "default": 0
+    },
+    "security_deposit": {
+      "type": "number",
+      "default": 0
+    },
+    "minimum_stay": {
+      "type": "number",
+      "default": 1
+    },
+    "deposit_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable booking deposit requirement"
+    },
+    "deposit_type": {
+      "type": "string",
+      "enum": [
+        "percentage",
+        "fixed"
+      ],
+      "description": "Type of deposit (percentage or fixed amount)"
+    },
+    "deposit_value": {
+      "type": "number",
+      "description": "Deposit value (percentage 0-100 or fixed amount)"
+    },
+    "description": {
+      "type": "string"
+    },
+    "amenities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of amenities"
+    },
+    "house_rules": {
+      "type": "string"
+    },
+    "pets_allowed": {
+      "type": "boolean",
+      "default": false
+    },
+    "smoking_allowed": {
+      "type": "boolean",
+      "default": false
+    },
+    "children_allowed": {
+      "type": "boolean",
+      "default": false
+    },
+    "minimum_child_age": {
+      "type": "number",
+      "default": null
+    },
+    "check_in_time": {
+      "type": "string",
+      "default": "15:00"
+    },
+    "check_out_time": {
+      "type": "string",
+      "default": "10:00"
+    },
+    "blocked_dates": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Dates property is unavailable"
+    },
+    "ical_url": {
+      "type": "string",
+      "description": "External calendar sync URL"
+    },
+    "day_based_restrictions_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable day-of-week booking restrictions"
+    },
+    "booking_rules": {
+      "type": "object",
+      "description": "Per-day booking rules",
+      "properties": {
+        "monday": {
+          "type": "object"
+        },
+        "tuesday": {
+          "type": "object"
+        },
+        "wednesday": {
+          "type": "object"
+        },
+        "thursday": {
+          "type": "object"
+        },
+        "friday": {
+          "type": "object"
+        },
+        "saturday": {
+          "type": "object"
+        },
+        "sunday": {
+          "type": "object"
+        }
+      }
+    },
+    "pricing_settings": {
+      "type": "object",
+      "description": "Advanced pricing configuration",
+      "properties": {
+        "base_rate": {
+          "type": "number"
+        },
+        "price_rounding": {
+          "type": "number",
+          "description": "Round to nearest X (e.g., 5)"
+        },
+        "weekday_rate": {
+          "type": "number",
+          "description": "Mon-Thu rate"
+        },
+        "weekend_rate": {
+          "type": "number",
+          "description": "Fri-Sun rate"
+        },
+        "seasons": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "start_date": {
+                "type": "string"
+              },
+              "end_date": {
+                "type": "string"
+              },
+              "nightly_rate": {
+                "type": "number"
+              },
+              "min_nights": {
+                "type": "number"
+              },
+              "weekend_modifier": {
+                "type": "number",
+                "description": "% increase for weekends"
+              }
+            }
+          }
+        },
+        "date_overrides": {
+          "type": "object",
+          "description": "Specific date pricing { 'YYYY-MM-DD': { rate: number, min_nights: number } }"
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "published",
+        "paused"
+      ],
+      "default": "draft"
+    },
+    "featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "average_rating": {
+      "type": "number",
+      "default": 0
+    },
+    "review_count": {
+      "type": "number",
+      "default": 0
+    },
+    "cancellation_policy_id": {
+      "type": "string"
+    },
+    "cleaning_fee_refundable": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "owner_id",
+    "title",
+    "property_type",
+    "guest_capacity",
+    "nightly_rate"
+  ]
+}

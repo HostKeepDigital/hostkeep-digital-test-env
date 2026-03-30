@@ -1,0 +1,36 @@
+{
+  "name": "RiskEvents",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "User reference"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "id_not_verified",
+        "bank_name_mismatch",
+        "duplicate_listing",
+        "first_booking_cancellation",
+        "guest_dispute",
+        "chargeback",
+        "multiple_accounts_same_ip"
+      ],
+      "description": "Type of risk event"
+    },
+    "points_added": {
+      "type": "number",
+      "description": "Risk points added for this event"
+    },
+    "description": {
+      "type": "string",
+      "description": "Event description"
+    }
+  },
+  "required": [
+    "user_id",
+    "event_type",
+    "points_added"
+  ]
+}

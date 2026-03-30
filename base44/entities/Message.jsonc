@@ -1,0 +1,66 @@
+{
+  "name": "Message",
+  "type": "object",
+  "properties": {
+    "conversation_id": {
+      "type": "string",
+      "description": "Unique conversation thread ID"
+    },
+    "booking_id": {
+      "type": "string",
+      "description": "Related booking if any"
+    },
+    "job_id": {
+      "type": "string",
+      "description": "Related cleaning job if any"
+    },
+    "property_id": {
+      "type": "string",
+      "description": "Related property"
+    },
+    "sender_id": {
+      "type": "string"
+    },
+    "sender_name": {
+      "type": "string"
+    },
+    "receiver_id": {
+      "type": "string"
+    },
+    "content": {
+      "type": "string"
+    },
+    "read": {
+      "type": "boolean",
+      "default": false
+    },
+    "message_type": {
+      "type": "string",
+      "enum": [
+        "text",
+        "image",
+        "file",
+        "system",
+        "guest_question",
+        "status_update",
+        "booking_request",
+        "booking_confirmed",
+        "booking_declined"
+      ],
+      "default": "text"
+    },
+    "attachment_url": {
+      "type": "string",
+      "description": "URL for file/image attachments"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional data (e.g., question topic)"
+    }
+  },
+  "required": [
+    "conversation_id",
+    "sender_id",
+    "content"
+  ]
+}

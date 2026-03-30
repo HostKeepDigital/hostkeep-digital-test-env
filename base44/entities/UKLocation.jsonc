@@ -1,0 +1,55 @@
+{
+  "name": "UKLocation",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Location name (e.g., Devon, Manchester)"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "county",
+        "city",
+        "town"
+      ],
+      "default": "county",
+      "description": "Location type for future expansion"
+    },
+    "country": {
+      "type": "string",
+      "enum": [
+        "England",
+        "Scotland",
+        "Wales",
+        "Northern Ireland"
+      ],
+      "description": "Country within UK"
+    },
+    "normalized_name": {
+      "type": "string",
+      "description": "Lowercase for case-insensitive search (indexed)"
+    },
+    "slug": {
+      "type": "string",
+      "description": "Kebab-case slug for URLs"
+    },
+    "lat": {
+      "type": "number",
+      "description": "Latitude coordinate (county centroid)"
+    },
+    "lng": {
+      "type": "number",
+      "description": "Longitude coordinate (county centroid)"
+    }
+  },
+  "required": [
+    "name",
+    "type",
+    "country",
+    "normalized_name",
+    "slug",
+    "lat",
+    "lng"
+  ]
+}

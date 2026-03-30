@@ -1,0 +1,58 @@
+{
+  "name": "Conversation",
+  "type": "object",
+  "properties": {
+    "participants": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of user IDs in this conversation"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "booking",
+        "cleaning",
+        "direct"
+      ],
+      "default": "booking"
+    },
+    "booking_id": {
+      "type": "string",
+      "description": "Related booking ID"
+    },
+    "job_id": {
+      "type": "string",
+      "description": "Related cleaning job ID"
+    },
+    "property_id": {
+      "type": "string",
+      "description": "Related property ID"
+    },
+    "last_message_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "last_message_preview": {
+      "type": "string"
+    },
+    "unread_counts": {
+      "type": "object",
+      "description": "Map of user_id to unread count"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "participants",
+    "type",
+    "property_id"
+  ]
+}

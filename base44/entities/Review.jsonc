@@ -1,0 +1,64 @@
+{
+  "name": "Review",
+  "type": "object",
+  "properties": {
+    "booking_id": {
+      "type": "string",
+      "description": "Verified booking reference"
+    },
+    "property_id": {
+      "type": "string"
+    },
+    "reviewer_id": {
+      "type": "string"
+    },
+    "reviewer_name": {
+      "type": "string"
+    },
+    "reviewee_id": {
+      "type": "string",
+      "description": "Who is being reviewed (host or guest)"
+    },
+    "review_type": {
+      "type": "string",
+      "enum": [
+        "guest_to_host",
+        "host_to_guest"
+      ],
+      "description": "Type of review"
+    },
+    "rating": {
+      "type": "number",
+      "description": "1-5 star rating"
+    },
+    "cleanliness_rating": {
+      "type": "number"
+    },
+    "communication_rating": {
+      "type": "number"
+    },
+    "location_rating": {
+      "type": "number"
+    },
+    "value_rating": {
+      "type": "number"
+    },
+    "comment": {
+      "type": "string"
+    },
+    "host_response": {
+      "type": "string"
+    },
+    "visible": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "booking_id",
+    "property_id",
+    "reviewer_id",
+    "review_type",
+    "rating"
+  ]
+}

@@ -1,0 +1,215 @@
+{
+  "name": "Cleaner",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "User ID of the cleaner"
+    },
+    "business_name": {
+      "type": "string",
+      "description": "Cleaner or cleaning business name"
+    },
+    "bio": {
+      "type": "string",
+      "description": "Profile description"
+    },
+    "profile_photo": {
+      "type": "string",
+      "description": "Profile photo URL"
+    },
+    "portfolio_photos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Work portfolio images"
+    },
+    "service_area": {
+      "type": "object",
+      "properties": {
+        "city": {
+          "type": "string"
+        },
+        "postcode_prefix": {
+          "type": "string"
+        },
+        "radius_miles": {
+          "type": "number"
+        },
+        "lat": {
+          "type": "number"
+        },
+        "lng": {
+          "type": "number"
+        }
+      },
+      "description": "Service coverage area"
+    },
+    "base_price": {
+      "type": "number",
+      "description": "Base cleaning price"
+    },
+    "price_per_bedroom": {
+      "type": "number",
+      "default": 0,
+      "description": "Additional charge per bedroom"
+    },
+    "price_per_bathroom": {
+      "type": "number",
+      "default": 0,
+      "description": "Additional charge per bathroom"
+    },
+    "minimum_charge": {
+      "type": "number",
+      "description": "Minimum job charge"
+    },
+    "services": {
+      "type": "object",
+      "properties": {
+        "laundry": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": false
+            },
+            "price": {
+              "type": "number",
+              "default": 0
+            },
+            "pricing_type": {
+              "type": "string",
+              "enum": [
+                "per_job",
+                "per_load"
+              ],
+              "default": "per_job"
+            }
+          }
+        },
+        "linen_change": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": false
+            },
+            "price": {
+              "type": "number",
+              "default": 0
+            }
+          }
+        },
+        "deep_cleaning": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": false
+            },
+            "price": {
+              "type": "number",
+              "default": 0
+            }
+          }
+        },
+        "urgency_premium": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": false
+            },
+            "percentage": {
+              "type": "number",
+              "default": 0
+            }
+          }
+        }
+      }
+    },
+    "average_duration_hours": {
+      "type": "number",
+      "default": 2,
+      "description": "Typical cleaning duration"
+    },
+    "verified": {
+      "type": "boolean",
+      "default": false,
+      "description": "Identity verified"
+    },
+    "insurance_verified": {
+      "type": "boolean",
+      "default": false,
+      "description": "Insurance coverage verified"
+    },
+    "average_rating": {
+      "type": "number",
+      "default": 0
+    },
+    "total_reviews": {
+      "type": "number",
+      "default": 0
+    },
+    "total_jobs": {
+      "type": "number",
+      "default": 0
+    },
+    "acceptance_rate": {
+      "type": "number",
+      "default": 100,
+      "description": "Percentage of accepted jobs"
+    },
+    "response_time_minutes": {
+      "type": "number",
+      "default": 0,
+      "description": "Average response time"
+    },
+    "subscription_plan": {
+      "type": "string",
+      "enum": [
+        "none",
+        "basic",
+        "pro"
+      ],
+      "default": "none"
+    },
+    "subscription_status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive",
+        "trial"
+      ],
+      "default": "inactive"
+    },
+    "subscription_expires": {
+      "type": "string",
+      "format": "date"
+    },
+    "auto_accept_jobs": {
+      "type": "boolean",
+      "default": false,
+      "description": "Auto-accept job requests (Pro only)"
+    },
+    "max_jobs_per_day": {
+      "type": "number",
+      "default": 3
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "paused",
+        "suspended"
+      ],
+      "default": "active"
+    }
+  },
+  "required": [
+    "user_id",
+    "business_name",
+    "base_price"
+  ]
+}

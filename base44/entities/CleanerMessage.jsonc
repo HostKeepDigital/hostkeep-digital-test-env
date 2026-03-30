@@ -1,0 +1,62 @@
+{
+  "name": "CleanerMessage",
+  "type": "object",
+  "properties": {
+    "conversation_id": {
+      "type": "string",
+      "description": "Unique conversation thread"
+    },
+    "job_id": {
+      "type": "string",
+      "description": "Related job if applicable"
+    },
+    "cleaner_id": {
+      "type": "string"
+    },
+    "host_id": {
+      "type": "string"
+    },
+    "sender_id": {
+      "type": "string",
+      "description": "User ID of sender"
+    },
+    "sender_type": {
+      "type": "string",
+      "enum": [
+        "host",
+        "cleaner"
+      ]
+    },
+    "content": {
+      "type": "string"
+    },
+    "attachments": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "read": {
+      "type": "boolean",
+      "default": false
+    },
+    "message_type": {
+      "type": "string",
+      "enum": [
+        "text",
+        "job_request",
+        "job_accepted",
+        "job_declined",
+        "job_completed",
+        "system"
+      ],
+      "default": "text"
+    }
+  },
+  "required": [
+    "cleaner_id",
+    "host_id",
+    "sender_id",
+    "content"
+  ]
+}

@@ -1,0 +1,188 @@
+{
+  "name": "Booking",
+  "type": "object",
+  "properties": {
+    "property_id": {
+      "type": "string",
+      "description": "Property being booked"
+    },
+    "host_id": {
+      "type": "string",
+      "description": "Property owner ID"
+    },
+    "guest_id": {
+      "type": "string",
+      "description": "Guest user ID"
+    },
+    "guest_name": {
+      "type": "string"
+    },
+    "guest_email": {
+      "type": "string"
+    },
+    "guest_phone": {
+      "type": "string"
+    },
+    "check_in": {
+      "type": "string",
+      "format": "date"
+    },
+    "check_out": {
+      "type": "string",
+      "format": "date"
+    },
+    "guests_count": {
+      "type": "number",
+      "default": 1
+    },
+    "nightly_rate": {
+      "type": "number"
+    },
+    "nights": {
+      "type": "number"
+    },
+    "subtotal": {
+      "type": "number"
+    },
+    "cleaning_fee": {
+      "type": "number",
+      "default": 0
+    },
+    "security_deposit": {
+      "type": "number",
+      "default": 0
+    },
+    "service_fee": {
+      "type": "number",
+      "default": 0
+    },
+    "total_amount": {
+      "type": "number"
+    },
+    "deposit_amount": {
+      "type": "number",
+      "default": 0,
+      "description": "Required deposit amount"
+    },
+    "deposit_paid": {
+      "type": "number",
+      "default": 0,
+      "description": "Amount of deposit paid"
+    },
+    "deposit_due_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When deposit payment expires"
+    },
+    "remaining_balance": {
+      "type": "number",
+      "description": "Balance remaining after deposit"
+    },
+    "amount_paid": {
+      "type": "number",
+      "default": 0
+    },
+    "full_payment_due_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When full payment is due"
+    },
+    "payment_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "partial",
+        "paid",
+        "refunded"
+      ],
+      "default": "pending"
+    },
+    "booking_status": {
+      "type": "string",
+      "enum": [
+        "awaiting_decision",
+        "awaiting_payment",
+        "confirmed",
+        "checked_in",
+        "completed",
+        "cancelled",
+        "declined",
+        "expired",
+        "blocked"
+      ],
+      "default": "awaiting_decision"
+    },
+    "booking_type": {
+      "type": "string",
+      "enum": [
+        "instant",
+        "request"
+      ],
+      "default": "request"
+    },
+    "request_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When guest submitted booking request"
+    },
+    "decision_deadline": {
+      "type": "string",
+      "format": "date-time",
+      "description": "24-hour deadline for host decision"
+    },
+    "accepted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "checked_in_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "is_competing_request": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether multiple guests requested same dates"
+    },
+    "payment_link_id": {
+      "type": "string"
+    },
+    "stripe_payment_id": {
+      "type": "string"
+    },
+    "guest_message": {
+      "type": "string"
+    },
+    "host_notes": {
+      "type": "string"
+    },
+    "special_requests": {
+      "type": "string"
+    },
+    "cancellation_policy_snapshot": {
+      "type": "object",
+      "description": "Snapshot of the policy at booking time"
+    },
+    "refund_amount": {
+      "type": "number"
+    },
+    "host_payout_adjustment": {
+      "type": "number"
+    },
+    "platform_fee_clawback": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "property_id",
+    "host_id",
+    "guest_name",
+    "guest_email",
+    "check_in",
+    "check_out",
+    "total_amount"
+  ]
+}

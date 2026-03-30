@@ -1,0 +1,34 @@
+{
+  "name": "UserRole",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "User ID reference"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "host",
+        "cleaner",
+        "guest"
+      ],
+      "description": "User role"
+    },
+    "approval_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected"
+      ],
+      "default": "pending",
+      "description": "Role approval status"
+    }
+  },
+  "required": [
+    "user_id",
+    "role"
+  ]
+}

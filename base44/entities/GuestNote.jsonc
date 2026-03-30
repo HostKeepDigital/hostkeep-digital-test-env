@@ -1,0 +1,22 @@
+{
+  "name": "GuestNote",
+  "type": "object",
+  "properties": {
+    "guest_id": {
+      "type": "string",
+      "description": "Guest reference"
+    },
+    "staff_name": {
+      "type": "string",
+      "description": "Staff who added note"
+    },
+    "content": {
+      "type": "string",
+      "description": "Note content"
+    }
+  },
+  "required": [
+    "guest_id",
+    "content"
+  ]
+}

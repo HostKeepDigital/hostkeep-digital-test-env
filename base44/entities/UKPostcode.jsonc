@@ -1,0 +1,75 @@
+{
+  "name": "UKPostcode",
+  "type": "object",
+  "properties": {
+    "postcode": {
+      "type": "string",
+      "description": "Full postcode (e.g., PL13 2JE)"
+    },
+    "postcode_district": {
+      "type": "string",
+      "description": "Outward code + first digit(s) (e.g., PL13)"
+    },
+    "postcode_area": {
+      "type": "string",
+      "description": "Outward code only (e.g., PL)"
+    },
+    "post_town": {
+      "type": "string",
+      "description": "Official post town from ONS data"
+    },
+    "county": {
+      "type": "string",
+      "description": "County from ONS data"
+    },
+    "country": {
+      "type": "string",
+      "enum": [
+        "England",
+        "Scotland",
+        "Wales",
+        "Northern Ireland"
+      ],
+      "default": "England",
+      "description": "UK constituent country"
+    },
+    "latitude": {
+      "type": "number",
+      "description": "Latitude coordinate"
+    },
+    "longitude": {
+      "type": "number",
+      "description": "Longitude coordinate"
+    },
+    "accuracy": {
+      "type": "string",
+      "enum": [
+        "postcode",
+        "district",
+        "area",
+        "estimated"
+      ],
+      "default": "postcode",
+      "description": "Source accuracy level"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "ons",
+        "external_geocoder",
+        "manual"
+      ],
+      "default": "external_geocoder",
+      "description": "Data source"
+    }
+  },
+  "required": [
+    "postcode",
+    "postcode_district",
+    "postcode_area",
+    "post_town",
+    "county",
+    "latitude",
+    "longitude"
+  ]
+}

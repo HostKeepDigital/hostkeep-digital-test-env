@@ -1,0 +1,37 @@
+{
+  "name": "GuestIncident",
+  "type": "object",
+  "properties": {
+    "guest_id": {
+      "type": "string",
+      "description": "Guest reference"
+    },
+    "booking_id": {
+      "type": "string",
+      "description": "Related booking"
+    },
+    "incident_type": {
+      "type": "string",
+      "enum": [
+        "damage",
+        "rule_violation",
+        "noise_complaint",
+        "no_show"
+      ],
+      "description": "Type of incident"
+    },
+    "description": {
+      "type": "string",
+      "description": "Incident details"
+    },
+    "logged_by": {
+      "type": "string",
+      "description": "Staff who logged incident"
+    }
+  },
+  "required": [
+    "guest_id",
+    "incident_type",
+    "description"
+  ]
+}

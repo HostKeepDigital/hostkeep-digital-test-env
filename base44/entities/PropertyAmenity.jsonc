@@ -1,0 +1,22 @@
+{
+  "name": "PropertyAmenity",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Amenity name (WiFi, Parking, etc.)"
+    },
+    "slug": {
+      "type": "string",
+      "description": "Kebab-case slug"
+    },
+    "icon": {
+      "type": "string",
+      "description": "Icon identifier (lucide-react)"
+    }
+  },
+  "required": [
+    "name",
+    "slug"
+  ]
+}

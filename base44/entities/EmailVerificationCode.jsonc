@@ -1,0 +1,29 @@
+{
+  "name": "EmailVerificationCode",
+  "type": "object",
+  "properties": {
+    "email": {
+      "type": "string",
+      "description": "Email address being verified"
+    },
+    "code": {
+      "type": "string",
+      "description": "6-digit verification code"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the code expires (10 minutes from creation)"
+    },
+    "used": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the code has been used"
+    }
+  },
+  "required": [
+    "email",
+    "code",
+    "expires_at"
+  ]
+}

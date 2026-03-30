@@ -1,0 +1,30 @@
+{
+  "name": "CancellationPolicy",
+  "type": "object",
+  "properties": {
+    "policy_name": {
+      "type": "string"
+    },
+    "tier_1_deadline_days": {
+      "type": "number"
+    },
+    "tier_1_refund_percentage": {
+      "type": "number"
+    },
+    "tier_2_deadline_days": {
+      "type": "number"
+    },
+    "tier_2_refund_percentage": {
+      "type": "number"
+    },
+    "final_tier_refund_percentage": {
+      "type": "number"
+    },
+    "description": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "policy_name"
+  ]
+}

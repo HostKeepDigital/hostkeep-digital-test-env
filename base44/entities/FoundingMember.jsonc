@@ -1,0 +1,63 @@
+{
+  "name": "FoundingMember",
+  "type": "object",
+  "properties": {
+    "full_name": {
+      "type": "string",
+      "description": "Full name of the founding member"
+    },
+    "email": {
+      "type": "string",
+      "description": "Email address"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "host",
+        "cleaner"
+      ],
+      "description": "Role applying for"
+    },
+    "postcode": {
+      "type": "string",
+      "description": "Property/home postcode"
+    },
+    "signup_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When they signed up"
+    },
+    "onboarding_token": {
+      "type": "string",
+      "description": "Unique onboarding token for password creation"
+    },
+    "onboarding_expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the onboarding token expires"
+    },
+    "user_id": {
+      "type": "string",
+      "description": "ID of the created User account"
+    },
+    "approval_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected",
+        "out_of_area",
+        "invited",
+        "password_protected"
+      ],
+      "default": "pending",
+      "description": "Admin approval + onboarding status"
+    }
+  },
+  "required": [
+    "full_name",
+    "email",
+    "role",
+    "postcode"
+  ]
+}

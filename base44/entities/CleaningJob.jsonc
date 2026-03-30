@@ -1,0 +1,127 @@
+{
+  "name": "CleaningJob",
+  "type": "object",
+  "properties": {
+    "property_id": {
+      "type": "string",
+      "description": "Property to be cleaned"
+    },
+    "booking_id": {
+      "type": "string",
+      "description": "Related booking reference"
+    },
+    "host_id": {
+      "type": "string",
+      "description": "Property owner ID"
+    },
+    "cleaner_id": {
+      "type": "string",
+      "description": "Assigned cleaner ID"
+    },
+    "cleaner_user_id": {
+      "type": "string",
+      "description": "Cleaner user account ID"
+    },
+    "scheduled_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "scheduled_time": {
+      "type": "string",
+      "description": "Time slot (e.g., 10:00)"
+    },
+    "checkout_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Guest checkout date"
+    },
+    "next_checkin_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Next guest check-in"
+    },
+    "property_details": {
+      "type": "object",
+      "properties": {
+        "bedrooms": {
+          "type": "number"
+        },
+        "bathrooms": {
+          "type": "number"
+        },
+        "address": {
+          "type": "string"
+        }
+      }
+    },
+    "cleaner_price": {
+      "type": "number",
+      "description": "Amount paid to cleaner"
+    },
+    "host_cleaning_fee": {
+      "type": "number",
+      "description": "Fee charged to guest (can be different)"
+    },
+    "host_markup": {
+      "type": "number",
+      "default": 0,
+      "description": "Host markup/markdown amount"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "declined",
+        "completed",
+        "cancelled",
+        "in_progress"
+      ],
+      "default": "pending"
+    },
+    "job_type": {
+      "type": "string",
+      "enum": [
+        "auto_assigned",
+        "manual",
+        "fallback"
+      ],
+      "default": "auto_assigned"
+    },
+    "is_default_cleaner": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this was the default cleaner"
+    },
+    "special_instructions": {
+      "type": "string"
+    },
+    "completion_notes": {
+      "type": "string"
+    },
+    "completion_photos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "accepted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "declined_reason": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "property_id",
+    "host_id",
+    "cleaner_id",
+    "scheduled_date",
+    "cleaner_price"
+  ]
+}

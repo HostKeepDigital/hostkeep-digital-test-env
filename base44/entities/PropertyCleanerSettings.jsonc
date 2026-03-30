@@ -1,0 +1,86 @@
+{
+  "name": "PropertyCleanerSettings",
+  "type": "object",
+  "properties": {
+    "property_id": {
+      "type": "string",
+      "description": "Property reference"
+    },
+    "host_id": {
+      "type": "string",
+      "description": "Property owner ID"
+    },
+    "default_cleaner_id": {
+      "type": "string",
+      "description": "Default assigned cleaner"
+    },
+    "cleaner_base_price": {
+      "type": "number",
+      "description": "Cleaner's current price"
+    },
+    "fee_strategy": {
+      "type": "string",
+      "enum": [
+        "match_cleaner",
+        "markup",
+        "markdown",
+        "fixed",
+        "free"
+      ],
+      "default": "match_cleaner",
+      "description": "How to calculate guest cleaning fee"
+    },
+    "fee_amount": {
+      "type": "number",
+      "description": "Guest cleaning fee (based on strategy)"
+    },
+    "markup_percentage": {
+      "type": "number",
+      "default": 0,
+      "description": "Markup/markdown percentage"
+    },
+    "markup_fixed": {
+      "type": "number",
+      "default": 0,
+      "description": "Fixed markup/markdown amount"
+    },
+    "auto_schedule": {
+      "type": "boolean",
+      "default": true,
+      "description": "Auto-book cleaner after checkout"
+    },
+    "buffer_hours": {
+      "type": "number",
+      "default": 2,
+      "description": "Hours between checkout and cleaning"
+    },
+    "special_instructions": {
+      "type": "string",
+      "description": "Default instructions for cleaner"
+    },
+    "fallback_cleaners": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Backup cleaner IDs in order"
+    },
+    "price_change_pending": {
+      "type": "boolean",
+      "default": false,
+      "description": "Cleaner updated price, host not yet reviewed"
+    },
+    "old_cleaner_price": {
+      "type": "number",
+      "description": "Previous cleaner price for comparison"
+    },
+    "new_cleaner_price": {
+      "type": "number",
+      "description": "New cleaner price pending approval"
+    }
+  },
+  "required": [
+    "property_id",
+    "host_id"
+  ]
+}
