@@ -39,10 +39,11 @@ export default function Founding() {
               The holiday let platform<br />
               that <span className="text-[#0d9488]">works for you.</span>
             </h1>
-            <p className="text-white/70 text-lg mb-8 max-w-xl">
+            <p className="text-white/70 text-lg mb-4 max-w-xl">
               Everything you need to run your holiday let — without losing a percentage of every booking to Airbnb or Booking.com.
-              One flat monthly fee. You keep 100%.
+              One flat monthly fee. You keep 100% of the booking*.
             </p>
+            <p className="text-white/40 text-xs mb-8 max-w-xl">*Stripe payment processing fees apply</p>
 
             <div className="flex flex-col sm:flex-row gap-3">
               <Link
