@@ -5,14 +5,43 @@ const LOGO_URL = "https://i.ibb.co/6cwz6PzN/Host-Keep-Digital-Navy-Background.pn
 const FB_ICON = "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Facebook_Logo_%282019%29.png/600px-Facebook_Logo_%282019%29.png";
 const IG_ICON = "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Instagram_icon.png/600px-Instagram_icon.png";
 
+// ── FOUNDING MEMBER RULES ─────────────────────────────────────────────────────
+const CORNWALL_POSTCODES   = ["TR", "PL", "EX"];
+const HOST_FOUNDING_CAP    = 50;
+const CLEANER_FOUNDING_CAP = 30;
+
+// Statuses that mean the slot is still occupied — count these toward the cap
+const NON_ACTIVE_STATUSES = [
+  "banned_email_verification",
+  "banned_documentation_failure",
+  "banned_fraud",
+  "banned_manual_admin_action",
+  "rejected",
+  "rejected_pending_application",
+  "out_of_area",
+];
+
 function generateToken() {
   const bytes = new Uint8Array(32);
   crypto.getRandomValues(bytes);
   return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-async function sendInvitationEmail(to, fullName, roleLabel, inviteUrl) {
+async function sendInvitationEmail(
+  to,
+  fullName,
+  roleLabel,
+  inviteUrl,
+  isFoundingMember,
+) {
   if (!RESEND_API_KEY) return;
+
+  const founderLine = isFoundingMember
+    ? `<p style="margin-top:16px;padding:12px 16px;background-color:#f0fdfa;border-left:4px solid #0d9488;border-radius:4px;font-size:14px;color:#0f766e;">
+        <strong>🎉 You're a Founding ${roleLabel}!</strong> You've secured one of our limited founding spots and will receive your exclusive founding member benefits when you upgrade to a paid plan.
+      </p>`
+    : "";
+
   try {
     await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -42,6 +71,7 @@ async function sendInvitationEmail(to, fullName, roleLabel, inviteUrl) {
           <div style="font-size:15px;line-height:1.7;color:#374151;">
             <p>Hi ${fullName || "there"},</p>
             <p>Your application to become a Founding ${roleLabel} on HostKeep has been approved.</p>
+            ${founderLine}
             <p>Click the button below to create your password and activate your account.</p>
             <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;">
               <tr><td align="center">
@@ -101,7 +131,7 @@ Deno.serve(async (req) => {
 
     const email = member.email.toLowerCase().trim();
 
-    // Ensure User entity exists so createonboardingpassword can find it
+    // Ensure User entity exists so setOnboardingPassword can find it
     const existingUsers = await base44.asServiceRole.entities.User.filter({ email });
     if (!existingUsers?.[0]) {
       await base44.asServiceRole.entities.User.create({
@@ -111,7 +141,40 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Generate onboarding token and store on FoundingMember
+    // ── FOUNDING MEMBER CHECK ─────────────────────────────────────────────
+    // The badge belongs to the SLOT not the person.
+    // Count active Cornwall/Devon members of same role — excludes banned/rejected.
+    // If a slot was freed by a ban, this count will be below the cap,
+    // so the waitlist user filling that slot correctly gets founding status.
+
+    const postcode = (member.postcode || "").trim().toUpperCase();
+    const isCornwall = CORNWALL_POSTCODES.some(p => postcode.startsWith(p));
+
+    let isFoundingMember = false;
+
+    if (isCornwall) {
+      const cap = member.role === "host" ? HOST_FOUNDING_CAP : CLEANER_FOUNDING_CAP;
+
+      // Get all members of same role
+      const allSameRole = await base44.asServiceRole.entities.FoundingMember.filter({
+        role: member.role,
+      });
+
+      // Count only Cornwall/Devon members who are actively occupying a slot
+      const activeCount = (allSameRole || []).filter(m => {
+        const pc = (m.postcode || "").trim().toUpperCase();
+        const isInArea = CORNWALL_POSTCODES.some(p => pc.startsWith(p));
+        const isActive = !NON_ACTIVE_STATUSES.includes(m.approval_status);
+        return isInArea && isActive;
+      }).length;
+
+      // Current member being approved is not yet counted — check if adding them stays within cap
+      if (activeCount < cap) {
+        isFoundingMember = true;
+      }
+    }
+
+    // ── GENERATE TOKEN & UPDATE ───────────────────────────────────────────
     const token = generateToken();
     const inviteUrl = `https://hostkeepdigital.co.uk/CreatePassword?token=${token}`;
 
@@ -119,12 +182,13 @@ Deno.serve(async (req) => {
       approval_status: "invited",
       onboarding_token: token,
       onboarding_expires_at: new Date(Date.now() + 86400000).toISOString(),
+      is_founding_member: isFoundingMember,
     });
 
     const roleLabel = member.role === "host" ? "Host" : "Cleaner";
-    await sendInvitationEmail(email, member.full_name, roleLabel, inviteUrl);
+    await sendInvitationEmail(email, member.full_name, roleLabel, inviteUrl, isFoundingMember);
 
-    return Response.json({ success: true });
+    return Response.json({ success: true, is_founding_member: isFoundingMember });
 
   } catch (err) {
     console.error("promoteUserToInvited error:", err);
