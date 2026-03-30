@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
@@ -8,48 +8,61 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Calendar, MapPin, Star, MessageSquare, Loader2, Home
+import {
+  Calendar,
+  MapPin,
+  Star,
+  MessageSquare,
+  Loader2,
+  Home
 } from "lucide-react";
-import { format, parseISO, isBefore, isAfter, differenceInDays } from "date-fns";
+import {
+  format,
+  parseISO,
+  isBefore,
+  isAfter,
+  differenceInDays
+} from "date-fns";
 import ReviewForm from "@/components/reviews/ReviewForm";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function MyBookings() {
-  const [user, setUser] = useState(null);
+  const { user, isAuthenticated } = useAuth(); // ← custom auth
   const [reviewBooking, setReviewBooking] = useState(null);
 
-  useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
-  }, []);
-
   const { data: bookings = [], isLoading } = useQuery({
-    queryKey: ['guest-bookings', user?.email],
-    queryFn: () => base44.entities.Booking.filter({ guest_email: user?.email }),
-    enabled: !!user?.email,
+    queryKey: ["guest-bookings", user?.email],
+    queryFn: () =>
+      base44.entities.Booking.filter({ guest_email: user?.email }),
+    enabled: !!user?.email
   });
 
   const { data: properties = [] } = useQuery({
-    queryKey: ['booked-properties'],
+    queryKey: ["booked-properties"],
     queryFn: () => base44.entities.Property.list(),
-    enabled: bookings.length > 0,
+    enabled: bookings.length > 0
   });
 
   const { data: existingReviews = [] } = useQuery({
-    queryKey: ['my-reviews', user?.id],
-    queryFn: () => base44.entities.Review.filter({ reviewer_id: user?.id }),
-    enabled: !!user?.id,
+    queryKey: ["my-reviews", user?.id],
+    queryFn: () =>
+      base44.entities.Review.filter({ reviewer_id: user?.id }),
+    enabled: !!user?.id
   });
 
-  const getProperty = (propertyId) => properties.find(p => p.id === propertyId);
-  
-  const hasReviewed = (bookingId) => {
-    return existingReviews.some(r => r.booking_id === bookingId && r.review_type === "guest_to_host");
-  };
+  const getProperty = (propertyId) =>
+    properties.find((p) => p.id === propertyId);
 
-  const canReview = (booking) => {
-    // Can only review if checked_in or completed
-    return ["checked_in", "completed"].includes(booking.booking_status) && !hasReviewed(booking.id);
-  };
+  const hasReviewed = (bookingId) =>
+    existingReviews.some(
+      (r) =>
+        r.booking_id === bookingId &&
+        r.review_type === "guest_to_host"
+    );
+
+  const canReview = (booking) =>
+    ["checked_in", "completed"].includes(booking.booking_status) &&
+    !hasReviewed(booking.id);
 
   const statusColors = {
     pending: "bg-amber-50 text-amber-700 border-amber-200",
@@ -57,20 +70,31 @@ export default function MyBookings() {
     checked_in: "bg-blue-50 text-blue-700 border-blue-200",
     completed: "bg-gray-50 text-gray-700 border-gray-200",
     cancelled: "bg-rose-50 text-rose-700 border-rose-200",
-    declined: "bg-rose-50 text-rose-700 border-rose-200",
+    declined: "bg-rose-50 text-rose-700 border-rose-200"
   };
 
   const today = new Date();
-  const upcomingBookings = bookings.filter(b => 
-    ["awaiting_decision", "awaiting_payment", "confirmed"].includes(b.booking_status) && isAfter(parseISO(b.check_in), today)
+
+  const upcomingBookings = bookings.filter(
+    (b) =>
+      ["awaiting_decision", "awaiting_payment", "confirmed"].includes(
+        b.booking_status
+      ) && isAfter(parseISO(b.check_in), today)
   );
-  const activeBookings = bookings.filter(b => 
-    b.booking_status === "checked_in" || 
-    (b.booking_status === "confirmed" && !isAfter(parseISO(b.check_in), today) && !isBefore(parseISO(b.check_out), today))
+
+  const activeBookings = bookings.filter(
+    (b) =>
+      b.booking_status === "checked_in" ||
+      (b.booking_status === "confirmed" &&
+        !isAfter(parseISO(b.check_in), today) &&
+        !isBefore(parseISO(b.check_out), today))
   );
-  const pastBookings = bookings.filter(b => 
-    b.booking_status === "completed" || 
-    (["confirmed", "checked_in"].includes(b.booking_status) && isBefore(parseISO(b.check_out), today))
+
+  const pastBookings = bookings.filter(
+    (b) =>
+      b.booking_status === "completed" ||
+      (["confirmed", "checked_in"].includes(b.booking_status) &&
+        isBefore(parseISO(b.check_out), today))
   );
 
   if (isLoading) {
@@ -85,40 +109,48 @@ export default function MyBookings() {
     const property = getProperty(booking.property_id);
     const reviewed = hasReviewed(booking.id);
     const showReviewButton = canReview(booking) && !isActive;
-    
-    // Calculate days before check-in
-    const daysBeforeCheckIn = differenceInDays(parseISO(booking.check_in), today);
-    
-    // Determine cancellation button display
+
+    const daysBeforeCheckIn = differenceInDays(
+      parseISO(booking.check_in),
+      today
+    );
+
     const getCancelButton = () => {
       if (isUpcoming) {
-        // Upcoming bookings are always cancellable
         return (
-          <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50">
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-red-600 border-red-200 hover:bg-red-50"
+          >
             Cancel Booking
           </Button>
         );
       }
-      
-      // Active bookings logic
-      if (daysBeforeCheckIn <= 7) {
-        // No button within 7 days
-        return null;
-      } else if (daysBeforeCheckIn < 56) {
-        // Less than 56 days: show request button
+
+      if (daysBeforeCheckIn <= 7) return null;
+
+      if (daysBeforeCheckIn < 56) {
         return (
-          <Button variant="outline" size="sm" className="text-amber-600 border-amber-200 hover:bg-amber-50">
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-amber-600 border-amber-200 hover:bg-amber-50"
+          >
             Request Host Cancel
           </Button>
         );
-      } else {
-        // More than 56 days: show cancel button
-        return (
-          <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50">
-            Cancel Booking
-          </Button>
-        );
       }
+
+      return (
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-red-600 border-red-200 hover:bg-red-50"
+        >
+          Cancel Booking
+        </Button>
+      );
     };
 
     return (
@@ -131,11 +163,15 @@ export default function MyBookings() {
             <div className="flex flex-col sm:flex-row">
               <div className="sm:w-48 h-32 sm:h-auto bg-gray-100">
                 <img
-                  src={property?.photos?.[0] || "https://lh3.googleusercontent.com/d/1Vr07gcaaC19XEmxcvTbq-DTn8PZKn-_a"}
+                  src={
+                    property?.photos?.[0] ||
+                    "https://lh3.googleusercontent.com/d/1Vr07gcaaC19XEmxcvTbq-DTn8PZKn-_a"
+                  }
                   alt={property?.title}
                   className="w-full h-full object-cover"
                 />
               </div>
+
               <div className="flex-1 p-4">
                 <div className="flex items-start justify-between mb-2">
                   <div>
@@ -147,7 +183,11 @@ export default function MyBookings() {
                       {property?.location?.city || "Location"}
                     </p>
                   </div>
-                  <Badge variant="outline" className={statusColors[booking.booking_status]}>
+
+                  <Badge
+                    variant="outline"
+                    className={statusColors[booking.booking_status]}
+                  >
                     {booking.booking_status?.replace("_", " ")}
                   </Badge>
                 </div>
@@ -155,30 +195,46 @@ export default function MyBookings() {
                 <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
                   <span className="flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
-                    {format(parseISO(booking.check_in), "MMM d")} - {format(parseISO(booking.check_out), "MMM d, yyyy")}
+                    {format(parseISO(booking.check_in), "MMM d")} -{" "}
+                    {format(parseISO(booking.check_out), "MMM d, yyyy")}
                   </span>
-                  <span className="font-semibold text-teal-600">£{booking.total_amount}</span>
+
+                  <span className="font-semibold text-teal-600">
+                    £{booking.total_amount}
+                  </span>
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Link to={createPageUrl("PropertyDetails") + `?id=${booking.property_id}`}>
+                  <Link
+                    to={
+                      createPageUrl("PropertyDetails") +
+                      `?id=${booking.property_id}`
+                    }
+                  >
                     <Button variant="outline" size="sm">
                       View Property
                     </Button>
                   </Link>
+
                   {getCancelButton()}
+
                   {showReviewButton && (
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       onClick={() => setReviewBooking(booking)}
                       className="bg-teal-600 hover:bg-teal-700"
                     >
                       <Star className="w-4 h-4 mr-1" /> Leave Review
                     </Button>
                   )}
+
                   {reviewed && (
-                    <Badge variant="outline" className="text-emerald-600 border-emerald-200">
-                      <Star className="w-3 h-3 mr-1 fill-emerald-600" /> Reviewed
+                    <Badge
+                      variant="outline"
+                      className="text-emerald-600 border-emerald-200"
+                    >
+                      <Star className="w-3 h-3 mr-1 fill-emerald-600" />{" "}
+                      Reviewed
                     </Badge>
                   )}
                 </div>
@@ -194,25 +250,39 @@ export default function MyBookings() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">My Bookings</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+            My Bookings
+          </h1>
           <p className="text-gray-500">View and manage your trips</p>
         </div>
 
         {bookings.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-xl border border-gray-100">
             <Home className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No stays booked yet</h3>
-            <p className="text-gray-500 mb-6">Start exploring properties for your next trip</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No stays booked yet
+            </h3>
+            <p className="text-gray-500 mb-6">
+              Start exploring properties for your next trip
+            </p>
             <Link to={createPageUrl("Search")}>
-              <Button className="bg-teal-600 hover:bg-teal-700">Browse Properties</Button>
+              <Button className="bg-teal-600 hover:bg-teal-700">
+                Browse Properties
+              </Button>
             </Link>
           </div>
         ) : (
           <Tabs defaultValue="upcoming" className="space-y-6">
             <TabsList className="bg-white border border-gray-100">
-              <TabsTrigger value="upcoming">Upcoming ({upcomingBookings.length})</TabsTrigger>
-              <TabsTrigger value="active">Active ({activeBookings.length})</TabsTrigger>
-              <TabsTrigger value="past">Past ({pastBookings.length})</TabsTrigger>
+              <TabsTrigger value="upcoming">
+                Upcoming ({upcomingBookings.length})
+              </TabsTrigger>
+              <TabsTrigger value="active">
+                Active ({activeBookings.length})
+              </TabsTrigger>
+              <TabsTrigger value="past">
+                Past ({pastBookings.length})
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="upcoming" className="space-y-4">
@@ -222,8 +292,12 @@ export default function MyBookings() {
                   <p className="text-gray-500">No upcoming trips</p>
                 </div>
               ) : (
-                upcomingBookings.map(booking => (
-                  <BookingCard key={booking.id} booking={booking} isUpcoming={true} />
+                upcomingBookings.map((booking) => (
+                  <BookingCard
+                    key={booking.id}
+                    booking={booking}
+                    isUpcoming={true}
+                  />
                 ))
               )}
             </TabsContent>
@@ -235,8 +309,13 @@ export default function MyBookings() {
                   <p className="text-gray-500">No active stays</p>
                 </div>
               ) : (
-                activeBookings.map(booking => (
-                  <BookingCard key={booking.id} booking={booking} isUpcoming={false} isActive={true} />
+                activeBookings.map((booking) => (
+                  <BookingCard
+                    key={booking.id}
+                    booking={booking}
+                    isUpcoming={false}
+                    isActive={true}
+                  />
                 ))
               )}
             </TabsContent>
@@ -248,7 +327,7 @@ export default function MyBookings() {
                   <p className="text-gray-500">No past trips yet</p>
                 </div>
               ) : (
-                pastBookings.map(booking => (
+                pastBookings.map((booking) => (
                   <BookingCard key={booking.id} booking={booking} />
                 ))
               )}
@@ -256,11 +335,12 @@ export default function MyBookings() {
           </Tabs>
         )}
 
-        {/* Review Form Dialog */}
         {reviewBooking && (
           <ReviewForm
             open={!!reviewBooking}
-            onOpenChange={(open) => !open && setReviewBooking(null)}
+            onOpenChange={(open) =>
+              !open && setReviewBooking(null)
+            }
             booking={reviewBooking}
             reviewType="guest_to_host"
             reviewerName={user?.full_name}
