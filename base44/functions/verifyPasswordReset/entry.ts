@@ -90,8 +90,20 @@ Deno.serve(async (req) => {
     return Response.json({ success: false, error: 'user_not_found' });
   }
 
-  // Step 4 - Update the user's password via auth (required because login uses loginViaEmailPassword)
-  await base44.asServiceRole.auth.updateUser(user.id, { password: newPassword });
+// Step 4 - Update password in UserCredentials (custom auth system)
+const salt = Deno.env.get("HASH_SALT") || "";
+const encoder = new TextEncoder();
+const data = encoder.encode(newPassword + salt);
+const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+const hashArray = Array.from(new Uint8Array(hashBuffer));
+const password_hash = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+
+const existingCreds = await base44.asServiceRole.entities.UserCredentials.filter({ email: record.email });
+if (existingCreds?.[0]) {
+  await base44.asServiceRole.entities.UserCredentials.update(existingCreds[0].id, { password_hash });
+} else {
+  await base44.asServiceRole.entities.UserCredentials.create({ email: record.email, password_hash });
+}
 
   // Step 5 - Delete the used token
   await base44.asServiceRole.entities.PasswordResetToken.delete(record.id);
