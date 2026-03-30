@@ -38,7 +38,6 @@ import {
   Calendar,
   FileText,
   ChevronLeft,
-  ChevronRight,
   Upload,
   X,
   Check,
@@ -53,22 +52,19 @@ import {
   getUserRoles,
   hasRole,
 } from "@/components/utils/roleHelpers";
-import LocationAutocomplete from "@/components/LocationAutocomplete";
-import {
-  validateLocationSelection,
-  extractLocationData,
-} from "@/components/LocationValidator";
 import LocationStep from "@/components/properties/LocationStep";
 import { useAuth } from "@/lib/AuthContext";
 
+import { AMENITY_GROUPS, AMENITY_MAP } from "@/data/amenities";
+
 const STEPS = [
-  { id: 1, title: "Basics", icon: Home, description: "Property type and details" },
-  { id: 2, title: "Description", icon: FileText, description: "Tell guests about your place" },
-  { id: 3, title: "Location", icon: MapPin, description: "Where is your property?" },
-  { id: 4, title: "Photos", icon: Image, description: "Show off your space" },
-  { id: 5, title: "Pricing", icon: PoundSterling, description: "Set your rates" },
-  { id: 6, title: "Booking Rules", icon: Calendar, description: "Day-based restrictions (optional)" },
-  { id: 7, title: "Verification", icon: FileText, description: "Prove property ownership" },
+  { id: 1, title: "Basics", icon: Home },
+  { id: 2, title: "Description", icon: FileText },
+  { id: 3, title: "Location", icon: MapPin },
+  { id: 4, title: "Photos", icon: Image },
+  { id: 5, title: "Pricing", icon: PoundSterling },
+  { id: 6, title: "Booking Rules", icon: Calendar },
+  { id: 7, title: "Verification", icon: FileText },
 ];
 
 const PROPERTY_TYPES = [
@@ -81,34 +77,12 @@ const PROPERTY_TYPES = [
   { value: "lodges", label: "Lodges" },
 ];
 
-const AMENITIES = [
-  "WiFi",
-  "Pool",
-  "Parking",
-  "Air Conditioning",
-  "Kitchen",
-  "Washing Machine",
-  "TV",
-  "Hot Tub",
-  "Garden",
-  "BBQ",
-  "Gym",
-  "Beach Access",
-  "Fireplace",
-  "Workspace",
-  "Iron",
-  "Hair Dryer",
-  "Dishwasher",
-  "Coffee Maker",
-];
-
 export default function CreateProperty() {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth(); // ← custom auth
+  const { user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const formContentRef = useRef(null);
 
-  // Redirect if not logged in
   useEffect(() => {
     if (!isAuthenticated) {
       window.location.href = createPageUrl("Home");
@@ -124,26 +98,19 @@ export default function CreateProperty() {
   });
 
   const [titleError, setTitleError] = useState("");
-  const [selectedLocation, setSelectedLocation] = useState(null);
-  const [locationError, setLocationError] = useState("");
-  const [locationData, setLocationData] = useState({
-    location_id: null,
-    lat: null,
-    lng: null,
-    normalized_name: null,
-    slug: null,
-  });
+  const [locationData, setLocationData] = useState({});
+  const [uploadedFileIdentifiers, setUploadedFileIdentifiers] = useState([]);
 
   const validateTitle = (value) => {
     const invalidChars = value.replace(/[a-zA-Z0-9\s\-&!.]/g, "");
     if (invalidChars.length > 0) {
-      return `Invalid characters: ${invalidChars.split("").join(" ")} (only - & ! . allowed)`;
+      return `Invalid characters: ${invalidChars.split("").join(" ")}`;
     }
     if (value.length > 0 && value.length < 16) {
-      return `Title must be at least 16 characters (${value.length}/16)`;
+      return `Title must be at least 16 characters`;
     }
     if (value.length > 50) {
-      return `Title must be maximum 50 characters (${value.length}/50)`;
+      return `Title must be maximum 50 characters`;
     }
     return "";
   };
@@ -159,13 +126,7 @@ export default function CreateProperty() {
     guest_capacity: 4,
     bedrooms: 2,
     bathrooms: 1,
-    location: {
-      street: "",
-      locality: "",
-      town_city: "",
-      county: "",
-      postcode: "",
-    },
+    location: {},
     photos: [],
     nightly_rate: 100,
     cleaning_fee: 50,
@@ -199,10 +160,7 @@ export default function CreateProperty() {
 
   useEffect(() => {
     if (formContentRef.current) {
-      formContentRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+      formContentRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [currentStep]);
 
@@ -221,12 +179,12 @@ export default function CreateProperty() {
 
       return property;
     },
-    onSuccess: (property) => {
-      queryClient.invalidateQueries({ queryKey: ["properties"] });
-      toast.success("Property created successfully! You're now a host.");
+    onSuccess: () => {
+      queryClient.invalidateQueries(["properties"]);
+      toast.success("Property created!");
       setTimeout(() => {
         window.location.href = createPageUrl("HostProperties");
-      }, 1000);
+      }, 800);
     },
   });
 
@@ -234,21 +192,14 @@ export default function CreateProperty() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleLocationSelect = (location) => {
-    setSelectedLocation(location);
-    setLocationError("");
+  const toggleAmenity = (slug) => {
     setFormData((prev) => ({
       ...prev,
-      location_id: location.id,
-      location: {
-        ...prev.location,
-        county: location.name,
-        country: location.country,
-      },
+      amenities: prev.amenities.includes(slug)
+        ? prev.amenities.filter((a) => a !== slug)
+        : [...prev.amenities, slug],
     }));
   };
-
-  const [uploadedFileIdentifiers, setUploadedFileIdentifiers] = useState([]);
 
   const handlePhotoUpload = async (e) => {
     const files = Array.from(e.target.files);
@@ -257,8 +208,8 @@ export default function CreateProperty() {
     const newIdentifiers = files.map(
       (f) => `${f.name}-${f.size}-${f.lastModified}`
     );
-    const duplicateFiles = [];
 
+    const duplicateFiles = [];
     newIdentifiers.forEach((identifier, idx) => {
       if (uploadedFileIdentifiers.includes(identifier)) {
         duplicateFiles.push(files[idx].name);
@@ -266,7 +217,7 @@ export default function CreateProperty() {
     });
 
     if (duplicateFiles.length > 0) {
-      toast.error(`Duplicate file(s) detected: ${duplicateFiles.join(", ")}`);
+      toast.error(`Duplicate file(s): ${duplicateFiles.join(", ")}`);
       e.target.value = "";
       return;
     }
@@ -283,6 +234,7 @@ export default function CreateProperty() {
       ...prev,
       photos: [...prev.photos, ...uploadedUrls],
     }));
+
     setUploadedFileIdentifiers((prev) => [...prev, ...newIdentifiers]);
     setIsUploading(false);
     e.target.value = "";
@@ -304,55 +256,16 @@ export default function CreateProperty() {
     setFormData((prev) => ({ ...prev, photos: newPhotos }));
   };
 
-  const handleDragStart = (e, idx) => {
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("photoIndex", idx.toString());
-  };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-  };
-
-  const handleDrop = (e, targetIdx) => {
-    e.preventDefault();
-    const sourceIdx = parseInt(e.dataTransfer.getData("photoIndex"));
-    if (sourceIdx === targetIdx) return;
-
-    const newPhotos = [...formData.photos];
-    const [movedPhoto] = newPhotos.splice(sourceIdx, 1);
-    newPhotos.splice(targetIdx, 0, movedPhoto);
-    setFormData((prev) => ({ ...prev, photos: newPhotos }));
-  };
-
-  const toggleAmenity = (amenity) => {
-    setFormData((prev) => ({
-      ...prev,
-      amenities: prev.amenities.includes(amenity)
-        ? prev.amenities.filter((a) => a !== amenity)
-        : [...prev.amenities, amenity],
-    }));
-  };
-
   const canProceed = () => {
     switch (currentStep) {
       case 1:
         return (
           formData.title.length >= 16 &&
           formData.title.length <= 50 &&
-          !titleError &&
-          formData.property_type &&
-          formData.guest_capacity > 0
+          !titleError
         );
       case 2:
         return formData.description.length >= 50;
-      case 3:
-        return (
-          formData.postcode &&
-          formData.latitude &&
-          formData.longitude &&
-          formData.location?.street
-        );
       case 4:
         return formData.photos.length >= 5;
       case 5:
@@ -370,38 +283,10 @@ export default function CreateProperty() {
   };
 
   const handleSubmit = async () => {
-    const subscriptions = await base44.entities.Subscription.filter({
-      user_id: user.id,
-      status: "active",
-    });
-
-    const properties = await base44.entities.Property.filter({
-      owner_id: user.id,
-    });
-
-    if (subscriptions.length === 0 && properties.length === 0) {
-      localStorage.setItem(
-        "pendingPropertyDraft",
-        JSON.stringify({
-          ...formData,
-          owner_id: user.id,
-        })
-      );
-
-      toast.info("Please select a subscription plan to continue");
-      setTimeout(() => {
-        window.location.href =
-          createPageUrl("Subscription") + "?from=createProperty";
-      }, 1500);
-      return;
-    }
-
     createMutation.mutate({
       ...formData,
       ...locationData,
       status: "draft",
-      existing_listing_url: formData.existing_listing_url,
-      verification_document: formData.verification_document,
     });
   };
 
@@ -413,19 +298,16 @@ export default function CreateProperty() {
       <div className="bg-white border-b border-gray-100 sticky top-0 z-40">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-4">
-            <Button
-              variant="ghost"
-              onClick={() => window.history.back()}
-              className="gap-2"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Back
+            <Button variant="ghost" onClick={() => window.history.back()}>
+              <ChevronLeft className="w-4 h-4" /> Back
             </Button>
             <div className="text-sm text-gray-500">
               Step {currentStep} of {STEPS.length}
             </div>
           </div>
+
           <Progress value={progress} className="h-2" />
+
           <div className="flex justify-between mt-4">
             {STEPS.map((step) => (
               <div
@@ -476,6 +358,7 @@ export default function CreateProperty() {
                   <CardTitle>Property Basics</CardTitle>
                   <CardDescription>Let's start with the essentials</CardDescription>
                 </CardHeader>
+
                 <CardContent className="space-y-6">
                   <div>
                     <Label>Property Title</Label>
@@ -492,7 +375,7 @@ export default function CreateProperty() {
                           titleError ? "text-red-500" : "text-gray-400"
                         }`}
                       >
-                        {titleError || "16–50 characters. Special chars: - & ! ."}
+                        {titleError || "16–50 characters"}
                       </p>
                       <span className="text-sm text-gray-400">
                         {formData.title.length}/50
@@ -535,6 +418,7 @@ export default function CreateProperty() {
                         className="mt-1"
                       />
                     </div>
+
                     <div>
                       <Label>Bedrooms</Label>
                       <Input
@@ -571,14 +455,12 @@ export default function CreateProperty() {
               </Card>
             )}
 
-            {/* Step 2: Description */}
+            {/* Step 2: Description & Amenities */}
             {currentStep === 2 && (
               <Card>
                 <CardHeader>
                   <CardTitle>Description & Amenities</CardTitle>
-                  <CardDescription>
-                    Tell guests what makes your place special
-                  </CardDescription>
+                  <CardDescription>Tell guests what makes your place special</CardDescription>
                 </CardHeader>
 
                 <CardContent className="space-y-6">
@@ -589,7 +471,7 @@ export default function CreateProperty() {
                       onChange={(e) =>
                         handleChange("description", e.target.value)
                       }
-                      placeholder="Describe your property, the neighbourhood, and what makes it unique..."
+                      placeholder="Describe your property..."
                       rows={6}
                       className="mt-1"
                     />
@@ -598,21 +480,46 @@ export default function CreateProperty() {
                     </p>
                   </div>
 
+                  {/* NEW: Grouped Amenity Selector */}
                   <div>
                     <Label className="mb-3 block">Amenities</Label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                      {AMENITIES.map((amenity) => (
-                        <label
-                          key={amenity}
-                          className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer"
-                        >
-                          <Checkbox
-                            checked={formData.amenities.includes(amenity)}
-                            onCheckedChange={() => toggleAmenity(amenity)}
-                          />
-                          <span className="text-sm">{amenity}</span>
-                        </label>
-                      ))}
+
+                    <div className="space-y-6">
+                      {Object.entries(AMENITY_GROUPS).map(
+                        ([groupName, slugs]) => (
+                          <div key={groupName}>
+                            <h4 className="text-sm font-semibold text-gray-700 mb-2">
+                              {groupName}
+                            </h4>
+
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                              {slugs.map((slug) => {
+                                const amenity = AMENITY_MAP[slug];
+                                if (!amenity) return null;
+
+                                return (
+                                  <label
+                                    key={slug}
+                                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer"
+                                  >
+                                    <Checkbox
+                                      checked={formData.amenities.includes(
+                                        slug
+                                      )}
+                                      onCheckedChange={() =>
+                                        toggleAmenity(slug)
+                                      }
+                                    />
+                                    <span className="text-sm">
+                                      {amenity.name}
+                                    </span>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )
+                      )}
                     </div>
                   </div>
 
@@ -623,7 +530,7 @@ export default function CreateProperty() {
                       onChange={(e) =>
                         handleChange("house_rules", e.target.value)
                       }
-                      placeholder="Any specific rules guests should follow..."
+                      placeholder="Any specific rules..."
                       rows={3}
                       className="mt-1"
                     />
@@ -734,10 +641,6 @@ export default function CreateProperty() {
                     </label>
                   </div>
 
-                  <p className="text-sm text-gray-500 mt-2">
-                    Users can rearrange images by dragging and dropping them into the desired order.
-                  </p>
-
                   {formData.photos.length < 5 && (
                     <p className="text-sm mt-2 text-red-500">
                       {formData.photos.length} / 5 photos uploaded (minimum 5 required)
@@ -751,9 +654,25 @@ export default function CreateProperty() {
                           key={idx}
                           className="relative group aspect-square cursor-move"
                           draggable
-                          onDragStart={(e) => handleDragStart(e, idx)}
-                          onDragOver={handleDragOver}
-                          onDrop={(e) => handleDrop(e, idx)}
+                          onDragStart={(e) => {
+                            e.dataTransfer.setData("photoIndex", idx.toString());
+                          }}
+                          onDragOver={(e) => e.preventDefault()}
+                          onDrop={(e) => {
+                            const sourceIdx = parseInt(
+                              e.dataTransfer.getData("photoIndex")
+                            );
+                            if (sourceIdx === idx) return;
+
+                            const newPhotos = [...formData.photos];
+                            const [moved] = newPhotos.splice(sourceIdx, 1);
+                            newPhotos.splice(idx, 0, moved);
+
+                            setFormData((prev) => ({
+                              ...prev,
+                              photos: newPhotos,
+                            }));
+                          }}
                         >
                           <img
                             src={photo}
@@ -772,7 +691,7 @@ export default function CreateProperty() {
                               <DropdownMenuContent align="end">
                                 {idx !== 0 && (
                                   <DropdownMenuItem onClick={() => setCoverPhoto(idx)}>
-                                    Make this Picture your cover
+                                    Make Cover Photo
                                   </DropdownMenuItem>
                                 )}
 
@@ -809,107 +728,10 @@ export default function CreateProperty() {
 
             {/* Step 6: Booking Rules */}
             {currentStep === 6 && (
-              <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Cancellation Policy</CardTitle>
-                    <CardDescription>
-                      Select the cancellation policy for this property.
-                    </CardDescription>
-                  </CardHeader>
-
-                  <CardContent className="space-y-6">
-                    <div>
-                      <Label>
-                        Policy Type <span className="text-red-500">*</span>
-                      </Label>
-
-                      <Select
-                        value={formData.cancellation_policy_id}
-                        onValueChange={(val) => {
-                          const policy = policies?.find((p) => p.id === val);
-                          const isStrict = policy?.policy_name?.includes("Strict");
-
-                          setFormData((prev) => ({
-                            ...prev,
-                            cancellation_policy_id: val,
-                            cleaning_fee_refundable: !isStrict,
-                          }));
-                        }}
-                      >
-                        <SelectTrigger
-                          className={`mt-1 ${
-                            !formData.cancellation_policy_id
-                              ? "border-red-300"
-                              : ""
-                          }`}
-                        >
-                          <SelectValue placeholder="Select a policy..." />
-                        </SelectTrigger>
-
-                        <SelectContent>
-                          {policies?.map((p) => (
-                            <SelectItem key={p.id} value={p.id}>
-                              {p.policy_name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-
-                      {!formData.cancellation_policy_id && (
-                        <p className="text-sm text-red-500 mt-1">
-                          Cancellation policy is required
-                        </p>
-                      )}
-
-                      {formData.cancellation_policy_id && (
-                        <div className="mt-3 p-4 bg-gray-50 rounded-lg text-sm text-gray-700">
-                          {
-                            policies?.find(
-                              (p) => p.id === formData.cancellation_policy_id
-                            )?.description
-                          }
-                        </div>
-                      )}
-
-                      {policies?.find(
-                        (p) => p.id === formData.cancellation_policy_id
-                      )?.policy_name === "Super Strict" && (
-                        <div className="mt-2 text-sm text-rose-600 font-medium">
-                          Warning: This policy may reduce booking conversions.
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <Checkbox
-                        checked={formData.cleaning_fee_refundable}
-                        onCheckedChange={(val) =>
-                          handleChange("cleaning_fee_refundable", val)
-                        }
-                        id="clean-refund-new"
-                      />
-                      <Label
-                        htmlFor="clean-refund-new"
-                        className="font-normal cursor-pointer"
-                      >
-                        Refund cleaning fee if guest cancels before check-in
-                      </Label>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <DayBasedBookingRules
-                  value={{
-                    enabled: formData.day_based_restrictions_enabled,
-                    rules: formData.booking_rules,
-                  }}
-                  onChange={(val) => {
-                    handleChange("day_based_restrictions_enabled", val.enabled);
-                    handleChange("booking_rules", val.rules);
-                  }}
-                />
-              </div>
+              <DayBasedBookingRules
+                formData={formData}
+                onUpdate={(field, value) => handleChange(field, value)}
+              />
             )}
 
             {/* Step 7: Verification */}
@@ -918,7 +740,7 @@ export default function CreateProperty() {
                 <CardHeader>
                   <CardTitle>Verification</CardTitle>
                   <CardDescription>
-                    Provide proof of ownership or an existing listing URL
+                    Provide proof of ownership or an existing listing link
                   </CardDescription>
                 </CardHeader>
 
@@ -930,18 +752,18 @@ export default function CreateProperty() {
                       onChange={(e) =>
                         handleChange("existing_listing_url", e.target.value)
                       }
-                      placeholder="https://airbnb.com/your-listing"
+                      placeholder="https://airbnb.com/..."
                       className="mt-1"
                     />
                   </div>
 
                   <div>
-                    <Label>Upload Ownership Document (optional)</Label>
-                    <Input
+                    <Label>Upload Verification Document</Label>
+                    <input
                       type="file"
-                      accept="application/pdf,image/*"
+                      accept="image/*,application/pdf"
                       onChange={async (e) => {
-                        const file = e.target.files[0];
+                        const file = e.target.files?.[0];
                         if (!file) return;
 
                         const { file_url } =
@@ -949,17 +771,15 @@ export default function CreateProperty() {
 
                         handleChange("verification_document", file_url);
                       }}
-                      className="mt-1"
+                      className="mt-2"
                     />
-                  </div>
 
-                  <Button
-                    onClick={handleSubmit}
-                    disabled={!canProceed()}
-                    className="w-full bg-teal-600 hover:bg-teal-700"
-                  >
-                    Submit Property
-                  </Button>
+                    {formData.verification_document && (
+                      <p className="text-sm text-teal-600 mt-2">
+                        Document uploaded successfully
+                      </p>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             )}
@@ -972,28 +792,31 @@ export default function CreateProperty() {
             <Button
               variant="outline"
               onClick={() => setCurrentStep((s) => s - 1)}
-              className="gap-2"
             >
-              <ChevronLeft className="w-4 h-4" />
               Back
             </Button>
           ) : (
             <div />
           )}
 
-          {currentStep < STEPS.length && (
+          {currentStep < STEPS.length ? (
             <Button
-              onClick={() => {
-                if (!canProceed()) {
-                  toast.error("Please complete the required fields");
-                  return;
-                }
-                setCurrentStep((s) => s + 1);
-              }}
-              className="gap-2"
+              disabled={!canProceed()}
+              onClick={() => setCurrentStep((s) => s + 1)}
+              className="bg-teal-600 hover:bg-teal-700"
             >
-              Next
-              <ChevronRight className="w-4 h-4" />
+              Continue
+            </Button>
+          ) : (
+            <Button
+              disabled={!canProceed() || createMutation.isPending}
+              onClick={handleSubmit}
+              className="bg-teal-600 hover:bg-teal-700"
+            >
+              {createMutation.isPending && (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              )}
+              Submit Property
             </Button>
           )}
         </div>
