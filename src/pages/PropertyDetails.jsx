@@ -48,7 +48,7 @@ import confetti from "canvas-confetti";
 import ReviewList from "@/components/reviews/ReviewList";
 import BookingCalendar from "@/components/shared/BookingCalendar";
 import PropertyShareModal from "@/components/properties/PropertyShareModal";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/lib/AuthContext";
 
 const AMENITY_ICONS = {
   WiFi: Wifi,
