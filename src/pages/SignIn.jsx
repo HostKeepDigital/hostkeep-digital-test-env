@@ -1,10 +1,15 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
+
+const CORNWALL_IMG = "https://drive.google.com/uc?export=view&id=1ZmljdO7m9HdHdT_KKSa0S-p2e9ctR5BU";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -17,22 +22,22 @@ export default function SignIn() {
       const res = await fetch("/functions/customSignIn", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          password,
-          is_app: isApp,
-        }),
+        body: JSON.stringify({ email, password, is_app: isApp }),
       });
 
       const data = await res.json();
 
       if (!data.success) {
-        setError(data.error || "login_failed");
+        const messages = {
+          invalid_credentials: "Incorrect email or password.",
+          missing_fields: "Please enter your email and password.",
+          server_error: "Something went wrong. Please try again.",
+        };
+        setError(messages[data.error] || "Unable to sign in. Please try again.");
         return;
       }
 
       localStorage.setItem("session_token", data.session_token);
-
       if (data.expires_at) {
         localStorage.setItem("session_expires_at", data.expires_at);
       }
@@ -40,61 +45,168 @@ export default function SignIn() {
       window.location.href = "/";
     } catch (err) {
       console.error("SignIn error:", err);
-      setError("server_error");
+      setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white p-8 rounded-xl shadow-md space-y-4"
-        >
-          <h1 className="text-2xl font-bold text-gray-900">Sign in</h1>
+    <div className="min-h-screen flex">
 
-          {error && (
-            <p className="text-sm text-red-600">
-              {error}
+      {/* Left panel — Cornwall photography */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+        <img
+          src={CORNWALL_IMG}
+          alt="Cornwall coast"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        {/* Navy gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1E3A5F]/90 via-[#1E3A5F]/70 to-[#0d9488]/50" />
+
+        {/* Content over image */}
+        <div className="relative z-10 flex flex-col justify-between p-12 w-full">
+          {/* Logo */}
+          <div className="flex items-center gap-3">
+            <img
+              src="https://i.ibb.co/6cwz6PzN/Host-Keep-Digital-Navy-Background.png"
+              alt="HostKeep Digital"
+              className="h-10 w-auto"
+            />
+          </div>
+
+          {/* Centre quote */}
+          <div>
+            <p className="text-white/60 text-sm font-medium tracking-[0.2em] uppercase mb-4">
+              Cornwall · Summer 2026
             </p>
-          )}
+            <h1 className="text-white text-4xl font-bold leading-tight mb-6">
+              Your property.<br />
+              Your price.<br />
+              <span className="text-[#0d9488]">Zero commission.</span>
+            </h1>
+            <p className="text-white/70 text-base leading-relaxed max-w-sm">
+              HostKeep gives Cornwall hosts everything Airbnb offers at a flat monthly rate — not a cut of every booking.
+            </p>
+          </div>
 
-          <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">
-              Email
-            </label>
-            <input
-              type="email"
-              className="w-full border rounded-md px-3 py-2 text-sm"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
+          {/* Bottom stats */}
+          <div className="flex gap-8">
+            {[
+              { value: "0%", label: "Commission" },
+              { value: "£29", label: "From /month" },
+              { value: "50", label: "Founding spots" },
+            ].map((s) => (
+              <div key={s.label}>
+                <p className="text-white text-2xl font-bold">{s.value}</p>
+                <p className="text-white/50 text-xs mt-0.5">{s.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Right panel — form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white">
+        <div className="w-full max-w-sm">
+
+          {/* Mobile logo */}
+          <div className="lg:hidden flex justify-center mb-8">
+            <img
+              src="https://i.ibb.co/6cwz6PzN/Host-Keep-Digital-Navy-Background.png"
+              alt="HostKeep Digital"
+              className="h-10 w-auto"
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">
-              Password
-            </label>
-            <input
-              type="password"
-              className="w-full border rounded-md px-3 py-2 text-sm"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-            />
+          <h2 className="text-2xl font-bold text-[#111827] mb-1">Welcome back</h2>
+          <p className="text-sm text-gray-500 mb-8">Sign in to your HostKeep account</p>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1.5 tracking-wide uppercase">
+                Email address
+              </label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                placeholder="you@example.com"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#0d9488]/40 focus:border-[#0d9488] transition-colors"
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold text-gray-600 tracking-wide uppercase">
+                  Password
+                </label>
+                <Link
+                  to="/ResetPassword"
+                  className="text-xs text-[#0d9488] hover:text-[#0f766e] transition-colors"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                  placeholder="••••••••"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 pr-11 focus:outline-none focus:ring-2 focus:ring-[#0d9488]/40 focus:border-[#0d9488] transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                </button>
+              </div>
+            </div>
+
+            {error && (
+              <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[#1E3A5F] hover:bg-[#162d4a] disabled:opacity-60 text-white font-semibold text-sm rounded-xl py-3.5 transition-colors"
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Signing in...
+                </span>
+              ) : "Sign In"}
+            </button>
+          </form>
+
+          <div className="mt-8 pt-8 border-t border-gray-100 text-center">
+            <p className="text-sm text-gray-500">
+              Not a member yet?{" "}
+              <Link to="/founding" className="text-[#0d9488] font-semibold hover:text-[#0f766e] transition-colors">
+                Apply for a founding spot
+              </Link>
+            </p>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-black text-white py-2 rounded-md text-sm font-medium disabled:opacity-60"
-          >
-            {loading ? "Signing in..." : "Sign in"}
-          </button>
-        </form>
+          <p className="text-center text-xs text-gray-400 mt-6">
+            © 2026 HostKeep Digital Ltd · Cornwall, UK
+          </p>
+        </div>
       </div>
     </div>
   );
