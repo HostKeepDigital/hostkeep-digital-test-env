@@ -62,20 +62,25 @@ export default function CreatePassword() {
       return;
     }
 
-    const res = await fetch("/functions/createonboardingpassword", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    });
+const res = await fetch("/functions/setOnboardingPassword", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ email, password }),
+});
 
-    const data = await res.json();
+const data = await res.json();
 
-    if (!data.success) {
-      setError("Unable to create your account. Please try again.");
-      return;
-    }
+if (!data.success) {
+  setError("Unable to create your account. Please try again.");
+  return;
+}
 
-    window.location.href = `/ResetPassword?token=${data.resetToken}`;
+localStorage.setItem("session_token", data.session_token);
+if (data.expires_at) {
+  localStorage.setItem("session_expires_at", data.expires_at);
+}
+
+window.location.href = "/";
   }
 
   // Loading state
