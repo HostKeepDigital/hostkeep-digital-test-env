@@ -2,10 +2,15 @@ import { logout } from "./logout";
 
 export async function api(path, body = {}) {
   try {
+    const session_token = localStorage.getItem("session_token");
+    
     const res = await fetch(path, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify({
+        ...body,
+        session_token: session_token || undefined,
+      }),
     });
 
     let data;
@@ -16,7 +21,6 @@ export async function api(path, body = {}) {
       throw err;
     }
 
-    // Auto‑logout if backend reports expired session
     if (data?.error === "session_expired") {
       logout();
       return;
