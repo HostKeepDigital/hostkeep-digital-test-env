@@ -8,16 +8,18 @@ export default function HostTerms() {
         <div className="hidden lg:block w-64">
           <LegalNavigation currentPage="HostTerms" />
         </div>
-        
+
         <div className="flex-1 px-4 py-12 md:px-8">
           <div className="max-w-3xl mx-auto">
             <div className="lg:hidden mb-4">
               <LegalBackButton />
             </div>
+
             <p className="text-sm text-gray-500 mb-2">Last Updated: February 2026</p>
             <h1 className="text-4xl font-bold text-gray-900 mb-8">Host Terms</h1>
 
             <div className="space-y-8">
+
               {/* Introduction */}
               <section className="bg-white rounded-xl p-8 border border-gray-100">
                 <p className="text-gray-700 leading-relaxed">
@@ -83,7 +85,7 @@ export default function HostTerms() {
               {/* 3. Host Responsibilities */}
               <section className="bg-white rounded-xl p-8 border border-gray-100">
                 <h2 className="text-2xl font-semibold text-gray-900 mb-4">3. Host Responsibilities</h2>
-                
+
                 <div className="space-y-6">
                   <div>
                     <h3 className="text-lg font-medium text-gray-900 mb-3">3.1 Accuracy of Listings</h3>
@@ -389,10 +391,11 @@ export default function HostTerms() {
               {/* 12. HostKeep's Liability to Hosts */}
               <section className="bg-white rounded-xl p-8 border border-gray-100">
                 <h2 className="text-2xl font-semibold text-gray-900 mb-4">12. HostKeep's Liability to Hosts</h2>
-                
+
                 <p className="text-gray-700 mb-4">
                   To the maximum extent permitted by UK law, HostKeep is not liable for:
                 </p>
+
                 <ul className="list-disc list-inside space-y-2 text-gray-700 mb-4">
                   <li>Property damage</li>
                   <li>Personal injury (except where caused by HostKeep's negligence)</li>
@@ -406,6 +409,7 @@ export default function HostTerms() {
                   <li>Disputes with Guests or Cleaners</li>
                   <li>Stripe decisions</li>
                 </ul>
+
                 <p className="text-gray-700">
                   HostKeep's total liability is limited to the subscription fees paid by the Host in the previous 12 months, subject to mandatory UK legal exceptions.
                 </p>
@@ -414,7 +418,9 @@ export default function HostTerms() {
               {/* 13. Termination of Host Accounts */}
               <section className="bg-white rounded-xl p-8 border border-gray-100">
                 <h2 className="text-2xl font-semibold text-gray-900 mb-4">13. Termination of Host Accounts</h2>
+
                 <p className="text-gray-700 mb-4">HostKeep may suspend or terminate a Host account for:</p>
+
                 <ul className="list-disc list-inside space-y-2 text-gray-700 mb-4">
                   <li>Repeated cancellations</li>
                   <li>Fraudulent activity</li>
@@ -423,6 +429,7 @@ export default function HostTerms() {
                   <li>Breach of these Host Terms</li>
                   <li>Breach of Platform rules</li>
                 </ul>
+
                 <p className="text-gray-700">
                   Termination does not entitle the Host to a subscription refund.
                 </p>
@@ -431,6 +438,7 @@ export default function HostTerms() {
               {/* 14. Changes to These Host Terms */}
               <section className="bg-white rounded-xl p-8 border border-gray-100">
                 <h2 className="text-2xl font-semibold text-gray-900 mb-4">14. Changes to These Host Terms</h2>
+
                 <ul className="list-disc list-inside space-y-2 text-gray-700">
                   <li>We may update these Host Terms from time to time.</li>
                   <li>The "Last Updated" date will reflect the most recent version.</li>
@@ -441,6 +449,7 @@ export default function HostTerms() {
               {/* 15. Contact Information */}
               <section className="bg-white rounded-xl p-8 border border-gray-100">
                 <h2 className="text-2xl font-semibold text-gray-900 mb-4">15. Contact Information</h2>
+
                 <div className="text-gray-700 space-y-2">
                   <p className="font-medium">HostKeep Digital Ltd</p>
                   <p>[Registered Address]</p>
@@ -448,6 +457,7 @@ export default function HostTerms() {
                   <p>admin@hostkeepdigital.co.uk</p>
                 </div>
               </section>
+
             </div>
           </div>
         </div>
