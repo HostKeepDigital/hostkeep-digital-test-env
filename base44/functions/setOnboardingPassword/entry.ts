@@ -99,13 +99,14 @@ Deno.serve(async (req) => {
     const session_token = generateToken();
     const expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
-    await serviceRole.entities.UserSession.create({
-      session_token,
-      email: normalisedEmail,
-      role,
-      founding_member_id,
-      expires_at,
-    });
+      await serviceRole.entities.UserSession.create({
+       session_token,
+       email: normalisedEmail,
+       role,
+       founding_member_id,
+       user_id: userLookup.user?.id || null,
+       expires_at,
+});
 
     return Response.json({
       success: true,
