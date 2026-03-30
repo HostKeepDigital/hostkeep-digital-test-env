@@ -9,33 +9,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, Bell, CreditCard, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function Settings() {
-  const [user, setUser] = useState(null);
+  const { user, updateUser, openAuthModal } = useAuth();
+
   const [userRoles, setUserRoles] = useState([]);
   const [stripeStatus, setStripeStatus] = useState(null);
   const [stripeLoading, setStripeLoading] = useState(false);
   const [stripeStatusLoading, setStripeStatusLoading] = useState(true);
   const stripeCacheRef = useRef(null);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState('profile');
-
-  const fetchStripeStatus = async (forceRefresh = false) => {
-    if (!forceRefresh && stripeCacheRef.current !== null) {
-      setStripeStatus(stripeCacheRef.current);
-      setStripeStatusLoading(false);
-      return;
-    }
-    setStripeStatusLoading(true);
-    try {
-      const res = await base44.functions.invoke('getStripeConnectStatus', {});
-      const status = res.data?.status || 'not_connected';
-      stripeCacheRef.current = status;
-      setStripeStatus(status);
-    } finally {
-      setStripeStatusLoading(false);
-    }
-  };
+  const [activeTab, setActiveTab] = useState("profile");
 
   const [profile, setProfile] = useState({ full_name: "", phone: "", location: "" });
   const [notifications, setNotifications] = useState({
@@ -44,87 +29,126 @@ export default function Settings() {
     notifications_marketing: false,
   });
 
+  // Load user data from auth context
   useEffect(() => {
-    base44.auth.me().then(async (u) => {
-      setUser(u);
-      setProfile({
-        full_name: u.full_name || "",
-        phone: u.phone || "",
-        location: u.location || "",
-      });
-      setNotifications({
-        notifications_bookings: u.notifications_bookings ?? true,
-        notifications_messages: u.notifications_messages ?? true,
-        notifications_marketing: u.notifications_marketing ?? false,
-      });
-      if (u?.id) {
-        const roles = await base44.entities.UserRole.filter({ user_id: u.id });
-        setUserRoles(roles);
-      }
-    }).catch(() => {});
-  }, []);
+    if (!user) return;
 
-  const hasPaymentsRole = userRoles.some(r =>
-    ['host', 'cleaner'].includes((r.role || '').toLowerCase()) &&
-    (r.approval_status || '').toLowerCase() === 'approved'
+    setProfile({
+      full_name: user.full_name || "",
+      phone: user.phone || "",
+      location: user.location || "",
+    });
+
+    setNotifications({
+      notifications_bookings: user.notifications_bookings ?? true,
+      notifications_messages: user.notifications_messages ?? true,
+      notifications_marketing: user.notifications_marketing ?? false,
+    });
+
+    if (user.id) {
+      base44.entities.UserRole.filter({ user_id: user.id }).then(setUserRoles);
+    }
+  }, [user]);
+
+  const hasPaymentsRole = userRoles.some(
+    (r) =>
+      ["host", "cleaner"].includes((r.role || "").toLowerCase()) &&
+      (r.approval_status || "").toLowerCase() === "approved"
   );
 
+  // Handle tab from URL
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const tab = urlParams.get('tab');
+    const tab = urlParams.get("tab");
     if (tab) setActiveTab(tab);
   }, []);
 
+  // Stripe status fetch
+  const fetchStripeStatus = async (forceRefresh = false) => {
+    if (!forceRefresh && stripeCacheRef.current !== null) {
+      setStripeStatus(stripeCacheRef.current);
+      setStripeStatusLoading(false);
+      return;
+    }
+    setStripeStatusLoading(true);
+    try {
+      const res = await base44.functions.invoke("getStripeConnectStatus", {});
+      const status = res.data?.status || "not_connected";
+      stripeCacheRef.current = status;
+      setStripeStatus(status);
+    } finally {
+      setStripeStatusLoading(false);
+    }
+  };
+
+  // Stripe return handling
   useEffect(() => {
     if (!hasPaymentsRole || !user) return;
+
     const urlParams = new URLSearchParams(window.location.search);
-    const stripeReturn = urlParams.get('stripe_return');
-    if (stripeReturn === 'success') {
+    const stripeReturn = urlParams.get("stripe_return");
+
+    if (stripeReturn === "success") {
       stripeCacheRef.current = null;
       fetchStripeStatus(true).then(() => {
-        window.history.replaceState({}, '', window.location.pathname);
-        toast.success('Stripe verification step completed');
-      }).catch(() => {});
-    } else if (stripeReturn === 'refresh') {
+        window.history.replaceState({}, "", window.location.pathname);
+        toast.success("Stripe verification step completed");
+      });
+    } else if (stripeReturn === "refresh") {
       stripeCacheRef.current = null;
       fetchStripeStatus(true).then(() => {
-        window.history.replaceState({}, '', window.location.pathname);
-        toast.info('Please complete your Stripe verification');
-      }).catch(() => {});
+        window.history.replaceState({}, "", window.location.pathname);
+        toast.info("Please complete your Stripe verification");
+      });
     } else {
-      fetchStripeStatus().catch(() => {});
+      fetchStripeStatus();
     }
   }, [hasPaymentsRole, user]);
 
+  // Save profile
   const handleSaveProfile = async () => {
     setSaving(true);
     try {
-      await base44.auth.updateMe(profile);
-      toast.success('Changes saved');
+      await updateUser(profile);
+      toast.success("Changes saved");
     } catch {
-      toast.error('Failed to save changes. Please try again.');
+      toast.error("Failed to save changes. Please try again.");
     }
     setSaving(false);
   };
 
+  // Toggle notifications
   const handleNotificationToggle = async (field, value) => {
     const updated = { ...notifications, [field]: value };
     setNotifications(updated);
-    await base44.auth.updateMe({ [field]: value });
+    await updateUser({ [field]: value });
   };
 
+  // Stripe connect
   const handleStripeConnect = async () => {
     setStripeLoading(true);
-    const res = await base44.functions.invoke('createStripeConnectLink', {});
+    const res = await base44.functions.invoke("createStripeConnectLink", {});
     const url = res.data?.url;
     if (url) window.location.href = url;
     setStripeLoading(false);
   };
 
-  // State A: not_connected, State B: pending/pending_verification, State C: verified
-  const stripeState = !stripeStatus || stripeStatus === 'not_connected' ? 'A'
-    : stripeStatus === 'verified' ? 'C'
-    : 'B';
+  const stripeState =
+    !stripeStatus || stripeStatus === "not_connected"
+      ? "A"
+      : stripeStatus === "verified"
+      ? "C"
+      : "B";
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Button onClick={openAuthModal} className="bg-teal-600 hover:bg-teal-700">
+          Sign in to access settings
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -162,25 +186,30 @@ export default function Settings() {
                     <Label>Full Name</Label>
                     <Input
                       value={profile.full_name}
-                      onChange={e => setProfile(p => ({ ...p, full_name: e.target.value }))}
+                      onChange={(e) =>
+                        setProfile((p) => ({ ...p, full_name: e.target.value }))
+                      }
                       className="mt-1"
                     />
                   </div>
                   <div>
                     <Label>Email Address</Label>
                     <Input
-                      value={user?.email || ""}
+                      value={user.email}
                       disabled
                       className="mt-1 bg-gray-100 text-gray-500 cursor-not-allowed"
                     />
                   </div>
                 </div>
+
                 <div className="grid md:grid-cols-2 gap-5">
                   <div>
                     <Label>Phone Number</Label>
                     <Input
                       value={profile.phone}
-                      onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))}
+                      onChange={(e) =>
+                        setProfile((p) => ({ ...p, phone: e.target.value }))
+                      }
                       placeholder="+44 7123 456789"
                       className="mt-1"
                     />
@@ -189,14 +218,27 @@ export default function Settings() {
                     <Label>Location</Label>
                     <Input
                       value={profile.location}
-                      onChange={e => setProfile(p => ({ ...p, location: e.target.value }))}
+                      onChange={(e) =>
+                        setProfile((p) => ({ ...p, location: e.target.value }))
+                      }
                       placeholder="e.g. London, UK"
                       className="mt-1"
                     />
                   </div>
                 </div>
-                <Button onClick={handleSaveProfile} disabled={saving} className="bg-teal-600 hover:bg-teal-700">
-                  {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</> : "Save Changes"}
+
+                <Button
+                  onClick={handleSaveProfile}
+                  disabled={saving}
+                  className="bg-teal-600 hover:bg-teal-700"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
                 </Button>
               </CardContent>
             </Card>
@@ -211,9 +253,21 @@ export default function Settings() {
               </CardHeader>
               <CardContent className="space-y-6">
                 {[
-                  { field: "notifications_bookings", label: "Booking Notifications", desc: "New bookings, cancellations, and reminders" },
-                  { field: "notifications_messages", label: "Message Notifications", desc: "New messages from guests or hosts" },
-                  { field: "notifications_marketing", label: "Marketing Emails", desc: "Tips, news, and special offers" },
+                  {
+                    field: "notifications_bookings",
+                    label: "Booking Notifications",
+                    desc: "New bookings, cancellations, and reminders",
+                  },
+                  {
+                    field: "notifications_messages",
+                    label: "Message Notifications",
+                    desc: "New messages from guests or hosts",
+                  },
+                  {
+                    field: "notifications_marketing",
+                    label: "Marketing Emails",
+                    desc: "Tips, news, and special offers",
+                  },
                 ].map(({ field, label, desc }) => (
                   <div key={field} className="flex items-center justify-between">
                     <div>
@@ -222,7 +276,7 @@ export default function Settings() {
                     </div>
                     <Switch
                       checked={notifications[field]}
-                      onCheckedChange={v => handleNotificationToggle(field, v)}
+                      onCheckedChange={(v) => handleNotificationToggle(field, v)}
                     />
                   </div>
                 ))}
@@ -230,13 +284,15 @@ export default function Settings() {
             </Card>
           </TabsContent>
 
-          {/* Payments Tab — host/cleaner only */}
+          {/* Payments Tab */}
           {hasPaymentsRole && (
             <TabsContent value="payments">
               <Card>
                 <CardHeader>
                   <CardTitle>Stripe Payments</CardTitle>
-                  <CardDescription>Connect your Stripe account to receive payments</CardDescription>
+                  <CardDescription>
+                    Connect your Stripe account to receive payments
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-5">
                   {stripeStatusLoading ? (
@@ -246,35 +302,61 @@ export default function Settings() {
                     </>
                   ) : (
                     <>
-                      {stripeState === 'C' && (
+                      {stripeState === "C" && (
                         <>
                           <Badge className="bg-green-100 text-green-700 border-green-200 gap-1.5">
                             <CheckCircle className="w-3.5 h-3.5" /> Stripe Connected
                           </Badge>
-                          <p className="text-sm text-gray-600">Your account is verified and ready to receive payments.</p>
+                          <p className="text-sm text-gray-600">
+                            Your account is verified and ready to receive payments.
+                          </p>
                         </>
                       )}
-                      {stripeState === 'B' && (
+
+                      {stripeState === "B" && (
                         <>
                           <Badge className="bg-amber-100 text-amber-700 border-amber-200 gap-1.5">
-                            <AlertCircle className="w-3.5 h-3.5" /> Verification Incomplete
+                            <AlertCircle className="w-3.5 h-3.5" /> Verification
+                            Incomplete
                           </Badge>
-                          <p className="text-sm text-gray-600">Your Stripe account is connected but needs additional verification before you can receive payments.</p>
-                          <Button onClick={handleStripeConnect} disabled={stripeLoading} className="bg-teal-600 hover:bg-teal-700">
-                            {stripeLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Loading...</> : "Complete Verification"}
+                          <p className="text-sm text-gray-600">
+                            Your Stripe account is connected but needs additional
+                            verification.
+                          </p>
+                          <Button
+                            onClick={handleStripeConnect}
+                            disabled={stripeLoading}
+                            className="bg-teal-600 hover:bg-teal-700"
+                          >
+                            {stripeLoading ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Loading...
+                              </>
+                            ) : (
+                              "Complete Verification"
+                            )}
                           </Button>
-                          <p className="text-sm text-gray-500">Stripe requires identity verification to activate payouts. Click above to complete the remaining steps.</p>
                         </>
                       )}
-                      {stripeState === 'A' && (
+
+                      {stripeState === "A" && (
                         <>
                           <Badge className="bg-amber-100 text-amber-700 border-amber-200 gap-1.5">
                             <AlertCircle className="w-3.5 h-3.5" /> Not Connected
                           </Badge>
-                          <Button onClick={handleStripeConnect} disabled={stripeLoading} className="bg-teal-600 hover:bg-teal-700">
-                            {stripeLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Connecting...</> : "Connect with Stripe"}
+                          <Button
+                            onClick={handleStripeConnect}
+                            disabled={stripeLoading}
+                            className="bg-teal-600 hover:bg-teal-700"
+                          >
+                            {stripeLoading ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Connecting...
+                              </>
+                            ) : (
+                              "Connect with Stripe"
+                            )}
                           </Button>
-                          <p className="text-sm text-gray-500">You need a Stripe account to receive payments. It's free to set up.</p>
                         </>
                       )}
                     </>
