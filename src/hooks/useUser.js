@@ -3,21 +3,19 @@ import { api } from "../utils/api";
 import { logout } from "../utils/logout";
 
 export function useUser() {
-  const [user, setUser] = useState(null);
-  const [role, setRole] = useState(null);
+  const [user, setUser] = useState(null); // { id, email, founding_member_id }
+  const [role, setRole] = useState(null); // "host" | "cleaner" | "guest" | null
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadUser() {
       try {
-        // Proactive expiry check (frontend)
         const expiresAt = localStorage.getItem("session_expires_at");
         if (expiresAt && new Date(expiresAt) < new Date()) {
           logout();
           return;
         }
 
-        // Validate session with backend
         const data = await api("/functions/checkSession", {});
 
         if (!data || !data.authenticated) {
@@ -26,8 +24,8 @@ export function useUser() {
           return;
         }
 
-        // Hydrate user + role
         setUser({
+          id: data.user_id || null,
           email: data.email,
           founding_member_id: data.founding_member_id || null,
         });
