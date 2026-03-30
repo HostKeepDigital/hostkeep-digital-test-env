@@ -1,5 +1,4 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { appParams } from '@/lib/app-params';
 
 const AuthContext = createContext();
 
@@ -34,7 +33,8 @@ export const AuthProvider = ({ children }) => {
 
       const data = await res.json();
 
-      if (!data.valid) {
+      // checkSession returns data.authenticated not data.valid
+      if (!data.authenticated) {
         localStorage.removeItem("session_token");
         localStorage.removeItem("session_expires_at");
         setIsAuthenticated(false);
@@ -44,6 +44,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       setUser({
+        id: data.user_id || null,
         email: data.email,
         role: data.role,
         founding_member_id: data.founding_member_id,
@@ -65,7 +66,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("session_expires_at");
     setUser(null);
     setIsAuthenticated(false);
-    window.location.href = "/Home";
+    window.location.href = "/SignIn";
   };
 
   return (
