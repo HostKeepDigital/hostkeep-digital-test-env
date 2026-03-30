@@ -157,7 +157,7 @@ export default function ChatWindow({
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 px-4 py-4 bg-gray-50/50">
+      <ScrollArea className="flex-1 px-4 py-4 bg-gray-50/50" style={{ overscrollBehavior: "contain" }}>
         <div className="space-y-6 max-w-3xl mx-auto">
           {/* System Message Example - Start of conversation */}
           <div className="flex justify-center my-4">

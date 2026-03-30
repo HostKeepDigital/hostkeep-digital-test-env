@@ -18,9 +18,16 @@ import {
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 
 export default function CleanerDashboard() {
   const { user, isAuthenticated } = useAuth();
+  const { refreshing } = usePullToRefresh([
+    ["cleaner-profile"],
+    ["pending-jobs"],
+    ["upcoming-jobs"],
+    ["completed-jobs"],
+  ]);
 
   const { data: cleanerProfile } = useQuery({
     queryKey: ["cleaner-profile", user?.id],
@@ -104,6 +111,14 @@ export default function CleanerDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
+      {refreshing && (
+        <div className="fixed top-4 left-0 right-0 z-50 flex justify-center pointer-events-none">
+          <div className="bg-white rounded-full shadow px-4 py-1.5 text-xs text-teal-600 font-medium flex items-center gap-2">
+            <div className="w-3 h-3 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+            Refreshing…
+          </div>
+        </div>
+      )}
       <div className="max-w-7xl mx-auto px-4">
         {/* Header */}
         <motion.div

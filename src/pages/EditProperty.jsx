@@ -7,13 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import MobileSelect from "@/components/MobileSelect";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -680,22 +674,13 @@ export default function EditProperty() {
 
                 <div>
                   <Label>Property Type</Label>
-                  <Select
+                  <MobileSelect
                     value={formData.property_type}
                     onValueChange={(v) => handleChange("property_type", v)}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-
-                    <SelectContent>
-                      {PROPERTY_TYPES.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder="Property Type"
+                    options={PROPERTY_TYPES}
+                    triggerClassName="mt-1 w-full"
+                  />
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
@@ -750,20 +735,17 @@ export default function EditProperty() {
 
                 <div>
                   <Label>Status</Label>
-                  <Select
+                  <MobileSelect
                     value={formData.status}
                     onValueChange={(v) => handleChange("status", v)}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-
-                    <SelectContent>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="published">Published</SelectItem>
-                      <SelectItem value="paused">Paused</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    placeholder="Status"
+                    options={[
+                      { value: "draft", label: "Draft" },
+                      { value: "published", label: "Published" },
+                      { value: "paused", label: "Paused" },
+                    ]}
+                    triggerClassName="mt-1 w-full"
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -1035,32 +1017,21 @@ export default function EditProperty() {
               <CardContent className="space-y-6">
                 <div>
                   <Label>Policy</Label>
-                  <Select
+                  <MobileSelect
                     value={formData.cancellation_policy_id}
                     onValueChange={(val) => {
                       const policy = policies?.find((p) => p.id === val);
-                      const isStrict =
-                        policy?.policy_name?.includes("Strict");
-
+                      const isStrict = policy?.policy_name?.includes("Strict");
                       setFormData((prev) => ({
                         ...prev,
                         cancellation_policy_id: val,
                         cleaning_fee_refundable: !isStrict,
                       }));
                     }}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select a policy..." />
-                    </SelectTrigger>
-
-                    <SelectContent>
-                      {policies?.map((p) => (
-                        <SelectItem key={p.id} value={p.id}>
-                          {p.policy_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder="Select a policy..."
+                    options={(policies || []).map((p) => ({ value: p.id, label: p.policy_name }))}
+                    triggerClassName="mt-1 w-full"
+                  />
                 </div>
               </CardContent>
             </Card>

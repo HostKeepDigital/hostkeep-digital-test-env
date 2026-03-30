@@ -29,9 +29,16 @@ import RaiseQuestionModal from "@/components/messaging/RaiseQuestionModal";
 import CancelBookingModal from "@/components/bookings/CancelBookingModal";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/lib/AuthContext";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 
 export default function MyTrips() {
   const { user, isAuthenticated } = useAuth(); // ← custom auth
+  const { refreshing } = usePullToRefresh([
+    ["guest-bookings"],
+    ["wishlist-properties"],
+    ["properties-for-trips"],
+    ["my-reviews"],
+  ]);
 
   const [reviewBooking, setReviewBooking] = useState(null);
   const [questionBooking, setQuestionBooking] = useState(null);
@@ -405,6 +412,14 @@ export default function MyTrips() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {refreshing && (
+        <div className="fixed top-16 left-0 right-0 z-50 flex justify-center py-2">
+          <div className="bg-white rounded-full shadow px-4 py-1.5 text-xs text-teal-600 font-medium flex items-center gap-2">
+            <div className="w-3 h-3 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+            Refreshing…
+          </div>
+        </div>
+      )}
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">

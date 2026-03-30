@@ -26,13 +26,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { createPageUrl } from "@/utils";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import MobileSelect from "@/components/MobileSelect";
 import { Link, useNavigate } from "react-router-dom";
 import { getUserRoles, hasRole } from "@/components/utils/roleHelpers";
 import { useUser } from "@/hooks/useUser";
@@ -733,26 +727,18 @@ export default function Subscription() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Why are you cancelling?
                     </label>
-                    <Select
+                    <MobileSelect
                       value={cancelReason}
                       onValueChange={setCancelReason}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a reason" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="too_expensive">
-                          Too expensive
-                        </SelectItem>
-                        <SelectItem value="not_using">
-                          Not using enough
-                        </SelectItem>
-                        <SelectItem value="missing_features">
-                          Missing features
-                        </SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
+                      placeholder="Select a reason"
+                      options={[
+                        { value: "too_expensive", label: "Too expensive" },
+                        { value: "not_using", label: "Not using enough" },
+                        { value: "missing_features", label: "Missing features" },
+                        { value: "other", label: "Other" },
+                      ]}
+                      triggerClassName="w-full"
+                    />
                   </div>
                   <Button
                     variant="ghost"

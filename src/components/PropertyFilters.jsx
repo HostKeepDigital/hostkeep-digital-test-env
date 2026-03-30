@@ -3,13 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import MobileSelect from "@/components/MobileSelect";
 import LocationAutocomplete from "@/components/LocationAutocomplete";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
@@ -307,22 +301,18 @@ export default function PropertyFilters({ onFilterChange }) {
       {/* Sort */}
       <div>
         <Label className="text-sm font-semibold">Sort By</Label>
-        <Select
+        <MobileSelect
           value={filters.sort}
-          onValueChange={(v) =>
-            setFilters((prev) => ({ ...prev, sort: v }))
-          }
-        >
-          <SelectTrigger className="mt-1">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="newest">Newest</SelectItem>
-            <SelectItem value="price_asc">Price: Low to High</SelectItem>
-            <SelectItem value="price_desc">Price: High to Low</SelectItem>
-            <SelectItem value="score">Best Match</SelectItem>
-          </SelectContent>
-        </Select>
+          onValueChange={(v) => setFilters((prev) => ({ ...prev, sort: v }))}
+          placeholder="Sort By"
+          options={[
+            { value: "newest", label: "Newest" },
+            { value: "price_asc", label: "Price: Low to High" },
+            { value: "price_desc", label: "Price: High to Low" },
+            { value: "score", label: "Best Match" },
+          ]}
+          triggerClassName="mt-1 w-full"
+        />
       </div>
 
       {/* Clear Filters */}

@@ -8,13 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import MobileSelect from "@/components/MobileSelect";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Card,
@@ -385,21 +379,13 @@ export default function CreateProperty() {
 
                   <div>
                     <Label>Property Type</Label>
-                    <Select
+                    <MobileSelect
                       value={formData.property_type}
                       onValueChange={(v) => handleChange("property_type", v)}
-                    >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PROPERTY_TYPES.map((type) => (
-                          <SelectItem key={type.value} value={type.value}>
-                            {type.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      placeholder="Property Type"
+                      options={PROPERTY_TYPES}
+                      triggerClassName="mt-1 w-full"
+                    />
                   </div>
 
                   <div className="grid grid-cols-3 gap-4">
