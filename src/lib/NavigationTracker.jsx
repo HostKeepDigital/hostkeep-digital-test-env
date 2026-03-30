@@ -10,6 +10,7 @@ export default function NavigationTracker() {
   const mainPageKey = mainPage ?? Object.keys(Pages)[0];
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     const pathname = location.pathname;
     let pageName;
 
