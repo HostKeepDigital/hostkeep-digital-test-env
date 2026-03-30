@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
@@ -130,6 +131,7 @@ const geocodeLocation = async (input) => {
 };
 
 export default function Search() {
+  const { refreshing } = usePullToRefresh([["properties"], ["all-reviews"], ["active-bookings"]]);
   const urlParams = new URLSearchParams(window.location.search);
 
   const parseChildAges = () => {
@@ -685,6 +687,14 @@ export default function Search() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {refreshing && (
+        <div className="fixed top-16 left-0 right-0 z-50 flex justify-center py-2">
+          <div className="bg-white rounded-full shadow px-4 py-1.5 text-xs text-teal-600 font-medium flex items-center gap-2">
+            <div className="w-3 h-3 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+            Refreshing…
+          </div>
+        </div>
+      )}
       {/* Search Header */}
       <div className="bg-white border-b border-gray-100 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 py-4">

@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Compass, CalendarDays, MessageSquare, User, Home, Building2, BookOpen } from "lucide-react";
 import { hasRole } from "@/components/utils/roleHelpers";
@@ -17,10 +17,28 @@ const HOST_NAV = [
   { label: "Messages",    icon: MessageSquare, path: createPageUrl("HostMessages")   },
 ];
 
+// Save/restore scroll position per tab path
+function useTabScroll() {
+  const scrollCache = {};
+  const saveScroll = (path) => {
+    scrollCache[path] = window.scrollY;
+    sessionStorage.setItem("tabScroll:" + path, window.scrollY);
+  };
+  const restoreScroll = (path) => {
+    const saved = sessionStorage.getItem("tabScroll:" + path);
+    if (saved !== null) {
+      requestAnimationFrame(() => window.scrollTo(0, parseInt(saved)));
+    }
+  };
+  return { saveScroll, restoreScroll };
+}
+
 export default function MobileBottomNav({ userRoles = [] }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const isHost = hasRole(userRoles, "host");
   const navItems = isHost ? HOST_NAV : GUEST_NAV;
+  const { saveScroll, restoreScroll } = useTabScroll();
 
   return (
     <nav
@@ -30,15 +48,20 @@ export default function MobileBottomNav({ userRoles = [] }) {
       {navItems.map(({ label, icon: Icon, path }) => {
         const active = location.pathname === path || location.pathname.startsWith(path + "/");
         return (
-          <Link
+          <button
             key={label}
-            to={path}
+            type="button"
+            onClick={() => {
+              saveScroll(location.pathname);
+              navigate(path);
+              restoreScroll(path);
+            }}
             className={`flex-1 flex flex-col items-center justify-center py-2 gap-0.5 transition-colors select-none
               ${active ? "text-teal-600" : "text-gray-400 hover:text-gray-600"}`}
           >
             <Icon className="w-5 h-5" />
             <span className="text-[10px] font-medium">{label}</span>
-          </Link>
+          </button>
         );
       })}
     </nav>

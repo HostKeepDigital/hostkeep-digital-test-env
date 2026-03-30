@@ -10,6 +10,7 @@ import { AuthProvider, useAuth } from "@/lib/AuthContext";
 import UserNotRegisteredError from "@/components/UserNotRegisteredError";
 import { queryClientInstance } from "@/lib/query-client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import AdminPanel from "./pages/AdminPanel";
 import Pending from "./pages/Pending";
 import Founding from "./pages/Founding";
@@ -265,66 +266,88 @@ const AuthenticatedApp = () => {
     }
   }
 
+  const pageVariants = {
+    initial: { opacity: 0, x: 20 },
+    in:      { opacity: 1, x: 0 },
+    out:     { opacity: 0, x: -20 },
+  };
+  const pageTransition = { duration: 0.18, ease: "easeOut" };
+
+  const Slide = ({ children }) => (
+    <motion.div
+      variants={pageVariants}
+      initial="initial"
+      animate="in"
+      exit="out"
+      transition={pageTransition}
+      style={{ willChange: "opacity, transform" }}
+    >
+      {children}
+    </motion.div>
+  );
+
   return (
     <RequirePendingCheck>
-      <Routes>
-        <Route path="/login" element={<Navigate to="/SignIn" replace />} />
-        <Route path="/Login" element={<Navigate to="/SignIn" replace />} />
-        <Route path="/SignIn" element={<SignIn />} />
-        <Route path="/ForgotPassword" element={<ForgotPassword />} />
-        <Route path="/CreatePassword" element={<CreatePassword />} />
-        <Route path="/ResetPassword" element={<ResetPassword />} />
-        <Route
-          path="/"
-          element={
-            <RequireAuth>
-              <LayoutWrapper currentPageName="Home">
-                <PostLoginRedirect />
-              </LayoutWrapper>
-            </RequireAuth>
-          }
-        />
-
-        {Object.entries(Pages).map(([path, Page]) => (
+      <AnimatePresence mode="wait" initial={false}>
+        <Routes location={location} key={location.pathname}>
+          <Route path="/login" element={<Navigate to="/SignIn" replace />} />
+          <Route path="/Login" element={<Navigate to="/SignIn" replace />} />
+          <Route path="/SignIn" element={<Slide><SignIn /></Slide>} />
+          <Route path="/ForgotPassword" element={<Slide><ForgotPassword /></Slide>} />
+          <Route path="/CreatePassword" element={<Slide><CreatePassword /></Slide>} />
+          <Route path="/ResetPassword" element={<Slide><ResetPassword /></Slide>} />
           <Route
-            key={path}
-            path={`/${path}`}
+            path="/"
             element={
               <RequireAuth>
-                <LayoutWrapper currentPageName={path}>
-                  <Page />
+                <LayoutWrapper currentPageName="Home">
+                  <Slide><PostLoginRedirect /></Slide>
                 </LayoutWrapper>
               </RequireAuth>
             }
           />
-        ))}
 
-        <Route path="/pending" element={<Pending />} />
-        <Route path="/founding-thankyou" element={<FoundingThankYou />} />
-        <Route path="/founding" element={<Founding />} />
-        <Route path="/foundinghost" element={<FoundingHost />} />
-        <Route path="/foundingcleaner" element={<FoundingCleaner />} />
-        <Route path="/verify-email" element={<VerifyEmail />} />
-        <Route
-          path="/HowPaymentsWork"
-          element={
-            <LayoutWrapper currentPageName="HowPaymentsWork">
-              <HowPaymentsWork />
-            </LayoutWrapper>
-          }
-        />
-        <Route
-          path="/admin"
-          element={
-            <RequireAdmin>
-              <LayoutWrapper currentPageName="AdminPanel">
-                <AdminPanel />
+          {Object.entries(Pages).map(([path, Page]) => (
+            <Route
+              key={path}
+              path={`/${path}`}
+              element={
+                <RequireAuth>
+                  <LayoutWrapper currentPageName={path}>
+                    <Slide><Page /></Slide>
+                  </LayoutWrapper>
+                </RequireAuth>
+              }
+            />
+          ))}
+
+          <Route path="/pending" element={<Slide><Pending /></Slide>} />
+          <Route path="/founding-thankyou" element={<Slide><FoundingThankYou /></Slide>} />
+          <Route path="/founding" element={<Slide><Founding /></Slide>} />
+          <Route path="/foundinghost" element={<Slide><FoundingHost /></Slide>} />
+          <Route path="/foundingcleaner" element={<Slide><FoundingCleaner /></Slide>} />
+          <Route path="/verify-email" element={<Slide><VerifyEmail /></Slide>} />
+          <Route
+            path="/HowPaymentsWork"
+            element={
+              <LayoutWrapper currentPageName="HowPaymentsWork">
+                <Slide><HowPaymentsWork /></Slide>
               </LayoutWrapper>
-            </RequireAdmin>
-          }
-        />
-        <Route path="*" element={<PageNotFound />} />
-      </Routes>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <RequireAdmin>
+                <LayoutWrapper currentPageName="AdminPanel">
+                  <Slide><AdminPanel /></Slide>
+                </LayoutWrapper>
+              </RequireAdmin>
+            }
+          />
+          <Route path="*" element={<PageNotFound />} />
+        </Routes>
+      </AnimatePresence>
     </RequirePendingCheck>
   );
 };

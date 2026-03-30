@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
 import {
@@ -12,6 +12,7 @@ import {
   LogOut,
   Users,
   Shield,
+  ArrowLeft,
 } from "lucide-react";
 import { useState, useEffect, createContext } from "react";
 
@@ -36,6 +37,10 @@ import { useAuth } from "@/lib/AuthContext";
 // Pages without layout (guest facing / public)
 const PUBLIC_PAGES = ["Pay"];
 
+// Root tab pages — no back button shown
+const HOST_ROOT_PAGES = new Set(["HostDashboard", "HostProperties", "HostBookings", "HostMessages", "HostCancellationPolicies"]);
+const GUEST_ROOT_PAGES = new Set(["Home", "Search", "MyTrips", "GuestMessages", "Settings"]);
+
 // Host dashboard pages
 const HOST_PAGES = [
   "HostDashboard",
@@ -49,6 +54,7 @@ const HOST_PAGES = [
 
 export default function Layout({ children, currentPageName }) {
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Pull everything from your custom AuthContext
   const {
@@ -68,9 +74,12 @@ export default function Layout({ children, currentPageName }) {
     }
   };
 
-  // Scroll to top on route change
+  // Scroll to top on route change, but not for tab-root pages (scroll is restored by MobileBottomNav)
+  const ALL_TAB_PAGES = new Set(["HostDashboard","HostProperties","HostBookings","HostMessages","HostCancellationPolicies","Home","Search","MyTrips","GuestMessages","Settings"]);
   useEffect(() => {
-    window.scrollTo(0, 0);
+    if (!ALL_TAB_PAGES.has(currentPageName)) {
+      window.scrollTo(0, 0);
+    }
   }, [currentPageName]);
 
   // No layout for payment page
@@ -147,18 +156,23 @@ export default function Layout({ children, currentPageName }) {
           {/* Mobile Header */}
           <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
             <div className="flex items-center justify-between px-4 py-3">
-              <Link
-                to={createPageUrl("Home")}
-                onClick={(e) => handleNavClick(e, createPageUrl("Home"))}
-                className="flex items-center gap-3"
-              >
-                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center">
-                  <Home className="w-4 h-4 text-white" />
-                </div>
-                <span className="text-lg font-bold text-gray-900">
-                  HostKeep
-                </span>
-              </Link>
+              {HOST_ROOT_PAGES.has(currentPageName) ? (
+                <Link
+                  to={createPageUrl("Home")}
+                  onClick={(e) => handleNavClick(e, createPageUrl("Home"))}
+                  className="flex items-center gap-3"
+                >
+                  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center">
+                    <Home className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="text-lg font-bold text-gray-900">HostKeep</span>
+                </Link>
+              ) : (
+                <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-600">
+                  <ArrowLeft className="w-5 h-5" />
+                  <span className="text-sm font-medium">Back</span>
+                </button>
+              )}
               <Button
                 variant="ghost"
                 size="icon"
@@ -231,6 +245,12 @@ export default function Layout({ children, currentPageName }) {
         <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex items-center justify-between h-16">
+              {/* Mobile: back button on child pages, logo on root pages */}
+              {!GUEST_ROOT_PAGES.has(currentPageName) ? (
+                <button onClick={() => navigate(-1)} className="flex md:hidden items-center gap-2 text-gray-600 mr-3">
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+              ) : null}
               <Link
                 to={createPageUrl("Home")}
                 onClick={(e) => handleNavClick(e, createPageUrl("Home"))}

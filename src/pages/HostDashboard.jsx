@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import StripeStatusBanner from "@/components/host/StripeStatusBanner";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
@@ -48,7 +49,13 @@ import NewMessageModal from "@/components/messaging/NewMessageModal";
 import { useAuth } from "@/lib/AuthContext";
 
 export default function HostDashboard() {
-  const { user, isAuthenticated } = useAuth(); // ← custom auth
+  const { user, isAuthenticated } = useAuth();
+  const { refreshing } = usePullToRefresh([
+    ["host-properties", user?.id],
+    ["host-bookings", user?.id],
+    ["host-messages", user?.id],
+    ["subscription", user?.id],
+  ]); // ← custom auth
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
 
@@ -190,6 +197,14 @@ export default function HostDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {refreshing && (
+        <div className="fixed top-0 left-0 right-0 z-50 flex justify-center py-2 pt-20">
+          <div className="bg-white rounded-full shadow px-4 py-1.5 text-xs text-teal-600 font-medium flex items-center gap-2">
+            <div className="w-3 h-3 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+            Refreshing…
+          </div>
+        </div>
+      )}
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
