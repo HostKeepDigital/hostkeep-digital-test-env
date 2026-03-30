@@ -1,22 +1,22 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Home, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, CheckCircle } from "lucide-react";
+
+const CORNWALL_IMG = "https://drive.google.com/uc?export=view&id=1Vr07gcaaC19XEmxcvTbq-DTn8PZKn-_a";
 
 export default function CreatePassword() {
   const [loading, setLoading] = useState(true);
   const [valid, setValid] = useState(false);
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
-
+  const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const token = new URLSearchParams(window.location.search).get("token");
 
-  // 1) Validate onboarding token
   useEffect(() => {
     async function validate() {
       try {
@@ -25,29 +25,23 @@ export default function CreatePassword() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token }),
         });
-
         const data = await res.json();
-
         if (!data.valid) {
           setError("This onboarding link is invalid or has expired.");
           setLoading(false);
           return;
         }
-
         setEmail(data.email);
         setValid(true);
         setLoading(false);
-
-      } catch (err) {
+      } catch {
         setError("Unable to validate onboarding link.");
         setLoading(false);
       }
     }
-
     validate();
   }, [token]);
 
-  // 2) Submit password
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
@@ -56,57 +50,69 @@ export default function CreatePassword() {
       setError("Passwords do not match.");
       return;
     }
-
     if (password.length < 8) {
       setError("Password must be at least 8 characters.");
       return;
     }
 
-const res = await fetch("/functions/setOnboardingPassword", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ email, password }),
-});
+    setSubmitting(true);
 
-const data = await res.json();
+    try {
+      const res = await fetch("/functions/setOnboardingPassword", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
 
-if (!data.success) {
-  setError("Unable to create your account. Please try again.");
-  return;
-}
+      if (!data.success) {
+        setError("Unable to create your account. Please try again.");
+        return;
+      }
 
-localStorage.setItem("session_token", data.session_token);
-if (data.expires_at) {
-  localStorage.setItem("session_expires_at", data.expires_at);
-}
-
-window.location.href = "/";
+      localStorage.setItem("session_token", data.session_token);
+      if (data.expires_at) {
+        localStorage.setItem("session_expires_at", data.expires_at);
+      }
+      window.location.href = "/";
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
-  // Loading state
+  const passwordStrength = () => {
+    if (password.length === 0) return null;
+    if (password.length < 8) return { label: "Too short", color: "bg-red-400", width: "w-1/4" };
+    if (password.length < 12) return { label: "Fair", color: "bg-amber-400", width: "w-2/4" };
+    if (!/[A-Z]/.test(password) || !/[0-9]/.test(password)) return { label: "Good", color: "bg-[#0d9488]", width: "w-3/4" };
+    return { label: "Strong", color: "bg-green-500", width: "w-full" };
+  };
+  const strength = passwordStrength();
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-400 text-sm">Validating your link...</p>
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="w-8 h-8 border-4 border-gray-200 border-t-[#0d9488] rounded-full animate-spin" />
       </div>
     );
   }
 
-  // Invalid token
   if (!valid) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-10 text-center">
-          <div className="flex items-center justify-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center">
-              <Home className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold text-gray-900">HostKeep</span>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-10 text-center">
+          <div className="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-5">
+            <svg className="w-7 h-7 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </div>
-          <p className="text-red-500 text-sm">{error}</p>
-          <p className="text-gray-400 text-sm mt-3">
-            Please contact us at{" "}
-            <a href="mailto:hello@hostkeepdigital.co.uk" className="text-teal-600">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Link expired</h2>
+          <p className="text-sm text-gray-500 mb-6">{error}</p>
+          <p className="text-sm text-gray-400">
+            Contact us at{" "}
+            <a href="mailto:hello@hostkeepdigital.co.uk" className="text-[#0d9488]">
               hello@hostkeepdigital.co.uk
             </a>
           </p>
@@ -115,91 +121,168 @@ window.location.href = "/";
     );
   }
 
-  // Password form
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-10">
+    <div className="min-h-screen flex">
 
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center">
-            <Home className="w-5 h-5 text-white" />
+      {/* Left panel — Polperro photography */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+        <img
+          src={CORNWALL_IMG}
+          alt="Polperro, Cornwall"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1E3A5F]/85 via-[#1E3A5F]/65 to-[#0d9488]/40" />
+
+        <div className="relative z-10 flex flex-col justify-between p-12 w-full">
+          <img
+            src="https://i.ibb.co/6cwz6PzN/Host-Keep-Digital-Navy-Background.png"
+            alt="HostKeep Digital"
+            className="h-10 w-auto"
+          />
+
+          <div>
+            <p className="text-white/60 text-sm font-medium tracking-[0.2em] uppercase mb-4">
+              Almost there
+            </p>
+            <h1 className="text-white text-4xl font-bold leading-tight mb-6">
+              You're in.<br />
+              <span className="text-[#0d9488]">Let's get set up.</span>
+            </h1>
+            <p className="text-white/70 text-base leading-relaxed max-w-sm">
+              Create your password to activate your founding member account and start setting up your property.
+            </p>
           </div>
-          <span className="text-xl font-bold text-gray-900">HostKeep</span>
+
+          <div className="space-y-3">
+            {[
+              "Flat monthly subscription — 0% commission",
+              "Direct payments to your account",
+              "Your founding rate locked forever",
+            ].map((item) => (
+              <div key={item} className="flex items-center gap-3">
+                <CheckCircle className="w-4 h-4 text-[#0d9488] flex-shrink-0" />
+                <p className="text-white/80 text-sm">{item}</p>
+              </div>
+            ))}
+          </div>
         </div>
+      </div>
 
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">
-          Create your password
-        </h1>
-        <p className="text-sm text-gray-400 mb-6">
-          Setting up account for <strong className="text-gray-600">{email}</strong>
-        </p>
+      {/* Right panel — form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white">
+        <div className="w-full max-w-sm">
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-
-          {/* Password */}
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
-              Password
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                required
-                minLength={8}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full border rounded-lg px-3 py-2 text-sm border-gray-200 pr-10"
-                placeholder="Choose a secure password"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
+          <div className="lg:hidden flex justify-center mb-8">
+            <img
+              src="https://i.ibb.co/6cwz6PzN/Host-Keep-Digital-Navy-Background.png"
+              alt="HostKeep Digital"
+              className="h-10 w-auto"
+            />
           </div>
 
-          {/* Confirm Password */}
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
-              Confirm password
-            </label>
-            <div className="relative">
-              <input
-                type={showConfirmPassword ? "text" : "password"}
-                required
-                minLength={8}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full border rounded-lg px-3 py-2 text-sm border-gray-200 pr-10"
-                placeholder="Retype your password"
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-              >
-                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
+          <h2 className="text-2xl font-bold text-[#111827] mb-1">Create your password</h2>
+          <p className="text-sm text-gray-500 mb-2">
+            Setting up account for
+          </p>
+          <p className="text-sm font-semibold text-[#1E3A5F] mb-8 bg-blue-50 px-3 py-2 rounded-lg inline-block">
+            {email}
+          </p>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1.5 tracking-wide uppercase">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  minLength={8}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Choose a secure password"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 pr-11 focus:outline-none focus:ring-2 focus:ring-[#0d9488]/40 focus:border-[#0d9488] transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                </button>
+              </div>
+              {strength && (
+                <div className="mt-2">
+                  <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full transition-all ${strength.color} ${strength.width}`} />
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">{strength.label}</p>
+                </div>
+              )}
             </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1.5 tracking-wide uppercase">
+                Confirm password
+              </label>
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  required
+                  minLength={8}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Retype your password"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 pr-11 focus:outline-none focus:ring-2 focus:ring-[#0d9488]/40 focus:border-[#0d9488] transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showConfirmPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                </button>
+              </div>
+              {confirmPassword && password === confirmPassword && (
+                <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                  <CheckCircle size={12} /> Passwords match
+                </p>
+              )}
+            </div>
+
+            {error && (
+              <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full bg-[#0d9488] hover:bg-[#0f766e] disabled:opacity-60 text-white font-semibold text-sm rounded-xl py-3.5 transition-colors"
+            >
+              {submitting ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Creating account...
+                </span>
+              ) : "Activate my account"}
+            </button>
+          </form>
+
+          <div className="mt-8 text-center">
+            <Link to="/SignIn" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
+              ← Back to Sign In
+            </Link>
           </div>
 
-          {error && <p className="text-sm text-red-500">{error}</p>}
-
-          <button
-            type="submit"
-            className="w-full bg-teal-600 hover:bg-teal-700 text-white h-11 text-sm font-semibold rounded-lg"
-          >
-            Create password
-          </button>
-        </form>
-
-        <div className="mt-6 text-center">
-          <Link to="/SignIn" className="text-sm text-teal-600 hover:text-teal-700">
-            ← Back to Sign In
-          </Link>
+          <p className="text-center text-xs text-gray-400 mt-6">
+            © 2026 HostKeep Digital Ltd · Cornwall, UK
+          </p>
         </div>
       </div>
     </div>
