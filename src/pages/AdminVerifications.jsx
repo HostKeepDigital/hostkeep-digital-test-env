@@ -140,7 +140,7 @@ export default function AdminVerifications() {
     mutationFn: async (docId) => {
       return await base44.entities.VerificationDocuments.update(docId, {
         verification_status: "approved",
-        reviewed_by_admin_id: user.id, // replaced base44.auth.me()
+        reviewed_by_admin_id: user.email,
       });
     },
     onSuccess: () => {
@@ -154,7 +154,7 @@ export default function AdminVerifications() {
     mutationFn: async ({ docId, reason }) => {
       return await base44.entities.VerificationDocuments.update(docId, {
         verification_status: "rejected",
-        reviewed_by_admin_id: user.id, // replaced base44.auth.me()
+        reviewed_by_admin_id: user.email,
         rejection_reason: reason,
       });
     },
