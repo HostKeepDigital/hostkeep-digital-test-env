@@ -15,7 +15,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Look up session
     const sessions = await serviceRole.entities.UserSession.filter({
       session_token,
     });
@@ -28,7 +27,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check expiry
     const now = new Date();
     const expiresAt = new Date(session.expires_at);
 
@@ -39,18 +37,19 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Session is valid
+    // ✅ Session is valid — now include user_id
     return Response.json({
       authenticated: true,
       email: session.email,
       role: session.role,
       founding_member_id: session.founding_member_id || null,
+      user_id: session.user_id, // <-- key addition
     });
   } catch (err) {
     console.error("checkSession error:", err);
     return Response.json(
       { authenticated: false, error: "server_error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });
