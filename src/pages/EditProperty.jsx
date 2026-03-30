@@ -178,11 +178,25 @@ export default function EditProperty() {
 
   const updateMutation = useMutation({
     mutationFn: (data) => base44.entities.Property.update(propertyId, data),
+    onMutate: async (data) => {
+      await queryClient.cancelQueries({ queryKey: ["property", propertyId] });
+      const previous = queryClient.getQueryData(["property", propertyId]);
+      queryClient.setQueryData(["property", propertyId], (old) =>
+        old ? { ...old, ...data } : old
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["property", propertyId], context.previous);
+      }
+      toast.error("Failed to save changes");
+    },
     onSuccess: (_, variables) => {
       toast.success("Property updated successfully!");
       setOriginalData((prev) => ({ ...prev, ...variables }));
-      queryClient.invalidateQueries(["property", propertyId]);
-      queryClient.invalidateQueries(["properties"]);
+      queryClient.invalidateQueries({ queryKey: ["property", propertyId] });
+      queryClient.invalidateQueries({ queryKey: ["properties"] });
     },
   });
 

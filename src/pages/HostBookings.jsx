@@ -75,12 +75,24 @@ export default function HostBookings() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) =>
-      base44.entities.Booking.update(id, data),
+    mutationFn: ({ id, data }) => base44.entities.Booking.update(id, data),
+    onMutate: async ({ id, data }) => {
+      await queryClient.cancelQueries({ queryKey: ["host-bookings", user?.id] });
+      const previous = queryClient.getQueryData(["host-bookings", user?.id]);
+      queryClient.setQueryData(["host-bookings", user?.id], (old = []) =>
+        old.map((b) => (b.id === id ? { ...b, ...data } : b))
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["host-bookings", user?.id], context.previous);
+      }
+      toast.error("Failed to update booking");
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["host-bookings"] });
-      setActionDialog({ open: false, action: null, booking: null });
-      toast.success("Booking updated successfully");
+      toast.success("Booking updated");
     },
   });
 

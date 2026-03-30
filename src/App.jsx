@@ -11,6 +11,7 @@ import UserNotRegisteredError from "@/components/UserNotRegisteredError";
 import { queryClientInstance } from "@/lib/query-client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import ThemeProvider from "@/components/ThemeProvider";
 import AdminPanel from "./pages/AdminPanel";
 import Pending from "./pages/Pending";
 import Founding from "./pages/Founding";
@@ -354,15 +355,17 @@ const AuthenticatedApp = () => {
 
 function App() {
   return (
-    <AuthProvider>
-      <QueryClientProvider client={queryClientInstance}>
-        <Router>
-          <NavigationTracker />
-          <AuthenticatedApp />
-        </Router>
-        <Toaster />
-      </QueryClientProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <QueryClientProvider client={queryClientInstance}>
+          <Router>
+            <NavigationTracker />
+            <AuthenticatedApp />
+          </Router>
+          <Toaster />
+        </QueryClientProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

@@ -118,7 +118,12 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-nav, header, button, a {
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+nav, header, button, a, [role="button"] {
   user-select: none;
   -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
