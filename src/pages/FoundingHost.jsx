@@ -16,7 +16,7 @@ const COMPARISONS = [
   { label: "Commission per booking",  airbnb: "3%–16%",            booking: "15%–18%",            hostkeep: "0%" },
   { label: "£15,000 annual income",   airbnb: "Up to £2,400 lost", booking: "Up to £2,700 lost",  hostkeep: "You keep £15,000" },
   { label: "£25,000 annual income",   airbnb: "Up to £4,000 lost", booking: "Up to £4,500 lost",  hostkeep: "You keep £25,000" },
-  { label: "Payout timing",           airbnb: "Platform holds",    booking: "Platform holds",      hostkeep: "Direct to you" },
+  { label: "Payout timing",           airbnb: "Platform holds",    booking: "Platform holds",      hostkeep: "Direct, 24hrs after check-in" },
   { label: "Guest surcharges",        airbnb: "12%–15% added",     booking: "Varies",              hostkeep: "None" },
   { label: "Your monthly cost",       airbnb: "£0 + commission",   booking: "£0 + commission",     hostkeep: "£19/mo (founding)" },
 ];
@@ -141,7 +141,7 @@ export default function FoundingHost() {
             { v: "0%",    l: "Commission on bookings" },
             { v: "£19",   l: "Per month (founding rate)" },
             { v: "£3,200",l: "Saved annually vs Airbnb (£20k property)" },
-            { v: "100%",  l: "Of guest payments go to you" },
+            { v: "100%",  l: "Of guest payments go to you*" },
           ].map(s => (
             <div key={s.l}>
               <p className="text-2xl font-black text-white">{s.v}</p>
@@ -289,6 +289,12 @@ export default function FoundingHost() {
             <Shield className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
             <p className="text-xs text-gray-400 leading-relaxed">
               <span className="font-medium text-gray-500">Payments via Stripe.</span> Stripe charges a small processing fee on transactions (typically 1.4% + 25p for European cards). HostKeep receives none of this.
+            </p>
+          </div>
+          <div className="flex items-start gap-2.5 bg-teal-50 border border-teal-100 rounded-xl px-4 py-3">
+            <Shield className="w-4 h-4 text-teal-400 flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-teal-700 leading-relaxed">
+              <span className="font-medium">*Payout timing.</span> Guests pay in advance. Your funds are released <span className="font-medium">24 hours after guest check-in</span> — this gives guests a brief window to raise any issues before the payment is settled to you.
             </p>
           </div>
           <p className="text-center text-xs text-gray-400">No payment required to apply · Reviewed within 48 hours</p>
