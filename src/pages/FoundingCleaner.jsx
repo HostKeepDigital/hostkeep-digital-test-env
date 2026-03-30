@@ -224,7 +224,7 @@ export default function FoundingCleaner() {
             <div className="bg-[#1E3A5F] rounded-2xl p-6 text-white h-full">
               <span className="inline-block bg-blue-500/20 border border-blue-400/30 text-blue-400 text-xs font-semibold uppercase tracking-wider rounded-full px-3 py-1 mb-4">Founding Cleaner Benefits</span>
               <p className="text-2xl font-black text-blue-400 mb-0.5">3 months free<span className="text-base font-semibold text-white/50"> then £9.99/mo</span></p>
-              <p className="text-white/40 text-xs mb-5">Founding rate locked in when you apply.</p>
+
               <div className="space-y-2.5">
                 {BENEFITS.map(b => (
                   <div key={b} className="flex items-start gap-2.5">
