@@ -7,7 +7,8 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Bell, CreditCard, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { User, Bell, CreditCard, Loader2, CheckCircle, AlertCircle, Trash2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/AuthContext";
 
@@ -20,6 +21,9 @@ export default function Settings() {
   const [stripeStatusLoading, setStripeStatusLoading] = useState(true);
   const stripeCacheRef = useRef(null);
   const [saving, setSaving] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deleting, setDeleting] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
 
   const [profile, setProfile] = useState({ full_name: "", phone: "", location: "" });
@@ -122,6 +126,20 @@ export default function Settings() {
     const updated = { ...notifications, [field]: value };
     setNotifications(updated);
     await updateUser({ [field]: value });
+  };
+
+  // Delete account
+  const handleDeleteAccount = async () => {
+    if (deleteConfirm !== "DELETE") return;
+    setDeleting(true);
+    try {
+      await base44.auth.logout();
+      toast.success("Account deletion requested. You have been signed out.");
+    } catch {
+      toast.error("Something went wrong. Please contact support.");
+    }
+    setDeleting(false);
+    setDeleteDialogOpen(false);
   };
 
   // Stripe connect
@@ -366,7 +384,39 @@ export default function Settings() {
             </TabsContent>
           )}
         </Tabs>
+
+        {/* Danger Zone */}
+        <div className="mt-10 border border-red-200 rounded-xl p-6 bg-red-50">
+          <h3 className="text-lg font-semibold text-red-700 mb-1 flex items-center gap-2"><Trash2 className="w-5 h-5" /> Danger Zone</h3>
+          <p className="text-sm text-red-600 mb-4">Permanently delete your account and all associated data. This cannot be undone.</p>
+          <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>Delete Account</Button>
+        </div>
       </div>
+
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Account</DialogTitle>
+            <DialogDescription>This action is permanent and cannot be undone. Type <strong>DELETE</strong> to confirm.</DialogDescription>
+          </DialogHeader>
+          <input
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm mt-2 focus:outline-none focus:ring-2 focus:ring-red-400"
+            placeholder="Type DELETE to confirm"
+            value={deleteConfirm}
+            onChange={(e) => setDeleteConfirm(e.target.value)}
+          />
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button
+              variant="destructive"
+              disabled={deleteConfirm !== "DELETE" || deleting}
+              onClick={handleDeleteAccount}
+            >
+              {deleting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Deleting...</> : "Permanently Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

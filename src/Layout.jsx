@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Footer from "@/components/Footer";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import { hasRole } from "@/components/utils/roleHelpers";
 import RoleSwitcher from "@/components/RoleSwitcher";
 import AppLockWrapper from "@/components/AppLockWrapper";
@@ -144,7 +145,7 @@ export default function Layout({ children, currentPageName }) {
           </aside>
 
           {/* Mobile Header */}
-          <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100">
+          <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
             <div className="flex items-center justify-between px-4 py-3">
               <Link
                 to={createPageUrl("Home")}
@@ -209,11 +210,12 @@ export default function Layout({ children, currentPageName }) {
             )}
           </div>
 
-          <main className="lg:pl-64 pt-16 lg:pt-0">
+          <main className="lg:pl-64 pt-16 lg:pt-0 pb-16 lg:pb-0">
             <NavigationContext.Provider value={setNavBlocker}>
               {children}
             </NavigationContext.Provider>
           </main>
+          <MobileBottomNav userRoles={userRoles} />
         </div>
       </AppLockWrapper>
     );
@@ -226,7 +228,7 @@ export default function Layout({ children, currentPageName }) {
     <AppLockWrapper>
       <div className="flex flex-col min-h-screen bg-white">
         {/* Header */}
-        <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100">
+        <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex items-center justify-between h-16">
               <Link
@@ -424,11 +426,14 @@ export default function Layout({ children, currentPageName }) {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 pt-16">
+        <main className="flex-1 pt-16 pb-16 lg:pb-0">
           <NavigationContext.Provider value={setNavBlocker}>
             {children}
           </NavigationContext.Provider>
         </main>
+
+        {/* Bottom Nav (mobile) */}
+        <MobileBottomNav userRoles={userRoles} />
 
         {/* Footer */}
         <div className="mt-auto">

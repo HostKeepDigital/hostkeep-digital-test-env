@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -98,10 +104,21 @@
 }
 
 .scroll-area::-webkit-scrollbar-thumb {
-  background: #cbd5e1; /* slate-300 */
+  background: #cbd5e1;
   border-radius: 4px;
 }
 
 .scroll-area::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8; /* slate-400 */
+  background: #94a3b8;
+}
+
+/* Mobile native feel */
+body {
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+nav, header, button, a {
+  user-select: none;
+  -webkit-user-select: none;
 }
