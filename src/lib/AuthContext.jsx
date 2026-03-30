@@ -6,6 +6,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  const [roles, setRoles] = useState([]);
   const [authError, setAuthError] = useState(null);
 
   useEffect(() => {
@@ -21,6 +22,7 @@ export const AuthProvider = ({ children }) => {
       if (!session_token) {
         setIsAuthenticated(false);
         setUser(null);
+        setRoles([]);
         setIsLoadingAuth(false);
         return;
       }
@@ -33,12 +35,12 @@ export const AuthProvider = ({ children }) => {
 
       const data = await res.json();
 
-      // checkSession returns data.authenticated not data.valid
       if (!data.authenticated) {
         localStorage.removeItem("session_token");
         localStorage.removeItem("session_expires_at");
         setIsAuthenticated(false);
         setUser(null);
+        setRoles([]);
         setIsLoadingAuth(false);
         return;
       }
@@ -50,6 +52,12 @@ export const AuthProvider = ({ children }) => {
         founding_member_id: data.founding_member_id,
       });
 
+      // Build roles array in the shape App.jsx expects
+      setRoles([{
+        role: data.role,
+        approval_status: "approved",
+      }]);
+
       setIsAuthenticated(true);
       setIsLoadingAuth(false);
 
@@ -57,6 +65,7 @@ export const AuthProvider = ({ children }) => {
       console.error("validateSession error:", err);
       setIsAuthenticated(false);
       setUser(null);
+      setRoles([]);
       setIsLoadingAuth(false);
     }
   };
@@ -65,6 +74,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("session_token");
     localStorage.removeItem("session_expires_at");
     setUser(null);
+    setRoles([]);
     setIsAuthenticated(false);
     window.location.href = "/SignIn";
   };
@@ -75,6 +85,7 @@ export const AuthProvider = ({ children }) => {
       isAuthenticated,
       isLoadingAuth,
       authError,
+      roles,
       logout,
       validateSession
     }}>
