@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import FoundingFooter from "@/components/founding/FoundingFooter";
 import { CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ export default function FoundingThankYou() {
           </Button>
         </Link>
       </motion.div>
+      <FoundingFooter />
     </div>
   );
 }

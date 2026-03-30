@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Shield, PoundSterling, Heart, Star, ArrowRight, Users, Home, CheckCircle, Zap } from "lucide-react";
+import FoundingFooter from "@/components/founding/FoundingFooter";
 
 const HERO_IMG  = "https://lh3.googleusercontent.com/d/1ZmljdO7m9HdHdT_KKSa0S-p2e9ctR5BU";
 const LOOE_IMG  = "https://lh3.googleusercontent.com/d/1Vr07gcaaC19XEmxcvTbq-DTn8PZKn-_a";
@@ -196,6 +197,7 @@ export default function Founding() {
         </div>
       </section>
 
+      <FoundingFooter />
     </div>
   );
 }

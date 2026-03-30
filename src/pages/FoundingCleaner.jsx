@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import FoundingFooter from "@/components/founding/FoundingFooter";
 import { useNavigate, Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { CheckCircle, AlertTriangle, Loader2, ArrowLeft, Users, ArrowRight, Shield } from "lucide-react";
@@ -315,6 +316,7 @@ export default function FoundingCleaner() {
           <p className="text-center text-xs text-gray-400">No payment required to apply · Reviewed within 48 hours</p>
         </form>
       </section>
+      <FoundingFooter />
     </div>
   );
 }
