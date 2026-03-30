@@ -17,9 +17,8 @@ async function sendBrandedEmail({ to, resetUrl }) {
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:12px;overflow:hidden;max-width:600px;width:100%;">
         <tr>
-          <td style="background-color:#0d9488;padding:32px 40px;text-align:center;">
-            <span style="color:#ffffff;font-size:24px;font-weight:bold;letter-spacing:-0.5px;">HostKeep</span><br>
-            <span style="color:#99f6e4;font-size:13px;">hostkeepdigital.co.uk</span>
+          <td style="background-color:#1E3A5F;padding:32px 40px;text-align:center;">
+            <img src="https://i.ibb.co/6cwz6PzN/Host-Keep-Digital-Navy-Background.png" alt="HostKeep Digital" width="200" style="display:block;margin:0 auto;max-width:200px;height:auto;" />
           </td>
         </tr>
         <tr>
@@ -85,35 +84,45 @@ Deno.serve(async (req) => {
   const normalizedEmail = email.toLowerCase().trim();
 
   try {
-    // Find the user account
-    const users = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
-    const user = users?.[0];
+    // ── CUSTOM AUTH: check UserCredentials first ──────────────────────────
+    // Users in the custom auth system have a UserCredentials record.
+    // Fall back to User entity for legacy accounts.
+    const creds = await base44.asServiceRole.entities.UserCredentials.filter({
+      email: normalizedEmail,
+    });
 
-    if (!user) {
-      // Don't reveal whether email exists
-      return Response.json({ success: true });
+    const hasCustomAuth = creds && creds.length > 0;
+
+    if (!hasCustomAuth) {
+      // No UserCredentials — check legacy User entity
+      const users = await base44.asServiceRole.entities.User.filter({
+        email: normalizedEmail,
+      });
+      if (!users?.[0]) {
+        // Email not found anywhere — return success silently
+        return Response.json({ success: true });
+      }
     }
 
-    // Delete any existing tokens for this user to ensure uniqueness
-    const existingTokens = await base44.asServiceRole.entities.PasswordResetToken.filter({ email: normalizedEmail });
+    // Delete any existing reset tokens for this email
+    const existingTokens = await base44.asServiceRole.entities.PasswordResetToken.filter({
+      email: normalizedEmail,
+    });
     for (const t of existingTokens) {
       await base44.asServiceRole.entities.PasswordResetToken.delete(t.id);
     }
 
-    // Generate a unique token
+    // Generate a new token — 1 hour expiry
     const token = generateToken();
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hour
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
 
-    // Store token in DB
     await base44.asServiceRole.entities.PasswordResetToken.create({
-      user_id: user.id,
       email: normalizedEmail,
       token,
       expires_at: expiresAt,
       used: false,
     });
 
-    // Send branded email
     const resetUrl = `https://hostkeepdigital.co.uk/ResetPassword?token=${token}`;
     await sendBrandedEmail({ to: normalizedEmail, resetUrl });
 
