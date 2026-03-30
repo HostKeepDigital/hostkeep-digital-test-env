@@ -74,12 +74,14 @@ Deno.serve(async (req) => {
     } catch (_) {}
 
     // Fall back to FoundingMember role
-    if (!role && members?.[0]?.role) {
+      if (!role && members?.[0]?.role) {
       role = members[0].role;
     }
 
-    if (!role) {
-      role = "guest";
+// Admin email override — always admin regardless of UserRole records
+    const adminEmails = ["admin@hostkeepdigital.co.uk", "1tylerclarke1@gmail.com"];
+      if (adminEmails.includes(normalisedEmail)) {
+      role = "admin";
     }
 
     const session_token = crypto.randomUUID();
