@@ -117,6 +117,7 @@ Deno.serve(async (req) => {
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
 
     await base44.asServiceRole.entities.PasswordResetToken.create({
+      user_id: normalizedEmail, // required field — using email as fallback ID
       email: normalizedEmail,
       token,
       expires_at: expiresAt,
