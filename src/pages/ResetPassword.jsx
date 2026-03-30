@@ -2,8 +2,6 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Eye, EyeOff, Mail, CheckCircle } from "lucide-react";
 
-const [step, setStep] = useState("form"); // form | success | invalid | expired
-
 const CORNWALL_IMG = "https://drive.google.com/uc?export=view&id=1ngVI8yfXwJXYnSM96Sp21B0soD4SMNOJ";
 
 export default function ResetPassword() {
@@ -22,7 +20,7 @@ export default function ResetPassword() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [resetError, setResetError] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
-  const [step, setStep] = useState("form");
+  const [step, setStep] = useState("form"); // form | success | invalid | expired
 
   const handleRequestReset = async (e) => {
     e.preventDefault();
