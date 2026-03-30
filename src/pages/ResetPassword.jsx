@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Eye, EyeOff, Mail, CheckCircle } from "lucide-react";
 
+const [step, setStep] = useState("form"); // form | success | invalid | expired
+
 const CORNWALL_IMG = "https://drive.google.com/uc?export=view&id=1ngVI8yfXwJXYnSM96Sp21B0soD4SMNOJ";
 
 export default function ResetPassword() {
@@ -62,18 +64,18 @@ export default function ResetPassword() {
       });
       const data = await res.json();
 
-      if (!data.success) {
-        if (data.error === "invalid_token") {
-          setResetError("This reset link is invalid or has already been used.");
-        } else if (data.error === "expired_token") {
-          setResetError("This reset link has expired. Please request a new one.");
-        } else {
-          setResetError("Unable to reset password. Please try again.");
-        }
-        return;
-      }
+if (!data.success) {
+  if (data.error === "invalid_token") {
+    setStep("invalid");
+  } else if (data.error === "expired_token") {
+    setStep("expired");
+  } else {
+    setResetError("Unable to reset password. Please try again.");
+  }
+  return;
+}
 
-      setStep("success");
+setStep("success");
     } catch {
       setResetError("Something went wrong. Please try again.");
     } finally {
@@ -118,30 +120,100 @@ export default function ResetPassword() {
   );
 
   // Success
-  if (step === "success") {
-    return (
-      <div className="min-h-screen flex">
-        <LeftPanel />
-        <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white">
-          <div className="w-full max-w-sm text-center">
-            <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle className="w-8 h-8 text-green-500" />
-            </div>
-            <h2 className="text-2xl font-bold text-[#111827] mb-3">Password updated</h2>
-            <p className="text-sm text-gray-500 mb-8">
-              Your password has been successfully changed. You can now sign in with your new password.
-            </p>
+if (step === "success") {
+  return (
+    <div className="min-h-screen flex">
+      <LeftPanel />
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white">
+        <div className="w-full max-w-sm text-center">
+          <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle className="w-8 h-8 text-green-500" />
+          </div>
+          <h2 className="text-2xl font-bold text-[#111827] mb-3">Password updated</h2>
+          <p className="text-sm text-gray-500 mb-8">
+            Your password has been successfully changed. You can now sign in with your new password.
+          </p>
+          <Link
+            to="/SignIn"
+            className="inline-block w-full bg-[#1E3A5F] hover:bg-[#162d4a] text-white font-semibold text-sm rounded-xl py-3.5 transition-colors text-center"
+          >
+            Sign In
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+if (step === "invalid") {
+  return (
+    <div className="min-h-screen flex">
+      <LeftPanel />
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white">
+        <div className="w-full max-w-sm text-center">
+          <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-8 h-8 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M12 3a9 9 0 100 18A9 9 0 0012 3z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-[#111827] mb-3">Link already used</h2>
+          <p className="text-sm text-gray-500 mb-8">
+            This reset link has already been used or is invalid. Reset links can only be used once — please request a new one if you need to change your password.
+          </p>
+          <div className="space-y-3">
             <Link
-              to="/SignIn"
+              to="/ResetPassword"
               className="inline-block w-full bg-[#1E3A5F] hover:bg-[#162d4a] text-white font-semibold text-sm rounded-xl py-3.5 transition-colors text-center"
             >
-              Go to Sign In
+              Request a new link
+            </Link>
+            <Link
+              to="/SignIn"
+              className="inline-block w-full text-sm text-gray-400 hover:text-gray-600 transition-colors py-2 text-center"
+            >
+              Back to Sign In
             </Link>
           </div>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
+
+if (step === "expired") {
+  return (
+    <div className="min-h-screen flex">
+      <LeftPanel />
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white">
+        <div className="w-full max-w-sm text-center">
+          <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-8 h-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-[#111827] mb-3">Link expired</h2>
+          <p className="text-sm text-gray-500 mb-8">
+            This reset link has expired — links are valid for 1 hour. Please request a new one and complete the process within that window.
+          </p>
+          <div className="space-y-3">
+            <Link
+              to="/ResetPassword"
+              className="inline-block w-full bg-[#1E3A5F] hover:bg-[#162d4a] text-white font-semibold text-sm rounded-xl py-3.5 transition-colors text-center"
+            >
+              Request a new link
+            </Link>
+            <Link
+              to="/SignIn"
+              className="inline-block w-full text-sm text-gray-400 hover:text-gray-600 transition-colors py-2 text-center"
+            >
+              Back to Sign In
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
   // No token — email entry
   if (!token) {
