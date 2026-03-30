@@ -84,6 +84,10 @@ Deno.serve(async (req) => {
       role = "admin";
     }
 
+    if (!role) {
+     role = "guest";
+    }
+
     const session_token = crypto.randomUUID();
 
     const isApp = is_app === true;
