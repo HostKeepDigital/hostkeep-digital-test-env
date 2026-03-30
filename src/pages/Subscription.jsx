@@ -3,16 +3,41 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Crown, Zap, Rocket, Loader2, X, AlertCircle, Building2, Sparkles, Star } from "lucide-react";
+import {
+  CheckCircle,
+  Crown,
+  Zap,
+  Rocket,
+  Loader2,
+  X,
+  AlertCircle,
+  Building2,
+  Sparkles,
+  Star,
+} from "lucide-react";
 import { toast } from "sonner";
 import { createPageUrl } from "@/utils";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Link, useNavigate } from "react-router-dom";
 import { getUserRoles, hasRole } from "@/components/utils/roleHelpers";
+import { useUser } from "@/hooks/useUser";
+import { api } from "@/utils/api";
 
-// Lookup key → display name map
 const PLAN_DISPLAY_NAMES = {
   host_starter_monthly: "Single Property Host",
   host_growth_monthly: "Multi Property Host",
@@ -53,8 +78,8 @@ const HOST_PLANS = [
     price: 59,
     icon: Crown,
     color: "violet",
-    max_properties: 5,
     popular: true,
+    max_properties: 5,
     features: HOST_FEATURES,
   },
   {
@@ -123,9 +148,12 @@ const CLEANER_PLANS = [
 
 export default function Subscription() {
   const urlParams = new URLSearchParams(window.location.search);
-  const tabParam = urlParams.get('tab');
-  const [activeTab, setActiveTab] = useState(tabParam === 'cleaner' ? 'cleaner' : 'host');
-  const [user, setUser] = useState(null);
+  const tabParam = urlParams.get("tab");
+  const [activeTab, setActiveTab] = useState(
+    tabParam === "cleaner" ? "cleaner" : "host",
+  );
+
+  const { user, role, loading } = useUser();
   const [userRoles, setUserRoles] = useState(null); // null = loading
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
@@ -135,108 +163,157 @@ export default function Subscription() {
   const navigate = useNavigate();
   const pollRef = useRef(null);
 
+  // Load roles once user is known
   useEffect(() => {
-    base44.auth.me().then(async (u) => {
-      setUser(u);
-      if (u?.id) {
-        const roles = await base44.entities.UserRole.filter({ user_id: u.id });
-        setUserRoles(roles);
-      } else {
-        setUserRoles([]);
+    if (!user?.id) {
+      if (!loading && !user) {
+        setUserRoles([]); // not logged in
       }
-    }).catch(() => setUserRoles([]));
-  }, []);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadRoles() {
+      try {
+        const roles = await base44.entities.UserRole.filter({
+          user_id: user.id,
+        });
+        if (!cancelled) {
+          setUserRoles(roles);
+        }
+      } catch {
+        if (!cancelled) {
+          setUserRoles([]);
+        }
+      }
+    }
+
+    loadRoles();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, loading]);
 
   // Handle Stripe redirect back to page
   useEffect(() => {
-    const success = urlParams.get('success');
-    const cancelled = urlParams.get('cancelled');
+    const success = urlParams.get("success");
+    const cancelled = urlParams.get("cancelled");
 
-    if (success === 'true') {
+    if (success === "true") {
       setPaymentActivating(true);
-      window.history.replaceState({}, '', window.location.pathname);
+      window.history.replaceState({}, "", window.location.pathname);
 
-      // Poll every 2s for up to 30s
       let attempts = 0;
       pollRef.current = setInterval(async () => {
         attempts++;
         try {
-          const u = await base44.auth.me();
-          if (!u?.id) return;
-          const subs = await base44.entities.Subscription.filter({ user_id: u.id });
-          const active = subs.find(s => s.status === 'active' && !BETA_PLANS.includes(s.plan));
+          // Re-validate session
+          const session = await api("/functions/checkSession", {});
+          if (!session?.authenticated || !session.user_id) {
+            return;
+          }
+
+          const subs = await base44.entities.Subscription.filter({
+            user_id: session.user_id,
+          });
+          const active = subs.find(
+            (s) =>
+              s.status === "active" && !BETA_PLANS.includes(s.plan),
+          );
+
           if (active) {
             clearInterval(pollRef.current);
-            const displayName = PLAN_DISPLAY_NAMES[active.plan] || active.plan;
+            const displayName =
+              PLAN_DISPLAY_NAMES[active.plan] || active.plan;
             setActivatedPlanName(displayName);
             setPaymentActivating(false);
-            queryClient.invalidateQueries({ queryKey: ['subscription'] });
+            queryClient.invalidateQueries({ queryKey: ["subscription"] });
           }
-        } catch {}
+        } catch {
+          // swallow and retry until attempts exhausted
+        }
+
         if (attempts >= 15) {
           clearInterval(pollRef.current);
           setPaymentActivating(false);
-          toast.error("Could not confirm activation. Please refresh the page.");
+          toast.error(
+            "Could not confirm activation. Please refresh the page.",
+          );
         }
       }, 2000);
-    } else if (cancelled === 'true') {
+    } else if (cancelled === "true") {
       toast.error("Payment cancelled. No changes were made to your account.");
-      window.history.replaceState({}, '', window.location.pathname);
+      window.history.replaceState({}, "", window.location.pathname);
     }
+
     return () => clearInterval(pollRef.current);
   }, []);
 
   const { data: subscription } = useQuery({
-    queryKey: ['subscription', user?.id],
+    queryKey: ["subscription", user?.id],
     queryFn: async () => {
-      const subs = await base44.entities.Subscription.filter({ user_id: user?.id });
+      const subs = await base44.entities.Subscription.filter({
+        user_id: user?.id,
+      });
       return subs[0];
     },
     enabled: !!user?.id,
   });
 
-  const isBetaUser = subscription && BETA_PLANS.includes(subscription.plan) && subscription.status === 'active';
-  const isPending = userRoles && userRoles.some(r =>
-    !['guest'].includes((r.role || '').toLowerCase()) &&
-    (r.approval_status || '').toLowerCase() === 'pending'
-  );
+  const isBetaUser =
+    subscription &&
+    BETA_PLANS.includes(subscription.plan) &&
+    subscription.status === "active";
 
-  // Role-based logic
-  const isHost = hasRole(userRoles, 'host');
-  const isCleaner = hasRole(userRoles, 'cleaner');
+  const isPending =
+    userRoles &&
+    userRoles.some(
+      (r) =>
+        !["guest"].includes((r.role || "").toLowerCase()) &&
+        (r.approval_status || "").toLowerCase() === "pending",
+    );
+
+  const isHost = hasRole(userRoles, "host");
+  const isCleaner = hasRole(userRoles, "cleaner");
   const showHostTab = isHost && !isCleaner;
   const showCleanerTab = isCleaner && !isHost;
   const showBothTabs = (isHost && isCleaner) || (!isHost && !isCleaner);
 
-  // Set default tab based on roles
   useEffect(() => {
     if (userRoles && userRoles.length > 0) {
-      if (showHostTab && activeTab !== 'host') setActiveTab('host');
-      if (showCleanerTab && activeTab !== 'cleaner') setActiveTab('cleaner');
+      if (showHostTab && activeTab !== "host") setActiveTab("host");
+      if (showCleanerTab && activeTab !== "cleaner") setActiveTab("cleaner");
     }
-  }, [showHostTab, showCleanerTab]);
+  }, [showHostTab, showCleanerTab, userRoles]);
 
   const [checkoutLoading, setCheckoutLoading] = useState(null);
 
   const handleSubscribe = async (planId) => {
     if (!user) {
-      navigate('/founding');
+      navigate("/founding");
       return;
     }
     if (isPending) {
-      navigate('/pending');
+      navigate("/pending");
       return;
     }
     setCheckoutLoading(planId);
     try {
-      const response = await base44.functions.invoke('createCheckoutSession', { plan: planId });
+      const response = await base44.functions.invoke(
+        "createCheckoutSession",
+        { plan: planId },
+      );
       if (response.data?.url) {
         window.location.href = response.data.url;
       } else {
-        toast.error(response.data?.error || 'Failed to create checkout session');
+        toast.error(
+          response.data?.error || "Failed to create checkout session",
+        );
       }
     } catch (error) {
-      toast.error('Failed to start checkout. Please try again.');
+      toast.error("Failed to start checkout. Please try again.");
     } finally {
       setCheckoutLoading(null);
     }
@@ -244,17 +321,20 @@ export default function Subscription() {
 
   const cancelMutation = useMutation({
     mutationFn: () => {
-      return base44.entities.Subscription.update(subscription.id, { status: 'cancelled' });
+      return base44.entities.Subscription.update(subscription.id, {
+        status: "cancelled",
+      });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['subscription'] });
-      toast.success("Subscription cancelled. Access will continue until end of billing period.");
+      queryClient.invalidateQueries({ queryKey: ["subscription"] });
+      toast.success(
+        "Subscription cancelled. Access will continue until end of billing period.",
+      );
       setShowCancelDialog(false);
       setCancelReason("");
     },
   });
 
-  // Payment activating screen
   if (paymentActivating) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
@@ -262,14 +342,17 @@ export default function Subscription() {
           <div className="w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center mx-auto mb-6">
             <Loader2 className="w-8 h-8 text-teal-600 animate-spin" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment successful — activating your plan...</h2>
-          <p className="text-gray-500">This usually takes just a few seconds.</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Payment successful — activating your plan...
+          </h2>
+          <p className="text-gray-500">
+            This usually takes just a few seconds.
+          </p>
         </div>
       </div>
     );
   }
 
-  // Plan activated success screen
   if (activatedPlanName) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
@@ -277,9 +360,18 @@ export default function Subscription() {
           <div className="w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-8 h-8 text-teal-600" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">You're all set!</h2>
-          <p className="text-gray-600 mb-6">Your <span className="font-semibold">{activatedPlanName}</span> plan is now active.</p>
-          <Button className="bg-teal-600 hover:bg-teal-700" onClick={() => navigate(createPageUrl('HostDashboard'))}>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            You're all set!
+          </h2>
+          <p className="text-gray-600 mb-6">
+            Your{" "}
+            <span className="font-semibold">{activatedPlanName}</span> plan is
+            now active.
+          </p>
+          <Button
+            className="bg-teal-600 hover:bg-teal-700"
+            onClick={() => navigate(createPageUrl("HostDashboard"))}
+          >
             Go to Dashboard
           </Button>
         </div>
@@ -299,18 +391,19 @@ export default function Subscription() {
             Simple, Transparent Pricing
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-4">
-            Pay one flat monthly fee. Keep 100% of your bookings. No commissions. Ever.
+            Pay one flat monthly fee. Keep 100% of your bookings. No
+            commissions. Ever.
           </p>
-          {activeTab === 'host' && (
+          {activeTab === "host" && (
             <div className="inline-flex items-center gap-2 bg-teal-50 border border-teal-200 text-teal-800 px-4 py-2 rounded-full text-sm font-medium">
               <Star className="w-4 h-4 text-teal-500" />
-              Every plan includes every feature — plans only differ by property count
+              Every plan includes every feature — plans only differ by property
+              count
             </div>
           )}
-
         </motion.div>
 
-        {subscription && subscription.status === 'active' && !isBetaUser && (
+        {subscription && subscription.status === "active" && !isBetaUser && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -321,12 +414,12 @@ export default function Subscription() {
               {PLAN_DISPLAY_NAMES[subscription.plan] || subscription.plan}
             </h2>
             <p className="text-gray-600">
-              £{subscription.price_monthly}/month • Renews {subscription.end_date}
+              £{subscription.price_monthly}/month • Renews{" "}
+              {subscription.end_date}
             </p>
           </motion.div>
         )}
 
-        {/* Beta founding member message */}
         {isBetaUser && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -337,134 +430,200 @@ export default function Subscription() {
               <Crown className="w-7 h-7 text-amber-600" />
             </div>
             <Badge className="bg-amber-500 mb-3">Founding Member</Badge>
-            <h2 className="text-2xl font-bold text-gray-900 mb-3">You have free beta access</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">
+              You have free beta access
+            </h2>
             <p className="text-gray-600 text-base leading-relaxed">
-              You are a Founding Member with free beta access. When beta ends, you will be invited to choose your plan at your founding member discount rate.
+              You are a Founding Member with free beta access. When beta ends,
+              you will be invited to choose your plan at your founding member
+              discount rate.
             </p>
           </motion.div>
         )}
 
-        {/* Plan cards — hidden for beta users */}
         {!isBetaUser && (
           <>
-            {/* Plan type tabs */}
-                {showBothTabs ? (
-                  <div className="flex justify-center mb-8">
-                    <div className="flex bg-white border border-gray-200 rounded-xl p-1 gap-1">
-                      <button
-                        onClick={() => setActiveTab('host')}
-                        className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                          activeTab === 'host' ? 'bg-teal-600 text-white shadow' : 'text-gray-600 hover:text-gray-900'
-                        }`}
-                      >
-                        <Building2 className="w-4 h-4" /> Host Plans
-                      </button>
-                      <button
-                        onClick={() => setActiveTab('cleaner')}
-                        className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                          activeTab === 'cleaner' ? 'bg-blue-600 text-white shadow' : 'text-gray-600 hover:text-gray-900'
-                        }`}
-                      >
-                        <Sparkles className="w-4 h-4" /> Cleaner Plans
-                      </button>
-                    </div>
-                  </div>
-                ) : null}
+            {showBothTabs ? (
+              <div className="flex justify-center mb-8">
+                <div className="flex bg-white border border-gray-200 rounded-xl p-1 gap-1">
+                  <button
+                    onClick={() => setActiveTab("host")}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                      activeTab === "host"
+                        ? "bg-teal-600 text-white shadow"
+                        : "text-gray-600 hover:text-gray-900"
+                    }`}
+                  >
+                    <Building2 className="w-4 h-4" /> Host Plans
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("cleaner")}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                      activeTab === "cleaner"
+                        ? "bg-blue-600 text-white shadow"
+                        : "text-gray-600 hover:text-gray-900"
+                    }`}
+                  >
+                    <Sparkles className="w-4 h-4" /> Cleaner Plans
+                  </button>
+                </div>
+              </div>
+            ) : null}
 
             <div className="grid md:grid-cols-3 gap-6">
-              {(activeTab === 'host' ? HOST_PLANS : CLEANER_PLANS).map((plan, idx) => {
-                const isCurrentPlan = subscription?.plan === plan.id && subscription?.status === 'active';
-                const Icon = plan.icon;
+              {(activeTab === "host" ? HOST_PLANS : CLEANER_PLANS).map(
+                (plan, idx) => {
+                  const isCurrentPlan =
+                    subscription?.plan === plan.id &&
+                    subscription?.status === "active";
+                  const Icon = plan.icon;
 
-                return (
-                  <motion.div
-                    key={plan.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.1 }}
-                  >
-                    <Card className={`relative h-full flex flex-col ${
-                      plan.popular ? 'border-2 border-violet-500 shadow-lg' : 'border border-gray-200'
-                    } ${isCurrentPlan ? `ring-2 ${activeTab === 'cleaner' ? 'ring-blue-500' : 'ring-teal-500'}` : ''}`}>
-                      {plan.popular && (
-                        <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-violet-500">
-                          Most Popular
-                        </Badge>
-                      )}
-                      {isCurrentPlan && (
-                        <Badge className={`absolute -top-3 right-4 ${activeTab === 'cleaner' ? 'bg-blue-500' : 'bg-teal-500'}`}>
-                          Current
-                        </Badge>
-                      )}
-
-                      <CardHeader className="text-center pb-4">
-                        <div className={`w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center ${
-                          plan.color === 'teal' ? (activeTab === 'cleaner' ? 'bg-blue-100' : 'bg-teal-100') :
-                          plan.color === 'violet' ? 'bg-violet-100' : 'bg-amber-100'
-                        }`}>
-                          <Icon className={`w-6 h-6 ${
-                            plan.color === 'teal' ? (activeTab === 'cleaner' ? 'text-blue-600' : 'text-teal-600') :
-                            plan.color === 'violet' ? 'text-violet-600' : 'text-amber-600'
-                          }`} />
-                        </div>
-                        <CardTitle className="text-xl">{plan.name}</CardTitle>
-                        <div className="mt-2">
-                          <span className="text-4xl font-bold text-gray-900">£{plan.price}</span>
-                          <span className="text-gray-500">/month</span>
-                        </div>
-                        {plan.max_properties != null && (
-                          <CardDescription className="mt-2 font-semibold text-gray-700">
-                            {plan.max_properties === 999 ? 'Unlimited properties' : plan.max_properties === 1 ? '1 property' : `Up to ${plan.max_properties} properties`}
-                          </CardDescription>
+                  return (
+                    <motion.div
+                      key={plan.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.1 }}
+                    >
+                      <Card
+                        className={`relative h-full flex flex-col ${
+                          plan.popular
+                            ? "border-2 border-violet-500 shadow-lg"
+                            : "border border-gray-200"
+                        } ${
+                          isCurrentPlan
+                            ? `ring-2 ${
+                                activeTab === "cleaner"
+                                  ? "ring-blue-500"
+                                  : "ring-teal-500"
+                              }`
+                            : ""
+                        }`}
+                      >
+                        {plan.popular && (
+                          <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-violet-500">
+                            Most Popular
+                          </Badge>
                         )}
-                      </CardHeader>
-
-                      <CardContent className="flex-1">
-                        <ul className="space-y-3">
-                          {plan.features.map((feature, i) => (
-                            <li key={i} className="flex items-start gap-3 text-sm text-gray-600">
-                              <CheckCircle className={`w-5 h-5 flex-shrink-0 ${
-                                plan.color === 'teal' ? (activeTab === 'cleaner' ? 'text-blue-500' : 'text-teal-500') :
-                                plan.color === 'violet' ? 'text-violet-500' : 'text-amber-500'
-                              }`} />
-                              {feature}
-                            </li>
-                          ))}
-                        </ul>
-                      </CardContent>
-
-                      <CardFooter>
-                        {isCurrentPlan ? (
-                          <Button variant="outline" className="w-full" disabled>
-                            Currently Selected
-                          </Button>
-                        ) : (
-                          <Button
-                            className={`w-full ${
-                              plan.popular
-                                ? 'bg-violet-600 hover:bg-violet-700'
-                                : activeTab === 'cleaner' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-teal-600 hover:bg-teal-700'
+                        {isCurrentPlan && (
+                          <Badge
+                            className={`absolute -top-3 right-4 ${
+                              activeTab === "cleaner"
+                                ? "bg-blue-500"
+                                : "bg-teal-500"
                             }`}
-                            onClick={() => handleSubscribe(plan.id)}
-                            disabled={!!checkoutLoading}
                           >
-                            {checkoutLoading === plan.id ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : subscription?.status === 'active' ? (
-                              'Switch to ' + plan.name
-                            ) : (
-                              'Get Started'
-                            )}
-                          </Button>
+                            Current
+                          </Badge>
                         )}
-                      </CardFooter>
-                    </Card>
-                  </motion.div>
-                );
-              })}
+
+                        <CardHeader className="text-center pb-4">
+                          <div
+                            className={`w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center ${
+                              plan.color === "teal"
+                                ? activeTab === "cleaner"
+                                  ? "bg-blue-100"
+                                  : "bg-teal-100"
+                                : plan.color === "violet"
+                                ? "bg-violet-100"
+                                : "bg-amber-100"
+                            }`}
+                          >
+                            <Icon
+                              className={`w-6 h-6 ${
+                                plan.color === "teal"
+                                  ? activeTab === "cleaner"
+                                    ? "text-blue-600"
+                                    : "text-teal-600"
+                                  : plan.color === "violet"
+                                  ? "text-violet-600"
+                                  : "text-amber-600"
+                              }`}
+                            />
+                          </div>
+                          <CardTitle className="text-xl">
+                            {plan.name}
+                          </CardTitle>
+                          <div className="mt-2">
+                            <span className="text-4xl font-bold text-gray-900">
+                              £{plan.price}
+                            </span>
+                            <span className="text-gray-500">/month</span>
+                          </div>
+                          {plan.max_properties != null && (
+                            <CardDescription className="mt-2 font-semibold text-gray-700">
+                              {plan.max_properties === 999
+                                ? "Unlimited properties"
+                                : plan.max_properties === 1
+                                ? "1 property"
+                                : `Up to ${plan.max_properties} properties`}
+                            </CardDescription>
+                          )}
+                        </CardHeader>
+
+                        <CardContent className="flex-1">
+                          <ul className="space-y-3">
+                            {plan.features.map((feature, i) => (
+                              <li
+                                key={i}
+                                className="flex items-start gap-3 text-sm text-gray-600"
+                              >
+                                <CheckCircle
+                                  className={`w-5 h-5 flex-shrink-0 ${
+                                    plan.color === "teal"
+                                      ? activeTab === "cleaner"
+                                        ? "text-blue-500"
+                                        : "text-teal-500"
+                                      : plan.color === "violet"
+                                      ? "text-violet-500"
+                                      : "text-amber-500"
+                                  }`}
+                                />
+                                {feature}
+                              </li>
+                            ))}
+                          </ul>
+                        </CardContent>
+
+                        <CardFooter>
+                          {isCurrentPlan ? (
+                            <Button
+                              variant="outline"
+                              className="w-full"
+                              disabled
+                            >
+                              Currently Selected
+                            </Button>
+                          ) : (
+                            <Button
+                              className={`w-full ${
+                                plan.popular
+                                  ? "bg-violet-600 hover:bg-violet-700"
+                                  : activeTab === "cleaner"
+                                  ? "bg-blue-600 hover:bg-blue-700"
+                                  : "bg-teal-600 hover:bg-teal-700"
+                              }`}
+                              onClick={() => handleSubscribe(plan.id)}
+                              disabled={!!checkoutLoading}
+                            >
+                              {checkoutLoading === plan.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : subscription?.status === "active" ? (
+                                "Switch to " + plan.name
+                              ) : (
+                                "Get Started"
+                              )}
+                            </Button>
+                          )}
+                        </CardFooter>
+                      </Card>
+                    </motion.div>
+                  );
+                },
+              )}
             </div>
 
-            {subscription?.status === 'active' && (
+            {subscription?.status === "active" && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -472,7 +631,7 @@ export default function Subscription() {
                 className="mt-8 text-center"
               >
                 <p className="text-gray-600 mb-2">
-                  Do you want to{' '}
+                  Do you want to{" "}
                   <button
                     onClick={() => setShowCancelDialog(true)}
                     className="text-red-600 hover:text-red-700 font-medium underline"
@@ -500,10 +659,19 @@ export default function Subscription() {
               "No commission fees",
               "Direct payments",
               "Secure platform",
-              "Cancel anytime"
+              "Cancel anytime",
             ].map((item, i) => (
-              <span key={i} className="flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-gray-200">
-                <CheckCircle className={`w-4 h-4 ${activeTab === 'cleaner' ? 'text-blue-500' : 'text-teal-500'}`} />
+              <span
+                key={i}
+                className="flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-gray-200"
+              >
+                <CheckCircle
+                  className={`w-4 h-4 ${
+                    activeTab === "cleaner"
+                      ? "text-blue-500"
+                      : "text-teal-500"
+                  }`}
+                />
                 {item}
               </span>
             ))}
@@ -511,7 +679,6 @@ export default function Subscription() {
         </motion.div>
       </div>
 
-      {/* Cancel Subscription Dialog */}
       <AnimatePresence>
         {showCancelDialog && (
           <>
@@ -539,15 +706,20 @@ export default function Subscription() {
                   <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
                     <AlertCircle className="w-8 h-8 text-red-600" />
                   </div>
-                  <CardTitle className="text-2xl">Wait! Before You Go…</CardTitle>
+                  <CardTitle className="text-2xl">
+                    Wait! Before You Go…
+                  </CardTitle>
                   <CardDescription className="text-base mt-2">
-                    We're sorry to see you go 😢<br/>
-                    Before you cancel, you may want to consider switching to a lower plan.
+                    We're sorry to see you go 😢
+                    <br />
+                    Before you cancel, you may want to consider switching to a
+                    lower plan.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <p className="text-sm text-gray-600 text-center">
-                    Your access will continue until the end of your billing period.
+                    Your access will continue until the end of your billing
+                    period.
                   </p>
                   <div className="space-y-3">
                     <Button
@@ -561,14 +733,23 @@ export default function Subscription() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Why are you cancelling?
                     </label>
-                    <Select value={cancelReason} onValueChange={setCancelReason}>
+                    <Select
+                      value={cancelReason}
+                      onValueChange={setCancelReason}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select a reason" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="too_expensive">Too expensive</SelectItem>
-                        <SelectItem value="not_using">Not using enough</SelectItem>
-                        <SelectItem value="missing_features">Missing features</SelectItem>
+                        <SelectItem value="too_expensive">
+                          Too expensive
+                        </SelectItem>
+                        <SelectItem value="not_using">
+                          Not using enough
+                        </SelectItem>
+                        <SelectItem value="missing_features">
+                          Missing features
+                        </SelectItem>
                         <SelectItem value="other">Other</SelectItem>
                       </SelectContent>
                     </Select>
@@ -578,7 +759,9 @@ export default function Subscription() {
                     className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
                     onClick={() => {
                       if (!cancelReason) {
-                        toast.error("Please select a reason before cancelling");
+                        toast.error(
+                          "Please select a reason before cancelling",
+                        );
                         return;
                       }
                       cancelMutation.mutate();
