@@ -482,8 +482,6 @@ export default function Home() {
             </div>
 
             <div className="hidden md:block h-full">
-              <img
-                src="https://lh3.googleusercontent.com/d/1rRoDfT5XKQW3TtRwulxbIJoo7LJi
                <img
                 src="https://lh3.googleusercontent.com/d/1rRoDfT5XKQW3TtRwulxbIJoo7LJi98gK"
                 alt="Beautiful holiday home"
