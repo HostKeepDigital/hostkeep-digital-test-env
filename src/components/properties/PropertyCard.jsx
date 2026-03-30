@@ -46,7 +46,6 @@ export default function PropertyCard({
     property.photos?.[0] ||
     "https://lh3.googleusercontent.com/d/1Vr07gcaaC19XEmxcvTbq-DTn8PZKn-_a";
 
-  // Fetch reviews
   const { data: reviews = [] } = useQuery({
     queryKey: ["property-reviews", property.id],
     queryFn: () =>
@@ -58,7 +57,6 @@ export default function PropertyCard({
     staleTime: 5 * 60 * 1000,
   });
 
-  // Fetch wishlist
   const { data: wishlistProperties = [] } = useQuery({
     queryKey: ["wishlist-properties", user?.id],
     queryFn: () =>
@@ -114,7 +112,7 @@ export default function PropertyCard({
         ).toFixed(1)
       : 0;
 
-  // NEW: dynamic top amenities (first 4 with icons)
+  // Dynamic top amenities (first 4 with icons)
   const topAmenities =
     property.amenities
       ?.map((slug) => AMENITY_MAP[slug])
@@ -244,7 +242,6 @@ export default function PropertyCard({
             </span>
           </div>
 
-          {/* NEW: Dynamic Amenity Icons */}
           {topAmenities.length > 0 && (
             <div className="flex items-center gap-2 mb-3">
               {topAmenities.map((amenity) => (
