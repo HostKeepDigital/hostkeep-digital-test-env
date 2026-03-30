@@ -1,343 +1,262 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { base44 } from "@/api/base44Client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Users, Home, Sparkles, AlertTriangle, Loader2 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Shield, PoundSterling, Heart, Star, ArrowRight, Users, Home, CheckCircle } from "lucide-react";
 
-const HOST_LIMIT = 50;
-const CLEANER_LIMIT = 30;
-const CORNWALL_PREFIXES = ["TR", "PL", "EX"];
+const LOGO_URL   = "https://i.ibb.co/6cwz6PzN/Host-Keep-Digital-Navy-Background.png";
+const HERO_IMG   = "https://drive.google.com/uc?export=view&id=1ZmljdO7m9HdHdT_KKSa0S-p2e9ctR5BU";
+const LOOE_IMG   = "https://drive.google.com/uc?export=view&id=1Vr07gcaaC19XEmxcvTbq-DTn8PZKn-_a";
 
-function isCornwallPostcode(postcode) {
-  const clean = postcode.trim().toUpperCase().replace(/\s+/g, "");
-  return CORNWALL_PREFIXES.some(p => clean.startsWith(p));
-}
+const PILLARS = [
+  {
+    icon: PoundSterling,
+    title: "0% commission. Always.",
+    body: "Airbnb and Booking.com take up to 16% of every booking. HostKeep charges a flat monthly fee and keeps nothing from your income. What you earn is yours.",
+  },
+  {
+    icon: Shield,
+    title: "Safe, secure, transparent.",
+    body: "Payments processed by Stripe — the same technology trusted by millions of businesses worldwide. Your guest data is protected under UK GDPR. We will never sell your information.",
+  },
+  {
+    icon: Heart,
+    title: "Built by a small host, for small hosts.",
+    body: "HostKeep was created because the platforms were taking too much. We know what it's like to manage a small property and watch a percentage of every booking disappear. We built the alternative.",
+  },
+  {
+    icon: Users,
+    title: "Fair for everyone.",
+    body: "Hosts keep their income. Cleaners keep their earnings. Guests pay fair prices without inflated platform fees. Everyone wins — except the middleman.",
+  },
+];
 
-function SpotsCounter({ used, limit, color }) {
-  const remaining = Math.max(0, limit - used);
-  const pct = Math.min(100, (used / limit) * 100);
-  const isFull = remaining === 0;
-  return (
-    <div className="mt-3">
-      <div className="flex justify-between text-sm mb-1">
-        <span className={isFull ? "text-red-600 font-semibold" : `text-${color}-700 font-semibold`}>
-          {isFull ? "Fully Claimed" : `${remaining} spots remaining`}
-        </span>
-        <span className="text-gray-500">{used}/{limit} claimed</span>
-      </div>
-      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-        <div
-          className={`h-full rounded-full transition-all duration-500 ${isFull ? "bg-red-500" : color === "teal" ? "bg-teal-500" : "bg-blue-500"}`}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-    </div>
-  );
-}
+const VALUES = [
+  "No commission on bookings — ever",
+  "Direct payments from guests to you",
+  "Full calendar, messaging and booking tools",
+  "Host and cleaner coordination built in",
+  "Transparent pricing with no hidden fees",
+  "UK-based, GDPR compliant",
+];
 
 export default function Founding() {
-  const navigate = useNavigate();
-  const [hostCount, setHostCount] = useState(0);
-  const [cleanerCount, setCleanerCount] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [cornwallWarning, setCornwallWarning] = useState(false);
-
-  const [form, setForm] = useState({
-    forename: "",
-    middle_name: "",
-    surname: "",
-    email: "",
-    postcode: "",
-    role: "",
-  });
-  const [errors, setErrors] = useState({});
-
-  useEffect(() => {
-    base44.functions.invoke("getFoundingCounts", {})
-      .then(res => {
-        setHostCount(res.data?.hostCount || 0);
-        setCleanerCount(res.data?.cleanerCount || 0);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
-
-  const hostFull = hostCount >= HOST_LIMIT;
-  const cleanerFull = cleanerCount >= CLEANER_LIMIT;
-
-  const getFullName = () => [form.forename.trim(), form.middle_name.trim(), form.surname.trim()].filter(Boolean).join(" ");
-
-  const validate = () => {
-    const e = {};
-    if (!form.forename.trim()) e.forename = "Forename is required.";
-    if (!form.surname.trim()) e.surname = "Surname is required.";
-    if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "A valid email is required.";
-    if (!form.postcode.trim()) e.postcode = "Postcode is required.";
-    if (!form.role) e.role = "Please select a role.";
-    return e;
-  };
-
-  const handlePostcodeBlur = () => {
-    if (form.postcode && !isCornwallPostcode(form.postcode)) {
-      setCornwallWarning(true);
-    } else {
-      setCornwallWarning(false);
-    }
-  };
-
-  const isOutOfArea = form.postcode && !isCornwallPostcode(form.postcode);
-
-  const field = (key, value) => setForm(f => ({ ...f, [key]: value }));
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const errs = validate();
-    if (Object.keys(errs).length) { setErrors(errs); return; }
-
-    setSubmitting(true);
-    let isDuplicate = false;
-
-    try {
-      const result = await base44.functions.invoke("registerFoundingMember", {
-        full_name: getFullName(),
-        email: form.email.toLowerCase().trim(),
-        postcode: form.postcode.toUpperCase().trim(),
-        role: form.role,
-      });
-
-      if (result?.data?.error === "duplicate_email") {
-        isDuplicate = true;
-        setErrors({ email: "This email has already been registered." });
-      }
-
-      if (!isDuplicate) {
-        // 1. Send the verification code email
-        await base44.functions.invoke("sendVerificationCode", {
-          email: form.email.toLowerCase().trim(),
-        });
-
-        // 2. Redirect the user to the verification page
-        navigate(`/verify-email?email=${encodeURIComponent(form.email.toLowerCase().trim())}`);
-      }
-    } catch (_) {
-      // Ignore errors — always redirect unless duplicate
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-teal-600" />
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-white">
-      {/* Hero */}
-      <section className="relative bg-gradient-to-br from-teal-600 via-teal-700 to-emerald-800 overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://lh3.googleusercontent.com/d/1dO0GP74-0q34O64CKSL0gGCan9qeELf5')] bg-cover bg-center opacity-15" />
-        <div className="relative max-w-4xl mx-auto px-4 py-20 text-center text-white">
-          <Badge className="bg-white/20 text-white border-0 mb-4 text-sm px-4 py-1">
-            <Sparkles className="w-4 h-4 mr-1 inline" /> Limited Time Offer
-          </Badge>
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-4xl md:text-5xl font-bold mb-4"
-          >
-            Become a Founding Member
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-xl text-teal-100 max-w-2xl mx-auto"
-          >
-            Be part of HostKeep from day one. Founding members get exclusive perks — locked in forever. Limited spots available.
-          </motion.p>
+    <div className="min-h-screen bg-white" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+      <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+      {/* ── NAV ──────────────────────────────────────────────────────────────── */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#1E3A5F]/95 backdrop-blur-sm border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <img src={LOGO_URL} alt="HostKeep Digital" className="h-9 w-auto" />
+          <Link to="/SignIn" className="text-white/60 hover:text-white text-sm transition-colors">
+            Sign In
+          </Link>
+        </div>
+      </nav>
+
+      {/* ── HERO ─────────────────────────────────────────────────────────────── */}
+      <section className="relative min-h-screen flex items-center overflow-hidden">
+        <div className="absolute inset-0">
+          <img src={HERO_IMG} alt="Cornwall" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#1E3A5F]/97 via-[#1E3A5F]/80 to-[#1E3A5F]/30" />
+        </div>
+
+        <div className="relative z-10 max-w-7xl mx-auto px-6 pt-24 pb-20 w-full">
+          <div className="max-w-2xl">
+
+            <div className="inline-flex items-center gap-2 border border-[#0d9488]/50 bg-[#0d9488]/10 rounded-full px-4 py-1.5 mb-8">
+              <Star className="w-3 h-3 text-[#0d9488]" fill="currentColor" />
+              <span className="text-[#0d9488] text-xs font-semibold tracking-widest uppercase">
+                Cornwall & Devon — Summer 2026 Launch
+              </span>
+            </div>
+
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-white leading-[0.92] mb-6 tracking-tight">
+              The holiday let<br />
+              platform that<br />
+              <span className="text-[#0d9488]">works for you.</span>
+            </h1>
+
+            <p className="text-white/65 text-lg md:text-xl leading-relaxed mb-4 max-w-lg">
+              Everything you need to manage your holiday let or cleaning business — without giving away a percentage of every booking.
+            </p>
+
+            <p className="text-white/40 text-sm mb-12">
+              Built in Cornwall. For Cornwall.
+            </p>
+
+            {/* Role chooser */}
+            <div className="flex flex-col sm:flex-row gap-4 mb-8">
+              <Link
+                to="/foundinghost"
+                className="group flex items-center justify-between gap-4 bg-[#0d9488] hover:bg-[#0f766e] text-white px-7 py-5 rounded-2xl transition-all font-bold"
+              >
+                <div className="text-left">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <Home className="w-4 h-4" />
+                    <span className="text-base">I'm a Host</span>
+                  </div>
+                  <p className="text-white/60 text-xs font-normal">Apply for a founding host spot</p>
+                </div>
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+
+              <Link
+                to="/foundingcleaner"
+                className="group flex items-center justify-between gap-4 bg-white/10 hover:bg-white/15 border border-white/20 text-white px-7 py-5 rounded-2xl transition-all font-bold"
+              >
+                <div className="text-left">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <Users className="w-4 h-4" />
+                    <span className="text-base">I'm a Cleaner</span>
+                  </div>
+                  <p className="text-white/50 text-xs font-normal">Apply for a founding cleaner spot</p>
+                </div>
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+
+            <p className="text-white/30 text-xs">
+              Not sure? Read on to find out more ↓
+            </p>
+          </div>
         </div>
       </section>
 
-      <div className="max-w-5xl mx-auto px-4 py-16">
-        {/* Perk cards */}
-        <div className="grid md:grid-cols-2 gap-6 mb-16">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`rounded-2xl border-2 p-8 ${hostFull ? "border-gray-200 bg-gray-50 opacity-70" : "border-teal-200 bg-teal-50"}`}
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-teal-600 flex items-center justify-center">
-                <Home className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">Founding Host</h2>
-                {hostFull && <Badge className="bg-red-100 text-red-700 border-0 text-xs">Fully Claimed</Badge>}
+      {/* ── THE HEADLINE STAT ────────────────────────────────────────────────── */}
+      <section className="bg-[#0d9488] py-14">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <p className="text-5xl md:text-6xl font-black text-white mb-3">0%</p>
+          <p className="text-white/80 text-xl font-semibold">Commission on every booking. Every time. Forever.</p>
+          <p className="text-white/50 text-sm mt-3 max-w-xl mx-auto">
+            Airbnb and Booking.com charge up to 16% of every booking. On a property earning £20,000 a year, 
+            that's up to £3,200 going to a platform — not to you.
+          </p>
+        </div>
+      </section>
+
+      {/* ── OUR STORY ────────────────────────────────────────────────────────── */}
+      <section className="bg-white py-24">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div>
+              <p className="text-xs font-semibold text-[#0d9488] tracking-widest uppercase mb-4">Our story</p>
+              <h2 className="text-3xl md:text-4xl font-black text-[#1E3A5F] leading-tight mb-6">
+                Built by a small host.<br />For small hosts.
+              </h2>
+              <div className="space-y-4 text-gray-600 leading-relaxed">
+                <p>
+                  HostKeep was born out of frustration. Managing a small holiday let in Cornwall should be 
+                  straightforward — but the big platforms make it complicated, and expensive. Every improvement 
+                  they add comes with a higher commission rate attached.
+                </p>
+                <p>
+                  We built HostKeep to prove there's a better way. A flat monthly fee. Direct payments. 
+                  Full calendar and booking management. Cleaner coordination. Everything you actually need — 
+                  without the percentage of your income that the platforms take.
+                </p>
+                <p className="font-semibold text-[#1E3A5F]">
+                  The guests still come. The bookings still happen. The only difference is who keeps the money.
+                </p>
               </div>
             </div>
-            <p className="text-gray-700 mb-2">
-              Reserve your founding host spot and get <strong>£10 off your monthly subscription — forever.</strong>
-            </p>
-            <ul className="space-y-2 text-sm text-gray-600 mb-4">
-              {["No commission on bookings", "Direct payments to your account", "Full calendar & messaging tools", "Permanent £10/month discount"].map(f => (
-                <li key={f} className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-teal-600 flex-shrink-0" />
-                  {f}
-                </li>
-              ))}
-            </ul>
-            <SpotsCounter used={hostCount} limit={HOST_LIMIT} color="teal" />
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className={`rounded-2xl border-2 p-8 ${cleanerFull ? "border-gray-200 bg-gray-50 opacity-70" : "border-blue-200 bg-blue-50"}`}
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center">
-                <Users className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">Founding Cleaner</h2>
-                {cleanerFull && <Badge className="bg-red-100 text-red-700 border-0 text-xs">Fully Claimed</Badge>}
+            <div className="relative">
+              <img
+                src={LOOE_IMG}
+                alt="Polperro, Cornwall"
+                className="rounded-2xl w-full h-80 object-cover"
+              />
+              <div className="absolute -bottom-5 -left-5 bg-[#1E3A5F] text-white rounded-xl px-5 py-4 shadow-xl">
+                <p className="text-2xl font-black text-[#0d9488]">£19</p>
+                <p className="text-xs text-white/60">Founding host rate / month</p>
               </div>
             </div>
-            <p className="text-gray-700 mb-2">
-              Reserve your founding cleaner spot and get <strong>3 months free membership.</strong>
-            </p>
-            <ul className="space-y-2 text-sm text-gray-600 mb-4">
-              {["Keep 100% of what you earn", "Professional cleaner profile", "Direct jobs from local hosts", "3 months completely free"].map(f => (
-                <li key={f} className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                  {f}
-                </li>
-              ))}
-            </ul>
-            <SpotsCounter used={cleanerCount} limit={CLEANER_LIMIT} color="blue" />
-          </motion.div>
+          </div>
         </div>
+      </section>
 
-        {/* Form */}
-        <div className="max-w-2xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white rounded-2xl border-2 border-gray-100 shadow-lg p-8"
-          >
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Claim My Spot</h2>
-            <form onSubmit={handleSubmit} noValidate className="space-y-5">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Forename <span className="text-red-500">*</span></label>
-                  <Input
-                    value={form.forename}
-                    onChange={e => field("forename", e.target.value)}
-                    placeholder="Jane"
-                    className={errors.forename ? "border-red-400" : ""}
-                  />
-                  {errors.forename && <p className="text-red-500 text-xs mt-1">{errors.forename}</p>}
+      {/* ── PILLARS ──────────────────────────────────────────────────────────── */}
+      <section className="bg-[#f4f4f5] py-24">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-14">
+            <p className="text-xs font-semibold text-[#0d9488] tracking-widest uppercase mb-3">What we stand for</p>
+            <h2 className="text-3xl md:text-4xl font-black text-[#1E3A5F]">
+              A platform built on fairness.
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {PILLARS.map(({ icon: Icon, title, body }) => (
+              <div key={title} className="bg-white rounded-2xl p-8 border border-gray-100">
+                <div className="w-11 h-11 rounded-xl bg-teal-50 flex items-center justify-center mb-5">
+                  <Icon className="w-5 h-5 text-[#0d9488]" />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Middle Name <span className="text-gray-400 font-normal">(optional)</span></label>
-                  <Input
-                    value={form.middle_name}
-                    onChange={e => field("middle_name", e.target.value)}
-                    placeholder="Marie"
-                  />
-                </div>
+                <h3 className="font-bold text-[#1E3A5F] text-lg mb-2">{title}</h3>
+                <p className="text-gray-500 text-sm leading-relaxed">{body}</p>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Surname <span className="text-red-500">*</span></label>
-                <Input
-                  value={form.surname}
-                  onChange={e => field("surname", e.target.value)}
-                  placeholder="Smith"
-                  className={errors.surname ? "border-red-400" : ""}
-                />
-                {errors.surname && <p className="text-red-500 text-xs mt-1">{errors.surname}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                <Input
-                  type="email"
-                  value={form.email}
-                  onChange={e => field("email", e.target.value)}
-                  placeholder="jane@example.com"
-                  className={errors.email ? "border-red-400" : ""}
-                />
-                {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Property / Home Postcode</label>
-                <Input
-                  value={form.postcode}
-                  onChange={e => { field("postcode", e.target.value); setCornwallWarning(false); }}
-                  onBlur={handlePostcodeBlur}
-                  placeholder="e.g. TR1 2AB"
-                  className={errors.postcode || cornwallWarning ? "border-amber-400" : ""}
-                />
-                {errors.postcode && <p className="text-red-500 text-xs mt-1">{errors.postcode}</p>}
-                {cornwallWarning && !errors.postcode && (
-                  <div className="mt-2 flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
-                    <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                    <span>HostKeep is currently launching in Cornwall only. Join our waitlist to be notified when we expand to your area.</span>
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">I am a...</label>
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { value: "host", label: "Host", Icon: Home, disabled: hostFull, color: "teal" },
-                    { value: "cleaner", label: "Cleaner", Icon: Users, disabled: cleanerFull, color: "blue" },
-                  ].map(({ value, label, Icon, disabled, color }) => (
-                    <button
-                      key={value}
-                      type="button"
-                      disabled={disabled}
-                      onClick={() => !disabled && field("role", value)}
-                      className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left
-                        ${disabled ? "opacity-40 cursor-not-allowed border-gray-200 bg-gray-50" :
-                          form.role === value
-                            ? color === "teal" ? "border-teal-500 bg-teal-50 text-teal-700" : "border-blue-500 bg-blue-50 text-blue-700"
-                            : "border-gray-200 hover:border-gray-300 bg-white text-gray-700"
-                        }`}
-                    >
-                      <Icon className="w-5 h-5 flex-shrink-0" />
-                      <span className="font-medium">{label}{disabled ? " (Full)" : ""}</span>
-                    </button>
-                  ))}
-                </div>
-                {errors.role && <p className="text-red-500 text-xs mt-1">{errors.role}</p>}
-              </div>
-
-              <Button
-                type="submit"
-                disabled={submitting}
-                className="w-full h-12 bg-teal-600 hover:bg-teal-700 text-white text-base font-semibold"
-              >
-                {submitting
-                  ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Submitting...</>
-                  : isOutOfArea ? "Register Your Interest" : "Claim My Spot"
-                }
-              </Button>
-            </form>
-          </motion.div>
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
+
+      {/* ── WHAT'S INCLUDED ──────────────────────────────────────────────────── */}
+      <section className="bg-[#1E3A5F] py-20">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-black text-white mb-3">
+              Everything Airbnb offers.
+            </h2>
+            <p className="text-white/50 text-lg">Without taking a cut of every booking.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {VALUES.map(v => (
+              <div key={v} className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-5 py-4">
+                <CheckCircle className="w-4 h-4 text-[#0d9488] flex-shrink-0" />
+                <span className="text-white/80 text-sm">{v}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA ──────────────────────────────────────────────────────────────── */}
+      <section className="bg-white py-20">
+        <div className="max-w-2xl mx-auto px-6 text-center">
+          <h2 className="text-3xl md:text-4xl font-black text-[#1E3A5F] mb-4">
+            Ready to apply?
+          </h2>
+          <p className="text-gray-500 mb-10">
+            We're launching in Cornwall & Devon in Summer 2026 with 50 host and 30 cleaner founding spots. 
+            Tell us who you are and we'll be in touch within 48 hours.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              to="/foundinghost"
+              className="flex items-center justify-center gap-2 bg-[#0d9488] hover:bg-[#0f766e] text-white font-bold px-8 py-4 rounded-xl transition-colors"
+            >
+              <Home className="w-4 h-4" />
+              Apply as a Host
+            </Link>
+            <Link
+              to="/foundingcleaner"
+              className="flex items-center justify-center gap-2 bg-[#1E3A5F] hover:bg-[#162d4a] text-white font-bold px-8 py-4 rounded-xl transition-colors"
+            >
+              <Users className="w-4 h-4" />
+              Apply as a Cleaner
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FOOTER ───────────────────────────────────────────────────────────── */}
+      <footer className="bg-[#1E3A5F] py-10 border-t border-white/10">
+        <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
+          <img src={LOGO_URL} alt="HostKeep Digital" className="h-8 w-auto" />
+          <div className="flex gap-6 text-white/40 text-xs">
+            <Link to="/PrivacyPolicy" className="hover:text-white/70 transition-colors">Privacy Policy</Link>
+            <Link to="/TermsAndConditions" className="hover:text-white/70 transition-colors">Terms</Link>
+            <a href="mailto:hello@hostkeepdigital.co.uk" className="hover:text-white/70 transition-colors">hello@hostkeepdigital.co.uk</a>
+          </div>
+          <p className="text-white/30 text-xs">© 2026 HostKeep Digital Ltd</p>
+        </div>
+      </footer>
     </div>
   );
 }
