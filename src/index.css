@@ -116,40 +116,22 @@
 /* 📱 MOBILE WEB — prevent overflow & native-feel      */
 /* -------------------------------------------------- */
 
-html {
-  /* Hard-lock width to viewport — prevents horizontal scroll */
-  overflow-x: hidden;
+html, body {
+  overflow-x: clip; /* blocks horizontal overflow without breaking vertical scroll */
   width: 100%;
+  min-height: 100dvh;
+  overscroll-behavior-x: none; /* no horizontal rubber-banding */
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  overflow-x: hidden;
-  width: 100%;
-  min-height: 100dvh;           /* dynamic viewport height — respects browser chrome */
-  overscroll-behavior: none;    /* no pull-to-refresh on body, no rubber banding     */
-  -webkit-tap-highlight-color: transparent;
-  /* Safe area padding so content never sits behind notches */
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
 }
 
 #root {
-  overflow-x: hidden;
   width: 100%;
   min-height: 100dvh;
-}
-
-* {
-  /* Prevent individual elements from causing overflow */
-  max-width: 100%;
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* Exception: allow images and canvas to be controlled by their container */
-img, video, canvas, svg {
-  max-width: 100%;
-  height: auto;
 }
 
 nav, header, button, a, [role="button"] {
