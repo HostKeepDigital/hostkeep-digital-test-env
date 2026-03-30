@@ -102,9 +102,9 @@ Deno.serve(async (req) => {
       email: normalisedEmail,
       role,
       founding_member_id,
+      user_id: cred.id || null,
       expires_at,
     });
-
     return Response.json({
       success: true,
       session_token,
