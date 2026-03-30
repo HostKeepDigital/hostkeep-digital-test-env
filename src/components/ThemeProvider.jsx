@@ -25,5 +25,5 @@ export default function ThemeProvider({ children }) {
     return () => mq.removeEventListener("change", handler);
   }, []);
 
-  return children;
+  return <>{children}</>;
 }
