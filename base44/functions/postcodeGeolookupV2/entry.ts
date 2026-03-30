@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from "npm:@base44/sdk@0.8.23";
 
 /**
  * Official UK Postcode Lookup via Postcodes.io
@@ -7,49 +7,80 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
  * 1. Normalize postcode (trim, uppercase, remove spaces)
  * 2. Check UKPostcode cache table first
  * 3. If not cached, call https://api.postcodes.io/postcodes/{postcode}
- * 4. Extract authoritative admin data (county, district, parish, country, lat/lng)
- * 5. Cache result in UKPostcode table for future lookups
- * 6. Return structured data — no fallbacks, no centroid guessing
+ * 4. Extract authoritative admin data
+ * 5. Cache result
+ * 6. Return structured data
  */
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const serviceRole = base44.asServiceRole;
 
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    // Extract session token
+    const body = await req.json().catch(() => ({}));
+    const session_token =
+      body.session_token || req.headers.get("x-session-token");
+
+    if (!session_token) {
+      return Response.json(
+        { error: "Missing session token", authenticated: false },
+        { status: 401 },
+      );
     }
 
-    const body = await req.json();
+    // Validate session using your new auth model
+    const sessionCheck = await serviceRole.functions.invoke(
+      "checkSession",
+      { session_token },
+    );
+
+    const session = sessionCheck?.data;
+
+    if (!session?.authenticated) {
+      return Response.json(
+        { error: "Invalid or expired session", authenticated: false },
+        { status: 401 },
+      );
+    }
+
+    // Extract postcode
     const rawPostcode = body.postcode;
 
-    if (!rawPostcode || typeof rawPostcode !== 'string') {
-      return Response.json({ error: 'Please enter a valid UK postcode.' }, { status: 400 });
+    if (!rawPostcode || typeof rawPostcode !== "string") {
+      return Response.json(
+        { error: "Please enter a valid UK postcode." },
+        { status: 400 },
+      );
     }
 
     // Step 1: Normalize — trim, uppercase, remove all spaces
-    const clean = rawPostcode.trim().toUpperCase().replace(/\s+/g, '');
+    const clean = rawPostcode.trim().toUpperCase().replace(/\s+/g, "");
 
     // Basic format check before hitting the API
     const POSTCODE_REGEX = /^[A-Z]{1,2}\d[A-Z\d]?\d[A-Z]{2}$/;
     if (!POSTCODE_REGEX.test(clean)) {
-      return Response.json({
-        success: false,
-        error: 'Please enter a valid UK postcode.'
-      }, { status: 400 });
+      return Response.json(
+        { success: false, error: "Please enter a valid UK postcode." },
+        { status: 400 },
+      );
     }
 
     // Formatted version with space (e.g. PL132JE → PL13 2JE)
-    const formatted = clean.slice(0, -3) + ' ' + clean.slice(-3);
+    const formatted = clean.slice(0, -3) + " " + clean.slice(-3);
 
     // Step 2: Check cache in UKPostcode table
-    const cached = await base44.entities.UKPostcode.filter({ postcode: formatted }, '-created_date', 1);
+    const cached = await serviceRole.entities.UKPostcode.filter(
+      { postcode: formatted },
+      "-created_date",
+      1,
+    );
+
     if (cached && cached.length > 0) {
       const c = cached[0];
       return Response.json({
         success: true,
-        source: 'cache',
+        source: "cache",
         postcode: formatted,
         postcode_clean: clean,
         postcode_district: c.postcode_district,
@@ -59,57 +90,59 @@ Deno.serve(async (req) => {
         county: c.county,
         district: c.postcode_district,
         parish: c.post_town,
-        country: c.country
+        country: c.country,
       });
     }
 
-    // Step 3: Call Postcodes.io — the authoritative UK postcode API
-    const apiResponse = await fetch(`https://api.postcodes.io/postcodes/${clean}`);
+    // Step 3: Call Postcodes.io — authoritative UK postcode API
+    const apiResponse = await fetch(
+      `https://api.postcodes.io/postcodes/${clean}`,
+    );
     const apiData = await apiResponse.json();
 
     if (!apiResponse.ok || apiData.status !== 200 || !apiData.result) {
-      return Response.json({
-        success: false,
-        error: 'Please enter a valid UK postcode.'
-      }, { status: 400 });
+      return Response.json(
+        { success: false, error: "Please enter a valid UK postcode." },
+        { status: 400 },
+      );
     }
 
     const r = apiData.result;
 
-    // Step 4: Extract authoritative administrative data ONLY from API response
-    // Never use reverse geocoding or nearest-city logic
-    const county = r.admin_county || r.admin_district || '';
-    const district = r.admin_district || '';
-    const parish = r.parish || '';
-    const country = r.country || 'England';
+    // Step 4: Extract authoritative administrative data
+    const county = r.admin_county || r.admin_district || "";
+    const district = r.admin_district || "";
+    const parish = r.parish || "";
+    const country = r.country || "England";
     const latitude = r.latitude;
     const longitude = r.longitude;
-    const postcodeDistrict = formatted.split(' ')[0]; // e.g. PL13
-    const postcodeArea = postcodeDistrict.replace(/\d.*$/, ''); // e.g. PL
+    const postcodeDistrict = formatted.split(" ")[0]; // e.g. PL13
+    const postcodeArea = postcodeDistrict.replace(/\d.*$/, ""); // e.g. PL
 
     // Step 5: Cache in UKPostcode table
     try {
-      await base44.entities.UKPostcode.create({
+      await serviceRole.entities.UKPostcode.create({
         postcode: formatted,
         postcode_district: postcodeDistrict,
         postcode_area: postcodeArea,
         post_town: district,
-        county: county,
-        country: country,
-        latitude: latitude,
-        longitude: longitude,
-        accuracy: 'postcode',
-        source: 'ons'
+        county,
+        country,
+        latitude,
+        longitude,
+        accuracy: "postcode",
+        source: "ons",
       });
     } catch (cacheErr) {
-      // Non-fatal: log and continue
-      console.log(`Cache write skipped for ${formatted}: ${cacheErr.message}`);
+      console.log(
+        `Cache write skipped for ${formatted}: ${cacheErr.message}`,
+      );
     }
 
     // Step 6: Return structured authoritative data
     return Response.json({
       success: true,
-      source: 'postcodes.io',
+      source: "postcodes.io",
       postcode: formatted,
       postcode_clean: clean,
       postcode_district: postcodeDistrict,
@@ -119,13 +152,15 @@ Deno.serve(async (req) => {
       county,
       district,
       parish,
-      country
+      country,
     });
-
   } catch (error) {
-    return Response.json({
-      success: false,
-      error: 'Postcode lookup service error: ' + error.message
-    }, { status: 500 });
+    return Response.json(
+      {
+        success: false,
+        error: "Postcode lookup service error: " + error.message,
+      },
+      { status: 500 },
+    );
   }
 });
