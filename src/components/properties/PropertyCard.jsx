@@ -7,10 +7,6 @@ import {
   Users,
   Bed,
   Heart,
-  Wifi,
-  Car,
-  Waves,
-  ChefHat,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -18,12 +14,8 @@ import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { format, parseISO } from "date-fns";
 
-const AMENITY_ICONS = {
-  WiFi: Wifi,
-  Parking: Car,
-  Pool: Waves,
-  Kitchen: ChefHat,
-};
+import { AMENITY_MAP } from "@/data/amenities";
+import AmenityIcon from "@/components/AmenityIcon";
 
 export default function PropertyCard({
   property,
@@ -33,7 +25,7 @@ export default function PropertyCard({
   distanceMiles,
 }) {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth(); // custom auth
+  const { user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
 
   const handleSuggestionClick = (e, targetCheckIn, targetDuration) => {
@@ -122,8 +114,12 @@ export default function PropertyCard({
         ).toFixed(1)
       : 0;
 
+  // NEW: dynamic top amenities (first 4 with icons)
   const topAmenities =
-    property.amenities?.slice(0, 4).filter((a) => AMENITY_ICONS[a]) || [];
+    property.amenities
+      ?.map((slug) => AMENITY_MAP[slug])
+      .filter((a) => a?.icon)
+      .slice(0, 4) || [];
 
   return (
     <Link
@@ -217,11 +213,7 @@ export default function PropertyCard({
                 property.postcode) && (
                 <p className="text-sm text-gray-500 flex items-center gap-1">
                   <MapPin className="w-3 h-3" />
-                  {[
-                    property.location?.locality,
-                    property.county,
-                    property.postcode,
-                  ]
+                  {[property.location?.locality, property.county, property.postcode]
                     .filter(Boolean)
                     .join(", ")}
                   {distanceMiles != null && (
@@ -248,25 +240,22 @@ export default function PropertyCard({
             </span>
             <span className="flex items-center gap-1">
               <Bed className="w-4 h-4" />
-              {property.bedrooms} bed
-              {property.bedrooms !== 1 ? "s" : ""}
+              {property.bedrooms} bed{property.bedrooms !== 1 ? "s" : ""}
             </span>
           </div>
 
+          {/* NEW: Dynamic Amenity Icons */}
           {topAmenities.length > 0 && (
             <div className="flex items-center gap-2 mb-3">
-              {topAmenities.map((amenity) => {
-                const Icon = AMENITY_ICONS[amenity];
-                return (
-                  <div
-                    key={amenity}
-                    className="text-gray-400"
-                    title={amenity}
-                  >
-                    <Icon className="w-4 h-4" />
-                  </div>
-                );
-              })}
+              {topAmenities.map((amenity) => (
+                <div
+                  key={amenity.slug}
+                  className="text-gray-400"
+                  title={amenity.name}
+                >
+                  <AmenityIcon name={amenity.icon} className="w-4 h-4" />
+                </div>
+              ))}
             </div>
           )}
 
@@ -311,11 +300,7 @@ export default function PropertyCard({
                   <button
                     key={idx}
                     onClick={(e) =>
-                      handleSuggestionClick(
-                        e,
-                        opt.checkIn,
-                        opt.duration
-                      )
+                      handleSuggestionClick(e, opt.checkIn, opt.duration)
                     }
                     className="bg-white border border-amber-200 hover:bg-amber-50 text-amber-900 px-2 py-1.5 rounded shadow-sm font-medium transition-colors text-left"
                   >
@@ -324,9 +309,7 @@ export default function PropertyCard({
                 ))}
               </div>
             ) : (
-              <p className="text-amber-700/80">
-                No available dates nearby.
-              </p>
+              <p className="text-amber-700/80">No available dates nearby.</p>
             )}
           </div>
         )}
