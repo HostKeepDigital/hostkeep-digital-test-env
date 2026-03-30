@@ -21,9 +21,8 @@ async function sendConfirmationEmail(to) {
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:12px;overflow:hidden;max-width:600px;width:100%;">
         <tr>
-          <td style="background-color:#0d9488;padding:32px 40px;text-align:center;">
-            <span style="color:#ffffff;font-size:24px;font-weight:bold;letter-spacing:-0.5px;">HostKeep</span><br>
-            <span style="color:#99f6e4;font-size:13px;">hostkeepdigital.co.uk</span>
+          <td style="background-color:#1E3A5F;padding:32px 40px;text-align:center;">
+            <img src="https://i.ibb.co/6cwz6PzN/Host-Keep-Digital-Navy-Background.png" alt="HostKeep Digital" width="200" style="display:block;margin:0 auto;max-width:200px;height:auto;" />
           </td>
         </tr>
         <tr>
@@ -31,7 +30,7 @@ async function sendConfirmationEmail(to) {
             <h1 style="margin:0 0 16px 0;font-size:22px;font-weight:bold;color:#111827;">Your password has been updated</h1>
             <p style="font-size:15px;line-height:1.7;color:#374151;margin:0 0 28px 0;">
               Your HostKeep password was successfully changed. You can now sign in with your new password.<br><br>
-              If you did not make this change, please contact us immediately at 
+              If you did not make this change, please contact us immediately at
               <a href="mailto:hello@hostkeepdigital.co.uk" style="color:#0d9488;">hello@hostkeepdigital.co.uk</a>.
             </p>
             <table width="100%" cellpadding="0" cellspacing="0">
@@ -68,47 +67,48 @@ Deno.serve(async (req) => {
     return Response.json({ success: false, error: 'invalid_request' });
   }
 
-  // Step 1 - Find the token record
-  const records = await base44.asServiceRole.entities.PasswordResetToken.filter({ token, used: false });
+  // Step 1 — Find the token record
+  const records = await base44.asServiceRole.entities.PasswordResetToken.filter({ token });
   const record = records?.[0];
 
   if (!record) {
     return Response.json({ success: false, error: 'invalid_token' });
   }
 
-  // Step 2 - Check expiry
+  // Step 2 — Check expiry
   if (new Date() > new Date(record.expires_at)) {
     await base44.asServiceRole.entities.PasswordResetToken.delete(record.id);
     return Response.json({ success: false, error: 'expired_token' });
   }
 
-  // Step 3 - Find the existing user (do NOT delete — they have properties, bookings, reviews etc.)
-  const users = await base44.asServiceRole.entities.User.filter({ email: record.email });
-  const user = users?.[0];
+  // Step 3 — Hash the new password
+  const salt = Deno.env.get('HASH_SALT') || '';
+  const encoder = new TextEncoder();
+  const data = encoder.encode(newPassword + salt);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const password_hash = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 
-  if (!user) {
-    return Response.json({ success: false, error: 'user_not_found' });
+  // Step 4 — Update UserCredentials (custom auth — no User entity lookup needed)
+  const existingCreds = await base44.asServiceRole.entities.UserCredentials.filter({
+    email: record.email,
+  });
+
+  if (existingCreds?.[0]) {
+    await base44.asServiceRole.entities.UserCredentials.update(existingCreds[0].id, {
+      password_hash,
+    });
+  } else {
+    await base44.asServiceRole.entities.UserCredentials.create({
+      email: record.email,
+      password_hash,
+    });
   }
 
-// Step 4 - Update password in UserCredentials (custom auth system)
-const salt = Deno.env.get("HASH_SALT") || "";
-const encoder = new TextEncoder();
-const data = encoder.encode(newPassword + salt);
-const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-const hashArray = Array.from(new Uint8Array(hashBuffer));
-const password_hash = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-
-const existingCreds = await base44.asServiceRole.entities.UserCredentials.filter({ email: record.email });
-if (existingCreds?.[0]) {
-  await base44.asServiceRole.entities.UserCredentials.update(existingCreds[0].id, { password_hash });
-} else {
-  await base44.asServiceRole.entities.UserCredentials.create({ email: record.email, password_hash });
-}
-
-  // Step 5 - Delete the used token
+  // Step 5 — Delete the used token so it can't be reused
   await base44.asServiceRole.entities.PasswordResetToken.delete(record.id);
 
-  // Step 6 - Send confirmation email (non-fatal)
+  // Step 6 — Send confirmation email (non-fatal)
   try {
     await sendConfirmationEmail(record.email);
   } catch (_) {}
