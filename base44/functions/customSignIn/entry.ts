@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
     }
 
 // Admin email override — always admin regardless of UserRole records
-    const adminEmails = ["admin@hostkeepdigital.co.uk", "1tylerclarke1@gmail.com"];
+    const adminEmails = ["admin@hostkeepdigital.co.uk"];
       if (adminEmails.includes(normalisedEmail)) {
       role = "admin";
     }
