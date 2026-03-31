@@ -13,7 +13,7 @@ export default function UKSectorsMap({ sectorData = [], members = [] }) {
   const [loaded, setLoaded] = useState(false);
   const [error,  setError]  = useState(false);
 
-  // Load D3 + TopoJSON from CDN, then mark ready
+  // Load D3 + TopoJSON from CDN
   useEffect(() => {
     if (window.d3 && window.topojson) { setLoaded(true); return; }
 
@@ -40,7 +40,7 @@ export default function UKSectorsMap({ sectorData = [], members = [] }) {
     };
   }, []);
 
-  // Render map once D3 ready + sectorData present
+  // Render map
   useEffect(() => {
     if (!loaded || !mapRef.current || !sectorData.length) return;
 
@@ -51,7 +51,6 @@ export default function UKSectorsMap({ sectorData = [], members = [] }) {
     const W = container.clientWidth  || 300;
     const H = container.clientHeight || 560;
 
-    // Clear previous render
     d3.select(container).selectAll("*").remove();
 
     const svg = d3.select(container).append("svg")
@@ -65,7 +64,6 @@ export default function UKSectorsMap({ sectorData = [], members = [] }) {
 
     const pathGen = d3.geoPath().projection(projection);
 
-    // Simulated signup pins per sector
     const pins = sectorData.flatMap(s =>
       Array.from({ length: Math.max(1, Math.floor((s.hosts + s.cleaners) * 0.5)) }, () => ({
         lat: s.lat + (Math.random() - 0.5) * 0.9,
@@ -79,21 +77,18 @@ export default function UKSectorsMap({ sectorData = [], members = [] }) {
         const uk      = countries.features.find(f => f.id === 826);
         const ireland = countries.features.find(f => f.id === 372);
 
-        // Ireland background
         if (ireland) svg.append("path").datum(ireland)
           .attr("d", pathGen)
           .attr("fill", "#f1f5f9")
           .attr("stroke", "#e2e8f0")
           .attr("stroke-width", "0.5");
 
-        // UK fill
         if (uk) svg.append("path").datum(uk)
           .attr("d", pathGen)
           .attr("fill", "#dde4ec")
           .attr("stroke", "#94a3b8")
           .attr("stroke-width", "0.8");
 
-        // Signup pins
         pins.forEach(p => {
           const coords = projection([p.lng, p.lat]);
           if (!coords || coords[0] < 0 || coords[1] < 0 || coords[0] > W || coords[1] > H) return;
@@ -104,7 +99,6 @@ export default function UKSectorsMap({ sectorData = [], members = [] }) {
             .attr("stroke", "none");
         });
 
-        // Sector bubbles
         sectorData.forEach(s => {
           if (!s.lat || !s.lng) return;
           const coords = projection([s.lng, s.lat]);
@@ -116,7 +110,10 @@ export default function UKSectorsMap({ sectorData = [], members = [] }) {
           g.append("circle")
             .attr("cx", coords[0]).attr("cy", coords[1]).attr("r", 9)
             .attr("fill", col)
-            .attr("fill-opacity", s.computedStatus === "live" ? 1 : s.computedStatus === "phase3" ? 0.35 : 0.75)
+            .attr("fill-opacity",
+              s.computedStatus === "live" ? 1 :
+              s.computedStatus === "phase3" ? 0.35 : 0.75
+            )
             .attr("stroke", "#fff")
             .attr("stroke-width", 1.5);
 
@@ -150,19 +147,23 @@ export default function UKSectorsMap({ sectorData = [], members = [] }) {
   return (
     <div className="h-full flex flex-col">
       <div ref={mapRef} className="flex-1 w-full" />
-      <div className="flex flex-wrap gap-3 pt-3 border-t border-gray-100 mt-2">
-        {[
-          { color: "#1E3A5F", label: "Live" },
-          { color: "#0d9488", label: "Ready" },
-          { color: "#f59e0b", label: "Building" },
-          { color: "#94a3b8", label: "Waiting" },
-          { color: "#e11d48", label: "Signup pin" },
-        ].map(({ color, label }) => (
-          <span key={label} className="flex items-center gap-1.5 text-xs text-gray-500">
-            <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: color }} />
-            {label}
-          </span>
-        ))}
+
+      {/* ⭐ SCROLLABLE SECTOR LEGEND */}
+      <div className="w-full overflow-x-auto pb-4 mt-2 border-t border-gray-100">
+        <div className="flex gap-4 min-w-max py-3 px-1">
+          {[
+            { color: "#1E3A5F", label: "Live" },
+            { color: "#0d9488", label: "Ready" },
+            { color: "#f59e0b", label: "Building" },
+            { color: "#94a3b8", label: "Waiting" },
+            { color: "#e11d48", label: "Signup pin" },
+          ].map(({ color, label }) => (
+            <span key={label} className="flex items-center gap-1.5 text-xs text-gray-500 whitespace-nowrap">
+              <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: color }} />
+              {label}
+            </span>
+          ))}
+        </div>
       </div>
     </div>
   );
