@@ -18,10 +18,6 @@ export default function Pay() {
   const paymentLinkId = urlParams.get('id');
   const testMode = urlParams.get('test') === 'true';
 
-  if (!paymentLinkId && !testMode) {
-    return <Navigate to={createPageUrl("Home")} replace />;
-  }
-
   const [paymentAmount, setPaymentAmount] = useState("");
   const [payerName, setPayerName] = useState("");
   const [payerEmail, setPayerEmail] = useState("");
@@ -37,6 +33,10 @@ export default function Pay() {
     queryFn: () => base44.entities.Booking.filter({ payment_link_id: paymentLinkId }),
     enabled: !!paymentLinkId && !testMode,
   });
+
+  if (!paymentLinkId && !testMode) {
+    return <Navigate to={createPageUrl("Home")} replace />;
+  }
 
   // Test mode demo booking
   const demoBooking = testMode ? {

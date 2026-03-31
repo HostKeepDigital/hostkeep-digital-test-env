@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import {
   Star, Upload, DollarSign, Calendar,
   Award, CheckCircle, Sparkles,
-  Clock, AlertCircle, Target
+  Clock, AlertCircle, Target, TrendingUp
 } from "lucide-react";
 import { toast } from "sonner";
 import { createPageUrl } from "@/utils";

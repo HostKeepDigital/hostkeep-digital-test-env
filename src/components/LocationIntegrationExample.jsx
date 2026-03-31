@@ -1,6 +1,7 @@
 // Example: Using LocationAutocomplete in Property Search
 
 import React, { useState } from 'react';
+import { base44 } from '@/api/base44Client';
 import LocationAutocomplete from '@/components/LocationAutocomplete';
 import { validateLocationSelection, extractLocationData, buildLocationFilter } from '@/components/LocationValidator';
 

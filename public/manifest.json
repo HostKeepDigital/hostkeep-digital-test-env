@@ -1,22 +1,41 @@
 {
   "name": "HostKeep Digital",
   "short_name": "HostKeep",
-  "description": "The holiday let platform built for independent hosts and cleaners.",
+  "description": "Holiday let management for Cornwall hosts and cleaners. 0% commission. Direct payments.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#1E3A5F",
-  "orientation": "portrait",
+  "theme_color": "#0d9488",
+  "orientation": "portrait-primary",
+  "lang": "en-GB",
+  "categories": ["business", "productivity"],
   "icons": [
     {
-      "src": "https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/HostKeep_Digital_Navy_Background.png",
+      "src": "https://i.ibb.co/6cwz6PzN/Host-Keep-Digital-Navy-Background.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/HostKeep_Digital_Navy_Background.png",
+      "src": "https://i.ibb.co/6cwz6PzN/Host-Keep-Digital-Navy-Background.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Go to your HostKeep dashboard",
+      "url": "/",
+      "icons": [
+        {
+          "src": "https://i.ibb.co/6cwz6PzN/Host-Keep-Digital-Navy-Background.png",
+          "sizes": "96x96"
+        }
+      ]
     }
   ]
 }
