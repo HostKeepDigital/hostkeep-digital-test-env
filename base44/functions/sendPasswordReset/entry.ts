@@ -18,7 +18,7 @@ async function sendBrandedEmail({ to, resetUrl }) {
       <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:12px;overflow:hidden;max-width:600px;width:100%;">
         <tr>
           <td style="background-color:#1E3A5F;padding:32px 40px;text-align:center;">
-            <img src="https://i.ibb.co/6cwz6PzN/Host-Keep-Digital-Navy-Background.png" alt="HostKeep Digital" width="200" style="display:block;margin:0 auto;max-width:200px;height:auto;" />
+            <img src="https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/HostKeep_Digital_Navy_Background.png" alt="HostKeep Digital" width="200" style="display:block;margin:0 auto;max-width:200px;height:auto;" />
           </td>
         </tr>
         <tr>
