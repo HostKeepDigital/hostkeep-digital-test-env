@@ -27,7 +27,9 @@ export function useUser() {
         setUser({
           id: data.user_id || null,
           email: data.email,
-          founding_member_id: data.founding_member_id || null,
+          role: data.role || null,                // determines host/cleaner/admin/guest
+          founding_member_id: data.founding_member_id || null,  // determines founder perks
+          signup_postcode: data.signup_postcode || null,
         });
 
         setRole(data.role || null);
