@@ -171,14 +171,18 @@ export default function Settings() {
 
     try {
       const fullName = assembleFullName(profile);
+      const sessionToken = localStorage.getItem("session_token");
 
-      if (!user?.founding_member_id) {
-        throw new Error("No founding member ID on session");
-      }
-
-      await base44.entities.FoundingMember.update(user.founding_member_id, {
-        full_name: fullName,
+      const res = await fetch("/functions/updateProfile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ session_token: sessionToken, full_name: fullName }),
       });
+      const data = await res.json();
+
+      if (!data.success) {
+        throw new Error(data.error || "save_failed");
+      }
 
       setSaveStatus("success");
       // Auto-clear after 4 seconds
