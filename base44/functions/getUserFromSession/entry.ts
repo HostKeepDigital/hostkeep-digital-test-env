@@ -61,13 +61,26 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ⭐ ALWAYS load FoundingMember profile for phone/location/full_name
+    let fmProfile = null;
+    if (founding_member_id) {
+      fmProfile = await serviceRole.entities.FoundingMember.get(founding_member_id);
+    }
+
     return Response.json({
       success: true,
       email: normalisedEmail,
       role,
       founding_member_id,
       expires_at: session.expires_at,
-      user,
+
+      // ⭐ Merge FoundingMember profile fields
+      user: {
+        ...user,
+        full_name: fmProfile?.full_name || user?.full_name || "",
+        phone: fmProfile?.phone || "",
+        location: fmProfile?.location || "",
+      },
     });
 
   } catch (err) {
