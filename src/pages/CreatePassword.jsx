@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Eye, EyeOff, CheckCircle } from "lucide-react";
 
 const CORNWALL_IMG = "https://drive.google.com/uc?export=view&id=1Vr07gcaaC19XEmxcvTbq-DTn8PZKn-_a";
+const LOGO_IMG = "https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/HostKeep_Digital_Navy_Background.png";
 
 export default function CreatePassword() {
   const [loading, setLoading] = useState(true);
@@ -135,7 +136,7 @@ export default function CreatePassword() {
 
         <div className="relative z-10 flex flex-col justify-between p-12 w-full">
           <img
-            src="https://i.ibb.co/6cwz6PzN/Host-Keep-Digital-Navy-Background.png"
+            src={LOGO_IMG}
             alt="HostKeep Digital"
             className="h-10 w-auto"
           />
@@ -174,7 +175,7 @@ export default function CreatePassword() {
 
           <div className="lg:hidden flex justify-center mb-8">
             <img
-              src="https://i.ibb.co/6cwz6PzN/Host-Keep-Digital-Navy-Background.png"
+              src={LOGO_IMG}
               alt="HostKeep Digital"
               className="h-10 w-auto"
             />

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 
 const CORNWALL_IMG = "https://drive.google.com/uc?export=view&id=1ZmljdO7m9HdHdT_KKSa0S-p2e9ctR5BU";
+const LOGO_IMG = "https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/HostKeep_Digital_Navy_Background.png";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
@@ -69,7 +70,7 @@ export default function SignIn() {
           {/* Logo */}
           <div className="flex items-center gap-3">
             <img
-              src="https://i.ibb.co/6cwz6PzN/Host-Keep-Digital-Navy-Background.png"
+              src={LOGO_IMG}
               alt="HostKeep Digital"
               className="h-10 w-auto"
             />
@@ -113,7 +114,7 @@ export default function SignIn() {
           {/* Mobile logo */}
           <div className="lg:hidden flex justify-center mb-8">
             <img
-              src="https://i.ibb.co/6cwz6PzN/Host-Keep-Digital-Navy-Background.png"
+              src={LOGO_IMG}
               alt="HostKeep Digital"
               className="h-10 w-auto"
             />
