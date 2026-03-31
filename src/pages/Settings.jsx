@@ -79,24 +79,43 @@ export default function Settings() {
     notifications_marketing: false,
   });
 
-  // Load user data
+  // Load full profile data from FoundingMember via getUserFromSession.
+  // AuthContext only holds email/role/founding_member_id — full_name lives on FoundingMember.
   useEffect(() => {
     if (!user) return;
 
-    const nameParts = splitFullName(user.full_name || "");
-    setProfile({
-      forename: nameParts.forename,
-      middle_name: nameParts.middle_name,
-      surname: nameParts.surname,
-      phone: user.phone || "",
-      location: user.location || "",
-    });
+    const sessionToken = localStorage.getItem("session_token");
+    if (!sessionToken) return;
 
-    setNotifications({
-      notifications_bookings: user.notifications_bookings ?? true,
-      notifications_messages: user.notifications_messages ?? true,
-      notifications_marketing: user.notifications_marketing ?? false,
-    });
+    fetch("/functions/getUserFromSession", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_token: sessionToken }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.success) return;
+        const fullName = data.user?.full_name || "";
+        const nameParts = splitFullName(fullName);
+        setProfile({
+          forename: nameParts.forename,
+          middle_name: nameParts.middle_name,
+          surname: nameParts.surname,
+          phone: data.user?.phone || "",
+          location: data.user?.location || "",
+        });
+      })
+      .catch(() => {
+        // Fall back to whatever is on the auth context user (likely empty)
+        const nameParts = splitFullName(user.full_name || "");
+        setProfile({
+          forename: nameParts.forename,
+          middle_name: nameParts.middle_name,
+          surname: nameParts.surname,
+          phone: user.phone || "",
+          location: user.location || "",
+        });
+      });
 
     if (user.id) {
       base44.entities.UserRole.filter({ user_id: user.id }).then(setUserRoles).catch(() => {});
