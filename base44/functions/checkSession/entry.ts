@@ -6,7 +6,8 @@ Deno.serve(async (req) => {
     const serviceRole = base44.asServiceRole;
 
     const body = await req.json().catch(() => ({}));
-    const session_token = body.session_token || req.headers.get("x-session-token");
+    const session_token =
+      body.session_token || req.headers.get("x-session-token");
 
     if (!session_token) {
       return Response.json({
@@ -37,13 +38,33 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ✅ Session is valid — now include user_id
+    // ⭐ NEW: derive signup_postcode from FoundingMember
+    let signup_postcode = null;
+
+    try {
+      const normalisedEmail = session.email.toLowerCase().trim();
+
+      const members = await serviceRole.entities.FoundingMember.filter({
+        email: normalisedEmail,
+      });
+
+      if (members?.[0]?.postcode) {
+        signup_postcode = (members[0].postcode || "")
+          .trim()
+          .toUpperCase();
+      }
+    } catch (_) {
+      // silent fail — postcode is optional
+    }
+
+    // ⭐ Session is valid — return full session info
     return Response.json({
       authenticated: true,
       email: session.email,
       role: session.role,
       founding_member_id: session.founding_member_id || null,
-      user_id: session.user_id, // <-- key addition
+      user_id: session.user_id || null,
+      signup_postcode, // <-- added
     });
   } catch (err) {
     console.error("checkSession error:", err);
