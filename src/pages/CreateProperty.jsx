@@ -447,17 +447,19 @@ export default function CreateProperty() {
               <Card>
                 <CardHeader>
                   <CardTitle>Description & Amenities</CardTitle>
-                  <CardDescription>Tell guests what makes your place special</CardDescription>
+                  <CardDescription>
+                    Tell guests what makes your place special
+                  </CardDescription>
                 </CardHeader>
 
                 <CardContent className="space-y-6">
+
+                  {/* Description */}
                   <div>
                     <Label>Property Description</Label>
                     <Textarea
                       value={formData.description}
-                      onChange={(e) =>
-                        handleChange("description", e.target.value)
-                      }
+                      onChange={(e) => handleChange("description", e.target.value)}
                       placeholder="Describe your property..."
                       rows={6}
                       className="mt-1"
@@ -467,34 +469,24 @@ export default function CreateProperty() {
                     </p>
                   </div>
 
-                  <div>
-                    <Label className="mb-3 block">Amenities</Label>
-                    <AmenitiesSelector
-                      amenities={formData.amenities}
-                      onChange={(val) => handleChange("amenities", val)}
-                    />
-                  </div>
-
+                  {/* House Rules — moved ABOVE amenities */}
                   <div>
                     <Label>House Rules (optional)</Label>
                     <Textarea
                       value={formData.house_rules}
-                      onChange={(e) =>
-                        handleChange("house_rules", e.target.value)
-                      }
+                      onChange={(e) => handleChange("house_rules", e.target.value)}
                       placeholder="Any specific rules..."
                       rows={3}
                       className="mt-1"
                     />
                   </div>
 
+                  {/* Pets / Smoking / Children — moved ABOVE amenities */}
                   <div className="flex flex-wrap gap-6">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <Checkbox
                         checked={formData.pets_allowed}
-                        onCheckedChange={(v) =>
-                          handleChange("pets_allowed", v)
-                        }
+                        onCheckedChange={(v) => handleChange("pets_allowed", v)}
                       />
                       <span>Pets allowed</span>
                     </label>
@@ -502,9 +494,7 @@ export default function CreateProperty() {
                     <label className="flex items-center gap-2 cursor-pointer">
                       <Checkbox
                         checked={formData.smoking_allowed}
-                        onCheckedChange={(v) =>
-                          handleChange("smoking_allowed", v)
-                        }
+                        onCheckedChange={(v) => handleChange("smoking_allowed", v)}
                       />
                       <span>Smoking allowed</span>
                     </label>
@@ -543,6 +533,16 @@ export default function CreateProperty() {
                       </p>
                     </div>
                   )}
+
+                  {/* Amenities — moved BELOW rules */}
+                  <div>
+                    <Label className="mb-3 block">Amenities</Label>
+                    <AmenitiesSelector
+                      amenities={formData.amenities}
+                      onChange={(val) => handleChange("amenities", val)}
+                    />
+                  </div>
+
                 </CardContent>
               </Card>
             )}
