@@ -427,10 +427,10 @@ export default function Layout({ children, currentPageName }) {
                   </>
                 ) : (
                   <>
-                    <Link to="/founding">
+                    <Link to="/founding" className="hidden sm:inline-flex">
                       <Button variant="outline">Become a Host</Button>
                     </Link>
-                    <Link to="/founding">
+                    <Link to="/founding" className="hidden sm:inline-flex">
                       <Button variant="ghost">Become a Cleaner</Button>
                     </Link>
                     <Link to="/login">
