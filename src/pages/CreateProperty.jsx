@@ -155,7 +155,6 @@ export default function CreateProperty() {
     smart_lock_enabled: false,
     smart_lock_code: "",
     smart_lock_send_hours: null,
-
   });
 
   useEffect(() => {
@@ -163,6 +162,42 @@ export default function CreateProperty() {
       formContentRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [currentStep]);
+
+  // Reset smart lock if cancellation policy makes current timing unsafe
+  useEffect(() => {
+    if (!formData.smart_lock_enabled) return;
+    if (!policies || !formData.cancellation_policy_id) return;
+
+    const policy = policies.find(
+      (p) => p.id === formData.cancellation_policy_id
+    );
+    if (!policy) return;
+
+    const cancellationHoursBefore =
+      policy.free_cancellation_hours_before_check_in ?? 0;
+
+    const maxAllowedHours = Math.max(cancellationHoursBefore - 12, 0);
+
+    if (
+      formData.smart_lock_send_hours &&
+      formData.smart_lock_send_hours > maxAllowedHours
+    ) {
+      setFormData((prev) => ({
+        ...prev,
+        smart_lock_enabled: false,
+        smart_lock_send_hours: null,
+      }));
+
+      toast.info(
+        "Smart lock auto-send has been disabled because the cancellation policy changed. Please reconfigure it."
+      );
+    }
+  }, [
+    formData.cancellation_policy_id,
+    formData.smart_lock_send_hours,
+    formData.smart_lock_enabled,
+    policies,
+  ]);
 
   const createMutation = useMutation({
     mutationFn: async (data) => {
@@ -356,7 +391,9 @@ export default function CreateProperty() {
               <Card>
                 <CardHeader>
                   <CardTitle>Property Basics</CardTitle>
-                  <CardDescription>Let's start with the essentials</CardDescription>
+                  <CardDescription>
+                    Let's start with the essentials
+                  </CardDescription>
                 </CardHeader>
 
                 <CardContent className="space-y-6">
@@ -366,7 +403,9 @@ export default function CreateProperty() {
                       value={formData.title}
                       onChange={(e) => handleTitleChange(e.target.value)}
                       placeholder="Seaside Cottage!"
-                      className={`mt-1 ${titleError ? "border-red-500" : ""}`}
+                      className={`mt-1 ${
+                        titleError ? "border-red-500" : ""
+                      }`}
                       maxLength={50}
                     />
                     <div className="flex justify-between mt-1">
@@ -452,7 +491,9 @@ export default function CreateProperty() {
               <Card>
                 <CardHeader>
                   <CardTitle>Description & Amenities</CardTitle>
-                  <CardDescription>Tell guests what makes your place special</CardDescription>
+                  <CardDescription>
+                    Tell guests what makes your place special
+                  </CardDescription>
                 </CardHeader>
 
                 <CardContent className="space-y-6">
@@ -470,14 +511,6 @@ export default function CreateProperty() {
                     <p className="text-sm text-gray-400 mt-1">
                       {formData.description.length}/50 characters minimum
                     </p>
-                  </div>
-
-                  <div>
-                    <Label className="mb-3 block">Amenities</Label>
-                    <AmenitiesSelector
-                      amenities={formData.amenities}
-                      onChange={(val) => handleChange("amenities", val)}
-                    />
                   </div>
 
                   <div>
@@ -548,6 +581,14 @@ export default function CreateProperty() {
                       </p>
                     </div>
                   )}
+
+                  <div>
+                    <Label className="mb-3 block">Amenities</Label>
+                    <AmenitiesSelector
+                      amenities={formData.amenities}
+                      onChange={(val) => handleChange("amenities", val)}
+                    />
+                  </div>
                 </CardContent>
               </Card>
             )}
@@ -600,7 +641,8 @@ export default function CreateProperty() {
 
                   {formData.photos.length < 5 && (
                     <p className="text-sm mt-2 text-red-500">
-                      {formData.photos.length} / 5 photos uploaded (minimum 5 required)
+                      {formData.photos.length} / 5 photos uploaded (minimum 5
+                      required)
                     </p>
                   )}
 
@@ -647,7 +689,9 @@ export default function CreateProperty() {
 
                               <DropdownMenuContent align="end">
                                 {idx !== 0 && (
-                                  <DropdownMenuItem onClick={() => setCoverPhoto(idx)}>
+                                  <DropdownMenuItem
+                                    onClick={() => setCoverPhoto(idx)}
+                                  >
                                     Make Cover Photo
                                   </DropdownMenuItem>
                                 )}
@@ -683,12 +727,96 @@ export default function CreateProperty() {
               />
             )}
 
-            {/* Step 6: Booking Rules */}
+            {/* Step 6: Booking Rules + Smart Lock */}
             {currentStep === 6 && (
-              <DayBasedBookingRules
-                formData={formData}
-                onUpdate={(field, value) => handleChange(field, value)}
-              />
+              <Card>
+                <CardHeader>
+                  <CardTitle>Booking Rules</CardTitle>
+                  <CardDescription>
+                    Set your booking restrictions and cancellation policy
+                  </CardDescription>
+                </CardHeader>
+
+                <CardContent className="space-y-8">
+                  <DayBasedBookingRules
+                    formData={formData}
+                    onUpdate={(field, value) => handleChange(field, value)}
+                  />
+
+                  <div className="pt-6 border-t border-gray-200 space-y-4">
+                    <div>
+                      <Label className="text-lg font-medium">
+                        Smart Lock Automation
+                      </Label>
+                      <p className="text-sm text-gray-500">
+                        Automatically send your smart lock code to guests
+                        before check‑in. The system will ensure the code is
+                        never sent while the guest can still cancel.
+                      </p>
+                    </div>
+
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <Checkbox
+                        checked={formData.smart_lock_enabled}
+                        disabled={!formData.cancellation_policy_id}
+                        onCheckedChange={(v) =>
+                          handleChange("smart_lock_enabled", v)
+                        }
+                      />
+                      <span>
+                        Enable smart lock automation
+                        {!formData.cancellation_policy_id &&
+                          " (select a cancellation policy first)"}
+                      </span>
+                    </label>
+
+                    {formData.smart_lock_enabled && (
+                      <div className="space-y-4 pl-6">
+                        <div>
+                          <Label>Smart Lock Code</Label>
+                          <Input
+                            value={formData.smart_lock_code}
+                            onChange={(e) =>
+                              handleChange("smart_lock_code", e.target.value)
+                            }
+                            placeholder="e.g. 4829# or app-generated code"
+                            className="mt-1"
+                          />
+                        </div>
+
+                        <div>
+                          <Label>Auto-send timing</Label>
+                          <select
+                            value={formData.smart_lock_send_hours ?? ""}
+                            onChange={(e) =>
+                              handleChange(
+                                "smart_lock_send_hours",
+                                e.target.value
+                                  ? parseInt(e.target.value)
+                                  : null
+                              )
+                            }
+                            className="mt-1 w-full border rounded-md p-2"
+                          >
+                            <option value="">Select timing</option>
+                            {[24, 48, 72, 96, 120, 144, 168].map((hours) => (
+                              <option key={hours} value={hours}>
+                                {hours} Hours ({hours / 24} Day
+                                {hours > 24 ? "s" : ""})
+                              </option>
+                            ))}
+                          </select>
+                          <p className="text-xs text-gray-500 mt-1">
+                            The system will automatically adjust this based on
+                            your cancellation policy and will never send the
+                            code while the guest can still cancel.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             )}
 
             {/* Step 7: Verification */}
