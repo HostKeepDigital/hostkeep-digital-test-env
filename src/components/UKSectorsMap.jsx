@@ -54,8 +54,11 @@ export default function UKSectorsMap({ sectorData = [], members = [] }) {
     d3.select(container).selectAll("*").remove();
 
     const svg = d3.select(container).append("svg")
-      .attr("width", W).attr("height", H)
-      .style("display", "block");
+      .attr("width", W)
+      .attr("height", H)
+      .style("display", "block")
+      .style("position", "relative")
+      .style("z-index", 2);
 
     const projection = d3.geoMercator()
       .center([-3.8, 55.0])
@@ -79,36 +82,39 @@ export default function UKSectorsMap({ sectorData = [], members = [] }) {
 
         if (ireland) svg.append("path").datum(ireland)
           .attr("d", pathGen)
-          .attr("fill", "#f1f5f9")
+          .attr("fill", "rgba(255,255,255,0.4)")
           .attr("stroke", "#e2e8f0")
           .attr("stroke-width", "0.5");
 
         if (uk) svg.append("path").datum(uk)
           .attr("d", pathGen)
-          .attr("fill", "#dde4ec")
+          .attr("fill", "rgba(255,255,255,0.4)")
           .attr("stroke", "#94a3b8")
           .attr("stroke-width", "0.8");
 
         pins.forEach(p => {
           const coords = projection([p.lng, p.lat]);
-          if (!coords || coords[0] < 0 || coords[1] < 0 || coords[0] > W || coords[1] > H) return;
+          if (!coords) return;
           svg.append("circle")
-            .attr("cx", coords[0]).attr("cy", coords[1]).attr("r", 2)
+            .attr("cx", coords[0])
+            .attr("cy", coords[1])
+            .attr("r", 2)
             .attr("fill", "#e11d48")
-            .attr("fill-opacity", 0.65)
-            .attr("stroke", "none");
+            .attr("fill-opacity", 0.65);
         });
 
         sectorData.forEach(s => {
           if (!s.lat || !s.lng) return;
           const coords = projection([s.lng, s.lat]);
-          if (!coords || coords[0] < 0 || coords[1] < 0 || coords[0] > W || coords[1] > H) return;
+          if (!coords) return;
 
           const col = SECTOR_STATUS_COLORS[s.computedStatus] || "#94a3b8";
           const g   = svg.append("g").style("cursor", "pointer");
 
           g.append("circle")
-            .attr("cx", coords[0]).attr("cy", coords[1]).attr("r", 9)
+            .attr("cx", coords[0])
+            .attr("cy", coords[1])
+            .attr("r", 9)
             .attr("fill", col)
             .attr("fill-opacity",
               s.computedStatus === "live" ? 1 :
@@ -118,13 +124,14 @@ export default function UKSectorsMap({ sectorData = [], members = [] }) {
             .attr("stroke-width", 1.5);
 
           g.append("title").text(
-            `${s.name}\nHosts: ${s.hosts}/${s.maxH} · Cleaners: ${s.cleaners}/${s.maxC}\n${s.computedStatus.charAt(0).toUpperCase() + s.computedStatus.slice(1)}`
+            `${s.name}\nHosts: ${s.hosts}/${s.maxH} · Cleaners: ${s.cleaners}/${s.maxC}`
           );
         });
       })
       .catch(() => {
         svg.append("text")
-          .attr("x", W / 2).attr("y", H / 2)
+          .attr("x", W / 2)
+          .attr("y", H / 2)
           .attr("text-anchor", "middle")
           .attr("font-size", "12")
           .attr("fill", "#9ca3af")
@@ -147,10 +154,10 @@ export default function UKSectorsMap({ sectorData = [], members = [] }) {
   return (
     <div className="h-full flex flex-col">
 
-      {/* ⭐ MAP WITH BACKGROUND IMAGE */}
+      {/* ⭐ MAP WITH BACKGROUND IMAGE + FIXED HEIGHT */}
       <div
         ref={mapRef}
-        className="flex-1 w-full bg-cover bg-center bg-no-repeat"
+        className="flex-1 w-full bg-cover bg-center bg-no-repeat min-h-[500px]"
         style={{
           backgroundImage:
             "url('https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/UK%20Map.jpg')",
