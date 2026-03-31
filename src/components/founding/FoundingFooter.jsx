@@ -1,9 +1,8 @@
-import { Facebook, Instagram, Twitter } from "lucide-react";
+import { Facebook, Instagram } from "lucide-react";
 
 const SOCIALS = [
-  { icon: Facebook,  href: "https://facebook.com/hostkeep",  label: "Facebook"  },
-  { icon: Instagram, href: "https://instagram.com/hostkeep", label: "Instagram" },
-  { icon: Twitter,   href: "https://twitter.com/hostkeep",   label: "Twitter"   },
+  { icon: Facebook,  href: "https://www.facebook.com/HostKeepDigital/",  label: "Facebook"  },
+  { icon: Instagram, href: "https://www.instagram.com/hostkeepdigital/", label: "Instagram" },
 ];
 
 export default function FoundingFooter() {
