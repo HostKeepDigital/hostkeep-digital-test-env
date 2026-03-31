@@ -156,6 +156,11 @@ export default function EditProperty() {
           date_overrides: {},
         },
         status: property.status || "draft",
+
+        // ⭐ NEW SMART LOCK FIELDS
+        smart_lock_enabled: property.smart_lock_enabled || false,
+        smart_lock_code: property.smart_lock_code || "",
+        smart_lock_send_hours: property.smart_lock_send_hours ?? null,
       };
 
       setFormData(initial);
@@ -257,6 +262,11 @@ export default function EditProperty() {
       cleaning_fee_refundable: "Cleaning Fee Refundable",
       pricing_settings: "Pricing Settings",
       status: "Status",
+
+      // ⭐ NEW SMART LOCK LABELS
+      smart_lock_enabled: "Smart Lock Enabled",
+      smart_lock_code: "Smart Lock Code",
+      smart_lock_send_hours: "Smart Lock Auto-Send Timing",
     };
     return map[field] || field;
   };
@@ -264,9 +274,7 @@ export default function EditProperty() {
   const handleBackClick = (e) => {
     e.preventDefault();
     if (hasChanges) {
-      setPendingAction(() =>
-        navigate(createPageUrl("HostProperties"))
-      );
+      setPendingAction(() => navigate(createPageUrl("HostProperties")));
       setShowUnsavedDialog(true);
     } else {
       navigate(createPageUrl("HostProperties"));
@@ -276,8 +284,8 @@ export default function EditProperty() {
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
-
-  const toggleAmenity = (slug) => {
+  
+    const toggleAmenity = (slug) => {
     setFormData((prev) => ({
       ...prev,
       amenities: prev.amenities.includes(slug)
@@ -425,6 +433,17 @@ export default function EditProperty() {
           changedData[key] = currentFormData[key];
         }
       });
+    }
+
+    // ⭐ SMART LOCK CHANGES INCLUDED
+    if (!isEqual(currentFormData.smart_lock_enabled, originalData.smart_lock_enabled)) {
+      changedData.smart_lock_enabled = currentFormData.smart_lock_enabled;
+    }
+    if (!isEqual(currentFormData.smart_lock_code, originalData.smart_lock_code)) {
+      changedData.smart_lock_code = currentFormData.smart_lock_code;
+    }
+    if (!isEqual(currentFormData.smart_lock_send_hours, originalData.smart_lock_send_hours)) {
+      changedData.smart_lock_send_hours = currentFormData.smart_lock_send_hours;
     }
 
     if (locationData.location_id) changedData.location_id = locationData.location_id;
@@ -690,7 +709,7 @@ export default function EditProperty() {
                     <Input
                       type="number"
                       min="1"
-                      value={formData.gest_capacity}
+                      value={formData.guest_capacity}
                       onChange={(e) =>
                         handleChange(
                           "guest_capacity",
@@ -822,188 +841,199 @@ export default function EditProperty() {
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <button className="w-8 h-8 bg-black/70 text-white rounded flex items-center justify-center hover:bg-black/90 transition-colors">
-                                <MoreVertical className="w-4 h-4" />
-                              </button>
-                            </DropdownMenuTrigger>
+                                                            <MoreVertical className="w-4 h-4" />
+                          </button>
+                        </DropdownMenuTrigger>
 
-                            <DropdownMenuContent align="end">
-                              {idx !== 0 && (
-                                <DropdownMenuItem
-                                  onClick={() => setCoverPhoto(idx)}
-                                >
-                                  Make this Picture your cover
-                                </DropdownMenuItem>
-                              )}
+                        <DropdownMenuContent align="end">
+                          {idx !== 0 && (
+                            <DropdownMenuItem
+                              onClick={() => setCoverPhoto(idx)}
+                            >
+                              Make this Picture your cover
+                            </DropdownMenuItem>
+                          )}
 
-                              <DropdownMenuItem
-                                onClick={() => removePhoto(idx)}
-                                className="text-red-600"
-                              >
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
+                          <DropdownMenuItem
+                            onClick={() => removePhoto(idx)}
+                            className="text-red-600"
+                          >
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
 
-                        {idx === 0 && (
-                          <span className="absolute bottom-2 left-2 px-2 py-1 bg-black/70 text-white text-xs rounded">
-                            Cover
-                          </span>
-                        )}
-                      </div>
-                    ))}
+                    {idx === 0 && (
+                      <span className="absolute bottom-2 left-2 px-2 py-1 bg-black/70 text-white text-xs rounded">
+                        Cover
+                      </span>
+                    )}
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </TabsContent>
 
-          {/* DETAILS TAB */}
-          <TabsContent value="details">
-            <Card>
-              <CardHeader>
-                <CardTitle>Description & Amenities</CardTitle>
-              </CardHeader>
+      {/* DETAILS TAB */}
+      <TabsContent value="details">
+        <Card>
+          <CardHeader>
+            <CardTitle>Description & Amenities</CardTitle>
+          </CardHeader>
 
-              <CardContent className="space-y-6">
-                <div>
-                  <Label>Description</Label>
-                  <Textarea
-                    value={formData.description}
-                    onChange={(e) =>
-                      handleChange("description", e.target.value)
-                    }
-                    rows={6}
-                    className="mt-1"
-                  />
-                  <p className="text-sm text-gray-400 mt-1">
-                    {formData.description.length}/50 characters minimum
-                  </p>
-                </div>
+          <CardContent className="space-y-6">
+            <div>
+              <Label>Description</Label>
+              <Textarea
+                value={formData.description}
+                onChange={(e) =>
+                  handleChange("description", e.target.value)
+                }
+                rows={6}
+                className="mt-1"
+              />
+              <p className="text-sm text-gray-400 mt-1">
+                {formData.description.length}/50 characters minimum
+              </p>
+            </div>
 
-                <div>
-                  <Label className="mb-3 block">Amenities</Label>
-                  <AmenitiesSelector
-                    amenities={formData.amenities}
-                    onChange={(val) => handleChange("amenities", val)}
-                  />
-                </div>
+            <div>
+              <Label className="mb-3 block">Amenities</Label>
+              <AmenitiesSelector
+                amenities={formData.amenities}
+                onChange={(val) => handleChange("amenities", val)}
+              />
+            </div>
 
-                <div>
-                  <Label>House Rules</Label>
-                  <Textarea
-                    value={formData.house_rules}
-                    onChange={(e) =>
-                      handleChange("house_rules", e.target.value)
-                    }
-                    rows={3}
-                    className="mt-1"
-                  />
-                </div>
+            <div>
+              <Label>House Rules</Label>
+              <Textarea
+                value={formData.house_rules}
+                onChange={(e) =>
+                  handleChange("house_rules", e.target.value)
+                }
+                rows={3}
+                className="mt-1"
+              />
+            </div>
 
-                <div className="flex flex-wrap gap-6">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <Checkbox
-                      checked={formData.pets_allowed}
-                      onCheckedChange={(v) =>
-                        handleChange("pets_allowed", v)
-                      }
-                    />
-                    <span>Pets allowed</span>
-                  </label>
+            <div className="flex flex-wrap gap-6">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <Checkbox
+                  checked={formData.pets_allowed}
+                  onCheckedChange={(v) =>
+                    handleChange("pets_allowed", v)
+                  }
+                />
+                <span>Pets allowed</span>
+              </label>
 
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <Checkbox
-                      checked={formData.smoking_allowed}
-                      onCheckedChange={(v) =>
-                        handleChange("smoking_allowed", v)
-                      }
-                    />
-                    <span>Smoking allowed</span>
-                  </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <Checkbox
+                  checked={formData.smoking_allowed}
+                  onCheckedChange={(v) =>
+                    handleChange("smoking_allowed", v)
+                  }
+                />
+                <span>Smoking allowed</span>
+              </label>
 
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <Checkbox
-                      checked={formData.children_allowed}
-                      onCheckedChange={(v) => {
-                        handleChange("children_allowed", v);
-                        if (!v) handleChange("minimum_child_age", null);
-                        else handleChange("minimum_child_age", 0);
-                      }}
-                    />
-                    <span>Children allowed</span>
-                  </label>
-                </div>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <Checkbox
+                  checked={formData.children_allowed}
+                  onCheckedChange={(v) => {
+                    handleChange("children_allowed", v);
+                    if (!v) handleChange("minimum_child_age", null);
+                    else handleChange("minimum_child_age", 0);
+                  }}
+                />
+                <span>Children allowed</span>
+              </label>
+            </div>
 
-                {formData.children_allowed && (
-                  <div className="mt-4">
-                    <Label>Minimum Child Age</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      max="17"
-                      value={formData.minimum_child_age ?? 0}
-                      onChange={(e) =>
-                        handleChange(
-                          "minimum_child_age",
-                          parseInt(e.target.value) || 0
-                        )
-                      }
-                      className="mt-1 w-32"
-                    />
-                    <p className="text-sm text-gray-500 mt-1">
-                      Children below this age are not permitted
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+            {formData.children_allowed && (
+              <div className="mt-4">
+                <Label>Minimum Child Age</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="17"
+                  value={formData.minimum_child_age ?? 0}
+                  onChange={(e) =>
+                    handleChange(
+                      "minimum_child_age",
+                      parseInt(e.target.value) || 0
+                    )
+                  }
+                  className="mt-1 w-32"
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Children below this age are not permitted
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </TabsContent>
 
-          {/* PRICING TAB */}
-          <TabsContent value="pricing">
-            <PricingManager
-              formData={formData}
-              onUpdate={(field, value) => handleChange(field, value)}
-            />
-          </TabsContent>
+      {/* PRICING TAB */}
+      <TabsContent value="pricing">
+        <PricingManager
+          formData={formData}
+          onUpdate={(field, value) => handleChange(field, value)}
+        />
+      </TabsContent>
 
-          {/* BOOKING RULES TAB */}
-          <TabsContent value="booking-rules">
-            <DayBasedBookingRules
-              formData={formData}
-              onUpdate={(field, value) => handleChange(field, value)}
-            />
+      {/* BOOKING RULES TAB */}
+      <TabsContent value="booking-rules">
+        <DayBasedBookingRules
+          formData={formData}
+          onUpdate={(field, value) => handleChange(field, value)}
+        />
 
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle>Cancellation Policy</CardTitle>
-              </CardHeader>
+        {/* CANCELLATION POLICY */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Cancellation Policy</CardTitle>
+          </CardHeader>
 
-              <CardContent className="space-y-6">
-                <div>
-                  <Label>Policy</Label>
-                  <MobileSelect
-                    value={formData.cancellation_policy_id}
-                    onValueChange={(val) => {
-                      const policy = policies?.find((p) => p.id === val);
-                      const isStrict = policy?.policy_name?.includes("Strict");
-                      setFormData((prev) => ({
-                        ...prev,
-                        cancellation_policy_id: val,
-                        cleaning_fee_refundable: !isStrict,
-                      }));
-                    }}
-                    placeholder="Select a policy..."
-                    options={(policies || []).map((p) => ({ value: p.id, label: p.policy_name }))}
-                    triggerClassName="mt-1 w-full"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </div>
-  );
+          <CardContent className="space-y-6">
+            <div>
+              <Label>Policy</Label>
+              <MobileSelect
+                value={formData.cancellation_policy_id}
+                onValueChange={(val) => {
+                  const policy = policies?.find((p) => p.id === val);
+                  const isStrict = policy?.policy_name?.includes("Strict");
+
+                  setFormData((prev) => ({
+                    ...prev,
+                    cancellation_policy_id: val,
+                    cleaning_fee_refundable: !isStrict,
+                  }));
+                }}
+                placeholder="Select a policy..."
+                options={(policies || []).map((p) => ({
+                  value: p.id,
+                  label: p.policy_name,
+                }))}
+                triggerClassName="mt-1 w-full"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ⭐ SMART LOCK AUTOMATION WILL BE INSERTED AFTER THIS IN PART 4 */}
+                {/* ⭐ SMART LOCK RESET LOGIC */}
+        {policies && (
+          <></>
+        )}
+      </TabsContent>
+    </Tabs>
+  </div>
+</div>
+);
 }
