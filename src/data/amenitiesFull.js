@@ -107,10 +107,4 @@ export const AMENITIES_FULL = {
     "Washing Up Liquid",
     "Laundry Detergent"
   ],
-
-  Pets: [
-    "Pet Friendly",
-    "Pet Bowls",
-    "Pet Bed"
-  ]
 };
