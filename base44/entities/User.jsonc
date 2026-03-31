@@ -2,44 +2,27 @@
   "name": "User",
   "type": "object",
   "properties": {
+    "phone": {
+      "type": "string",
+      "description": "Phone number"
+    },
+    "location": {
+      "type": "string",
+      "description": "User location"
+    },
     "role": {
       "type": "string",
       "enum": [
         "admin",
         "user"
       ],
-      "default": "user"
+      "default": "user",
+      "description": "User role"
     },
-    "phone": {
-      "type": "string"
-    },
-    "bio": {
-      "type": "string"
-    },
-    "location": {
-      "type": "string"
-    },
-    "profile_photo": {
-      "type": "string"
-    },
-    "notification_preferences": {
-      "type": "object"
-    },
-    "stripe_connect_account_id": {
-      "type": "string",
-      "description": "Stripe Connect Express account ID"
-    },
-    "stripe_connect_status": {
-      "type": "string",
-      "enum": [
-        "not_connected",
-        "pending",
-        "pending_verification",
-        "verified"
-      ],
-      "default": "not_connected",
-      "description": "Stripe Connect onboarding status"
+    "founding_member": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the user is a founding member"
     }
-  },
-  "required": []
+  }
 }
