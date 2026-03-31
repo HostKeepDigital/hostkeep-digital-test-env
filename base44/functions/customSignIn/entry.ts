@@ -73,15 +73,15 @@ Deno.serve(async (req) => {
       }
     } catch (_) {}
 
-    // Fall back to FoundingMember role
-      if (!role && members?.[0]?.role) {
-      role = members[0].role;
+    // Admin email override — must run BEFORE any fallback logic
+    const adminEmails = ["admin@hostkeepdigital.co.uk"];
+    if (adminEmails.includes(normalisedEmail)) {
+      role = "admin";
     }
 
-// Admin email override — always admin regardless of UserRole records
-    const adminEmails = ["admin@hostkeepdigital.co.uk"];
-      if (adminEmails.includes(normalisedEmail)) {
-      role = "admin";
+    // Fall back to FoundingMember role ONLY if not admin
+    if (!role && !adminEmails.includes(normalisedEmail) && members?.[0]?.role) {
+      role = members[0].role;
     }
 
     if (!role) {
