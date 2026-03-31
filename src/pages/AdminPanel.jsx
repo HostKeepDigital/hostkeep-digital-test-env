@@ -899,8 +899,8 @@ export default function AdminPanel() {
                   </div>
                 </div>
 
-                {/* Sector table */}
-                <div className="flex-1 min-w-0">
+                {/* Sector table — height matches map, scrolls independently */}
+                <div className="flex-1 min-w-0 overflow-y-auto" style={{ height:"615px" }}>
                   <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                     <table className="w-full text-sm">
                       <thead>
