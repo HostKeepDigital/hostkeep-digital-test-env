@@ -107,10 +107,6 @@ const ICON_MAP = {
   "washing-up-liquid": "Droplets",
   "laundry-detergent": "WashingMachine",
 
-  // Pets
-  "pet-friendly": "PawPrint",
-  "pet-bowls": "PawPrint",
-  "pet-bed": "PawPrint",
 };
 
 // Build AMENITY_MAP: slug → { slug, name, icon, group }
