@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Eye, EyeOff, Mail, CheckCircle } from "lucide-react";
 
-const CORNWALL_IMG = "https://drive.google.com/uc?export=view&id=1ngVI8yfXwJXYnSM96Sp21B0soD4SMNOJ";
+const CORNWALL_IMG = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1200&q=80";
 
 export default function ResetPassword() {
   const token = new URLSearchParams(window.location.search).get("token");
@@ -85,10 +85,10 @@ setStep("success");
     <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
       <img
         src={CORNWALL_IMG}
-        alt="Boscastle, Cornwall"
+        alt="Cornwall landscape"
         className="absolute inset-0 w-full h-full object-cover"
       />
-      <div className="absolute inset-0 bg-gradient-to-br from-[#1E3A5F]/88 via-[#1E3A5F]/68 to-[#0d9488]/45" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#1E3A5F]/90 via-[#1E3A5F]/70 to-[#0d9488]/50" />
       <div className="relative z-10 flex flex-col justify-between p-12 w-full">
         <img
           src="https://i.ibb.co/6cwz6PzN/Host-Keep-Digital-Navy-Background.png"
@@ -97,18 +97,19 @@ setStep("success");
         />
         <div>
           <p className="text-white/60 text-sm font-medium tracking-[0.2em] uppercase mb-4">
-            Account recovery
+            We've got your back
           </p>
           <h1 className="text-white text-4xl font-bold leading-tight mb-6">
-            Reset your<br />
-            <span className="text-[#0d9488]">password.</span>
+            Here to help,<br />
+            every step<br />
+            <span className="text-[#0d9488]">of the way.</span>
           </h1>
           <p className="text-white/70 text-base leading-relaxed max-w-sm">
-            Enter your email and we'll send you a secure link to set a new password.
+            HostKeep was built by people who understand the challenges small, independent hosts face. Whether it's a forgotten password or a tricky booking — we're always here.
           </p>
         </div>
         <p className="text-white/40 text-sm">
-          Questions? Contact{" "}
+          Need help?{" "}
           <a href="mailto:hello@hostkeepdigital.co.uk" className="text-white/60 underline underline-offset-2">
             hello@hostkeepdigital.co.uk
           </a>
