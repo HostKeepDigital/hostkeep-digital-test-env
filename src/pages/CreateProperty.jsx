@@ -49,6 +49,7 @@ import {
 import LocationStep from "@/components/properties/LocationStep";
 import AmenitiesSelector from "@/components/properties/AmenitiesSelector";
 import { useAuth } from "@/lib/AuthContext";
+import { useAuth } from "@/hooks/useUser"; // or your actual path
 
 import { AMENITY_GROUPS, AMENITY_MAP } from "@/data/amenities";
 
