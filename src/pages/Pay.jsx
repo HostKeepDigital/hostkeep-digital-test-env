@@ -34,6 +34,28 @@ export default function Pay() {
     enabled: !!paymentLinkId && !testMode,
   });
 
+  const paymentMutation = useMutation({
+    mutationFn: async (data) => {
+      if (testMode) return Promise.resolve();
+      await base44.entities.Payment.create({
+        booking_id: bookings[0]?.id,
+        amount: data.amount,
+        payment_method: "bank_transfer",
+        payment_date: format(new Date(), "yyyy-MM-dd"),
+        reference: data.reference,
+        notes: `Guest payment from ${data.name} (${data.email})`
+      });
+      const booking = bookings[0];
+      const newAmountPaid = (booking.amount_paid || 0) + data.amount;
+      const newStatus = newAmountPaid >= booking.total_amount ? 'paid' : 'partial';
+      await base44.entities.Booking.update(booking.id, { amount_paid: newAmountPaid, payment_status: newStatus });
+    },
+    onSuccess: () => {
+      setPaymentComplete(true);
+      if (!testMode) queryClient.invalidateQueries({ queryKey: ['booking-payment'] });
+    },
+  });
+
   if (!paymentLinkId && !testMode) {
     return <Navigate to={createPageUrl("Home")} replace />;
   }
@@ -52,38 +74,6 @@ export default function Pay() {
   } : null;
 
   const booking = testMode ? demoBooking : bookings[0];
-
-  const paymentMutation = useMutation({
-    mutationFn: async (data) => {
-      if (testMode) {
-        // Test mode - just simulate success
-        return Promise.resolve();
-      }
-      
-      await base44.entities.Payment.create({
-        booking_id: booking.id,
-        amount: data.amount,
-        payment_method: "bank_transfer",
-        payment_date: format(new Date(), "yyyy-MM-dd"),
-        reference: data.reference,
-        notes: `Guest payment from ${data.name} (${data.email})`
-      });
-
-      const newAmountPaid = (booking.amount_paid || 0) + data.amount;
-      const newStatus = newAmountPaid >= booking.total_amount ? 'paid' : 'partial';
-      
-      await base44.entities.Booking.update(booking.id, {
-        amount_paid: newAmountPaid,
-        payment_status: newStatus
-      });
-    },
-    onSuccess: () => {
-      setPaymentComplete(true);
-      if (!testMode) {
-        queryClient.invalidateQueries({ queryKey: ['booking-payment'] });
-      }
-    },
-  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
