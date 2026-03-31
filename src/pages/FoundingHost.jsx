@@ -270,8 +270,13 @@ export default function FoundingHost() {
           <div>
             <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Property postcode *</label>
             <input type="text" value={form.postcode}
-              onChange={e => { field("postcode", e.target.value); setCornwallWarn(false); }}
-              onBlur={() => { if (form.postcode && !isCornwallPostcode(form.postcode)) setCornwallWarn(true); }}
+              onChange={e => { field("postcode", e.target.value); setCornwallWarn(false); }}              
+          onBlur={(e) => {
+            const value = e.target.value;
+            if (value && !isCornwallPostcode(value)) {
+              setCornwallWarn(true);
+            }
+          }}
               placeholder="TR1 1AA"
               className={`w-full border rounded-xl px-4 py-3 text-sm uppercase focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 transition-colors ${errors.postcode || cornwallWarn ? "border-amber-400" : "border-gray-200"}`} />
             {errors.postcode && <p className="text-xs text-red-500 mt-1">{errors.postcode}</p>}
