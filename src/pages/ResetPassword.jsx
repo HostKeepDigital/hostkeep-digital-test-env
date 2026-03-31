@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Eye, EyeOff, Mail, CheckCircle } from "lucide-react";
 
-const CORNWALL_IMG = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1200&q=80";
+const CORNWALL_IMG = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80";
 
 export default function ResetPassword() {
   const token = new URLSearchParams(window.location.search).get("token");
@@ -222,8 +222,12 @@ if (step === "expired") {
         <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white">
           <div className="w-full max-w-sm">
 
-            <div className="lg:hidden flex justify-center mb-8">
-              <img src="https://i.ibb.co/6cwz6PzN/Host-Keep-Digital-Navy-Background.png" alt="HostKeep" className="h-10 w-auto" />
+            <div className="lg:hidden relative rounded-2xl overflow-hidden mb-8 h-36">
+              <img src={CORNWALL_IMG} alt="Cornwall coast" className="absolute inset-0 w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-br from-[#1E3A5F]/80 to-[#0d9488]/50" />
+              <div className="relative z-10 flex items-center justify-center h-full">
+                <img src="https://i.ibb.co/6cwz6PzN/Host-Keep-Digital-Navy-Background.png" alt="HostKeep" className="h-9 w-auto" />
+              </div>
             </div>
 
             <h2 className="text-2xl font-bold text-[#111827] mb-1">Forgot your password?</h2>
@@ -297,8 +301,12 @@ if (step === "expired") {
       <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white">
         <div className="w-full max-w-sm">
 
-          <div className="lg:hidden flex justify-center mb-8">
-            <img src="https://i.ibb.co/6cwz6PzN/Host-Keep-Digital-Navy-Background.png" alt="HostKeep" className="h-10 w-auto" />
+          <div className="lg:hidden relative rounded-2xl overflow-hidden mb-8 h-36">
+            <img src={CORNWALL_IMG} alt="Cornwall coast" className="absolute inset-0 w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#1E3A5F]/80 to-[#0d9488]/50" />
+            <div className="relative z-10 flex items-center justify-center h-full">
+              <img src="https://i.ibb.co/6cwz6PzN/Host-Keep-Digital-Navy-Background.png" alt="HostKeep" className="h-9 w-auto" />
+            </div>
           </div>
 
           <h2 className="text-2xl font-bold text-[#111827] mb-1">Set new password</h2>
