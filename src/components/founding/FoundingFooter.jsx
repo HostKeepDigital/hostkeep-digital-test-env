@@ -20,7 +20,7 @@ export default function FoundingFooter() {
               aria-label={label}
               className="text-gray-400 hover:text-gray-600 transition-colors"
             >
-              <Icon className="w-4 h-4" />
+              <Icon className="w-5 h-5" />
             </a>
           ))}
         </div>

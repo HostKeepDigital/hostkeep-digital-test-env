@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Home } from "lucide-react";
+import { Home, Facebook, Instagram } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -33,6 +33,14 @@ export default function Footer() {
              </Link>
            </div>
           
+          <div className="flex items-center gap-5">
+            <a href="https://www.facebook.com/HostKeepDigital/" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="text-gray-500 hover:text-white transition-colors">
+              <Facebook className="w-5 h-5" />
+            </a>
+            <a href="https://www.instagram.com/hostkeepdigital/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-gray-500 hover:text-white transition-colors">
+              <Instagram className="w-5 h-5" />
+            </a>
+          </div>
           <p className="text-sm">
             © {new Date().getFullYear()} HostKeep. All rights reserved.
           </p>
