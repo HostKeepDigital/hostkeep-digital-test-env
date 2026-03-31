@@ -93,7 +93,7 @@ setStep("success");
         <img
           src="https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/HostKeep_Digital_Navy_Background.png"
           alt="HostKeep Digital"
-          className="h-10 w-auto"
+          className="h-20 w-auto"
         />
         <div>
           <p className="text-white/60 text-sm font-medium tracking-[0.2em] uppercase mb-4">
@@ -226,7 +226,7 @@ if (step === "expired") {
               <img src={CORNWALL_IMG} alt="Cornwall coast" className="absolute inset-0 w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-br from-[#1E3A5F]/80 to-[#0d9488]/50" />
               <div className="relative z-10 flex items-center justify-center h-full">
-                <img src="https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/HostKeep_Digital_Navy_Background.png" alt="HostKeep" className="h-9 w-auto" />
+                <img src="https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/HostKeep_Digital_Navy_Background.png" alt="HostKeep" className="h-18 w-auto" />
               </div>
             </div>
 
@@ -305,7 +305,7 @@ if (step === "expired") {
             <img src={CORNWALL_IMG} alt="Cornwall coast" className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-br from-[#1E3A5F]/80 to-[#0d9488]/50" />
             <div className="relative z-10 flex items-center justify-center h-full">
-              <img src="https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/HostKeep_Digital_Navy_Background.png" alt="HostKeep" className="h-9 w-auto" />
+              <img src="https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/HostKeep_Digital_Navy_Background.png" alt="HostKeep" className="h-18 w-auto" />
             </div>
           </div>
 
