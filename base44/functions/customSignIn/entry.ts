@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
 
     let role = null;
     let founding_member_id = null;
-    let userId = null;
+    let userId = null; // <-- dynamic type, Deno-safe
 
     // Check FoundingMember
     const members = await serviceRole.entities.FoundingMember.filter({
@@ -89,7 +89,7 @@ Deno.serve(async (req) => {
       }
     } catch (_) {}
 
-    // ⭐ ADMIN OVERRIDE — MUST RUN BEFORE ANY FALLBACK
+    // ⭐ ADMIN OVERRIDE — MUST RUN BEFORE ANY FALLBACK LOGIC
     const adminEmails = ["admin@hostkeepdigital.co.uk"];
     if (adminEmails.includes(normalisedEmail)) {
       role = "admin";
@@ -125,7 +125,7 @@ Deno.serve(async (req) => {
       email: normalisedEmail,
       role,
       founding_member_id,
-      user_id: userId || null, // ⭐ FIXED: now points to User.id
+      user_id: userId || null, // ⭐ FIXED: now correct User.id
       expires_at,
     });
 
