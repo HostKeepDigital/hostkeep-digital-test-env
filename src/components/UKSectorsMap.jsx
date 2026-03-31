@@ -146,7 +146,16 @@ export default function UKSectorsMap({ sectorData = [], members = [] }) {
 
   return (
     <div className="h-full flex flex-col">
-      <div ref={mapRef} className="flex-1 w-full" />
+
+      {/* ⭐ MAP WITH BACKGROUND IMAGE */}
+      <div
+        ref={mapRef}
+        className="flex-1 w-full bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage:
+            "url('https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/UK%20Map.jpg')",
+        }}
+      />
 
       {/* ⭐ SCROLLABLE SECTOR LEGEND */}
       <div className="w-full overflow-x-auto pb-4 mt-2 border-t border-gray-100">
@@ -158,8 +167,14 @@ export default function UKSectorsMap({ sectorData = [], members = [] }) {
             { color: "#94a3b8", label: "Waiting" },
             { color: "#e11d48", label: "Signup pin" },
           ].map(({ color, label }) => (
-            <span key={label} className="flex items-center gap-1.5 text-xs text-gray-500 whitespace-nowrap">
-              <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: color }} />
+            <span
+              key={label}
+              className="flex items-center gap-1.5 text-xs text-gray-500 whitespace-nowrap"
+            >
+              <span
+                className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                style={{ background: color }}
+              />
               {label}
             </span>
           ))}
