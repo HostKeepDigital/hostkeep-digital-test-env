@@ -28,7 +28,6 @@ function assembleFullName({ forename, middle_name, surname }) {
   return [forename.trim(), middle_name.trim(), surname.trim()].filter(Boolean).join(" ");
 }
 
-// Inline save feedback banner — unambiguous success or error message
 function SaveBanner({ status }) {
   if (!status) return null;
   if (status === "success") {
@@ -48,7 +47,6 @@ function SaveBanner({ status }) {
 }
 
 export default function Settings() {
-  // AuthContext provides: user, isAuthenticated, isLoadingAuth, authError, roles, logout, validateSession
   const { user } = useAuth();
 
   const [userRoles, setUserRoles] = useState([]);
@@ -58,7 +56,7 @@ export default function Settings() {
   const stripeCacheRef = useRef(null);
 
   const [saving, setSaving] = useState(false);
-  const [saveStatus, setSaveStatus] = useState(null); // null | 'success' | 'error'
+  const [saveStatus, setSaveStatus] = useState(null);
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState("");
@@ -79,8 +77,6 @@ export default function Settings() {
     notifications_marketing: false,
   });
 
-  // Load full profile data from FoundingMember via getUserFromSession.
-  // AuthContext only holds email/role/founding_member_id — full_name lives on FoundingMember.
   useEffect(() => {
     if (!user) return;
 
@@ -106,7 +102,6 @@ export default function Settings() {
         });
       })
       .catch(() => {
-        // Fall back to whatever is on the auth context user (likely empty)
         const nameParts = splitFullName(user.full_name || "");
         setProfile({
           forename: nameParts.forename,
@@ -134,7 +129,6 @@ export default function Settings() {
     if (tab) setActiveTab(tab);
   }, []);
 
-  // Stripe
   const fetchStripeStatus = async (forceRefresh = false) => {
     if (!forceRefresh && stripeCacheRef.current !== null) {
       setStripeStatus(stripeCacheRef.current);
@@ -173,15 +167,11 @@ export default function Settings() {
     }
   }, [hasPaymentsRole, user]);
 
-  // Save profile — updates full_name on FoundingMember via founding_member_id
+  // ⭐ FIXED: Now saves phone + location
   const handleSaveProfile = async () => {
     setSaveStatus(null);
 
-    if (!profile.forename.trim()) {
-      setSaveStatus("error");
-      return;
-    }
-    if (!profile.surname.trim()) {
+    if (!profile.forename.trim() || !profile.surname.trim()) {
       setSaveStatus("error");
       return;
     }
@@ -195,16 +185,18 @@ export default function Settings() {
       const res = await fetch("/functions/updateProfile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ session_token: sessionToken, full_name: fullName }),
+        body: JSON.stringify({
+          session_token: sessionToken,
+          full_name: fullName,
+          phone: profile.phone,
+          location: profile.location,
+        }),
       });
-      const data = await res.json();
 
-      if (!data.success) {
-        throw new Error(data.error || "save_failed");
-      }
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || "save_failed");
 
       setSaveStatus("success");
-      // Auto-clear after 4 seconds
       setTimeout(() => setSaveStatus(null), 4000);
     } catch (err) {
       console.error("Save profile error:", err);
@@ -217,7 +209,6 @@ export default function Settings() {
   const handleNotificationToggle = async (field, value) => {
     const updated = { ...notifications, [field]: value };
     setNotifications(updated);
-    // Notification prefs stored locally only for now — no backend entity for custom auth users
   };
 
   const handleDeleteAccount = async () => {
@@ -297,7 +288,6 @@ export default function Settings() {
               </CardHeader>
               <CardContent className="space-y-5">
 
-                {/* Name — three fields matching the founding form */}
                 <div className="grid md:grid-cols-3 gap-4">
                   <div>
                     <Label>
@@ -344,7 +334,6 @@ export default function Settings() {
                   </div>
                 </div>
 
-                {/* Email — read-only */}
                 <div>
                   <Label>Email Address</Label>
                   <Input
@@ -375,7 +364,6 @@ export default function Settings() {
                   </div>
                 </div>
 
-                {/* Inline save feedback — shown directly above the button */}
                 <SaveBanner status={saveStatus} />
 
                 <Button
@@ -476,7 +464,6 @@ export default function Settings() {
           )}
         </Tabs>
 
-        {/* Danger Zone */}
         <div className="mt-10 border border-red-200 rounded-xl p-6 bg-red-50">
           <h3 className="text-lg font-semibold text-red-700 mb-1 flex items-center gap-2">
             <Trash2 className="w-5 h-5" /> Danger Zone
@@ -496,20 +483,32 @@ export default function Settings() {
               This action is permanent and cannot be undone. Type <strong>DELETE</strong> to confirm.
             </DialogDescription>
           </DialogHeader>
+
           <input
             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm mt-2 focus:outline-none focus:ring-2 focus:ring-red-400"
             placeholder="Type DELETE to confirm"
             value={deleteConfirm}
             onChange={(e) => setDeleteConfirm(e.target.value)}
           />
+
           <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+
             <Button
               variant="destructive"
               disabled={deleteConfirm !== "DELETE" || deleting}
               onClick={handleDeleteAccount}
             >
-              {deleting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Deleting...</> : "Permanently Delete"}
+              {deleting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Permanently Delete"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
