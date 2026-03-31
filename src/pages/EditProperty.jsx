@@ -50,6 +50,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import LocationStep from "@/components/properties/LocationStep";
+import AmenitiesSelector from "@/components/properties/AmenitiesSelector";
 
 import { AMENITY_GROUPS, AMENITY_MAP } from "@/data/amenities";
 
@@ -880,47 +881,12 @@ export default function EditProperty() {
                   </p>
                 </div>
 
-                {/* Grouped Amenities */}
                 <div>
                   <Label className="mb-3 block">Amenities</Label>
-
-                  <div className="space-y-6">
-                    {Object.entries(AMENITY_GROUPS).map(
-                      ([groupName, slugs]) => (
-                        <div key={groupName}>
-                          <h4 className="text-sm font-semibold text-gray-700 mb-2">
-                            {groupName}
-                          </h4>
-
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                            {slugs.map((slug) => {
-                              const amenity = AMENITY_MAP[slug];
-                              if (!amenity) return null;
-
-                              return (
-                                <label
-                                  key={slug}
-                                  className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer"
-                                >
-                                  <Checkbox
-                                    checked={formData.amenities.includes(
-                                      slug
-                                    )}
-                                    onCheckedChange={() =>
-                                      toggleAmenity(slug)
-                                    }
-                                  />
-                                  <span className="text-sm">
-                                    {amenity.name}
-                                  </span>
-                                </label>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )
-                    )}
-                  </div>
+                  <AmenitiesSelector
+                    amenities={formData.amenities}
+                    onChange={(val) => handleChange("amenities", val)}
+                  />
                 </div>
 
                 <div>
