@@ -7,15 +7,11 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Bell, CreditCard, Loader2, CheckCircle, AlertCircle, Trash2 } from "lucide-react";
+import { User, Bell, CreditCard, Loader2, CheckCircle, AlertCircle, Trash2, CheckCircle2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/AuthContext";
 
-// Split a stored full_name string back into forename / middle_name / surname.
-// "Jane Smith"       → { forename: "Jane", middle_name: "", surname: "Smith" }
-// "Jane Mary Smith"  → { forename: "Jane", middle_name: "Mary", surname: "Smith" }
-// "Jane"             → { forename: "Jane", middle_name: "", surname: "" }
 function splitFullName(full_name = "") {
   const parts = full_name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return { forename: "", middle_name: "", surname: "" };
@@ -32,15 +28,38 @@ function assembleFullName({ forename, middle_name, surname }) {
   return [forename.trim(), middle_name.trim(), surname.trim()].filter(Boolean).join(" ");
 }
 
+// Inline save feedback banner — unambiguous success or error message
+function SaveBanner({ status }) {
+  if (!status) return null;
+  if (status === "success") {
+    return (
+      <div className="flex items-center gap-2 px-4 py-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800 font-medium">
+        <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
+        Changes saved successfully.
+      </div>
+    );
+  }
+  return (
+    <div className="flex items-center gap-2 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800 font-medium">
+      <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+      Failed to save changes. Please try again or contact support.
+    </div>
+  );
+}
+
 export default function Settings() {
-  const { user, updateUser, openAuthModal } = useAuth();
+  // AuthContext provides: user, isAuthenticated, isLoadingAuth, authError, roles, logout, validateSession
+  const { user } = useAuth();
 
   const [userRoles, setUserRoles] = useState([]);
   const [stripeStatus, setStripeStatus] = useState(null);
   const [stripeLoading, setStripeLoading] = useState(false);
   const [stripeStatusLoading, setStripeStatusLoading] = useState(true);
   const stripeCacheRef = useRef(null);
+
   const [saving, setSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState(null); // null | 'success' | 'error'
+
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState("");
   const [deleting, setDeleting] = useState(false);
@@ -60,12 +79,11 @@ export default function Settings() {
     notifications_marketing: false,
   });
 
-  // Load user data from auth context
+  // Load user data
   useEffect(() => {
     if (!user) return;
 
     const nameParts = splitFullName(user.full_name || "");
-
     setProfile({
       forename: nameParts.forename,
       middle_name: nameParts.middle_name,
@@ -81,7 +99,7 @@ export default function Settings() {
     });
 
     if (user.id) {
-      base44.entities.UserRole.filter({ user_id: user.id }).then(setUserRoles);
+      base44.entities.UserRole.filter({ user_id: user.id }).then(setUserRoles).catch(() => {});
     }
   }, [user]);
 
@@ -91,14 +109,13 @@ export default function Settings() {
       (r.approval_status || "").toLowerCase() === "approved"
   );
 
-  // Handle tab from URL
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const tab = urlParams.get("tab");
     if (tab) setActiveTab(tab);
   }, []);
 
-  // Stripe status fetch
+  // Stripe
   const fetchStripeStatus = async (forceRefresh = false) => {
     if (!forceRefresh && stripeCacheRef.current !== null) {
       setStripeStatus(stripeCacheRef.current);
@@ -116,13 +133,10 @@ export default function Settings() {
     }
   };
 
-  // Stripe return handling
   useEffect(() => {
     if (!hasPaymentsRole || !user) return;
-
     const urlParams = new URLSearchParams(window.location.search);
     const stripeReturn = urlParams.get("stripe_return");
-
     if (stripeReturn === "success") {
       stripeCacheRef.current = null;
       fetchStripeStatus(true).then(() => {
@@ -140,45 +154,64 @@ export default function Settings() {
     }
   }, [hasPaymentsRole, user]);
 
-  // Save profile — assemble full_name before sending
+  // Save profile — updates full_name on FoundingMember via founding_member_id
   const handleSaveProfile = async () => {
+    setSaveStatus(null);
+
     if (!profile.forename.trim()) {
-      toast.error("Forename is required.");
+      setSaveStatus("error");
       return;
     }
     if (!profile.surname.trim()) {
-      toast.error("Surname is required.");
+      setSaveStatus("error");
       return;
     }
 
     setSaving(true);
+
     try {
-      await updateUser({
-        full_name: assembleFullName(profile),
-        phone: profile.phone,
-        location: profile.location,
+      const fullName = assembleFullName(profile);
+
+      if (!user?.founding_member_id) {
+        throw new Error("No founding member ID on session");
+      }
+
+      await base44.entities.FoundingMember.update(user.founding_member_id, {
+        full_name: fullName,
       });
-      toast.success("Changes saved");
-    } catch {
-      toast.error("Failed to save changes. Please try again.");
+
+      setSaveStatus("success");
+      // Auto-clear after 4 seconds
+      setTimeout(() => setSaveStatus(null), 4000);
+    } catch (err) {
+      console.error("Save profile error:", err);
+      setSaveStatus("error");
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
-  // Toggle notifications
   const handleNotificationToggle = async (field, value) => {
     const updated = { ...notifications, [field]: value };
     setNotifications(updated);
-    await updateUser({ [field]: value });
+    // Notification prefs stored locally only for now — no backend entity for custom auth users
   };
 
-  // Delete account
   const handleDeleteAccount = async () => {
     if (deleteConfirm !== "DELETE") return;
     setDeleting(true);
     try {
-      await base44.auth.logout();
-      toast.success("Account deletion requested. You have been signed out.");
+      const token = localStorage.getItem("session_token");
+      if (token) {
+        await fetch("/functions/logoutSession", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ session_token: token }),
+        });
+      }
+      localStorage.removeItem("session_token");
+      localStorage.removeItem("session_expires_at");
+      window.location.href = "/SignIn";
     } catch {
       toast.error("Something went wrong. Please contact support.");
     }
@@ -186,7 +219,6 @@ export default function Settings() {
     setDeleteDialogOpen(false);
   };
 
-  // Stripe connect
   const handleStripeConnect = async () => {
     setStripeLoading(true);
     const res = await base44.functions.invoke("createStripeConnectLink", {});
@@ -205,9 +237,7 @@ export default function Settings() {
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Button onClick={openAuthModal} className="bg-teal-600 hover:bg-teal-700">
-          Sign in to access settings
-        </Button>
+        <p className="text-gray-500 text-sm">Please sign in to access settings.</p>
       </div>
     );
   }
@@ -252,9 +282,10 @@ export default function Settings() {
                     </Label>
                     <Input
                       value={profile.forename}
-                      onChange={(e) =>
-                        setProfile((p) => ({ ...p, forename: e.target.value }))
-                      }
+                      onChange={(e) => {
+                        setProfile((p) => ({ ...p, forename: e.target.value }));
+                        setSaveStatus(null);
+                      }}
                       placeholder="Jane"
                       className="mt-1"
                     />
@@ -266,9 +297,10 @@ export default function Settings() {
                     </Label>
                     <Input
                       value={profile.middle_name}
-                      onChange={(e) =>
-                        setProfile((p) => ({ ...p, middle_name: e.target.value }))
-                      }
+                      onChange={(e) => {
+                        setProfile((p) => ({ ...p, middle_name: e.target.value }));
+                        setSaveStatus(null);
+                      }}
                       placeholder="Optional"
                       className="mt-1"
                     />
@@ -279,9 +311,10 @@ export default function Settings() {
                     </Label>
                     <Input
                       value={profile.surname}
-                      onChange={(e) =>
-                        setProfile((p) => ({ ...p, surname: e.target.value }))
-                      }
+                      onChange={(e) => {
+                        setProfile((p) => ({ ...p, surname: e.target.value }));
+                        setSaveStatus(null);
+                      }}
                       placeholder="Smith"
                       className="mt-1"
                     />
@@ -303,9 +336,7 @@ export default function Settings() {
                     <Label>Phone Number</Label>
                     <Input
                       value={profile.phone}
-                      onChange={(e) =>
-                        setProfile((p) => ({ ...p, phone: e.target.value }))
-                      }
+                      onChange={(e) => setProfile((p) => ({ ...p, phone: e.target.value }))}
                       placeholder="+44 7123 456789"
                       className="mt-1"
                     />
@@ -314,14 +345,15 @@ export default function Settings() {
                     <Label>Location</Label>
                     <Input
                       value={profile.location}
-                      onChange={(e) =>
-                        setProfile((p) => ({ ...p, location: e.target.value }))
-                      }
+                      onChange={(e) => setProfile((p) => ({ ...p, location: e.target.value }))}
                       placeholder="e.g. London, UK"
                       className="mt-1"
                     />
                   </div>
                 </div>
+
+                {/* Inline save feedback — shown directly above the button */}
+                <SaveBanner status={saveStatus} />
 
                 <Button
                   onClick={handleSaveProfile}
@@ -349,21 +381,9 @@ export default function Settings() {
               </CardHeader>
               <CardContent className="space-y-6">
                 {[
-                  {
-                    field: "notifications_bookings",
-                    label: "Booking Notifications",
-                    desc: "New bookings, cancellations, and reminders",
-                  },
-                  {
-                    field: "notifications_messages",
-                    label: "Message Notifications",
-                    desc: "New messages from guests or hosts",
-                  },
-                  {
-                    field: "notifications_marketing",
-                    label: "Marketing Emails",
-                    desc: "Tips, news, and special offers",
-                  },
+                  { field: "notifications_bookings", label: "Booking Notifications", desc: "New bookings, cancellations, and reminders" },
+                  { field: "notifications_messages", label: "Message Notifications", desc: "New messages from guests or hosts" },
+                  { field: "notifications_marketing", label: "Marketing Emails", desc: "Tips, news, and special offers" },
                 ].map(({ field, label, desc }) => (
                   <div key={field} className="flex items-center justify-between">
                     <div>
@@ -386,9 +406,7 @@ export default function Settings() {
               <Card>
                 <CardHeader>
                   <CardTitle>Stripe Payments</CardTitle>
-                  <CardDescription>
-                    Connect your Stripe account to receive payments
-                  </CardDescription>
+                  <CardDescription>Connect your Stripe account to receive payments</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-5">
                   {stripeStatusLoading ? (
@@ -403,53 +421,27 @@ export default function Settings() {
                           <Badge className="bg-green-100 text-green-700 border-green-200 gap-1.5">
                             <CheckCircle className="w-3.5 h-3.5" /> Stripe Connected
                           </Badge>
-                          <p className="text-sm text-gray-600">
-                            Your account is verified and ready to receive payments.
-                          </p>
+                          <p className="text-sm text-gray-600">Your account is verified and ready to receive payments.</p>
                         </>
                       )}
-
                       {stripeState === "B" && (
                         <>
                           <Badge className="bg-amber-100 text-amber-700 border-amber-200 gap-1.5">
                             <AlertCircle className="w-3.5 h-3.5" /> Verification Incomplete
                           </Badge>
-                          <p className="text-sm text-gray-600">
-                            Your Stripe account is connected but needs additional verification.
-                          </p>
-                          <Button
-                            onClick={handleStripeConnect}
-                            disabled={stripeLoading}
-                            className="bg-teal-600 hover:bg-teal-700"
-                          >
-                            {stripeLoading ? (
-                              <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Loading...
-                              </>
-                            ) : (
-                              "Complete Verification"
-                            )}
+                          <p className="text-sm text-gray-600">Your Stripe account is connected but needs additional verification.</p>
+                          <Button onClick={handleStripeConnect} disabled={stripeLoading} className="bg-teal-600 hover:bg-teal-700">
+                            {stripeLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Loading...</> : "Complete Verification"}
                           </Button>
                         </>
                       )}
-
                       {stripeState === "A" && (
                         <>
                           <Badge className="bg-amber-100 text-amber-700 border-amber-200 gap-1.5">
                             <AlertCircle className="w-3.5 h-3.5" /> Not Connected
                           </Badge>
-                          <Button
-                            onClick={handleStripeConnect}
-                            disabled={stripeLoading}
-                            className="bg-teal-600 hover:bg-teal-700"
-                          >
-                            {stripeLoading ? (
-                              <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Connecting...
-                              </>
-                            ) : (
-                              "Connect with Stripe"
-                            )}
+                          <Button onClick={handleStripeConnect} disabled={stripeLoading} className="bg-teal-600 hover:bg-teal-700">
+                            {stripeLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Connecting...</> : "Connect with Stripe"}
                           </Button>
                         </>
                       )}
@@ -469,9 +461,7 @@ export default function Settings() {
           <p className="text-sm text-red-600 mb-4">
             Permanently delete your account and all associated data. This cannot be undone.
           </p>
-          <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
-            Delete Account
-          </Button>
+          <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>Delete Account</Button>
         </div>
       </div>
 
@@ -480,8 +470,7 @@ export default function Settings() {
           <DialogHeader>
             <DialogTitle>Delete Account</DialogTitle>
             <DialogDescription>
-              This action is permanent and cannot be undone. Type{" "}
-              <strong>DELETE</strong> to confirm.
+              This action is permanent and cannot be undone. Type <strong>DELETE</strong> to confirm.
             </DialogDescription>
           </DialogHeader>
           <input
@@ -491,22 +480,13 @@ export default function Settings() {
             onChange={(e) => setDeleteConfirm(e.target.value)}
           />
           <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-              Cancel
-            </Button>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
             <Button
               variant="destructive"
               disabled={deleteConfirm !== "DELETE" || deleting}
               onClick={handleDeleteAccount}
             >
-              {deleting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                "Permanently Delete"
-              )}
+              {deleting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Deleting...</> : "Permanently Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>
