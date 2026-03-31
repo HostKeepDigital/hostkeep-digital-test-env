@@ -49,6 +49,7 @@ Deno.serve(async (req) => {
 
     let role = null;
     let founding_member_id = null;
+    let userId = null;
 
     // Check FoundingMember
     const members = await serviceRole.entities.FoundingMember.filter({
@@ -58,34 +59,50 @@ Deno.serve(async (req) => {
       founding_member_id = members[0].id;
     }
 
-    // Resolve role via UserRole (approved) using Base44 User entity
+    // Resolve role via UserRole (approved)
     try {
-      const users = await serviceRole.entities.User.filter({ email: normalisedEmail });
-      const userId = users?.[0]?.id;
+      const users = await serviceRole.entities.User.filter({
+        email: normalisedEmail,
+      });
+      userId = users?.[0]?.id || null;
+
       if (userId) {
-        const userRoles = await serviceRole.entities.UserRole.filter({ user_id: userId });
-        const approved = userRoles.filter(r => (r.approval_status || '').toLowerCase() === 'approved');
-        const priority = ['admin', 'host', 'cleaner'];
+        const userRoles = await serviceRole.entities.UserRole.filter({
+          user_id: userId,
+        });
+
+        const approved = userRoles.filter(
+          (r) => (r.approval_status || "").toLowerCase() === "approved"
+        );
+
+        const priority = ["admin", "host", "cleaner"];
         for (const p of priority) {
-          if (approved.some(r => r.role === p)) { role = p; break; }
+          if (approved.some((r) => r.role === p)) {
+            role = p;
+            break;
+          }
         }
-        if (!role && approved.some(r => r.role === 'guest')) role = 'guest';
+
+        if (!role && approved.some((r) => r.role === "guest")) {
+          role = "guest";
+        }
       }
     } catch (_) {}
 
-    // Admin email override — must run BEFORE any fallback logic
+    // ⭐ ADMIN OVERRIDE — MUST RUN BEFORE ANY FALLBACK
     const adminEmails = ["admin@hostkeepdigital.co.uk"];
     if (adminEmails.includes(normalisedEmail)) {
       role = "admin";
     }
 
-    // Fall back to FoundingMember role ONLY if not admin
+    // ⭐ FALLBACK TO FOUNDING MEMBER ROLE — ONLY IF NOT ADMIN
     if (!role && !adminEmails.includes(normalisedEmail) && members?.[0]?.role) {
       role = members[0].role;
     }
 
+    // Final fallback
     if (!role) {
-     role = "guest";
+      role = "guest";
     }
 
     const session_token = crypto.randomUUID();
@@ -108,9 +125,10 @@ Deno.serve(async (req) => {
       email: normalisedEmail,
       role,
       founding_member_id,
-      user_id: cred.id || null,
+      user_id: userId || null, // ⭐ FIXED: now points to User.id
       expires_at,
     });
+
     return Response.json({
       success: true,
       session_token,
