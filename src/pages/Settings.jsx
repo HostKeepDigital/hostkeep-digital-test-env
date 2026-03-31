@@ -12,6 +12,26 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { toast } from "sonner";
 import { useAuth } from "@/lib/AuthContext";
 
+// Split a stored full_name string back into forename / middle_name / surname.
+// "Jane Smith"       → { forename: "Jane", middle_name: "", surname: "Smith" }
+// "Jane Mary Smith"  → { forename: "Jane", middle_name: "Mary", surname: "Smith" }
+// "Jane"             → { forename: "Jane", middle_name: "", surname: "" }
+function splitFullName(full_name = "") {
+  const parts = full_name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return { forename: "", middle_name: "", surname: "" };
+  if (parts.length === 1) return { forename: parts[0], middle_name: "", surname: "" };
+  if (parts.length === 2) return { forename: parts[0], middle_name: "", surname: parts[1] };
+  return {
+    forename: parts[0],
+    middle_name: parts.slice(1, -1).join(" "),
+    surname: parts[parts.length - 1],
+  };
+}
+
+function assembleFullName({ forename, middle_name, surname }) {
+  return [forename.trim(), middle_name.trim(), surname.trim()].filter(Boolean).join(" ");
+}
+
 export default function Settings() {
   const { user, updateUser, openAuthModal } = useAuth();
 
@@ -26,7 +46,14 @@ export default function Settings() {
   const [deleting, setDeleting] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
 
-  const [profile, setProfile] = useState({ full_name: "", phone: "", location: "" });
+  const [profile, setProfile] = useState({
+    forename: "",
+    middle_name: "",
+    surname: "",
+    phone: "",
+    location: "",
+  });
+
   const [notifications, setNotifications] = useState({
     notifications_bookings: true,
     notifications_messages: true,
@@ -37,8 +64,12 @@ export default function Settings() {
   useEffect(() => {
     if (!user) return;
 
+    const nameParts = splitFullName(user.full_name || "");
+
     setProfile({
-      full_name: user.full_name || "",
+      forename: nameParts.forename,
+      middle_name: nameParts.middle_name,
+      surname: nameParts.surname,
       phone: user.phone || "",
       location: user.location || "",
     });
@@ -109,11 +140,24 @@ export default function Settings() {
     }
   }, [hasPaymentsRole, user]);
 
-  // Save profile
+  // Save profile — assemble full_name before sending
   const handleSaveProfile = async () => {
+    if (!profile.forename.trim()) {
+      toast.error("Forename is required.");
+      return;
+    }
+    if (!profile.surname.trim()) {
+      toast.error("Surname is required.");
+      return;
+    }
+
     setSaving(true);
     try {
-      await updateUser(profile);
+      await updateUser({
+        full_name: assembleFullName(profile),
+        phone: profile.phone,
+        location: profile.location,
+      });
       toast.success("Changes saved");
     } catch {
       toast.error("Failed to save changes. Please try again.");
@@ -199,25 +243,59 @@ export default function Settings() {
                 <CardDescription>Update your personal details</CardDescription>
               </CardHeader>
               <CardContent className="space-y-5">
-                <div className="grid md:grid-cols-2 gap-5">
+
+                {/* Name — three fields matching the founding form */}
+                <div className="grid md:grid-cols-3 gap-4">
                   <div>
-                    <Label>Full Name</Label>
+                    <Label>
+                      Forename <span className="text-red-500">*</span>
+                    </Label>
                     <Input
-                      value={profile.full_name}
+                      value={profile.forename}
                       onChange={(e) =>
-                        setProfile((p) => ({ ...p, full_name: e.target.value }))
+                        setProfile((p) => ({ ...p, forename: e.target.value }))
                       }
+                      placeholder="Jane"
                       className="mt-1"
                     />
                   </div>
                   <div>
-                    <Label>Email Address</Label>
+                    <Label>
+                      Middle name{" "}
+                      <span className="text-gray-400 text-xs">(optional)</span>
+                    </Label>
                     <Input
-                      value={user.email}
-                      disabled
-                      className="mt-1 bg-gray-100 text-gray-500 cursor-not-allowed"
+                      value={profile.middle_name}
+                      onChange={(e) =>
+                        setProfile((p) => ({ ...p, middle_name: e.target.value }))
+                      }
+                      placeholder="Optional"
+                      className="mt-1"
                     />
                   </div>
+                  <div>
+                    <Label>
+                      Surname <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      value={profile.surname}
+                      onChange={(e) =>
+                        setProfile((p) => ({ ...p, surname: e.target.value }))
+                      }
+                      placeholder="Smith"
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+
+                {/* Email — read-only */}
+                <div>
+                  <Label>Email Address</Label>
+                  <Input
+                    value={user.email}
+                    disabled
+                    className="mt-1 bg-gray-100 text-gray-500 cursor-not-allowed"
+                  />
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-5">
@@ -334,12 +412,10 @@ export default function Settings() {
                       {stripeState === "B" && (
                         <>
                           <Badge className="bg-amber-100 text-amber-700 border-amber-200 gap-1.5">
-                            <AlertCircle className="w-3.5 h-3.5" /> Verification
-                            Incomplete
+                            <AlertCircle className="w-3.5 h-3.5" /> Verification Incomplete
                           </Badge>
                           <p className="text-sm text-gray-600">
-                            Your Stripe account is connected but needs additional
-                            verification.
+                            Your Stripe account is connected but needs additional verification.
                           </p>
                           <Button
                             onClick={handleStripeConnect}
@@ -387,9 +463,15 @@ export default function Settings() {
 
         {/* Danger Zone */}
         <div className="mt-10 border border-red-200 rounded-xl p-6 bg-red-50">
-          <h3 className="text-lg font-semibold text-red-700 mb-1 flex items-center gap-2"><Trash2 className="w-5 h-5" /> Danger Zone</h3>
-          <p className="text-sm text-red-600 mb-4">Permanently delete your account and all associated data. This cannot be undone.</p>
-          <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>Delete Account</Button>
+          <h3 className="text-lg font-semibold text-red-700 mb-1 flex items-center gap-2">
+            <Trash2 className="w-5 h-5" /> Danger Zone
+          </h3>
+          <p className="text-sm text-red-600 mb-4">
+            Permanently delete your account and all associated data. This cannot be undone.
+          </p>
+          <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
+            Delete Account
+          </Button>
         </div>
       </div>
 
@@ -397,7 +479,10 @@ export default function Settings() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Account</DialogTitle>
-            <DialogDescription>This action is permanent and cannot be undone. Type <strong>DELETE</strong> to confirm.</DialogDescription>
+            <DialogDescription>
+              This action is permanent and cannot be undone. Type{" "}
+              <strong>DELETE</strong> to confirm.
+            </DialogDescription>
           </DialogHeader>
           <input
             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm mt-2 focus:outline-none focus:ring-2 focus:ring-red-400"
@@ -406,13 +491,22 @@ export default function Settings() {
             onChange={(e) => setDeleteConfirm(e.target.value)}
           />
           <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
             <Button
               variant="destructive"
               disabled={deleteConfirm !== "DELETE" || deleting}
               onClick={handleDeleteAccount}
             >
-              {deleting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Deleting...</> : "Permanently Delete"}
+              {deleting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Permanently Delete"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
