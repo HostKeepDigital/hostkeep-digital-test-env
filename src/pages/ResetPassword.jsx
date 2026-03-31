@@ -91,7 +91,7 @@ setStep("success");
       <div className="absolute inset-0 bg-gradient-to-br from-[#1E3A5F]/90 via-[#1E3A5F]/70 to-[#0d9488]/50" />
       <div className="relative z-10 flex flex-col justify-between p-12 w-full">
         <img
-          src="https://i.ibb.co/6cwz6PzN/Host-Keep-Digital-Navy-Background.png"
+          src="https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/HostKeep_Digital_Navy_Background.png"
           alt="HostKeep Digital"
           className="h-10 w-auto"
         />
