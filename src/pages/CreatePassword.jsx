@@ -138,7 +138,7 @@ export default function CreatePassword() {
           <img
             src={LOGO_IMG}
             alt="HostKeep Digital"
-            className="h-20 w-auto"
+            className="h-60 w-auto"
           />
 
           <div>
@@ -177,7 +177,7 @@ export default function CreatePassword() {
             <img
               src={LOGO_IMG}
               alt="HostKeep Digital"
-              className="h-20 w-auto"
+              className="h-60 w-auto"
             />
           </div>
 
