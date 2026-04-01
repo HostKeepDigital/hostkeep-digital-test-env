@@ -788,8 +788,14 @@ export default function CreateProperty() {
                     </div>
                   </CardContent>
                 </Card>
-
-                  <Card>
+                <DayBasedBookingRules
+                  value={{ enabled: formData.day_based_restrictions_enabled, rules: formData.booking_rules }}
+                  onChange={(data) => {
+                    handleChange("day_based_restrictions_enabled", data.enabled);
+                    handleChange("booking_rules", data.rules);
+                  }}
+                />
+                <Card>
                   <CardHeader>
                     <CardTitle>Smart Lock Automation</CardTitle>
                     <CardDescription>Automatically send your smart lock code to guests before check‑in. The system will ensure the code is never sent while the guest can still cancel.</CardDescription>
@@ -841,15 +847,6 @@ export default function CreateProperty() {
                 </Card>
               </div>
             )}
-
-                <DayBasedBookingRules
-                  value={{ enabled: formData.day_based_restrictions_enabled, rules: formData.booking_rules }}
-                  onChange={(data) => {
-                    handleChange("day_based_restrictions_enabled", data.enabled);
-                    handleChange("booking_rules", data.rules);
-                  }}
-                />
-              
 
             {/* Step 7: Verification */}
             {currentStep === 7 && (
