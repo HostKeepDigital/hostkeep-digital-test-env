@@ -762,7 +762,7 @@ export default function CreateProperty() {
                     <label className="flex items-center gap-2 cursor-pointer">
                       <Checkbox
                         checked={formData.smart_lock_enabled}
-                        disabled={!formData.cancellation_policy_id}
+                        disabled={false}
                         onCheckedChange={(v) =>
                           handleChange("smart_lock_enabled", v)
                         }
