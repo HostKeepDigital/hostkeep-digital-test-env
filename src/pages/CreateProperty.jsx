@@ -96,6 +96,7 @@ export default function CreateProperty() {
   const [titleError, setTitleError] = useState("");
   const [locationData, setLocationData] = useState({});
   const [uploadedFileIdentifiers, setUploadedFileIdentifiers] = useState([]);
+  const [smartLockPolicyWarning, setSmartLockPolicyWarning] = useState(null);
 
   const validateTitle = (value) => {
     const invalidChars = value.replace(/[a-zA-Z0-9\s\-&!.]/g, "");
