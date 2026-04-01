@@ -990,10 +990,9 @@ export default function EditProperty() {
       {/* BOOKING RULES TAB */}
       <TabsContent value="booking-rules">
         <DayBasedBookingRules
-          formData={formData}
-          onUpdate={(field, value) => handleChange(field, value)}
+          value={formData.booking_rules}
+          onChange={(value) => handleChange("booking_rules", value)}
         />
-
         {/* CANCELLATION POLICY */}
         <Card className="mt-6">
           <CardHeader>
