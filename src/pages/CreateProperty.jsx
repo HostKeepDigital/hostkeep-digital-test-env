@@ -743,7 +743,7 @@ export default function CreateProperty() {
                     <div>
                       <Label>Policy Type <span className="text-red-500">*</span></Label>
                       <Select
-                        value={formData.cancellation_policy_id}
+                        value={formData.cancellation_policy_id || undefined}
                         onValueChange={(val) => {
                           const policy = policies?.find(p => p.id === val);
                           const isStrict = policy?.policy_name?.includes("Strict");
