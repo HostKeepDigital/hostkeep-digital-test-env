@@ -207,9 +207,13 @@ export default function CreateProperty() {
       });
 
       if (user?.id) {
-        const roles = await getUserRoles(user.id);
-        if (!hasRole(roles, "guest")) await addUserRole(user.id, "guest");
-        if (!hasRole(roles, "host")) await addUserRole(user.id, "host");
+        try {
+          const roles = await getUserRoles(user.id);
+          if (!hasRole(roles, "guest")) await addUserRole(user.id, "guest");
+          if (!hasRole(roles, "host")) await addUserRole(user.id, "host");
+        } catch (e) {
+          console.warn("Role assignment skipped:", e);
+        }
       }
 
       return property;
