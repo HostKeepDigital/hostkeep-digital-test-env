@@ -788,13 +788,6 @@ export default function CreateProperty() {
                     </div>
                   </CardContent>
                 </Card>
-                <DayBasedBookingRules
-                  value={{ enabled: formData.day_based_restrictions_enabled, rules: formData.booking_rules }}
-                  onChange={(data) => {
-                    handleChange("day_based_restrictions_enabled", data.enabled);
-                    handleChange("booking_rules", data.rules);
-                  }}
-                />
                 <Card>
                   <CardHeader>
                     <CardTitle>Smart Lock Automation</CardTitle>
@@ -845,6 +838,13 @@ export default function CreateProperty() {
                     )}
                   </CardContent>
                 </Card>
+                <DayBasedBookingRules
+                  value={{ enabled: formData.day_based_restrictions_enabled, rules: formData.booking_rules }}
+                  onChange={(data) => {
+                    handleChange("day_based_restrictions_enabled", data.enabled);
+                    handleChange("booking_rules", data.rules);
+                  }}
+                />
               </div>
             )}
 
