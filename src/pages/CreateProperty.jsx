@@ -49,6 +49,7 @@ import {
 import LocationStep from "@/components/properties/LocationStep";
 import AmenitiesSelector from "@/components/properties/AmenitiesSelector";
 import { useAuth } from "@/lib/AuthContext";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import { AMENITY_GROUPS, AMENITY_MAP } from "@/data/amenities";
 
