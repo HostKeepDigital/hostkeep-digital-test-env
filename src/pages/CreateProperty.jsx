@@ -777,35 +777,53 @@ export default function CreateProperty() {
                     </div>
                   </CardContent>
                 </Card>
+               
                 <Card>
                   <CardHeader>
                     <CardTitle>Smart Lock Automation</CardTitle>
-                    <CardDescription>Automatically send your smart lock code to guests before check‑in. The system will ensure the code is never sent while the guest can still cancel.</CardDescription>
+                    <CardDescription>
+                      If your property has a smart lock, enter the guest access code below. Guests will use this to gain entry to your property. You can optionally enable automatic delivery of this code before check‑in.
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <Checkbox
-                        checked={formData.smart_lock_enabled}
-                        disabled={!formData.cancellation_policy_id}
-                        onCheckedChange={(v) => handleChange("smart_lock_enabled", v)}
+                    <div>
+                      <Label>Smart Lock Code</Label>
+                      <Input
+                        value={formData.smart_lock_code}
+                        onChange={(e) => handleChange("smart_lock_code", e.target.value)}
+                        placeholder="e.g. 4829# or app-generated code"
+                        className="mt-1"
                       />
-                      <span>
-                        Enable smart lock automation
-                        {!formData.cancellation_policy_id && " (select a cancellation policy first)"}
-                      </span>
-                    </label>
-                    {formData.smart_lock_enabled && (
-                      <div className="space-y-4 pl-6">
+                    </div>
+                    <div className="pt-2 border-t border-gray-100">
+                      <label className="flex items-start gap-2 cursor-pointer">
+                        <Checkbox
+                          checked={formData.smart_lock_enabled}
+                          disabled={!formData.cancellation_policy_id}
+                          onCheckedChange={(v) => {
+                            if (!v) {
+                              handleChange("smart_lock_send_hours", null);
+                              setSmartLockPolicyWarning(null);
+                              toast.info("Auto-send timing has been cleared.");
+                            }
+                            handleChange("smart_lock_enabled", v);
+                          }}
+                          className="mt-0.5"
+                        />
                         <div>
-                          <Label>Smart Lock Code</Label>
-                          <Input
-                            value={formData.smart_lock_code}
-                            onChange={(e) => handleChange("smart_lock_code", e.target.value)}
-                            placeholder="e.g. 4829# or app-generated code"
-                            className="mt-1"
-                          />
+                          <p className="text-sm font-medium">
+                            Enable smart lock automation
+                            {!formData.cancellation_policy_id && (
+                              <span className="text-gray-400 font-normal"> (select a cancellation policy first)</span>
+                            )}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            Automatically send your smart lock code to guests before check‑in. The system will never send the code while the guest can still cancel.
+                          </p>
                         </div>
-                        <div>
+                      </label>
+                      {formData.smart_lock_enabled && (
+                        <div className="mt-4 pl-6 space-y-2">
                           <Label>Auto-send timing</Label>
                           <select
                             value={formData.smart_lock_send_hours ?? ""}
@@ -813,20 +831,29 @@ export default function CreateProperty() {
                             className="mt-1 w-full border rounded-md p-2"
                           >
                             <option value="">Select timing</option>
-                            {[24, 48, 72, 96, 120, 144, 168].map((hours) => (
-                              <option key={hours} value={hours}>
-                                {hours} Hours ({hours / 24} Day{hours > 24 ? "s" : ""})
-                              </option>
-                            ))}
+                            {[24, 48, 72, 96, 120, 144, 168].map((hours) => {
+                              const policy = policies?.find(p => p.id === formData.cancellation_policy_id);
+                              const maxAllowed = policy ? Math.max((policy.tier_1_deadline_days ?? 0) * 24 - 12, 0) : 999;
+                              const disabled = hours > maxAllowed;
+                              return (
+                                <option key={hours} value={hours} disabled={disabled}>
+                                  {hours} Hours ({hours / 24} Day{hours > 24 ? "s" : ""}){disabled ? " — too early for selected policy" : ""}
+                                </option>
+                              );
+                            })}
                           </select>
                           <p className="text-xs text-gray-500 mt-1">
-                            The system will automatically adjust this based on your cancellation policy and will never send the code while the guest can still cancel.
+                            Options unavailable due to your cancellation policy window are marked above.
                           </p>
+                          {smartLockPolicyWarning && (
+                            <p className="text-xs text-red-500 mt-1 font-medium">{smartLockPolicyWarning}</p>
+                          )}
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
+
                 <DayBasedBookingRules
                   value={{ enabled: formData.day_based_restrictions_enabled, rules: formData.booking_rules }}
                   onChange={(data) => {
