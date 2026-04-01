@@ -310,7 +310,7 @@ export default function CreateProperty() {
       case 5:
         return formData.nightly_rate > 0;
       case 6:
-        return !!formData.cancellation_policy_id;
+        return true;
       case 7:
         return (
           formData.existing_listing_url.trim().length > 0 ||
