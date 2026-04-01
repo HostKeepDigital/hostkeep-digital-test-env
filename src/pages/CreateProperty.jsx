@@ -755,46 +755,7 @@ export default function CreateProperty() {
                           }));
                         }}
                       >
-                        <SelectTrigger className={`mt-1 ${!formData.cancellation_policy_id ? 'border-red-300' : ''}`}>
-                          <SelectValue placeholder="Select a policy..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {policies?.map(p => (
-                            <SelectItem key={p.id} value={p.id}>{p.policy_name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {!formData.cancellation_policy_id && (
-                        <p className="text-sm text-red-500 mt-1">Cancellation policy is required</p>
-                      )}
-                      {formData.cancellation_policy_id && (
-                        <div className="mt-3 p-4 bg-gray-50 rounded-lg text-sm text-gray-700">
-                          {policies?.find(p => p.id === formData.cancellation_policy_id)?.description}
-                        </div>
-                      )}
-                      {policies?.find(p => p.id === formData.cancellation_policy_id)?.policy_name === "Super Strict" && (
-                        <div className="mt-2 text-sm text-rose-600 font-medium">
-                          Warning: This policy may reduce booking conversions.
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Checkbox
-                        checked={formData.cleaning_fee_refundable}
-                        onCheckedChange={(val) => handleChange("cleaning_fee_refundable", val)}
-                        id="clean-refund-new"
-                      />
-                      <Label htmlFor="clean-refund-new" className="font-normal cursor-pointer">Refund cleaning fee if guest cancels before check-in</Label>
-                    </div>
-                  </CardContent>
-                </Card>
-                <DayBasedBookingRules
-                  value={{ enabled: formData.day_based_restrictions_enabled, rules: formData.booking_rules }}
-                  onChange={(data) => {
-                    handleChange("day_based_restrictions_enabled", data.enabled);
-                    handleChange("booking_rules", data.rules);
-                  }}
-                />
+
                 <Card>
                   <CardHeader>
                     <CardTitle>Smart Lock Automation</CardTitle>
@@ -845,6 +806,48 @@ export default function CreateProperty() {
                     )}
                   </CardContent>
                 </Card>
+
+                        <SelectTrigger className={`mt-1 ${!formData.cancellation_policy_id ? 'border-red-300' : ''}`}>
+                          <SelectValue placeholder="Select a policy..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {policies?.map(p => (
+                            <SelectItem key={p.id} value={p.id}>{p.policy_name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {!formData.cancellation_policy_id && (
+                        <p className="text-sm text-red-500 mt-1">Cancellation policy is required</p>
+                      )}
+                      {formData.cancellation_policy_id && (
+                        <div className="mt-3 p-4 bg-gray-50 rounded-lg text-sm text-gray-700">
+                          {policies?.find(p => p.id === formData.cancellation_policy_id)?.description}
+                        </div>
+                      )}
+                      {policies?.find(p => p.id === formData.cancellation_policy_id)?.policy_name === "Super Strict" && (
+                        <div className="mt-2 text-sm text-rose-600 font-medium">
+                          Warning: This policy may reduce booking conversions.
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Checkbox
+                        checked={formData.cleaning_fee_refundable}
+                        onCheckedChange={(val) => handleChange("cleaning_fee_refundable", val)}
+                        id="clean-refund-new"
+                      />
+                      <Label htmlFor="clean-refund-new" className="font-normal cursor-pointer">Refund cleaning fee if guest cancels before check-in</Label>
+                    </div>
+                  </CardContent>
+                </Card>
+                <DayBasedBookingRules
+                  value={{ enabled: formData.day_based_restrictions_enabled, rules: formData.booking_rules }}
+                  onChange={(data) => {
+                    handleChange("day_based_restrictions_enabled", data.enabled);
+                    handleChange("booking_rules", data.rules);
+                  }}
+                />
+
               </div>
             )}
 
