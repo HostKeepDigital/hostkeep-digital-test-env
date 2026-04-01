@@ -137,7 +137,7 @@ export default function CreateProperty() {
     check_in_time: "15:00",
     check_out_time: "10:00",
     day_based_restrictions_enabled: false,
-    booking_rules: {},
+    booking_rules: { enabled: false, rules: {} },
     cancellation_policy_id: "",
     cleaning_fee_refundable: true,
     pricing_settings: {
