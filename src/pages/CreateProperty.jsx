@@ -310,7 +310,7 @@ export default function CreateProperty() {
       case 5:
         return formData.nightly_rate > 0;
       case 6:
-        return true;
+        return !!formData.cancellation_policy_id;
       case 7:
         return (
           formData.existing_listing_url.trim().length > 0 ||
@@ -733,94 +733,118 @@ export default function CreateProperty() {
 
             {/* Step 6: Booking Rules + Smart Lock */}
             {currentStep === 6 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Booking Rules</CardTitle>
-                  <CardDescription>
-                    Set your booking restrictions and cancellation policy
-                  </CardDescription>
-                </CardHeader>
-
-                <CardContent className="space-y-8">
-                  <DayBasedBookingRules
-                    formData={formData}
-                    onUpdate={(field, value) => handleChange(field, value)}
-                  />
-
-                  <div className="pt-6 border-t border-gray-200 space-y-4">
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Cancellation Policy</CardTitle>
+                    <CardDescription>Select the cancellation policy for this property.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
                     <div>
-                      <Label className="text-lg font-medium">
-                        Smart Lock Automation
-                      </Label>
-                      <p className="text-sm text-gray-500">
-                        Automatically send your smart lock code to guests
-                        before check‑in. The system will ensure the code is
-                        never sent while the guest can still cancel.
-                      </p>
+                      <Label>Policy Type <span className="text-red-500">*</span></Label>
+                      <Select
+                        value={formData.cancellation_policy_id}
+                        onValueChange={(val) => {
+                          const policy = policies?.find(p => p.id === val);
+                          const isStrict = policy?.policy_name?.includes("Strict");
+                          setFormData(prev => ({
+                            ...prev,
+                            cancellation_policy_id: val,
+                            cleaning_fee_refundable: !isStrict
+                          }));
+                        }}
+                      >
+                        <SelectTrigger className={`mt-1 ${!formData.cancellation_policy_id ? 'border-red-300' : ''}`}>
+                          <SelectValue placeholder="Select a policy..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {policies?.map(p => (
+                            <SelectItem key={p.id} value={p.id}>{p.policy_name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {!formData.cancellation_policy_id && (
+                        <p className="text-sm text-red-500 mt-1">Cancellation policy is required</p>
+                      )}
+                      {formData.cancellation_policy_id && (
+                        <div className="mt-3 p-4 bg-gray-50 rounded-lg text-sm text-gray-700">
+                          {policies?.find(p => p.id === formData.cancellation_policy_id)?.description}
+                        </div>
+                      )}
+                      {policies?.find(p => p.id === formData.cancellation_policy_id)?.policy_name === "Super Strict" && (
+                        <div className="mt-2 text-sm text-rose-600 font-medium">
+                          Warning: This policy may reduce booking conversions.
+                        </div>
+                      )}
                     </div>
-
+                    <div className="flex items-center gap-3">
+                      <Checkbox
+                        checked={formData.cleaning_fee_refundable}
+                        onCheckedChange={(val) => handleChange("cleaning_fee_refundable", val)}
+                        id="clean-refund-new"
+                      />
+                      <Label htmlFor="clean-refund-new" className="font-normal cursor-pointer">Refund cleaning fee if guest cancels before check-in</Label>
+                    </div>
+                  </CardContent>
+                </Card>
+                <DayBasedBookingRules
+                  value={{ enabled: formData.day_based_restrictions_enabled, rules: formData.booking_rules }}
+                  onChange={(data) => {
+                    handleChange("day_based_restrictions_enabled", data.enabled);
+                    handleChange("booking_rules", data.rules);
+                  }}
+                />
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Smart Lock Automation</CardTitle>
+                    <CardDescription>Automatically send your smart lock code to guests before check‑in. The system will ensure the code is never sent while the guest can still cancel.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <Checkbox
                         checked={formData.smart_lock_enabled}
-                        disabled={false}
-                        onCheckedChange={(v) =>
-                          handleChange("smart_lock_enabled", v)
-                        }
+                        disabled={!formData.cancellation_policy_id}
+                        onCheckedChange={(v) => handleChange("smart_lock_enabled", v)}
                       />
                       <span>
                         Enable smart lock automation
-                        {!formData.cancellation_policy_id &&
-                          " (select a cancellation policy first)"}
+                        {!formData.cancellation_policy_id && " (select a cancellation policy first)"}
                       </span>
                     </label>
-
                     {formData.smart_lock_enabled && (
                       <div className="space-y-4 pl-6">
                         <div>
                           <Label>Smart Lock Code</Label>
                           <Input
                             value={formData.smart_lock_code}
-                            onChange={(e) =>
-                              handleChange("smart_lock_code", e.target.value)
-                            }
+                            onChange={(e) => handleChange("smart_lock_code", e.target.value)}
                             placeholder="e.g. 4829# or app-generated code"
                             className="mt-1"
                           />
                         </div>
-
                         <div>
                           <Label>Auto-send timing</Label>
                           <select
                             value={formData.smart_lock_send_hours ?? ""}
-                            onChange={(e) =>
-                              handleChange(
-                                "smart_lock_send_hours",
-                                e.target.value
-                                  ? parseInt(e.target.value)
-                                  : null
-                              )
-                            }
+                            onChange={(e) => handleChange("smart_lock_send_hours", e.target.value ? parseInt(e.target.value) : null)}
                             className="mt-1 w-full border rounded-md p-2"
                           >
                             <option value="">Select timing</option>
                             {[24, 48, 72, 96, 120, 144, 168].map((hours) => (
                               <option key={hours} value={hours}>
-                                {hours} Hours ({hours / 24} Day
-                                {hours > 24 ? "s" : ""})
+                                {hours} Hours ({hours / 24} Day{hours > 24 ? "s" : ""})
                               </option>
                             ))}
                           </select>
                           <p className="text-xs text-gray-500 mt-1">
-                            The system will automatically adjust this based on
-                            your cancellation policy and will never send the
-                            code while the guest can still cancel.
+                            The system will automatically adjust this based on your cancellation policy and will never send the code while the guest can still cancel.
                           </p>
                         </div>
                       </div>
                     )}
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </div>
             )}
 
             {/* Step 7: Verification */}
