@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -59,7 +59,9 @@ export default function DayBasedBookingRules({ value, onChange }) {
   });
   const [errors, setErrors] = useState({});
 
+const isMounted = useRef(false);
   useEffect(() => {
+    if (!isMounted.current) { isMounted.current = true; return; }
     onChange({ enabled, rules });
   }, [enabled, rules]);
 
