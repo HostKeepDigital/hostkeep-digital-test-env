@@ -60,10 +60,10 @@ export default function DayBasedBookingRules({ value, onChange }) {
   const [errors, setErrors] = useState({});
 
 const isMounted = useRef(false);
-  useEffect(() => {
-    if (!isMounted.current) { isMounted.current = true; return; }
-    onChange({ enabled, rules });
-  }, [enabled, rules]);
+useEffect(() => {
+  if (!isMounted.current) { isMounted.current = true; return; }
+  if (typeof onChange === "function") onChange({ enabled, rules });
+}, [enabled, rules]);
 
   const updateDayRule = (day, field, val) => {
     setRules(prev => ({
