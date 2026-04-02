@@ -29,7 +29,7 @@ import { createPageUrl } from "@/utils";
 import MobileSelect from "@/components/MobileSelect";
 import { Link, useNavigate } from "react-router-dom";
 import { getUserRoles, hasRole } from "@/components/utils/roleHelpers";
-import { useUser } from "@/hooks/useUser";
+import { useAuth } from "@/lib/AuthContext";
 import { api } from "@/utils/api";
 
 const PLAN_DISPLAY_NAMES = {
@@ -147,7 +147,8 @@ export default function Subscription() {
     tabParam === "cleaner" ? "cleaner" : "host",
   );
 
-  const { user, role, loading } = useUser();
+  const { user, isLoadingAuth: loading } = useAuth();
+  const role = user?.role || null;
   const [userRoles, setUserRoles] = useState(null); // null = loading
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
