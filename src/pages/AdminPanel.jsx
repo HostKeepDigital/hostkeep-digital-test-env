@@ -664,14 +664,19 @@ export default function AdminPanel() {
     fetchMembers();
   };
 
-  const handleDelete = async (member) => {
-    if (!window.confirm(`Delete ${member.full_name}? This cannot be undone.`)) return;
-    setML(member.id, "delete");
-    await base44.entities.FoundingMember.delete(member.id);
-    toast.success("Record deleted");
-    setML(member.id, null);
-    fetchMembers();
-  };
+const handleDelete = async (member) => {
+  if (!window.confirm(`Delete ${member.full_name}? This will remove their account and all credentials. This cannot be undone.`)) return;
+  setML(member.id, "delete");
+  try {
+    await base44.functions.invoke("deleteAccount", { admin_delete_email: member.email });
+    toast.success("Account fully deleted");
+  } catch (e) {
+    toast.error("Delete failed");
+    console.error(e);
+  }
+  setML(member.id, null);
+  fetchMembers();
+};
 
   // ── VERIFICATION QUERIES ──────────────────────────────────────────────────
 
