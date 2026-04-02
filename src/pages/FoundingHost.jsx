@@ -221,16 +221,6 @@ export default function FoundingHost() {
         </div>
       </section>
 
-      {/* IMAGE BREAK */}
-      <section className="relative h-64 overflow-hidden">
-        <img src={LOOE_IMG} alt="Cornwall" className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#1E3A5F]/80 to-transparent flex items-center">
-          <div className="max-w-7xl mx-auto px-4">
-            <p className="text-white text-2xl font-bold max-w-sm">Built in Cornwall. For Cornwall holiday lets.</p>
-          </div>
-        </div>
-      </section>
-
       {/* APPLICATION FORM */}
       <section ref={formRef} className="max-w-2xl mx-auto px-4 py-16">
         <div className="text-center mb-8">
