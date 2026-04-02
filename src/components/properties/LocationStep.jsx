@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,9 @@ import { toast } from "sonner";
  * Postcode is the single source of truth.
  * Uses Postcodes.io (via postcodeGeolookupV2 backend function) for authoritative data.
  * Checks that the postcode is within the Cornwall/Devon launch area (TR, PL, EX).
+ *
+ * If signupPostcode is provided (from the founding member record), it is pre-filled
+ * into the postcode input and automatically verified on mount.
  */
 
 // HostKeep launch area — Cornwall & Devon postcode areas only
@@ -46,12 +49,12 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
     return null;
   };
 
-  
-
   const [postcodeInput, setPostcodeInput] = useState(formData.postcode || "");
   const [postcodeLoading, setPostcodeLoading] = useState(false);
   const [postcodeError, setPostcodeError] = useState("");
   const [postcodeData, setPostcodeData] = useState(() => buildPostcodeData(formData));
+
+  const didAutoLookup = useRef(false);
 
   // Derive in-area state directly from postcodeData
   const inArea = postcodeData
@@ -59,30 +62,43 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
     : null; // null = not yet checked
 
   // Sync when formData.postcode arrives asynchronously (e.g. after DB load)
-    useEffect(() => {
-      if (formData.postcode && !postcodeData) {
-        setPostcodeInput(formData.postcode);
-        setPostcodeData(buildPostcodeData(formData));
-      }
-    }, [formData.postcode]);
+  useEffect(() => {
+    if (formData.postcode && !postcodeData) {
+      setPostcodeInput(formData.postcode);
+      setPostcodeData(buildPostcodeData(formData));
+    }
+  }, [formData.postcode]);
 
-    // Pre-fill from signup postcode
-    useEffect(() => {
-      if (signupPostcode && !formData.postcode && !postcodeData && !postcodeLoading) {
-        setPostcodeInput(signupPostcode.toUpperCase());
-      }
-    }, [signupPostcode]);
+  // Pre-fill postcode from founding member signup record
+  useEffect(() => {
+    if (!signupPostcode || formData.postcode || postcodeData || didAutoLookup.current) return;
+    didAutoLookup.current = true;
+    setPostcodeInput(signupPostcode.toUpperCase());
+  }, [signupPostcode]);
 
-    const handlePostcodeLookup = async () => {
-      const raw = postcodeInput.trim();
-      if (!raw) {
-        setPostcodeError("Please enter a postcode.");
-        return;
-      }
+  // Auto-verify once input has been pre-filled from signupPostcode
+  useEffect(() => {
+    if (
+      didAutoLookup.current &&
+      !postcodeData &&
+      !postcodeLoading &&
+      postcodeInput.length >= 5 &&
+      postcodeInput === (signupPostcode || "").toUpperCase()
+    ) {
+      handlePostcodeLookup();
+    }
+  }, [postcodeInput]);
 
-      setPostcodeLoading(true);
-      setPostcodeError("");
-      setPostcodeData(null);
+  const handlePostcodeLookup = async () => {
+    const raw = postcodeInput.trim();
+    if (!raw) {
+      setPostcodeError("Please enter a postcode.");
+      return;
+    }
+
+    setPostcodeLoading(true);
+    setPostcodeError("");
+    setPostcodeData(null);
 
     try {
       const sessionToken = localStorage.getItem("session_token");
@@ -151,6 +167,11 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
         {/* POSTCODE LOOKUP */}
         <div className="space-y-2">
           <Label>UK Postcode <span className="text-red-500">*</span></Label>
+          {signupPostcode && !formData.postcode && (
+            <p className="text-xs text-teal-600 font-medium">
+              Pre-filled from your founding member registration — verifying automatically.
+            </p>
+          )}
           <div className="flex gap-2">
             <Input
               value={postcodeInput}
@@ -263,8 +284,11 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
                   onFormChange("location", { ...formData.location, street: e.target.value })
                 }
                 placeholder="123 High Street"
-                className="mt-1"
+                className={`mt-1 ${postcodeData && inArea && !formData.location?.street ? "border-amber-400" : ""}`}
               />
+              {postcodeData && inArea && !formData.location?.street && (
+                <p className="text-xs text-amber-600 mt-1">Street address is required to continue.</p>
+              )}
             </div>
 
             <div>
@@ -323,7 +347,7 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
                   ? "Verify your postcode to continue."
                   : !inArea
                   ? "Postcode is outside the current launch area. Properties can only be listed in Cornwall and Devon."
-                  : "Street address is required."}
+                  : "Street address is required to continue."}
               </span>
             </div>
           )}
