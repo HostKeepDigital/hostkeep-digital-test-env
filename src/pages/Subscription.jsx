@@ -171,11 +171,24 @@ export default function Subscription() {
 
     async function loadRoles() {
       try {
-        const roles = await base44.entities.UserRole.filter({
+        // Try with user.id first (UserCredentials ID)
+        let roles = await base44.entities.UserRole.filter({
           user_id: user.id,
         });
+
+        // If no roles found, try looking up via Base44 User entity by email
+        if ((!roles || roles.length === 0) && user.email) {
+          try {
+            const users = await base44.entities.User.filter({ email: user.email });
+            const b44UserId = users?.[0]?.id;
+            if (b44UserId && b44UserId !== user.id) {
+              roles = await base44.entities.UserRole.filter({ user_id: b44UserId });
+            }
+          } catch (_) {}
+        }
+
         if (!cancelled) {
-          setUserRoles(roles);
+          setUserRoles(roles || []);
         }
       } catch {
         if (!cancelled) {
