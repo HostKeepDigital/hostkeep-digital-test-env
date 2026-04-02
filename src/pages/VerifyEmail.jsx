@@ -18,7 +18,10 @@ export default function VerifyEmail() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <EmailVerificationStep
         email={email}
-        onVerified={() => navigate("/founding-thankyou")}
+        onVerified={() => {
+        const status = searchParams.get("status");
+        navigate(status ? `/founding-thankyou?status=${status}` : "/founding-thankyou");
+      }}
         onBack={() => navigate("/founding")}
       />
     </div>
