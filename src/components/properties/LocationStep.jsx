@@ -28,7 +28,7 @@ function getAreaLabel(postcodeArea) {
   return map[postcodeArea] || null;
 }
 
-export default function LocationStep({ formData, onFormChange, onLocationChange }) {
+export default function LocationStep({ formData, onFormChange, onLocationChange, signupPostcode }) {
   const buildPostcodeData = (fd) => {
     if (fd.postcode) {
       return {
@@ -45,6 +45,8 @@ export default function LocationStep({ formData, onFormChange, onLocationChange 
     }
     return null;
   };
+
+  
 
   const [postcodeInput, setPostcodeInput] = useState(formData.postcode || "");
   const [postcodeLoading, setPostcodeLoading] = useState(false);
