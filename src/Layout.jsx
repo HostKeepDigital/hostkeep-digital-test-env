@@ -371,7 +371,7 @@ export default function Layout({ children, currentPageName }) {
                         {hasRole(userRoles, "admin") && (
                           <DropdownMenuItem asChild>
                             <Link
-                              to={createPageUrl("AdminVerifications")}
+                              to={createPageUrl("AdminPanel")}
                               className="flex items-center gap-2 text-rose-600"
                             >
                               <Shield className="w-4 h-4" /> Admin Panel
