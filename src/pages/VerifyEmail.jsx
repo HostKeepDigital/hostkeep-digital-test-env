@@ -27,7 +27,7 @@ export default function FoundingThankYou() {
             <img
               src={LOGO_IMG}
               alt="HostKeep Digital"
-              className="h-12 w-auto"
+              className="h-60 w-60"
             />
           </div>
 
