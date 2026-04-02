@@ -49,7 +49,7 @@
  */
 import AboutUs from './pages/AboutUs';
 import Accessibility from './pages/Accessibility';
-import AdminVerifications from './pages/AdminVerifications';
+
 import BecomeCleaner from './pages/BecomeCleaner';
 import BecomeHost from './pages/BecomeHost';
 import CleanKeep from './pages/CleanKeep';
@@ -99,7 +99,7 @@ import __Layout from './Layout.jsx';
 export const PAGES = {
     "AboutUs": AboutUs,
     "Accessibility": Accessibility,
-    "AdminVerifications": AdminVerifications,
+
     "BecomeCleaner": BecomeCleaner,
     "BecomeHost": BecomeHost,
     "CleanKeep": CleanKeep,
