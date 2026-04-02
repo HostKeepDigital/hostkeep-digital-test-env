@@ -91,7 +91,7 @@ export default function ResetPassword() {
         <img
           src={LOGO_IMG}
           alt="HostKeep Digital"
-          className="h-12 w-auto"
+          className="h-60 w-60"
         />
         <div>
           <p className="text-white/60 text-sm font-medium tracking-[0.2em] uppercase mb-4">
