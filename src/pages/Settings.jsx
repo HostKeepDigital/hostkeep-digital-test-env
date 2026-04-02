@@ -279,27 +279,27 @@ export default function Settings() {
   <p className="text-sm text-red-500 mt-2">{deleteBlockReason}</p>
 )}
 
-  const handleDeleteAccount = async () => {
-    if (deleteConfirm !== "DELETE") return;
-    setDeleting(true);
-    try {
-      const token = localStorage.getItem("session_token");
-      if (token) {
-        await fetch("/functions/logoutSession", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ session_token: token }),
-        });
-      }
-      localStorage.removeItem("session_token");
-      localStorage.removeItem("session_expires_at");
-      window.location.href = "/SignIn";
-    } catch {
-      toast.error("Something went wrong. Please contact support.");
-    }
-    setDeleting(false);
-    setDeleteDialogOpen(false);
-  };
+const handleDeleteAccount = async () => {
+  if (deleteConfirm !== "DELETE") return;
+  setDeleting(true);
+  try {
+    const token = localStorage.getItem("session_token");
+    const res = await fetch("/functions/deleteAccount", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_token: token }),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+    localStorage.removeItem("session_token");
+    localStorage.removeItem("session_expires_at");
+    window.location.href = "/SignIn";
+  } catch {
+    toast.error("Something went wrong. Please contact support.");
+  }
+  setDeleting(false);
+  setDeleteDialogOpen(false);
+};
 
   const handleStripeConnect = async () => {
     setStripeLoading(true);
