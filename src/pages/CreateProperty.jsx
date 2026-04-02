@@ -295,6 +295,8 @@ export default function CreateProperty() {
         );
       case 2:
         return formData.description.length >= 50;
+      case 3:
+         return !!(formData.postcode && formData.location?.street);
       case 4:
         return formData.photos.length >= 5;
       case 5:
@@ -589,13 +591,14 @@ export default function CreateProperty() {
 
             {/* Step 3: Location */}
             {currentStep === 3 && (
-              <LocationStep
-                formData={formData}
-                onFormChange={(field, value) =>
-                  setFormData((prev) => ({ ...prev, [field]: value }))
-                }
-                onLocationChange={setLocationData}
-              />
+            <LocationStep
+              formData={formData}
+              onFormChange={(field, value) =>
+                setFormData((prev) => ({ ...prev, [field]: value }))
+              }
+              onLocationChange={setLocationData}
+              signupPostcode={user?.signup_postcode || ""}
+            />
             )}
 
             {/* Step 4: Photos */}
