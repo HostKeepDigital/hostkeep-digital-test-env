@@ -62,6 +62,7 @@ export default function Settings() {
   const [deleteConfirm, setDeleteConfirm] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
+  const [deleteBlockReason, setDeleteBlockReason] = useState(null);
 
   const [profile, setProfile] = useState({
     forename: "",
@@ -210,6 +211,73 @@ export default function Settings() {
     const updated = { ...notifications, [field]: value };
     setNotifications(updated);
   };
+
+  const handleDeletePreCheck = async () => {
+  setDeleteBlockReason(null);
+  const token = localStorage.getItem("session_token");
+  const sessionRes = await fetch("/functions/getUserFromSession", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ session_token: token }),
+  });
+  const sessionData = await sessionRes.json();
+  const foundingMemberId = sessionData?.user?.founding_member_id;
+  const role = sessionData?.user?.role;
+  const today = new Date().toISOString().split("T")[0];
+
+  const activeBookingStatuses = ["awaiting_decision", "awaiting_payment", "confirmed", "checked_in"];
+  const activeJobStatuses = ["pending", "accepted", "in_progress"];
+
+  if (role === "host") {
+    const bookings = await base44.entities.Booking.filter({ host_id: foundingMemberId });
+    const activeBookings = bookings.filter(b =>
+      activeBookingStatuses.includes(b.booking_status) && b.check_out >= today
+    );
+    if (activeBookings.length > 0) {
+      setDeleteBlockReason(`You have ${activeBookings.length} active or upcoming booking(s). All bookings must be completed or cancelled before deleting your account.`);
+      return;
+    }
+    const jobs = await base44.entities.CleaningJob.filter({ host_id: foundingMemberId });
+    const activeJobs = jobs.filter(j => activeJobStatuses.includes(j.status));
+    if (activeJobs.length > 0) {
+      setDeleteBlockReason(`You have ${activeJobs.length} outstanding cleaning job(s). All jobs must be completed or cancelled before deleting your account.`);
+      return;
+    }
+  }
+
+  if (role === "guest") {
+    const bookings = await base44.entities.Booking.filter({ guest_id: foundingMemberId });
+    const activeBookings = bookings.filter(b =>
+      activeBookingStatuses.includes(b.booking_status) && b.check_out >= today
+    );
+    if (activeBookings.length > 0) {
+      setDeleteBlockReason(`You have ${activeBookings.length} upcoming trip(s) or outstanding balance(s). All trips must be completed or cancelled before deleting your account.`);
+      return;
+    }
+    const unpaidBookings = bookings.filter(b =>
+      b.payment_status === "partial" && b.booking_status !== "cancelled"
+    );
+    if (unpaidBookings.length > 0) {
+      setDeleteBlockReason(`You have outstanding payment balances on ${unpaidBookings.length} booking(s). Please settle all balances before deleting your account.`);
+      return;
+    }
+  }
+
+  if (role === "cleaner") {
+    const jobs = await base44.entities.CleaningJob.filter({ cleaner_user_id: foundingMemberId });
+    const activeJobs = jobs.filter(j => activeJobStatuses.includes(j.status));
+    if (activeJobs.length > 0) {
+      setDeleteBlockReason(`You have ${activeJobs.length} outstanding job(s). All jobs must be completed or removed before deleting your account.`);
+      return;
+    }
+  }
+
+  setDeleteDialogOpen(true);
+};
+
+{deleteBlockReason && (
+  <p className="text-sm text-red-500 mt-2">{deleteBlockReason}</p>
+)}
 
   const handleDeleteAccount = async () => {
     if (deleteConfirm !== "DELETE") return;
@@ -471,7 +539,7 @@ export default function Settings() {
           <p className="text-sm text-red-600 mb-4">
             Permanently delete your account and all associated data. This cannot be undone.
           </p>
-          <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>Delete Account</Button>
+          <Button variant="destructive" onClick={handleDeletePreCheck}>Delete Account</Button>
         </div>
       </div>
 
