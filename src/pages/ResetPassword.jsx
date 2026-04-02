@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Eye, EyeOff, Mail, CheckCircle } from "lucide-react";
 
-const CORNWALL_IMG = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80";
+const CORNWALL_IMG = "https://drive.google.com/uc?export=view&id=1ZmljdO7m9HdHdT_KKSa0S-p2e9ctR5BU";
+const LOGO_IMG = "https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/HostKeep_Digital_Navy_Background.png";
 
 export default function ResetPassword() {
   const token = new URLSearchParams(window.location.search).get("token");
@@ -28,13 +29,11 @@ export default function ResetPassword() {
     if (!email) { setEmailError("Please enter your email address."); return; }
     setEmailLoading(true);
     try {
-      // Use direct fetch — no base44 SDK needed
       await fetch("/functions/sendPasswordReset", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
-      // Always show success — never reveal if account exists
       setEmailSent(true);
     } catch (_) {
       setEmailSent(true);
@@ -54,7 +53,6 @@ export default function ResetPassword() {
     setResetLoading(true);
 
     try {
-      // Use direct fetch — no base44 SDK needed
       const res = await fetch("/functions/verifyPasswordReset", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -62,18 +60,18 @@ export default function ResetPassword() {
       });
       const data = await res.json();
 
-if (!data.success) {
-  if (data.error === "invalid_token") {
-    setStep("invalid");
-  } else if (data.error === "expired_token") {
-    setStep("expired");
-  } else {
-    setResetError("Unable to reset password. Please try again.");
-  }
-  return;
-}
+      if (!data.success) {
+        if (data.error === "invalid_token") {
+          setStep("invalid");
+        } else if (data.error === "expired_token") {
+          setStep("expired");
+        } else {
+          setResetError("Unable to reset password. Please try again.");
+        }
+        return;
+      }
 
-setStep("success");
+      setStep("success");
     } catch {
       setResetError("Something went wrong. Please try again.");
     } finally {
@@ -85,15 +83,15 @@ setStep("success");
     <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
       <img
         src={CORNWALL_IMG}
-        alt="Cornwall landscape"
+        alt="Cornwall coast"
         className="absolute inset-0 w-full h-full object-cover"
       />
       <div className="absolute inset-0 bg-gradient-to-br from-[#1E3A5F]/90 via-[#1E3A5F]/70 to-[#0d9488]/50" />
       <div className="relative z-10 flex flex-col justify-between p-12 w-full">
         <img
-          src="https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/HostKeep_Digital_Navy_Background.png"
+          src={LOGO_IMG}
           alt="HostKeep Digital"
-          className="h-60 w-60"
+          className="h-12 w-auto"
         />
         <div>
           <p className="text-white/60 text-sm font-medium tracking-[0.2em] uppercase mb-4">
@@ -118,117 +116,121 @@ setStep("success");
     </div>
   );
 
+  const MobileLogo = () => (
+    <div className="lg:hidden flex justify-center mb-8">
+      <img src={LOGO_IMG} alt="HostKeep Digital" className="h-12 w-auto" />
+    </div>
+  );
+
   // Success
-if (step === "success") {
-  return (
-    <div className="min-h-screen flex">
-      <LeftPanel />
-      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white">
-        <div className="w-full max-w-sm text-center">
-          <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle className="w-8 h-8 text-green-500" />
-          </div>
-          <h2 className="text-2xl font-bold text-[#111827] mb-3">Password updated</h2>
-          <p className="text-sm text-gray-500 mb-8">
-            Your password has been successfully changed. You can now sign in with your new password.
-          </p>
-          <Link
-            to="/SignIn"
-            className="inline-block w-full bg-[#1E3A5F] hover:bg-[#162d4a] text-white font-semibold text-sm rounded-xl py-3.5 transition-colors text-center"
-          >
-            Sign In
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-if (step === "invalid") {
-  return (
-    <div className="min-h-screen flex">
-      <LeftPanel />
-      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white">
-        <div className="w-full max-w-sm text-center">
-          <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg className="w-8 h-8 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M12 3a9 9 0 100 18A9 9 0 0012 3z" />
-            </svg>
-          </div>
-          <h2 className="text-2xl font-bold text-[#111827] mb-3">Link already used</h2>
-          <p className="text-sm text-gray-500 mb-8">
-            This reset link has already been used or is invalid. Reset links can only be used once — please request a new one if you need to change your password.
-          </p>
-          <div className="space-y-3">
-            <Link
-              to="/ResetPassword"
-              className="inline-block w-full bg-[#1E3A5F] hover:bg-[#162d4a] text-white font-semibold text-sm rounded-xl py-3.5 transition-colors text-center"
-            >
-              Request a new link
-            </Link>
+  if (step === "success") {
+    return (
+      <div className="min-h-screen flex">
+        <LeftPanel />
+        <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white">
+          <div className="w-full max-w-sm text-center">
+            <MobileLogo />
+            <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle className="w-8 h-8 text-green-500" />
+            </div>
+            <h2 className="text-2xl font-bold text-[#111827] mb-3">Password updated</h2>
+            <p className="text-sm text-gray-500 mb-8">
+              Your password has been successfully changed. You can now sign in with your new password.
+            </p>
             <Link
               to="/SignIn"
-              className="inline-block w-full text-sm text-gray-400 hover:text-gray-600 transition-colors py-2 text-center"
-            >
-              Back to Sign In
-            </Link>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-if (step === "expired") {
-  return (
-    <div className="min-h-screen flex">
-      <LeftPanel />
-      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white">
-        <div className="w-full max-w-sm text-center">
-          <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg className="w-8 h-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <h2 className="text-2xl font-bold text-[#111827] mb-3">Link expired</h2>
-          <p className="text-sm text-gray-500 mb-8">
-            This reset link has expired — links are valid for 1 hour. Please request a new one and complete the process within that window.
-          </p>
-          <div className="space-y-3">
-            <Link
-              to="/ResetPassword"
               className="inline-block w-full bg-[#1E3A5F] hover:bg-[#162d4a] text-white font-semibold text-sm rounded-xl py-3.5 transition-colors text-center"
             >
-              Request a new link
-            </Link>
-            <Link
-              to="/SignIn"
-              className="inline-block w-full text-sm text-gray-400 hover:text-gray-600 transition-colors py-2 text-center"
-            >
-              Back to Sign In
+              Sign In
             </Link>
           </div>
         </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
-  // No token — email entry
+  // Invalid token
+  if (step === "invalid") {
+    return (
+      <div className="min-h-screen flex">
+        <LeftPanel />
+        <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white">
+          <div className="w-full max-w-sm text-center">
+            <MobileLogo />
+            <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-8 h-8 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M12 3a9 9 0 100 18A9 9 0 0012 3z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-[#111827] mb-3">Link already used</h2>
+            <p className="text-sm text-gray-500 mb-8">
+              This reset link has already been used or is invalid. Reset links can only be used once — please request a new one if you need to change your password.
+            </p>
+            <div className="space-y-3">
+              <Link
+                to="/ResetPassword"
+                className="inline-block w-full bg-[#1E3A5F] hover:bg-[#162d4a] text-white font-semibold text-sm rounded-xl py-3.5 transition-colors text-center"
+              >
+                Request a new link
+              </Link>
+              <Link
+                to="/SignIn"
+                className="inline-block w-full text-sm text-gray-400 hover:text-gray-600 transition-colors py-2 text-center"
+              >
+                Back to Sign In
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Expired token
+  if (step === "expired") {
+    return (
+      <div className="min-h-screen flex">
+        <LeftPanel />
+        <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white">
+          <div className="w-full max-w-sm text-center">
+            <MobileLogo />
+            <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-8 h-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-[#111827] mb-3">Link expired</h2>
+            <p className="text-sm text-gray-500 mb-8">
+              This reset link has expired — links are valid for 1 hour. Please request a new one and complete the process within that window.
+            </p>
+            <div className="space-y-3">
+              <Link
+                to="/ResetPassword"
+                className="inline-block w-full bg-[#1E3A5F] hover:bg-[#162d4a] text-white font-semibold text-sm rounded-xl py-3.5 transition-colors text-center"
+              >
+                Request a new link
+              </Link>
+              <Link
+                to="/SignIn"
+                className="inline-block w-full text-sm text-gray-400 hover:text-gray-600 transition-colors py-2 text-center"
+              >
+                Back to Sign In
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // No token — email entry form
   if (!token) {
     return (
       <div className="min-h-screen flex">
         <LeftPanel />
         <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white">
           <div className="w-full max-w-sm">
-
-            <div className="lg:hidden relative rounded-2xl overflow-hidden mb-8 h-36">
-              <img src={CORNWALL_IMG} alt="Cornwall coast" className="absolute inset-0 w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-br from-[#1E3A5F]/80 to-[#0d9488]/50" />
-              <div className="relative z-10 flex items-center justify-center h-full">
-                <img src="https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/HostKeep_Digital_Navy_Background.png" alt="HostKeep" className="h-60 w-auto" />
-              </div>
-            </div>
+            <MobileLogo />
 
             <h2 className="text-2xl font-bold text-[#111827] mb-1">Forgot your password?</h2>
             <p className="text-sm text-gray-500 mb-8">
@@ -273,7 +275,7 @@ if (step === "expired") {
                 <div className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-[#0d9488] flex-shrink-0 mt-0.5" />
                   <p className="text-sm text-teal-800">
-                    If an account exists for <strong>{email}</strong>, a reset link has been sent. Check your inbox.
+                    If an account exists for <strong>{email}</strong>, a reset link has been sent. Check your inbox — and your junk or spam folder.
                   </p>
                 </div>
               </div>
@@ -300,14 +302,7 @@ if (step === "expired") {
       <LeftPanel />
       <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white">
         <div className="w-full max-w-sm">
-
-          <div className="lg:hidden relative rounded-2xl overflow-hidden mb-8 h-36">
-            <img src={CORNWALL_IMG} alt="Cornwall coast" className="absolute inset-0 w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-br from-[#1E3A5F]/80 to-[#0d9488]/50" />
-            <div className="relative z-10 flex items-center justify-center h-full">
-              <img src="https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/HostKeep_Digital_Navy_Background.png" alt="HostKeep" className="h-60 w-auto" />
-            </div>
-          </div>
+          <MobileLogo />
 
           <h2 className="text-2xl font-bold text-[#111827] mb-1">Set new password</h2>
           <p className="text-sm text-gray-500 mb-8">Choose a strong password for your account.</p>
