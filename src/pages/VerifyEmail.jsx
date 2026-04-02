@@ -52,18 +52,6 @@ export default function VerifyEmail() {
             </p>
           </div>
 
-          <div className="flex gap-8">
-            {[
-              { value: "0%", label: "Commission" },
-              { value: "£29", label: "From /month" },
-              { value: "50", label: "Founding spots" },
-            ].map((s) => (
-              <div key={s.label}>
-                <p className="text-white text-2xl font-bold">{s.value}</p>
-                <p className="text-white/50 text-xs mt-0.5">{s.label}</p>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
 
