@@ -50,6 +50,7 @@ export const AuthProvider = ({ children }) => {
         email: data.email,
         role: data.role,
         founding_member_id: data.founding_member_id,
+        signup_postcode: data.signup_postcode || null,
       });
 
       // Build roles array in the shape App.jsx expects
