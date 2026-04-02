@@ -1,6 +1,8 @@
 import { useSearchParams, useNavigate } from "react-router-dom";
 import EmailVerificationStep from "@/components/founding/EmailVerificationStep";
 
+const CORNWALL_IMG = ""
+
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
