@@ -79,6 +79,22 @@ export default function Founding() {
         </div>
       </section>
 
+      {/* THE NUMBER */}
+      <section className="bg-[#0d9488] py-8">
+        <div className="max-w-5xl mx-auto px-4 flex flex-wrap items-center justify-center gap-8 md:gap-16 text-center">
+          {[
+            { value: "0%", label: "Commission on bookings" },
+            { value: "£19/mo", label: "Founding host rate" },
+            { value: "50", label: "Host founding spots" },
+            { value: "30", label: "Cleaner founding spots" },
+          ].map(s => (
+            <div key={s.label}>
+              <p className="text-2xl font-black text-white">{s.value}</p>
+              <p className="text-white/60 text-xs mt-0.5">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* WHY HOSTKEEP */}
       <section className="max-w-7xl mx-auto px-4 py-16">
