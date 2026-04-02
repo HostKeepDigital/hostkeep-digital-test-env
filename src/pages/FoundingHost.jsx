@@ -7,7 +7,7 @@ import { CheckCircle, AlertTriangle, Loader2, ArrowLeft, Home, ArrowRight, Shiel
 const HOST_LIMIT        = 50;
 const CORNWALL_PREFIXES = ["TR", "PL", "EX"];
 const HERO_IMG          = "https://lh3.googleusercontent.com/d/1rRoDfT5XKQW3TtRwulxbIJoo7LJi98gK";
-const LOOE_IMG          = "https://lh3.googleusercontent.com/d/1Vr07gcaaC19XEmxcvTbq-DTn8PZKn-_a";
+const LOOE_IMG          = "https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/Mevagissey.jpeg";
 
 function isCornwallPostcode(p) {
   return CORNWALL_PREFIXES.some(x => p.trim().toUpperCase().replace(/\s+/g,"").startsWith(x));
