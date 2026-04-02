@@ -18,6 +18,10 @@ export default function VerifyEmail() {
         onVerified={() => navigate("/founding-thankyou")}
         onBack={() => navigate("/founding")}
       />
+      <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 mt-3 max-w-sm">
+        📬 Can't find the email? Please check your <strong>junk or spam folder</strong>.
+      </p>
     </div>
+  
   );
 }
