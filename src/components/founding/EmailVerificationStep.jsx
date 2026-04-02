@@ -1,174 +1,95 @@
-import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
-import { base44 } from "@/api/base44Client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Loader2, Mail, AlertCircle, RefreshCw } from "lucide-react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import EmailVerificationStep from "@/components/founding/EmailVerificationStep";
 
-export default function EmailVerificationStep({ email, onVerified, onBack, message, initialShowResend = false }) {
-  const [code, setCode] = useState("");
-  const [error, setError] = useState("");
-  const [verifying, setVerifying] = useState(false);
-  const [resending, setResending] = useState(false);
-  const [resendCooldown, setResendCooldown] = useState(initialShowResend ? 0 : 60);
-  const inputRef = useRef(null);
+const CORNWALL_IMG = "https://drive.google.com/uc?export=view&id=1ZmljdO7m9HdHdT_KKSa0S-p2e9ctR5BU";
+const LOGO_IMG = "https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/HostKeep_Digital_Navy_Background.png";
 
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+export default function VerifyEmail() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const email = searchParams.get("email");
 
-  // Countdown timer for resend button
-  useEffect(() => {
-    if (resendCooldown <= 0) return;
-    const timer = setTimeout(() => setResendCooldown(c => c - 1), 1000);
-    return () => clearTimeout(timer);
-  }, [resendCooldown]);
-
-  const handleCodeChange = (e) => {
-    const val = e.target.value.replace(/\D/g, "").slice(0, 6);
-    setCode(val);
-    setError("");
-  };
-
-  const handleVerify = async () => {
-    if (code.length !== 6) {
-      setError("Please enter the full 6-digit code.");
-      return;
-    }
-    setVerifying(true);
-    setError("");
-
-    const res = await base44.functions.invoke("verifyEmailCode", { email, code });
-    const data = res.data;
-    setVerifying(false);
-
-    if (data?.valid) {
-      // 🔹 NEW: move member from "interest" to "pending" after successful verification
-      try {
-        const members = await base44.entities.FoundingMember.filter({
-          email: email.toLowerCase().trim(),
-        });
-
-        if (members && members.length > 0) {
-          const member = members[0];
-          if (member.approval_status === "interest") {
-            await base44.entities.FoundingMember.update(member.id, {
-              approval_status: "pending",
-            });
-          }
-        }
-      } catch (err) {
-        console.error("Failed to update approval_status to pending after verification:", err);
-      }
-
-      onVerified();
-    } else {
-      setError("Incorrect or expired code. Please try again or request a new code.");
-      setCode("");
-    }
-  };
-
-  const handleResend = async () => {
-    setResending(true);
-    setError("");
-    setCode("");
-    await base44.functions.invoke("sendVerificationCode", { email });
-    setResending(false);
-    setResendCooldown(60);
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") handleVerify();
-  };
+  if (!email) {
+    navigate("/founding");
+    return null;
+  }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl border-2 border-gray-100 shadow-lg p-8"
-    >
-      <div className="flex flex-col items-center text-center mb-8">
-        <div className="w-14 h-14 rounded-full bg-teal-50 flex items-center justify-center mb-4">
-          <Mail className="w-7 h-7 text-teal-600" />
+    <div className="min-h-screen flex">
+
+      {/* Left panel — Cornwall photography */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+        <img
+          src={CORNWALL_IMG}
+          alt="Cornwall coast"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        {/* Navy gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1E3A5F]/90 via-[#1E3A5F]/70 to-[#0d9488]/50" />
+
+        {/* Content over image */}
+        <div className="relative z-10 flex flex-col justify-between p-12 w-full">
+          {/* Logo */}
+          <div className="flex items-center gap-3">
+            <img
+              src={LOGO_IMG}
+              alt="HostKeep Digital"
+              className="h-12 w-auto"
+            />
+          </div>
+
+          {/* Centre quote */}
+          <div>
+            <p className="text-white/60 text-sm font-medium tracking-[0.2em] uppercase mb-4">
+              Cornwall · Summer 2026
+            </p>
+            <h1 className="text-white text-4xl font-bold leading-tight mb-6">
+              Your property.<br />
+              Your price.<br />
+              <span className="text-[#0d9488]">Zero commission.</span>
+            </h1>
+            <p className="text-white/70 text-base leading-relaxed max-w-sm">
+              HostKeep gives Cornwall hosts everything Airbnb offers at a flat monthly rate — not a cut of every booking.
+            </p>
+          </div>
+
+          {/* Bottom stats */}
+          <div className="flex gap-8">
+            {[
+              { value: "0%", label: "Commission" },
+              { value: "£29", label: "From /month" },
+              { value: "50", label: "Founding spots" },
+            ].map((s) => (
+              <div key={s.label}>
+                <p className="text-white text-2xl font-bold">{s.value}</p>
+                <p className="text-white/50 text-xs mt-0.5">{s.label}</p>
+              </div>
+            ))}
+          </div>
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-3">Almost there!</h2>
-        <p className="text-gray-600 max-w-sm">
-          {message || (
-            <>
-              We have sent a 6-digit verification code to{" "}
-              <span className="font-semibold text-gray-900">{email}</span>. Please enter it below to complete your application. The code expires in 10 minutes.
-            </>
-          )}
-        </p>
-        <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 mt-3 max-w-sm">
-          📬 Can't find the email? Please check your <strong>junk or spam folder</strong>.
-        </p>
       </div>
 
+      {/* Right panel — verification */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white">
+        <div className="w-full max-w-sm">
 
-      <div className="space-y-4">
-        <div>
-          <Input
-            ref={inputRef}
-            value={code}
-            onChange={handleCodeChange}
-            onKeyDown={handleKeyDown}
-            placeholder="000000"
-            inputMode="numeric"
-            maxLength={6}
-            className={`text-center text-3xl font-bold tracking-widest h-16 ${error ? "border-red-400" : ""}`}
+          {/* Mobile logo */}
+          <div className="lg:hidden flex justify-center mb-8">
+            <img
+              src={LOGO_IMG}
+              alt="HostKeep Digital"
+              className="h-12 w-auto"
+            />
+          </div>
+
+          <EmailVerificationStep
+            email={email}
+            onVerified={() => navigate("/founding-thankyou")}
+            onBack={() => navigate("/founding")}
           />
-          {error && (
-            <div className="mt-2 flex items-center gap-2 text-red-600 text-sm">
-              <AlertCircle className="w-4 h-4 flex-shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-        </div>
-
-        <Button
-          onClick={handleVerify}
-          disabled={verifying || code.length !== 6}
-          className="w-full h-12 bg-teal-600 hover:bg-teal-700 text-white text-base font-semibold"
-        >
-          {verifying ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Verifying...
-            </>
-          ) : (
-            "Verify & Complete Application"
-          )}
-        </Button>
-
-        <div className="flex items-center justify-between pt-2">
-          <button
-            type="button"
-            onClick={onBack}
-            className="text-sm text-gray-500 hover:text-gray-700 underline"
-          >
-            Back to form
-          </button>
-
-          <button
-            type="button"
-            onClick={handleResend}
-            disabled={resending || resendCooldown > 0}
-            className="flex items-center gap-1.5 text-sm text-teal-600 hover:text-teal-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {resending ? (
-              <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin" /> Sending...
-              </>
-            ) : resendCooldown > 0 ? (
-              `Resend code in ${resendCooldown}s`
-            ) : (
-              <>
-                <RefreshCw className="w-3.5 h-3.5" /> Resend code
-              </>
-            )}
-          </button>
         </div>
       </div>
-    </motion.div>
+
+    </div>
   );
 }
