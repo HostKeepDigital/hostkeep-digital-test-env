@@ -138,22 +138,6 @@ export default function FoundingHost() {
         </div>
       </section>
 
-      {/* KEY STATS */}
-      <section className="bg-[#0d9488] py-7">
-        <div className="max-w-5xl mx-auto px-4 flex flex-wrap justify-center gap-8 md:gap-16 text-center">
-          {[
-            { v: "0%",    l: "Commission on bookings" },
-            { v: "£19",   l: "Per month (founding rate)" },
-            { v: "£3,200",l: "Saved annually vs Airbnb (£20k property)" },
-            { v: "100%",  l: "Of guest payments go to you*" },
-          ].map(s => (
-            <div key={s.l}>
-              <p className="text-2xl font-black text-white">{s.v}</p>
-              <p className="text-white/60 text-xs mt-0.5">{s.l}</p>
-            </div>
-          ))}
-        </div>
-      </section>
 
       {/* COMPARISON TABLE */}
       <section className="max-w-5xl mx-auto px-4 py-16">
