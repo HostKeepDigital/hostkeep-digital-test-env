@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
-import { useSearchParams } from "react-router-dom";
-import { CheckCircle, MapPin } from "lucide-react";
+import { CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const CORNWALL_IMG = "https://drive.google.com/uc?export=view&id=1ZmljdO7m9HdHdT_KKSa0S-p2e9ctR5BU";
