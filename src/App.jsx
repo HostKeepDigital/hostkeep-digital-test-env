@@ -33,7 +33,7 @@ const PUBLIC_ROUTES = new Set([
   "/DisputePolicy", "/PaymentPolicy", "/RefundPolicy", "/Accessibility",
   "/BecomeHost", "/BecomeCleaner", "/Index", "/LockScreen",
   "/founding", "/foundinghost", "/foundingcleaner", "/waitlist", "/pending", "/Subscription",
-  "/login", "/SignIn", "/ForgotPassword", "/CreatePassword", "/ResetPassword",
+  "/login", "/SignIn", "/ForgotPassword", "/CreatePassword", "/ResetPassword", "/verify-email", "/founding-thankyou",
 ]);
 
 // After login, redirect based on role records from UserRole
