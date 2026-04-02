@@ -59,16 +59,20 @@ Deno.serve(async (req) => {
       founding_member_id = members[0].id;
     }
 
+    // ⭐ Always use UserCredentials ID as user_id — this is our auth identity
+    userId = cred.id;
+
     // Resolve role via UserRole (approved)
     try {
+      // Try Base44 User entity for UserRole lookup (may or may not exist)
       const users = await serviceRole.entities.User.filter({
         email: normalisedEmail,
       });
-      userId = users?.[0]?.id || null;
+      const b44UserId = users?.[0]?.id || cred.id;
 
-      if (userId) {
+      if (b44UserId) {
         const userRoles = await serviceRole.entities.UserRole.filter({
-          user_id: userId,
+          user_id: b44UserId,
         });
 
         const approved = userRoles.filter(
