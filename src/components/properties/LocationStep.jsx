@@ -73,6 +73,16 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
       return;
     }
 
+    useEffect(() => {
+      if (signupPostcode && !formData.postcode && !postcodeData && !postcodeLoading) {
+        setPostcodeInput(signupPostcode.toUpperCase());
+        // Auto-trigger the lookup after a short delay so UI has settled
+        setTimeout(() => {
+          handlePostcodeLookup();
+        }, 300);
+      }
+    }, [signupPostcode]);
+
     setPostcodeLoading(true);
     setPostcodeError("");
     setPostcodeData(null);
