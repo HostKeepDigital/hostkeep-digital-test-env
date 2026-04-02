@@ -93,7 +93,7 @@ setStep("success");
         <img
           src="https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/HostKeep_Digital_Navy_Background.png"
           alt="HostKeep Digital"
-          className="h-40 w-auto"
+          className="h-60 w-60"
         />
         <div>
           <p className="text-white/60 text-sm font-medium tracking-[0.2em] uppercase mb-4">
