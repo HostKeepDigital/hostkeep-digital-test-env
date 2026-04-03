@@ -223,6 +223,7 @@ export default function HostProperties() {
                     isSingle={properties.length === 1}
                     onStatusToggle={() => toggleStatus(property)}
                     onDelete={() => setDeleteProperty(property)}
+                    isFoundingMember={isFoundingMember}
                   />
                 </motion.div>
               ))}
