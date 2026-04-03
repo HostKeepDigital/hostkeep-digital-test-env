@@ -49,6 +49,7 @@ export default function FoundingHost() {
   const [cornwallWarn, setCornwallWarn] = useState(false);
   const [form, setForm] = useState({ forename: "", middle_name: "", surname: "", email: "", postcode: "" });
   const [errors, setErrors] = useState({});
+  const [duplicateInfo, setDuplicateInfo] = useState(null);
 
   useEffect(() => {
     base44.functions.invoke("getFoundingCounts", {})
