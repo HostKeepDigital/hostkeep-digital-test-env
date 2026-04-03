@@ -1,8 +1,18 @@
+// src/components/BookingBar.jsx
+
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
+import { getCleanerStats } from "@/api/cleanerStats";
+import { useAuth } from "@/lib/AuthContext";
+
 export default function BookingBar({ event, onClick }) {
+  const { user } = useAuth();
+
   const {
     type,
     guest_name,
     cleaner_name,
+    cleaner_id,
     company_name,
     scheduled_start,
     scheduled_end,
@@ -10,6 +20,18 @@ export default function BookingBar({ event, onClick }) {
     color,
   } = event;
 
+  //
+  // Fetch reliability stats for cleaning jobs
+  //
+  const { data: stats } = useQuery({
+    queryKey: ["cleaner-stats", cleaner_id],
+    queryFn: () => getCleanerStats(cleaner_id),
+    enabled: type === "cleaning" && !!cleaner_id,
+  });
+
+  //
+  // Determine label text
+  //
   let line1 = "";
   let line2 = "";
 
@@ -44,6 +66,24 @@ export default function BookingBar({ event, onClick }) {
     line1 = "Conflict";
   }
 
+  //
+  // Reliability badge colour
+  //
+  function reliabilityColor(score) {
+    if (!score && score !== 0) return null;
+    if (score >= 90) return "#16a34a"; // green
+    if (score >= 70) return "#f59e0b"; // amber
+    return "#dc2626"; // red
+  }
+
+  const badgeColor =
+    type === "cleaning" && stats
+      ? reliabilityColor(stats.reliabilityScore)
+      : null;
+
+  //
+  // Render the bar
+  //
   return (
     <div
       className="booking-bar"
@@ -57,6 +97,7 @@ export default function BookingBar({ event, onClick }) {
         color: "white",
         fontSize: "12px",
         lineHeight: "14px",
+        position: "relative",
       }}
     >
       <div className="booking-bar-line1">{line1}</div>
@@ -70,33 +111,20 @@ export default function BookingBar({ event, onClick }) {
         </div>
       )}
 
-      {status && type === "cleaning" && (
+      {/* Reliability badge */}
+      {badgeColor && (
         <div
-          className="booking-bar-status"
           style={{
-            marginTop: "2px",
-            fontSize: "10px",
-            opacity: 0.8,
+            position: "absolute",
+            right: 4,
+            top: 4,
+            width: 8,
+            height: 8,
+            borderRadius: "50%",
+            backgroundColor: badgeColor,
           }}
-        >
-          {statusLabel(status)}
-        </div>
+        />
       )}
     </div>
   );
-}
-
-function statusLabel(status) {
-  switch (status) {
-    case "assigned":
-      return "Scheduled";
-    case "awaiting_start":
-      return "Awaiting Start";
-    case "in_progress":
-      return "In Progress";
-    case "completed":
-      return "Completed";
-    default:
-      return status;
-  }
 }
