@@ -27,8 +27,6 @@ import {
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import StatsCard from "@/components/dashboard/StatsCard";
-// Removed old BookingCalendar import
-// import BookingCalendar from "@/components/dashboard/BookingCalendar";
 import {
   parseISO,
   isAfter,
@@ -49,11 +47,11 @@ import {
 import NewMessageModal from "@/components/messaging/NewMessageModal";
 import { useAuth } from "@/lib/AuthContext";
 
-// NEW: unified calendar component (you’ll create this in Phase 2)
-import UnifiedCalendar from "@/components/calendar/UnifiedCalendar";
+// NEW: hybrid booking + cleaning calendar
+import BookingBarCalendar from "@/components/BookingBarCalendar";
 
 export default function HostDashboard() {
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const { refreshing } = usePullToRefresh([
     ["host-properties", user?.id],
     ["host-bookings", user?.id],
@@ -63,7 +61,7 @@ export default function HostDashboard() {
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
 
-  // NEW: selected property for unified calendar
+  // Selected property for calendar
   const [selectedPropertyId, setSelectedPropertyId] = useState(null);
 
   // Load properties
@@ -152,11 +150,10 @@ export default function HostDashboard() {
   // Detect properties with invalid booking rules
   const propertiesWithDeadDays = properties
     .map((p) => {
-      if (!p.day_based_restrictions_enabled || !p.booking_rules)
-        return null;
+      if (!p.day_based_restrictions_enabled || !p.booking_rules) return null;
 
       const deadDays = Object.entries(p.booking_rules)
-        .filter(([day, rule]) => {
+        .filter(([_, rule]) => {
           if (!rule.enabled) return false;
 
           const type = rule.rule_type || "any";
@@ -173,17 +170,13 @@ export default function HostDashboard() {
 
           if (type === "fixed") return !hasFixed;
           if (type === "multiples") return !hasMultiples;
-          if (type === "fixed_or_multiples")
-            return !(hasFixed || hasMultiples);
+          if (type === "fixed_or_multiples") return !(hasFixed || hasMultiples);
 
           return false;
         })
-        .map(
-          ([day]) => day.charAt(0).toUpperCase() + day.slice(1)
-        );
+        .map(([day]) => day.charAt(0).toUpperCase() + day.slice(1));
 
-      if (deadDays.length > 0)
-        return { title: p.title, id: p.id, deadDays };
+      if (deadDays.length > 0) return { title: p.title, id: p.id, deadDays };
 
       return null;
     })
@@ -202,7 +195,7 @@ export default function HostDashboard() {
     }
   };
 
-  // NEW: default selected property when properties load
+  // Default selected property when properties load
   useEffect(() => {
     if (!selectedPropertyId && properties.length > 0) {
       setSelectedPropertyId(properties[0].id);
@@ -219,19 +212,16 @@ export default function HostDashboard() {
           </div>
         </div>
       )}
+
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
               Welcome back
-              {user?.full_name
-                ? `, ${user.full_name.split(" ")[0]}`
-                : ""}
+              {user?.full_name ? `, ${user.full_name.split(" ")[0]}` : ""}
             </h1>
-            <p className="text-gray-500">
-              Manage your properties and bookings
-            </p>
+            <p className="text-gray-500">Manage your properties and bookings</p>
           </div>
 
           <div className="flex items-center gap-3">
@@ -272,18 +262,15 @@ export default function HostDashboard() {
                   Configuration Error: {item.title}
                 </AlertTitle>
                 <AlertDescription className="text-red-800">
-                  The following days are enabled for check-in but have
-                  no valid duration settings:
+                  The following days are enabled for check-in but have no valid
+                  duration settings:
                   <span className="font-semibold">
                     {" "}
                     {item.deadDays.join(", ")}
                   </span>
                   . These days will be unbookable.
                   <Link
-                    to={
-                      createPageUrl("EditProperty") +
-                      `?id=${item.id}`
-                    }
+                    to={createPageUrl("EditProperty") + `?id=${item.id}`}
                     className="underline ml-2"
                   >
                     Fix now
@@ -304,9 +291,7 @@ export default function HostDashboard() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <h3 className="text-lg font-semibold mb-1">
-                  {subscription
-                    ? "Your trial ends soon"
-                    : "Start your hosting journey"}
+                  {subscription ? "Your trial ends soon" : "Start your hosting journey"}
                 </h3>
                 <p className="text-teal-100">
                   Subscribe to list your properties and start earning
@@ -371,10 +356,7 @@ export default function HostDashboard() {
                   {pendingBookings.slice(0, 3).map((booking) => (
                     <Link
                       key={booking.id}
-                      to={
-                        createPageUrl("HostBookings") +
-                        `?id=${booking.id}`
-                      }
+                      to={createPageUrl("HostBookings") + `?id=${booking.id}`}
                       className="block p-4 rounded-xl bg-amber-50 border border-amber-100 hover:bg-amber-100 transition-colors"
                     >
                       <div className="flex items-center justify-between">
@@ -383,15 +365,8 @@ export default function HostDashboard() {
                             {booking.guest_name}
                           </p>
                           <p className="text-sm text-gray-500">
-                            {format(
-                              parseISO(booking.check_in),
-                              "MMM d"
-                            )}{" "}
-                            -{" "}
-                            {format(
-                              parseISO(booking.check_out),
-                              "MMM d"
-                            )}
+                            {format(parseISO(booking.check_in), "MMM d")} -{" "}
+                            {format(parseISO(booking.check_out), "MMM d")}
                           </p>
                         </div>
 
@@ -442,9 +417,7 @@ export default function HostDashboard() {
               {properties.length === 0 ? (
                 <div className="text-center py-8">
                   <Home className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                  <p className="text-gray-500 mb-4">
-                    No properties yet
-                  </p>
+                  <p className="text-gray-500 mb-4">No properties yet</p>
 
                   <Link to={createPageUrl("CreateProperty")}>
                     <Button className="bg-teal-600 hover:bg-teal-700">
@@ -457,10 +430,7 @@ export default function HostDashboard() {
                   {properties.slice(0, 3).map((property) => (
                     <Link
                       key={property.id}
-                      to={
-                        createPageUrl("EditProperty") +
-                        `?id=${property.id}`
-                      }
+                      to={createPageUrl("EditProperty") + `?id=${property.id}`}
                       className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors"
                     >
                       <img
@@ -496,60 +466,61 @@ export default function HostDashboard() {
               )}
             </motion.div>
 
-{/* NEW: Unified Calendar */}
-{properties.length > 0 && (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"
-  >
-    {/* Header with property identity */}
-    <div className="flex items-center justify-between mb-4">
-      <div className="flex items-center gap-3">
-        <img
-          src={
-            properties.find((p) => p.id === selectedPropertyId)?.photos?.[0] ||
-            "https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/default-property.jpg"
-          }
-          alt="Property"
-          className="w-12 h-12 rounded-lg object-cover border"
-        />
+            {/* Hybrid Calendar: Bookings + Cleaning */}
+            {properties.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"
+              >
+                {/* Header with property identity */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={
+                        properties.find((p) => p.id === selectedPropertyId)
+                          ?.photos?.[0] ||
+                        "https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/default-property.jpg"
+                      }
+                      alt="Property"
+                      className="w-12 h-12 rounded-lg object-cover border"
+                    />
 
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900">
-            {properties.find((p) => p.id === selectedPropertyId)?.title ||
-              "Select a property"}
-          </h2>
-          <p className="text-xs text-gray-500">
-            Viewing calendar for this property
-          </p>
-        </div>
-      </div>
+                    <div>
+                      <h2 className="text-lg font-semibold text-gray-900">
+                        {properties.find((p) => p.id === selectedPropertyId)
+                          ?.title || "Select a property"}
+                      </h2>
+                      <p className="text-xs text-gray-500">
+                        Viewing calendar for this property
+                      </p>
+                    </div>
+                  </div>
 
-      {/* Property selector */}
-      <select
-        className="border rounded px-2 py-1 text-sm"
-        value={selectedPropertyId || ""}
-        onChange={(e) => setSelectedPropertyId(e.target.value)}
-      >
-        {properties.map((p) => (
-          <option key={p.id} value={p.id}>
-            {p.title}
-          </option>
-        ))}
-      </select>
-    </div>
+                  {/* Property selector */}
+                  <select
+                    className="border rounded px-2 py-1 text-sm"
+                    value={selectedPropertyId || ""}
+                    onChange={(e) => setSelectedPropertyId(e.target.value)}
+                  >
+                    {properties.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-    {/* Calendar */}
-    {selectedPropertyId ? (
-      <UnifiedCalendar propertyId={selectedPropertyId} />
-    ) : (
-      <p className="text-sm text-gray-500">
-        Select a property to view its calendar.
-      </p>
-    )}
-  </motion.div>
-)}
+                {/* Calendar */}
+                {selectedPropertyId ? (
+                  <BookingBarCalendar propertyId={selectedPropertyId} />
+                ) : (
+                  <p className="text-sm text-gray-500">
+                    Select a property to view its calendar.
+                  </p>
+                )}
+              </motion.div>
+            )}
           </div>
 
           {/* Sidebar */}
@@ -561,9 +532,7 @@ export default function HostDashboard() {
               className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-900">
-                  Quick Actions
-                </h3>
+                <h3 className="font-semibold text-gray-900">Quick Actions</h3>
               </div>
 
               <div className="space-y-2">
@@ -631,12 +600,14 @@ export default function HostDashboard() {
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-4"
               >
-                <h3 className="font-semibold text-gray-900">Cancellation Policies</h3>
+                <h3 className="font-semibold text-gray-900">
+                  Cancellation Policies
+                </h3>
 
                 <div className="space-y-3 max-h-64 overflow-y-auto">
-                  {properties.map(property => {
+                  {properties.map((property) => {
                     const policy = cancellationPolicies.find(
-                      p => p.id === property.cancellation_policy_id
+                      (p) => p.id === property.cancellation_policy_id
                     );
 
                     return (
@@ -681,7 +652,9 @@ export default function HostDashboard() {
               animate={{ opacity: 1, y: 0 }}
               className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"
             >
-              <h3 className="font-semibold text-gray-900 mb-4">Subscription</h3>
+              <h3 className="font-semibold text-gray-900 mb-4">
+                Subscription
+              </h3>
 
               {subscription ? (
                 <div>
@@ -713,7 +686,8 @@ export default function HostDashboard() {
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-gray-600">Properties</span>
                     <span>
-                      {properties.length} / {subscription.max_properties || "∞"}
+                      {properties.length} /{" "}
+                      {subscription.max_properties || "∞"}
                     </span>
                   </div>
 
@@ -725,7 +699,10 @@ export default function HostDashboard() {
                           : "Renews"}
                       </span>
                       <span className="text-sm font-medium">
-                        {format(parseISO(subscription.end_date), "MMM d, yyyy")}
+                        {format(
+                          parseISO(subscription.end_date),
+                          "MMM d, yyyy"
+                        )}
                       </span>
                     </div>
                   )}
@@ -757,7 +734,10 @@ export default function HostDashboard() {
       </div>
 
       {/* Upgrade Dialog */}
-      <AlertDialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog}>
+      <AlertDialog
+        open={showUpgradeDialog}
+        onOpenChange={setShowUpgradeDialog}
+      >
         <AlertDialogContent>
           <button
             onClick={() => setShowUpgradeDialog(false)}
@@ -775,7 +755,8 @@ export default function HostDashboard() {
 
             <AlertDialogDescription className="text-left space-y-2">
               <p>
-                If you want to add more than one property, please see subscription upgrades.
+                If you want to add more than one property, please see
+                subscription upgrades.
               </p>
               <p className="text-sm text-gray-600">
                 Upgrade to <strong>Pro</strong> (up to 5 properties) or{" "}
