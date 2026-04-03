@@ -1,22 +1,26 @@
+// src/actions/cleanerRequestMove.js
+
 /**
- * Cleaner Move Request Action
+ * Cleaner Move Request Action (Full Replacement)
  *
  * This file handles the cleaner pressing:
  *    "Request to Move Job"
  *
- * It does NOT:
- * - update the cleaning job
- * - change status
- * - move the job
- * - notify the host (Step 5 will do that)
+ * It DOES:
+ * - Validate the request using turnover + job state rules
+ * - Ensure the cleaner is assigned to the job
+ * - Create a pending Move Request record
+ * - Notify the host of the new request
  *
- * It ONLY:
- * - validates the request using Step 3 logic
- * - creates a Move Request record for the host to review
+ * It DOES NOT:
+ * - Move the job
+ * - Change job status
+ * - Change booking dates
+ * - Override turnover rules
  */
 
-import { evaluateCleanerMoveRequest } from "@/utils/cleanerMoveRequest";
 import { base44 } from "@/api/base44Client";
+import { evaluateCleanerMoveRequest } from "@/utils/cleanerMoveRequest";
 import { notifyHostOfMoveRequest } from "@/services/cleaningJobNotifications";
 
 /**
@@ -33,7 +37,7 @@ import { notifyHostOfMoveRequest } from "@/services/cleaningJobNotifications";
  * }}
  */
 export async function cleanerRequestMove(cleaningJobId, cleanerId) {
-  // 1. Fetch job
+  // 1. Fetch the cleaning job
   const job = await base44.entities.CleaningJob.get(cleaningJobId);
 
   if (!job) {
@@ -46,7 +50,7 @@ export async function cleanerRequestMove(cleaningJobId, cleanerId) {
     };
   }
 
-  // 2. Ensure the cleaner owns this job
+  // 2. Ensure the cleaner is assigned to this job
   if (String(job.cleaner_id) !== String(cleanerId)) {
     return {
       success: false,
@@ -62,7 +66,7 @@ export async function cleanerRequestMove(cleaningJobId, cleanerId) {
     property_id: job.property_id,
   });
 
-  // 4. Evaluate request using Step 3 logic
+  // 4. Evaluate the request using Step 3 logic
   const evaluation = evaluateCleanerMoveRequest(job, bookings);
 
   if (!evaluation.allowed) {
@@ -75,18 +79,20 @@ export async function cleanerRequestMove(cleaningJobId, cleanerId) {
     };
   }
 
-  // 5. Create a Move Request record for host approval
+  // 5. Create a Move Request record (host will approve/deny later)
   const moveRequest = await base44.entities.CleaningJobMoveRequest.create({
     cleaning_job_id: job.id,
     cleaner_id: cleanerId,
     property_id: job.property_id,
     requested_new_date: evaluation.newDate.toISOString(),
-    status: "pending", // host will approve/deny later
+    status: "pending",
+    created_at: new Date().toISOString(),
   });
 
-  // 6. Notify the host about the new move request
+  // 6. Notify the host of the new request
   await notifyHostOfMoveRequest(moveRequest, job);
 
+  // 7. Return success to the cleaner UI
   return {
     success: true,
     allowed: true,
