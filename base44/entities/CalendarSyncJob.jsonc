@@ -1,0 +1,48 @@
+{
+  "name": "CalendarSyncJob",
+  "type": "object",
+  "properties": {
+    "channel_listing_id": {
+      "type": "string",
+      "description": "Reference to ChannelListing"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "import",
+        "export"
+      ],
+      "description": "Type of sync operation"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "success",
+        "failed"
+      ],
+      "default": "pending"
+    },
+    "error_message": {
+      "type": "string",
+      "description": "Error details if sync failed"
+    },
+    "run_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the sync was executed"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "channel_listing_id",
+    "type"
+  ]
+}

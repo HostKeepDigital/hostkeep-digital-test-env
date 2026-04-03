@@ -1,0 +1,46 @@
+{
+  "name": "ChannelListing",
+  "type": "object",
+  "properties": {
+    "property_id": {
+      "type": "string",
+      "description": "Reference to Property"
+    },
+    "channel_id": {
+      "type": "string",
+      "description": "Reference to Channel"
+    },
+    "external_listing_id": {
+      "type": "string",
+      "description": "ID of the listing on the external OTA"
+    },
+    "ical_import_url": {
+      "type": "string",
+      "description": "External iCal URL for importing bookings"
+    },
+    "ical_export_token": {
+      "type": "string",
+      "description": "Token used to generate public iCal export URL"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive"
+      ],
+      "default": "active"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "property_id",
+    "channel_id"
+  ]
+}

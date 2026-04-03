@@ -1,0 +1,26 @@
+{
+  "name": "Channel",
+  "type": "object",
+  "properties": {
+    "key": {
+      "type": "string",
+      "description": "Unique identifier for the channel (e.g., airbnb, booking_com, vrbo, direct)"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable channel name"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "key",
+    "name"
+  ]
+}

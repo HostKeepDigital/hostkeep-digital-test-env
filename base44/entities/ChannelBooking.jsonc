@@ -1,0 +1,67 @@
+{
+  "name": "ChannelBooking",
+  "type": "object",
+  "properties": {
+    "property_id": {
+      "type": "string",
+      "description": "Reference to Property"
+    },
+    "channel_listing_id": {
+      "type": "string",
+      "description": "Reference to ChannelListing"
+    },
+    "channel_id": {
+      "type": "string",
+      "description": "Reference to Channel"
+    },
+    "external_reservation_id": {
+      "type": "string",
+      "description": "Reservation ID from the OTA"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Check-in date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Check-out date"
+    },
+    "guest_name": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "confirmed",
+        "cancelled",
+        "blocked"
+      ],
+      "default": "confirmed"
+    },
+    "raw_payload": {
+      "type": "object",
+      "description": "Raw iCal event data for debugging"
+    },
+    "conflict": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this booking conflicts with an internal booking"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "property_id",
+    "channel_id",
+    "start_date",
+    "end_date"
+  ]
+}
