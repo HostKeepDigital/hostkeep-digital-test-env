@@ -20,7 +20,6 @@ export default function CalendarEventDrawer({ event, onClose }) {
   const [newEnd, setNewEnd] = useState("");
 
   const {
-    id,
     type,
     guest_name,
     cleaner_name,
@@ -35,6 +34,8 @@ export default function CalendarEventDrawer({ event, onClose }) {
     proposed_end,
   } = event;
 
+  const id = event.id;
+
   const start = new Date(scheduled_start);
   const end = new Date(scheduled_end);
 
@@ -48,9 +49,6 @@ export default function CalendarEventDrawer({ event, onClose }) {
     minute: "2-digit",
   });
 
-  //
-  // ACTION HANDLERS
-  //
   async function handleStartJob() {
     setLoading(true);
     await startCleaningJob(id);
@@ -84,7 +82,6 @@ export default function CalendarEventDrawer({ event, onClose }) {
   }
 
   async function refresh() {
-    // Refresh all calendar queries
     await queryClient.invalidateQueries();
     setLoading(false);
     onClose();
@@ -93,7 +90,6 @@ export default function CalendarEventDrawer({ event, onClose }) {
   return (
     <div className="drawer-overlay">
       <div className="drawer">
-        {/* Header */}
         <div className="drawer-header">
           <h2>
             {type === "booking" && guest_name}
@@ -107,7 +103,6 @@ export default function CalendarEventDrawer({ event, onClose }) {
           </button>
         </div>
 
-        {/* Time Window */}
         <div className="drawer-section">
           <h3>Time Window</h3>
           <p>
@@ -115,7 +110,6 @@ export default function CalendarEventDrawer({ event, onClose }) {
           </p>
         </div>
 
-        {/* Booking Details */}
         {type === "booking" && (
           <div className="drawer-section">
             <h3>Booking Details</h3>
@@ -124,7 +118,6 @@ export default function CalendarEventDrawer({ event, onClose }) {
           </div>
         )}
 
-        {/* Cleaning Job Details */}
         {type === "cleaning" && (
           <div className="drawer-section">
             <h3>Cleaning Job</h3>
@@ -174,10 +167,8 @@ export default function CalendarEventDrawer({ event, onClose }) {
           </div>
         )}
 
-        {/* Actions */}
         {type === "cleaning" && (
           <div className="drawer-section drawer-actions">
-            {/* Start Job */}
             {(status === "assigned" || status === "awaiting_start") && (
               <button
                 className="drawer-btn-primary"
@@ -188,7 +179,6 @@ export default function CalendarEventDrawer({ event, onClose }) {
               </button>
             )}
 
-            {/* Complete Job */}
             {status === "in_progress" && (
               <button
                 className="drawer-btn-primary"
@@ -199,7 +189,6 @@ export default function CalendarEventDrawer({ event, onClose }) {
               </button>
             )}
 
-            {/* Report Delay */}
             {!delay_reported &&
               (status === "assigned" || status === "awaiting_start") && (
                 <button
@@ -211,7 +200,6 @@ export default function CalendarEventDrawer({ event, onClose }) {
                 </button>
               )}
 
-            {/* Reschedule */}
             <button
               className="drawer-btn-secondary"
               disabled={loading}
@@ -222,7 +210,6 @@ export default function CalendarEventDrawer({ event, onClose }) {
           </div>
         )}
 
-        {/* Reschedule Modal */}
         {showReschedule && (
           <div className="drawer-section mt-4">
             <h3>Propose New Time</h3>
@@ -255,9 +242,6 @@ export default function CalendarEventDrawer({ event, onClose }) {
   );
 }
 
-//
-// Status label mapping
-//
 function statusLabel(status) {
   switch (status) {
     case "assigned":
