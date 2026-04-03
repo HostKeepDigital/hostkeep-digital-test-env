@@ -85,3 +85,10 @@ export async function regenerateExportToken(channelListingId) {
     body: JSON.stringify({ channelListingId })
   });
 }
+
+export async function getChannelOverview(hostId) {
+  return jsonFetch(`/functions/getChannelOverview`, {
+    method: "POST",
+    body: JSON.stringify({ hostId })
+  });
+}
