@@ -21,7 +21,6 @@ export default function CalendarEventDrawer({ event, onClose }) {
   const [newEnd, setNewEnd] = useState("");
 
   const {
-    id,
     type,
     guest_name,
     cleaner_name,
@@ -37,6 +36,7 @@ export default function CalendarEventDrawer({ event, onClose }) {
     proposed_end,
   } = event;
 
+  const jobId = event.id;
   const isCleaner = user?.role === "cleaner";
   const isHost = user?.role === "host";
 
@@ -54,19 +54,19 @@ export default function CalendarEventDrawer({ event, onClose }) {
   //
   async function handleStartJob() {
     setLoading(true);
-    await startCleaningJob(id);
+    await startCleaningJob(jobId);
     await refresh();
   }
 
   async function handleCompleteJob() {
     setLoading(true);
-    await completeCleaningJob(id);
+    await completeCleaningJob(jobId);
     await refresh();
   }
 
   async function handleReportDelay() {
     setLoading(true);
-    await reportCleaningDelay(id);
+    await reportCleaningDelay(jobId);
     await refresh();
   }
 
@@ -74,13 +74,13 @@ export default function CalendarEventDrawer({ event, onClose }) {
     if (!newStart || !newEnd) return;
 
     setLoading(true);
-    await proposeNewCleaningTime(id, newStart, newEnd);
+    await proposeNewCleaningTime(jobId, newStart, newEnd);
     await refresh();
   }
 
   async function handleApproveTime() {
     setLoading(true);
-    await approveProposedCleaningTime(id);
+    await approveProposedCleaningTime(jobId);
     await refresh();
   }
 
