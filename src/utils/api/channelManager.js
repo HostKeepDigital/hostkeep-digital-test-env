@@ -78,3 +78,10 @@ export async function deleteChannelBooking(channelBookingId) {
     body: JSON.stringify({ channelBookingId })
   });
 }
+
+export async function regenerateExportToken(channelListingId) {
+  return jsonFetch(`/functions/regenerateExportToken`, {
+    method: "POST",
+    body: JSON.stringify({ channelListingId })
+  });
+}
