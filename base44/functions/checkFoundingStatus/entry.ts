@@ -37,6 +37,7 @@ if (!hasRole) {
         user_id: user_id,
         role: member.role,
         approval_status: 'approved',
+        is_founding_member: member.is_founding_member || false,
       });
 
     await base44.asServiceRole.entities.FoundingMember
