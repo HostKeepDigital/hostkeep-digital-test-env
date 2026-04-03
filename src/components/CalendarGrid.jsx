@@ -7,6 +7,7 @@ import {
   isSameMonth,
   format,
 } from "date-fns";
+import { useDroppable, useDraggable } from "@dnd-kit/core";
 
 export default function CalendarGrid({
   events,
@@ -17,9 +18,6 @@ export default function CalendarGrid({
   const gridRef = useRef(null);
   const today = new Date();
 
-  //
-  // Build all days in the month view (including leading/trailing days)
-  //
   const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
   const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
 
@@ -28,13 +26,12 @@ export default function CalendarGrid({
     end: calendarEnd,
   });
 
-  //
-  // Auto-scroll to today when the month loads
-  //
   useEffect(() => {
     if (!isSameMonth(today, monthStart)) return;
 
-    const el = document.querySelector(`[data-day="${format(today, "yyyy-MM-dd")}"]`);
+    const el = document.querySelector(
+      `[data-day="${format(today, "yyyy-MM-dd")}"]`
+    );
     if (el && gridRef.current) {
       el.scrollIntoView({
         behavior: "smooth",
@@ -44,9 +41,6 @@ export default function CalendarGrid({
     }
   }, [monthStart]);
 
-  //
-  // Group events by day
-  //
   const eventsByDay = {};
   for (const event of events) {
     const dayKey = format(new Date(event.scheduled_start), "yyyy-MM-dd");
@@ -72,75 +66,112 @@ export default function CalendarGrid({
         const isToday = isSameDay(day, today);
 
         return (
-          <div
+          <DayColumn
             key={dayKey}
-            data-day={dayKey}
-            style={{
-              borderRight: "1px solid #e5e7eb",
-              minWidth: "140px",
-              position: "relative",
-              backgroundColor: "white",
-            }}
-          >
-            {/* TODAY HEADER HIGHLIGHT */}
-            <div
-              style={{
-                padding: "6px 0",
-                textAlign: "center",
-                fontWeight: isToday ? 700 : 500,
-                color: isToday ? "#0f766e" : "#374151",
-                backgroundColor: isToday ? "#ccfbf1" : "transparent",
-                borderBottom: "1px solid #e5e7eb",
-                borderTop: isToday ? "2px solid #0d9488" : "2px solid transparent",
-              }}
-            >
-              {format(day, "d")}
-            </div>
-
-            {/* TODAY COLUMN BORDER */}
-            {isToday && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  borderLeft: "2px solid #0d9488",
-                  borderRight: "2px solid #0d9488",
-                  pointerEvents: "none",
-                }}
-              />
-            )}
-
-            {/* EVENTS */}
-            <div style={{ padding: "4px" }}>
-              {(eventsByDay[dayKey] || []).map((event) => (
-                <div key={event.id} onClick={() => onEventClick(event)}>
-                  <div
-                    style={{
-                      backgroundColor: event.color,
-                      borderRadius: "4px",
-                      padding: "4px 6px",
-                      marginBottom: "4px",
-                      cursor: "pointer",
-                      color: "white",
-                      fontSize: "12px",
-                      lineHeight: "14px",
-                      position: "relative",
-                    }}
-                  >
-                    {event.guest_name ||
-                      event.cleaner_name ||
-                      event.company_name ||
-                      event.type}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+            day={day}
+            dayKey={dayKey}
+            isToday={isToday}
+            events={eventsByDay[dayKey] || []}
+            onEventClick={onEventClick}
+          />
         );
       })}
+    </div>
+  );
+}
+
+function DayColumn({ day, dayKey, isToday, events, onEventClick }) {
+  const { setNodeRef } = useDroppable({
+    id: dayKey,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      data-day={dayKey}
+      style={{
+        borderRight: "1px solid #e5e7eb",
+        minWidth: "140px",
+        position: "relative",
+        backgroundColor: "white",
+      }}
+    >
+      <div
+        style={{
+          padding: "6px 0",
+          textAlign: "center",
+          fontWeight: isToday ? 700 : 500,
+          color: isToday ? "#0f766e" : "#374151",
+          backgroundColor: isToday ? "#ccfbf1" : "transparent",
+          borderBottom: "1px solid #e5e7eb",
+          borderTop: isToday ? "2px solid #0d9488" : "2px solid transparent",
+        }}
+      >
+        {format(day, "d")}
+      </div>
+
+      {isToday && (
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            borderLeft: "2px solid #0d9488",
+            borderRight: "2px solid #0d9488",
+            pointerEvents: "none",
+          }}
+        />
+      )}
+
+      <div style={{ padding: "4px" }}>
+        {events.map((event) => (
+          <DraggableEvent
+            key={event.id}
+            event={event}
+            onClick={() => onEventClick(event)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DraggableEvent({ event, onClick }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({
+      id: event.id,
+    });
+
+  const style = {
+    backgroundColor: event.color,
+    borderRadius: "4px",
+    padding: "4px 6px",
+    marginBottom: "4px",
+    cursor: "grab",
+    color: "white",
+    fontSize: "12px",
+    lineHeight: "14px",
+    position: "relative",
+    opacity: isDragging ? 0.7 : 1,
+    transform: transform
+      ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
+      : undefined,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      style={style}
+      onClick={onClick}
+    >
+      {event.guest_name ||
+        event.cleaner_name ||
+        event.company_name ||
+        event.type}
     </div>
   );
 }
