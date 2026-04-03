@@ -1,54 +1,146 @@
-export default function CalendarGrid({ currentMonth, children }) {
-  const startOfMonth = new Date(
-    currentMonth.getFullYear(),
-    currentMonth.getMonth(),
-    1
-  );
+import React, { useEffect, useRef } from "react";
+import {
+  startOfWeek,
+  endOfWeek,
+  eachDayOfInterval,
+  isSameDay,
+  isSameMonth,
+  format,
+} from "date-fns";
 
-  const endOfMonth = new Date(
-    currentMonth.getFullYear(),
-    currentMonth.getMonth() + 1,
-    0
-  );
+export default function CalendarGrid({
+  events,
+  monthStart,
+  monthEnd,
+  onEventClick,
+}) {
+  const gridRef = useRef(null);
+  const today = new Date();
 
-  const startDay = startOfMonth.getDay();
-  const offset = startDay === 0 ? 6 : startDay - 1;
-  const daysInMonth = endOfMonth.getDate();
-  const totalCells = offset + daysInMonth;
-  const rows = Math.ceil(totalCells / 7);
+  //
+  // Build all days in the month view (including leading/trailing days)
+  //
+  const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
+  const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
 
-  const dates = [];
-  for (let i = 0; i < rows * 7; i++) {
-    const date = new Date(
-      currentMonth.getFullYear(),
-      currentMonth.getMonth(),
-      i - offset + 1
-    );
-    dates.push(date);
+  const days = eachDayOfInterval({
+    start: calendarStart,
+    end: calendarEnd,
+  });
+
+  //
+  // Auto-scroll to today when the month loads
+  //
+  useEffect(() => {
+    if (!isSameMonth(today, monthStart)) return;
+
+    const el = document.querySelector(`[data-day="${format(today, "yyyy-MM-dd")}"]`);
+    if (el && gridRef.current) {
+      el.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "center",
+      });
+    }
+  }, [monthStart]);
+
+  //
+  // Group events by day
+  //
+  const eventsByDay = {};
+  for (const event of events) {
+    const dayKey = format(new Date(event.scheduled_start), "yyyy-MM-dd");
+    if (!eventsByDay[dayKey]) eventsByDay[dayKey] = [];
+    eventsByDay[dayKey].push(event);
   }
 
   return (
-    <div className="calendar-grid">
-      <div className="calendar-row calendar-header-row">
-        {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
-          <div key={d} className="calendar-header-cell">
-            {d}
-          </div>
-        ))}
-      </div>
+    <div
+      ref={gridRef}
+      className="calendar-grid"
+      style={{
+        display: "grid",
+        gridTemplateColumns: `repeat(${days.length}, 1fr)`,
+        overflowX: "auto",
+        borderTop: "1px solid #e5e7eb",
+        borderBottom: "1px solid #e5e7eb",
+        paddingBottom: "20px",
+      }}
+    >
+      {days.map((day) => {
+        const dayKey = format(day, "yyyy-MM-dd");
+        const isToday = isSameDay(day, today);
 
-      {Array.from({ length: rows }).map((_, rowIndex) => (
-        <div key={rowIndex} className="calendar-row">
-          {dates.slice(rowIndex * 7, rowIndex * 7 + 7).map((date, i) => (
-            <div key={i} className="calendar-cell">
-              <div className="calendar-date-number">{date.getDate()}</div>
-              <div className="calendar-events-container">
-                {children(date)}
-              </div>
+        return (
+          <div
+            key={dayKey}
+            data-day={dayKey}
+            style={{
+              borderRight: "1px solid #e5e7eb",
+              minWidth: "140px",
+              position: "relative",
+              backgroundColor: "white",
+            }}
+          >
+            {/* TODAY HEADER HIGHLIGHT */}
+            <div
+              style={{
+                padding: "6px 0",
+                textAlign: "center",
+                fontWeight: isToday ? 700 : 500,
+                color: isToday ? "#0f766e" : "#374151",
+                backgroundColor: isToday ? "#ccfbf1" : "transparent",
+                borderBottom: "1px solid #e5e7eb",
+                borderTop: isToday ? "2px solid #0d9488" : "2px solid transparent",
+              }}
+            >
+              {format(day, "d")}
             </div>
-          ))}
-        </div>
-      ))}
+
+            {/* TODAY COLUMN BORDER */}
+            {isToday && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  borderLeft: "2px solid #0d9488",
+                  borderRight: "2px solid #0d9488",
+                  pointerEvents: "none",
+                }}
+              />
+            )}
+
+            {/* EVENTS */}
+            <div style={{ padding: "4px" }}>
+              {(eventsByDay[dayKey] || []).map((event) => (
+                <div key={event.id} onClick={() => onEventClick(event)}>
+                  <div
+                    style={{
+                      backgroundColor: event.color,
+                      borderRadius: "4px",
+                      padding: "4px 6px",
+                      marginBottom: "4px",
+                      cursor: "pointer",
+                      color: "white",
+                      fontSize: "12px",
+                      lineHeight: "14px",
+                      position: "relative",
+                    }}
+                  >
+                    {event.guest_name ||
+                      event.cleaner_name ||
+                      event.company_name ||
+                      event.type}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
