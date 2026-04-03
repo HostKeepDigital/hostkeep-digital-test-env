@@ -496,40 +496,60 @@ export default function HostDashboard() {
               )}
             </motion.div>
 
-            {/* NEW: Unified Calendar */}
-            {properties.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Calendar
-                  </h2>
+{/* NEW: Unified Calendar */}
+{properties.length > 0 && (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"
+  >
+    {/* Header with property identity */}
+    <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center gap-3">
+        <img
+          src={
+            properties.find((p) => p.id === selectedPropertyId)?.photos?.[0] ||
+            "https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/default-property.jpg"
+          }
+          alt="Property"
+          className="w-12 h-12 rounded-lg object-cover border"
+        />
 
-                  <select
-                    className="border rounded px-2 py-1 text-sm"
-                    value={selectedPropertyId || ""}
-                    onChange={(e) => setSelectedPropertyId(e.target.value)}
-                  >
-                    {properties.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.title}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900">
+            {properties.find((p) => p.id === selectedPropertyId)?.title ||
+              "Select a property"}
+          </h2>
+          <p className="text-xs text-gray-500">
+            Viewing calendar for this property
+          </p>
+        </div>
+      </div>
 
-                {selectedPropertyId ? (
-                  <UnifiedCalendar propertyId={selectedPropertyId} />
-                ) : (
-                  <p className="text-sm text-gray-500">
-                    Select a property to view its calendar.
-                  </p>
-                )}
-              </motion.div>
-            )}
+      {/* Property selector */}
+      <select
+        className="border rounded px-2 py-1 text-sm"
+        value={selectedPropertyId || ""}
+        onChange={(e) => setSelectedPropertyId(e.target.value)}
+      >
+        {properties.map((p) => (
+          <option key={p.id} value={p.id}>
+            {p.title}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    {/* Calendar */}
+    {selectedPropertyId ? (
+      <UnifiedCalendar propertyId={selectedPropertyId} />
+    ) : (
+      <p className="text-sm text-gray-500">
+        Select a property to view its calendar.
+      </p>
+    )}
+  </motion.div>
+)}
           </div>
 
           {/* Sidebar */}
