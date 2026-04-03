@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { DndContext } from "@dnd-kit/core";
 import CalendarGrid from "./CalendarGrid";
 import CalendarEventDrawer from "./CalendarEventDrawer";
 import { useCalendarEvents } from "@/hooks/useCalendarEvents";
@@ -9,22 +8,15 @@ import {
   addMonths,
   subMonths,
   format,
-  differenceInCalendarDays,
 } from "date-fns";
-import {
-  updateBookingDates,
-  updateCleaningJobTimes,
-  isCleanerAvailable,
-  unassignCleaner,
-  createCleaningConflict,
-} from "@/api/calendarUpdates";
 
 export default function BookingBarCalendar({ propertyId }) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
+
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
 
-  const { events, isLoading, refetch } = useCalendarEvents(propertyId, {
+  const { events, isLoading } = useCalendarEvents(propertyId, {
     start: monthStart,
     end: monthEnd,
   });
@@ -82,109 +74,9 @@ export default function BookingBarCalendar({ propertyId }) {
     (_, i) => new Date().getFullYear() - 2 + i
   );
 
-  async function handleDragEnd(event) {
-    const { active, over } = event;
-    if (!over) return;
-
-    const eventId = active.id;
-    const targetDay = over.id; // "yyyy-MM-dd"
-
-    const movedEvent = events.find((e) => e.id === eventId);
-    if (!movedEvent) return;
-
-    const originalStart = new Date(movedEvent.scheduled_start);
-    const originalDayKey = format(originalStart, "yyyy-MM-dd");
-    if (originalDayKey === targetDay) return;
-
-    const newDayDate = new Date(targetDay);
-    const dayDelta = differenceInCalendarDays(newDayDate, originalStart);
-
-    if (movedEvent.type === "booking") {
-      const checkIn = new Date(movedEvent.check_in);
-      const checkOut = new Date(movedEvent.check_out);
-
-      const newCheckIn = new Date(checkIn);
-      newCheckIn.setDate(checkIn.getDate() + dayDelta);
-
-      const newCheckOut = new Date(checkOut);
-      newCheckOut.setDate(checkOut.getDate() + dayDelta);
-
-      await updateBookingDates(
-        movedEvent.id,
-        newCheckIn.toISOString(),
-        newCheckOut.toISOString()
-      );
-
-      if (movedEvent.cleaning_job_id) {
-        const cjStart = new Date(movedEvent.scheduled_start);
-        const cjEnd = new Date(movedEvent.scheduled_end);
-
-        const newCjStart = new Date(cjStart);
-        newCjStart.setDate(cjStart.getDate() + dayDelta);
-
-        const newCjEnd = new Date(cjEnd);
-        newCjEnd.setDate(cjEnd.getDate() + dayDelta);
-
-        if (
-          movedEvent.cleaner_id &&
-          !(await isCleanerAvailable(
-            movedEvent.cleaner_id,
-            newCjStart.toISOString(),
-            newCjEnd.toISOString()
-          ))
-        ) {
-          await unassignCleaner(movedEvent.cleaning_job_id);
-          await createCleaningConflict(
-            movedEvent.cleaning_job_id,
-            "Cleaner unavailable on new date — please reassign."
-          );
-        }
-
-        await updateCleaningJobTimes(
-          movedEvent.cleaning_job_id,
-          newCjStart.toISOString(),
-          newCjEnd.toISOString()
-        );
-      }
-    }
-
-    if (movedEvent.type === "cleaning") {
-      const cjStart = new Date(movedEvent.scheduled_start);
-      const cjEnd = new Date(movedEvent.scheduled_end);
-
-      const newCjStart = new Date(cjStart);
-      newCjStart.setDate(cjStart.getDate() + dayDelta);
-
-      const newCjEnd = new Date(cjEnd);
-      newCjEnd.setDate(cjEnd.getDate() + dayDelta);
-
-      if (
-        movedEvent.cleaner_id &&
-        !(await isCleanerAvailable(
-          movedEvent.cleaner_id,
-          newCjStart.toISOString(),
-          newCjEnd.toISOString()
-        ))
-      ) {
-        await unassignCleaner(movedEvent.id);
-        await createCleaningConflict(
-          movedEvent.id,
-          "Cleaner unavailable on new date — please reassign."
-        );
-      }
-
-      await updateCleaningJobTimes(
-        movedEvent.id,
-        newCjStart.toISOString(),
-        newCjEnd.toISOString()
-      );
-    }
-
-    await refetch();
-  }
-
   return (
     <div className="w-full">
+      {/* MONTH NAVIGATION */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <button
@@ -210,6 +102,7 @@ export default function BookingBarCalendar({ propertyId }) {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Month dropdown */}
           <select
             value={currentMonth.getMonth()}
             onChange={handleMonthSelect}
@@ -222,6 +115,7 @@ export default function BookingBarCalendar({ propertyId }) {
             ))}
           </select>
 
+          {/* Year dropdown */}
           <select
             value={currentMonth.getFullYear()}
             onChange={handleYearSelect}
@@ -236,6 +130,7 @@ export default function BookingBarCalendar({ propertyId }) {
         </div>
       </div>
 
+      {/* FILTER BAR */}
       <div className="flex items-center gap-2 mb-4">
         <FilterButton
           label="Bookings"
@@ -266,15 +161,15 @@ export default function BookingBarCalendar({ propertyId }) {
         />
       </div>
 
-      <DndContext onDragEnd={handleDragEnd}>
-        <CalendarGrid
-          events={filteredEvents}
-          monthStart={monthStart}
-          monthEnd={monthEnd}
-          onEventClick={(event) => setSelectedEvent(event)}
-        />
-      </DndContext>
+      {/* CALENDAR GRID */}
+      <CalendarGrid
+        events={filteredEvents}
+        monthStart={monthStart}
+        monthEnd={monthEnd}
+        onEventClick={(event) => setSelectedEvent(event)}
+      />
 
+      {/* DRAWER */}
       {selectedEvent && (
         <CalendarEventDrawer
           event={selectedEvent}
