@@ -67,6 +67,22 @@ export default function Home() {
   const [postcodeError, setPostcodeError] = useState("");
   const postcodeCache = useRef({});
 
+  // Track page visit — fires once on mount
+  useEffect(() => {
+    try {
+      let visitorId = localStorage.getItem("hk_visitor_id");
+      if (!visitorId) {
+        visitorId = crypto.randomUUID();
+        localStorage.setItem("hk_visitor_id", visitorId);
+      }
+      base44.functions.invoke("trackPageView", {
+        visitor_id: visitorId,
+        page: "home",
+        timestamp: new Date().toISOString(),
+      }).catch(() => {});
+    } catch (_) {}
+  }, []);
+
   // Load roles when user changes
   useEffect(() => {
     if (user?.id) {
