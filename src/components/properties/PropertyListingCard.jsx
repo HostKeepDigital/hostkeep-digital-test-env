@@ -28,6 +28,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { format, isAfter, parseISO } from "date-fns";
 
+const FOUNDER_BADGE = "https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/HostFounderBadge.png";
+
 export default function PropertyListingCard({
   property,
   cleanerSettings,
@@ -36,6 +38,7 @@ export default function PropertyListingCard({
   isSingle,
   onStatusToggle,
   onDelete,
+  isFoundingMember,
 }) {
   const [showActions, setShowActions] = useState(false);
 
@@ -115,6 +118,14 @@ export default function PropertyListingCard({
         >
           {statusText[property.status] || property.status}
         </Badge>
+
+        {isFoundingMember && (
+          <img
+            src={FOUNDER_BADGE}
+            alt="Founding Member"
+            className="absolute bottom-4 right-4 h-10 w-auto drop-shadow-md"
+          />
+        )}
 
         <div className="absolute bottom-5 left-5 right-5 text-white">
           <h3 className="text-2xl font-bold mb-1.5 tracking-tight drop-shadow-md">
