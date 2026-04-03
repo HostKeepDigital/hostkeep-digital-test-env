@@ -1,78 +1,82 @@
-import { useState } from "react";
-import useCalendarEvents from "@/hooks/useCalendarEvents";
+import React, { useState } from "react";
 import CalendarGrid from "./CalendarGrid";
 import BookingBar from "./BookingBar";
 import CalendarEventDrawer from "./CalendarEventDrawer";
+import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 
 export default function BookingBarCalendar({ propertyId }) {
-  const { events, loading } = useCalendarEvents(propertyId);
+  const { events, isLoading } = useCalendarEvents(propertyId);
 
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [currentMonth, setCurrentMonth] = useState(new Date());
 
-  if (loading) {
-    return (
-      <div style={{ padding: "20px", textAlign: "center" }}>
-        Loading calendar…
-      </div>
-    );
+  //
+  // FILTER STATE
+  //
+  const [filters, setFilters] = useState({
+    bookings: true,
+    cleaning: true,
+    blocked: true,
+    conflict: true,
+  });
+
+  function toggleFilter(key) {
+    setFilters((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
   }
 
+  //
+  // APPLY FILTERS
+  //
+  const filteredEvents = events.filter((e) => {
+    if (e.type === "booking" && !filters.bookings) return false;
+    if (e.type === "cleaning" && !filters.cleaning) return false;
+    if (e.type === "blocked" && !filters.blocked) return false;
+    if (e.type === "conflict" && !filters.conflict) return false;
+    return true;
+  });
+
   return (
-    <div className="booking-calendar-container">
-      {/* MONTH HEADER + NAVIGATION */}
-      <div className="calendar-header">
-        <button
-          onClick={() =>
-            setCurrentMonth(
-              new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1)
-            )
-          }
-        >
-          ←
-        </button>
+    <div className="w-full">
+      {/* FILTER BAR */}
+      <div className="flex items-center gap-2 mb-4">
+        <FilterButton
+          label="Bookings"
+          active={filters.bookings}
+          color="#0ea5e9"
+          onClick={() => toggleFilter("bookings")}
+        />
 
-        <h2>
-          {currentMonth.toLocaleString("default", { month: "long" })}{" "}
-          {currentMonth.getFullYear()}
-        </h2>
+        <FilterButton
+          label="Cleaning"
+          active={filters.cleaning}
+          color="#16a34a"
+          onClick={() => toggleFilter("cleaning")}
+        />
 
-        <button
-          onClick={() =>
-            setCurrentMonth(
-              new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)
-            )
-          }
-        >
-          →
-        </button>
+        <FilterButton
+          label="Blocked"
+          active={filters.blocked}
+          color="#6b7280"
+          onClick={() => toggleFilter("blocked")}
+        />
+
+        <FilterButton
+          label="Conflicts"
+          active={filters.conflict}
+          color="#dc2626"
+          onClick={() => toggleFilter("conflict")}
+        />
       </div>
 
       {/* CALENDAR GRID */}
-      <CalendarGrid currentMonth={currentMonth}>
-        {(cellDate) => {
-          const cellEvents = events.filter((ev) => {
-            const start = new Date(ev.scheduled_start);
-            const end = new Date(ev.scheduled_end);
+      <CalendarGrid
+        events={filteredEvents}
+        onEventClick={(event) => setSelectedEvent(event)}
+      />
 
-            return cellDate >= start && cellDate <= end;
-          });
-
-          return (
-            <div className="calendar-cell">
-              {cellEvents.map((ev) => (
-                <BookingBar
-                  key={ev.id}
-                  event={ev}
-                  onClick={() => setSelectedEvent(ev)}
-                />
-              ))}
-            </div>
-          );
-        }}
-      </CalendarGrid>
-
-      {/* EVENT DRAWER */}
+      {/* DRAWER */}
       {selectedEvent && (
         <CalendarEventDrawer
           event={selectedEvent}
@@ -80,5 +84,27 @@ export default function BookingBarCalendar({ propertyId }) {
         />
       )}
     </div>
+  );
+}
+
+//
+// FILTER BUTTON COMPONENT
+//
+function FilterButton({ label, active, color, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        backgroundColor: active ? color : "white",
+        color: active ? "white" : "#374151",
+        border: `1px solid ${color}`,
+        padding: "6px 12px",
+        borderRadius: "6px",
+        fontSize: "13px",
+        fontWeight: 500,
+      }}
+    >
+      {label}
+    </button>
   );
 }
