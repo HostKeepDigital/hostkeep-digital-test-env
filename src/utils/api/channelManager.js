@@ -57,3 +57,24 @@ export async function getChannelSyncLogs(channelListingId) {
     body: JSON.stringify({ channelListingId })
   });
 }
+
+export async function getConflicts(hostId) {
+  return jsonFetch(`/functions/getConflicts`, {
+    method: "POST",
+    body: JSON.stringify({ hostId })
+  });
+}
+
+export async function resolveConflict(channelBookingId) {
+  return jsonFetch(`/functions/resolveConflict`, {
+    method: "POST",
+    body: JSON.stringify({ channelBookingId })
+  });
+}
+
+export async function deleteChannelBooking(channelBookingId) {
+  return jsonFetch(`/functions/deleteChannelBooking`, {
+    method: "POST",
+    body: JSON.stringify({ channelBookingId })
+  });
+}
