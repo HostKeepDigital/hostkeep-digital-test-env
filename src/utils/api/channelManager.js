@@ -1,6 +1,4 @@
-// Basic API helpers for Channel Manager
-
-const BASE_PATH = "/functions/channelManager";
+const BASE_PATH = "/functions";
 
 async function jsonFetch(url, options = {}) {
   const res = await fetch(url, {
@@ -13,6 +11,7 @@ async function jsonFetch(url, options = {}) {
 
   const text = await res.text();
   let data = null;
+
   try {
     data = text ? JSON.parse(text) : null;
   } catch {
@@ -26,68 +25,102 @@ async function jsonFetch(url, options = {}) {
   return data;
 }
 
-// Get channel listings for a property
+/* -----------------------------
+   CHANNEL LISTING CRUD
+------------------------------ */
+
+export async function createChannelListing(payload) {
+  return jsonFetch(`${BASE_PATH}/createChannelListing`, {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
+export async function updateChannelListing(id, updates) {
+  return jsonFetch(`${BASE_PATH}/updateChannelListing`, {
+    method: "POST",
+    body: JSON.stringify({ id, ...updates })
+  });
+}
+
 export async function getChannelListings(propertyId) {
-  return jsonFetch(`/functions/getChannelListings`, {
+  return jsonFetch(`${BASE_PATH}/getChannelListings`, {
     method: "POST",
     body: JSON.stringify({ propertyId })
   });
 }
 
-// Update a single ChannelListing
-export async function updateChannelListing(id, payload) {
-  return jsonFetch(`/functions/updateChannelListing`, {
+/* -----------------------------
+   VALIDATION
+------------------------------ */
+
+export async function validateIcalUrl(url) {
+  return jsonFetch(`${BASE_PATH}/validateIcalUrl`, {
     method: "POST",
-    body: JSON.stringify({ id, ...payload })
+    body: JSON.stringify({ url })
   });
 }
 
-// Trigger manual iCal import for a listing
+/* -----------------------------
+   SYNC
+------------------------------ */
+
 export async function triggerChannelSync(channelListingId) {
-  return jsonFetch(`${BASE_PATH}/icalImport`, {
+  return jsonFetch(`${BASE_PATH}/syncChannel`, {
     method: "POST",
     body: JSON.stringify({ channelListingId })
   });
 }
 
-// Get CalendarSyncJob logs for a listing
 export async function getChannelSyncLogs(channelListingId) {
-  return jsonFetch(`/functions/getChannelSyncLogs`, {
+  return jsonFetch(`${BASE_PATH}/getChannelSyncLogs`, {
     method: "POST",
     body: JSON.stringify({ channelListingId })
   });
 }
+
+/* -----------------------------
+   TOKEN REGENERATION
+------------------------------ */
+
+export async function regenerateExportToken(channelListingId) {
+  return jsonFetch(`${BASE_PATH}/regenerateExportToken`, {
+    method: "POST",
+    body: JSON.stringify({ channelListingId })
+  });
+}
+
+/* -----------------------------
+   CONFLICTS
+------------------------------ */
 
 export async function getConflicts(hostId) {
-  return jsonFetch(`/functions/getConflicts`, {
+  return jsonFetch(`${BASE_PATH}/getConflicts`, {
     method: "POST",
     body: JSON.stringify({ hostId })
   });
 }
 
 export async function resolveConflict(channelBookingId) {
-  return jsonFetch(`/functions/resolveConflict`, {
+  return jsonFetch(`${BASE_PATH}/resolveConflict`, {
     method: "POST",
     body: JSON.stringify({ channelBookingId })
   });
 }
 
 export async function deleteChannelBooking(channelBookingId) {
-  return jsonFetch(`/functions/deleteChannelBooking`, {
+  return jsonFetch(`${BASE_PATH}/deleteChannelBooking`, {
     method: "POST",
     body: JSON.stringify({ channelBookingId })
   });
 }
 
-export async function regenerateExportToken(channelListingId) {
-  return jsonFetch(`/functions/regenerateExportToken`, {
-    method: "POST",
-    body: JSON.stringify({ channelListingId })
-  });
-}
+/* -----------------------------
+   OVERVIEW
+------------------------------ */
 
 export async function getChannelOverview(hostId) {
-  return jsonFetch(`/functions/getChannelOverview`, {
+  return jsonFetch(`${BASE_PATH}/getChannelOverview`, {
     method: "POST",
     body: JSON.stringify({ hostId })
   });
