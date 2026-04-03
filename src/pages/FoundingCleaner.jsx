@@ -90,6 +90,7 @@ export default function FoundingCleaner() {
       });
       if (result?.error === "duplicate_email") { setErrors({ email: "Email already registered." }); setSubmitting(false); return; }
       if (result?.data?.out_of_area || isOutOfArea) {
+        try { await base44.functions.invoke("sendVerificationCode", { email: form.email.toLowerCase().trim(), name: form.forename.trim() }); } catch (_) {}
         navigate(`/verify-email?email=${encodeURIComponent(form.email.toLowerCase().trim())}&status=out_of_area`);
         return;
       }
