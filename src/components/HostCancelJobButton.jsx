@@ -1,67 +1,67 @@
-import { useState } from "react";
-import { base44 } from "@/api/base44Client";
-import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import React, { useState } from "react";
+import { hostCancelJob } from "@/actions/hostCancelJob";
 
 export default function HostCancelJobButton({ cleaningJobId, hostId }) {
   const [loading, setLoading] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const [result, setResult] = useState(null);
 
   async function handleCancel() {
-    if (!showConfirm) {
-      setShowConfirm(true);
-      return;
-    }
-
     setLoading(true);
-    try {
-      await base44.functions.invoke("hostCancelCleaningJob", {
-        cleaningJobId,
-      });
-      setResult({ success: true });
-      setTimeout(() => {
-        setResult(null);
-        setShowConfirm(false);
-      }, 3000);
-    } catch (error) {
-      setResult({ success: false, error: error.message });
-    } finally {
-      setLoading(false);
-    }
-  }
+    setResult(null);
 
-  if (result?.success) {
-    return (
-      <div className="p-2 bg-green-50 text-green-700 text-sm rounded">
-        Job cancelled successfully.
-      </div>
-    );
-  }
+    const response = await hostCancelJob(cleaningJobId, hostId);
 
-  if (result?.error) {
-    return (
-      <div className="p-2 bg-red-50 text-red-700 text-sm rounded">
-        {result.error}
-      </div>
-    );
+    setResult(response);
+    setLoading(false);
+
+    setTimeout(() => setResult(null), 4000);
   }
 
   return (
-    <div className="space-y-2">
-      <Button
-        variant="destructive"
-        onClick={handleCancel}
-        disabled={loading}
-        className="w-full gap-2"
-      >
-        <X className="w-4 h-4" />
-        {showConfirm ? "Confirm Cancel Job" : "Cancel Job"}
-      </Button>
-      {showConfirm && (
-        <p className="text-xs text-gray-600">
-          Cancelling will unassign the cleaner and mark the job as vacant.
-        </p>
+    <div className="mt-4">
+      {!confirming ? (
+        <button
+          onClick={() => setConfirming(true)}
+          className="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+        >
+          Cancel Cleaning Job
+        </button>
+      ) : (
+        <div className="p-3 border rounded bg-gray-50">
+          <p className="text-sm mb-2">
+            Are you sure you want to cancel this cleaning job?
+          </p>
+
+          <div className="flex gap-2">
+            <button
+              onClick={handleCancel}
+              disabled={loading}
+              className="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+            >
+              {loading ? "Cancelling..." : "Yes, Cancel Job"}
+            </button>
+
+            <button
+              onClick={() => setConfirming(false)}
+              className="px-3 py-2 bg-gray-300 rounded hover:bg-gray-400"
+            >
+              No
+            </button>
+          </div>
+        </div>
+      )}
+
+      {result && (
+        <div
+          className={`mt-2 p-2 rounded text-sm ${
+            result.success
+              ? "bg-green-100 text-green-800"
+              : "bg-red-100 text-red-800"
+          }`}
+        >
+          {result.message}
+        </div>
       )}
     </div>
   );
