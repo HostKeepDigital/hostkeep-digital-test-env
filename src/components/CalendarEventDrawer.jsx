@@ -21,7 +21,6 @@ export default function CalendarEventDrawer({ event, onClose }) {
   const [newEnd, setNewEnd] = useState("");
 
   const {
-    id,
     type,
     guest_name,
     cleaner_name,
@@ -37,6 +36,7 @@ export default function CalendarEventDrawer({ event, onClose }) {
     proposed_end,
   } = event;
 
+  const id = event.id;
   const isCleaner = user?.role === "cleaner";
   const isHost = user?.role === "host";
 
