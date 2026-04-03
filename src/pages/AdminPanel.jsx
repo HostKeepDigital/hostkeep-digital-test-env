@@ -1385,7 +1385,7 @@ const handleDelete = async (member) => {
 
         </div>
       )}
-
+        <ChannelManagerIntegrationTester hostId={user?.id} />
     </div>
   );
 }
