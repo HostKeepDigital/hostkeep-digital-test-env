@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { regenerateExportToken } from "../../utils/api/channelManager";
 
 export function ChannelListingForm({
   listing,
@@ -13,8 +14,12 @@ export function ChannelListingForm({
   const [status, setStatus] = useState(listing.status || "active");
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [exportToken, setExportToken] = useState(
+    listing.ical_export_token
+  );
+  const [regenerating, setRegenerating] = useState(false);
 
-  const exportUrl = `${exportBaseUrl}?token=${listing.ical_export_token}`;
+  const exportUrl = `${exportBaseUrl}?token=${exportToken}`;
 
   const handleSave = async () => {
     setSaving(true);
@@ -35,6 +40,18 @@ export function ChannelListingForm({
       setTimeout(() => setCopied(false), 1500);
     } catch (err) {
       console.error("Failed to copy", err);
+    }
+  };
+
+  const handleRegenerate = async () => {
+    setRegenerating(true);
+    try {
+      const res = await regenerateExportToken(listing.id);
+      setExportToken(res.listing.ical_export_token);
+    } catch (err) {
+      console.error("Failed to regenerate token", err);
+    } finally {
+      setRegenerating(false);
     }
   };
 
@@ -92,8 +109,22 @@ export function ChannelListingForm({
             {copied ? "Copied" : "Copy"}
           </button>
         </div>
-        <p className="text-[11px] text-gray-500">
-          Paste this into your OTA&apos;s calendar export settings.
+        <div className="flex items-center justify-between mt-1">
+          <p className="text-[11px] text-gray-500">
+            Paste this into your OTA&apos;s calendar export settings.
+          </p>
+          <button
+            type="button"
+            onClick={handleRegenerate}
+            disabled={regenerating}
+            className="text-[11px] text-red-600 hover:text-red-700"
+          >
+            {regenerating ? "Regenerating…" : "Regenerate token"}
+          </button>
+        </div>
+        <p className="text-[11px] text-red-500 mt-1">
+          Regenerating will change this URL. You&apos;ll need to update it in
+          your OTA.
         </p>
       </div>
 
