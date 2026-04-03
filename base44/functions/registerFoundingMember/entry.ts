@@ -12,11 +12,13 @@ Deno.serve(async (req) => {
   const outOfArea = !["TR", "PL", "EX"].some((p) => cleanPostcode.startsWith(p));
 
   // Check for duplicate email
+// Check for duplicate email+role combination
   const existing = await base44.asServiceRole.entities.FoundingMember.filter({
     email: email.toLowerCase().trim(),
+    role,
   });
   if (existing && existing.length > 0) {
-    return Response.json({ error: "duplicate_email" });
+    return Response.json({ error: "duplicate_email", status: existing[0].approval_status });
   }
 
   // Create FoundingMember record
