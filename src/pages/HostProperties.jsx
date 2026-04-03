@@ -89,6 +89,17 @@ export default function HostProperties() {
     enabled: !!user?.id
   });
 
+  const { data: foundingMemberData } = useQuery({
+    queryKey: ["founding-member", user?.email],
+    queryFn: async () => {
+      const members = await base44.entities.FoundingMember.filter({ email: user.email });
+      return members?.[0] || null;
+    },
+    enabled: !!user?.email
+  });
+
+  const isFoundingMember = foundingMemberData?.is_founding_member === true;
+
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Property.update(id, data),
     onSuccess: () => {
