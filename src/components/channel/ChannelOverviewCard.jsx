@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { ChannelBadge } from "./ChannelBadge";
 import { ArrowRight, RefreshCw, AlertTriangle } from "lucide-react";
 
 export function ChannelOverviewCard({ property, listings }) {
@@ -32,8 +33,7 @@ export function ChannelOverviewCard({ property, listings }) {
           className="border rounded-lg p-3 bg-gray-50 flex items-center justify-between"
         >
           <div>
-            import { ChannelBadge } from "./ChannelBadge"; // top of file
-              <ChannelBadge
+            <ChannelBadge
                 channelId={l.channel_id}
                 label={l.channel_name}
               />

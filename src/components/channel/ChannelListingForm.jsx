@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { regenerateExportToken } from "../../utils/api/channelManager";
+import { ChannelBadge } from "./ChannelBadge";
 
 export function ChannelListingForm({
   listing,
@@ -59,11 +60,10 @@ export function ChannelListingForm({
     <div className="border rounded-lg p-4 bg-white shadow-sm space-y-3">
       <div className="flex items-center justify-between">
         <div>
-         import { ChannelBadge } from "./ChannelBadge"; // adjust relative path as needed
          <ChannelBadge
-            channelId={listing.channel_id}
-            label={listing.channel_name || "Channel"}
-          />
+           channelId={listing.channel_id}
+           label={listing.channel_name || "Channel"}
+         />
           <p className="text-xs text-gray-500">
             Property ID: {listing.property_id}
           </p>
