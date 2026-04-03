@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/AuthContext";
+import ChannelManagerIntegrationTester from "@/components/devtools/ChannelManagerIntegrationTester";
 
 // ── STATUS MAPS ──────────────────────────────────────────────────────────────
 
