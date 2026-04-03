@@ -281,6 +281,25 @@ export default function FoundingHost() {
             <input type="email" value={form.email} onChange={e => field("email", e.target.value)} placeholder="jane@example.com"
               className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 transition-colors ${errors.email ? "border-red-300" : "border-gray-200"}`} />
             {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
+            {duplicateInfo?.type === "resend" && (
+              <div className="mt-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
+                You've already started registering as a host with this email.{" "}
+                <button type="button" className="underline font-medium" onClick={async () => {
+                  try { await base44.functions.invoke("sendVerificationCode", { email: duplicateInfo.email, name: form.forename.trim() }); } catch (_) {}
+                  navigate(`/verify-email?email=${encodeURIComponent(duplicateInfo.email)}`);
+                }}>Send a new verification code.</button>
+              </div>
+            )}
+            {duplicateInfo?.type === "out_of_area" && (
+              <div className="mt-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
+                You've already registered your interest with this email. We'll be in touch when we launch in your area.
+              </div>
+            )}
+            {duplicateInfo?.type === "already_registered" && (
+              <div className="mt-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
+                This email is already registered as a host. If you need help, contact <a href="mailto:hello@hostkeepdigital.co.uk" className="underline font-medium">hello@hostkeepdigital.co.uk</a>
+              </div>
+            )}
           </div>
 
           <div>
