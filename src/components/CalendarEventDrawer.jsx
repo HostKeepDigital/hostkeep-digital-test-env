@@ -1,5 +1,26 @@
+// src/components/CalendarEventDrawer.jsx
+
+import React, { useState } from "react";
+import {
+  startCleaningJob,
+  completeCleaningJob,
+  reportCleaningDelay,
+  proposeNewCleaningTime,
+  approveProposedCleaningTime,
+} from "@/api/cleaningJobs";
+
+import { useQueryClient } from "@tanstack/react-query";
+
 export default function CalendarEventDrawer({ event, onClose }) {
+  const queryClient = useQueryClient();
+
+  const [loading, setLoading] = useState(false);
+  const [showReschedule, setShowReschedule] = useState(false);
+  const [newStart, setNewStart] = useState("");
+  const [newEnd, setNewEnd] = useState("");
+
   const {
+    id,
     type,
     guest_name,
     cleaner_name,
@@ -10,6 +31,8 @@ export default function CalendarEventDrawer({ event, onClose }) {
     started_at,
     completed_at,
     delay_reported,
+    proposed_start,
+    proposed_end,
   } = event;
 
   const start = new Date(scheduled_start);
@@ -25,9 +48,52 @@ export default function CalendarEventDrawer({ event, onClose }) {
     minute: "2-digit",
   });
 
+  //
+  // ACTION HANDLERS
+  //
+  async function handleStartJob() {
+    setLoading(true);
+    await startCleaningJob(id);
+    await refresh();
+  }
+
+  async function handleCompleteJob() {
+    setLoading(true);
+    await completeCleaningJob(id);
+    await refresh();
+  }
+
+  async function handleReportDelay() {
+    setLoading(true);
+    await reportCleaningDelay(id);
+    await refresh();
+  }
+
+  async function handleProposeTime() {
+    if (!newStart || !newEnd) return;
+
+    setLoading(true);
+    await proposeNewCleaningTime(id, newStart, newEnd);
+    await refresh();
+  }
+
+  async function handleApproveTime() {
+    setLoading(true);
+    await approveProposedCleaningTime(id);
+    await refresh();
+  }
+
+  async function refresh() {
+    // Refresh all calendar queries
+    await queryClient.invalidateQueries();
+    setLoading(false);
+    onClose();
+  }
+
   return (
     <div className="drawer-overlay">
       <div className="drawer">
+        {/* Header */}
         <div className="drawer-header">
           <h2>
             {type === "booking" && guest_name}
@@ -41,6 +107,7 @@ export default function CalendarEventDrawer({ event, onClose }) {
           </button>
         </div>
 
+        {/* Time Window */}
         <div className="drawer-section">
           <h3>Time Window</h3>
           <p>
@@ -48,6 +115,7 @@ export default function CalendarEventDrawer({ event, onClose }) {
           </p>
         </div>
 
+        {/* Booking Details */}
         {type === "booking" && (
           <div className="drawer-section">
             <h3>Booking Details</h3>
@@ -56,6 +124,7 @@ export default function CalendarEventDrawer({ event, onClose }) {
           </div>
         )}
 
+        {/* Cleaning Job Details */}
         {type === "cleaning" && (
           <div className="drawer-section">
             <h3>Cleaning Job</h3>
@@ -82,20 +151,103 @@ export default function CalendarEventDrawer({ event, onClose }) {
             )}
 
             {delay_reported && <p>Delay reported by cleaner</p>}
+
+            {proposed_start && proposed_end && (
+              <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded">
+                <p className="font-medium text-amber-700">
+                  Cleaner proposed new time:
+                </p>
+                <p className="text-sm text-amber-700">
+                  {new Date(proposed_start).toLocaleString()} →{" "}
+                  {new Date(proposed_end).toLocaleString()}
+                </p>
+
+                <button
+                  className="drawer-btn-primary mt-2"
+                  disabled={loading}
+                  onClick={handleApproveTime}
+                >
+                  Approve New Time
+                </button>
+              </div>
+            )}
           </div>
         )}
 
+        {/* Actions */}
         {type === "cleaning" && (
           <div className="drawer-section drawer-actions">
-            {status === "assigned" || status === "awaiting_start" ? (
-              <button className="drawer-btn-primary">Start Job</button>
-            ) : null}
+            {/* Start Job */}
+            {(status === "assigned" || status === "awaiting_start") && (
+              <button
+                className="drawer-btn-primary"
+                disabled={loading}
+                onClick={handleStartJob}
+              >
+                Start Job
+              </button>
+            )}
 
-            {status === "in_progress" ? (
-              <button className="drawer-btn-primary">Complete Job</button>
-            ) : null}
+            {/* Complete Job */}
+            {status === "in_progress" && (
+              <button
+                className="drawer-btn-primary"
+                disabled={loading}
+                onClick={handleCompleteJob}
+              >
+                Complete Job
+              </button>
+            )}
 
-            <button className="drawer-btn-secondary">Reschedule Clean</button>
+            {/* Report Delay */}
+            {!delay_reported &&
+              (status === "assigned" || status === "awaiting_start") && (
+                <button
+                  className="drawer-btn-secondary"
+                  disabled={loading}
+                  onClick={handleReportDelay}
+                >
+                  Report Delay
+                </button>
+              )}
+
+            {/* Reschedule */}
+            <button
+              className="drawer-btn-secondary"
+              disabled={loading}
+              onClick={() => setShowReschedule(true)}
+            >
+              Reschedule Clean
+            </button>
+          </div>
+        )}
+
+        {/* Reschedule Modal */}
+        {showReschedule && (
+          <div className="drawer-section mt-4">
+            <h3>Propose New Time</h3>
+
+            <input
+              type="datetime-local"
+              className="drawer-input"
+              value={newStart}
+              onChange={(e) => setNewStart(e.target.value)}
+            />
+
+            <input
+              type="datetime-local"
+              className="drawer-input mt-2"
+              value={newEnd}
+              onChange={(e) => setNewEnd(e.target.value)}
+            />
+
+            <button
+              className="drawer-btn-primary mt-3"
+              disabled={loading}
+              onClick={handleProposeTime}
+            >
+              Submit Proposal
+            </button>
           </div>
         )}
       </div>
@@ -103,6 +255,9 @@ export default function CalendarEventDrawer({ event, onClose }) {
   );
 }
 
+//
+// Status label mapping
+//
 function statusLabel(status) {
   switch (status) {
     case "assigned":
