@@ -1,11 +1,11 @@
 /**
- * iCal Service
+ * iCal Service (JavaScript version for Base44)
  *
  * Provides:
  *  - parseICal(text): Parse VEVENTs from an iCal feed
  *  - generateICal(events): Convert events → iCal text
  *
- * This is intentionally dependency-free and browser-compatible.
+ * This is dependency‑free and Deno‑compatible.
  */
 
 /**
