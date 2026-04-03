@@ -32,7 +32,11 @@ export function ChannelOverviewCard({ property, listings }) {
           className="border rounded-lg p-3 bg-gray-50 flex items-center justify-between"
         >
           <div>
-            <p className="text-sm font-medium">{l.channel_name}</p>
+            import { ChannelBadge } from "./ChannelBadge"; // top of file
+              <ChannelBadge
+                channelId={l.channel_id}
+                label={l.channel_name}
+              />
             <p className="text-xs text-gray-500">
               {l.ical_import_url ? "Import enabled" : "No import URL"}
             </p>
