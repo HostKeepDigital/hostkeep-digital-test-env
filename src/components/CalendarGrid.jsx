@@ -7,7 +7,6 @@ import {
   isSameMonth,
   format,
 } from "date-fns";
-import { useDroppable, useDraggable } from "@dnd-kit/core";
 
 export default function CalendarGrid({
   events,
@@ -81,13 +80,8 @@ export default function CalendarGrid({
 }
 
 function DayColumn({ day, dayKey, isToday, events, onEventClick }) {
-  const { setNodeRef } = useDroppable({
-    id: dayKey,
-  });
-
   return (
     <div
-      ref={setNodeRef}
       data-day={dayKey}
       style={{
         borderRight: "1px solid #e5e7eb",
@@ -96,6 +90,7 @@ function DayColumn({ day, dayKey, isToday, events, onEventClick }) {
         backgroundColor: "white",
       }}
     >
+      {/* TODAY HEADER HIGHLIGHT */}
       <div
         style={{
           padding: "6px 0",
@@ -110,6 +105,7 @@ function DayColumn({ day, dayKey, isToday, events, onEventClick }) {
         {format(day, "d")}
       </div>
 
+      {/* TODAY COLUMN BORDER */}
       {isToday && (
         <div
           style={{
@@ -125,53 +121,31 @@ function DayColumn({ day, dayKey, isToday, events, onEventClick }) {
         />
       )}
 
+      {/* EVENTS */}
       <div style={{ padding: "4px" }}>
         {events.map((event) => (
-          <DraggableEvent
+          <div
             key={event.id}
-            event={event}
             onClick={() => onEventClick(event)}
-          />
+            style={{
+              backgroundColor: event.color,
+              borderRadius: "4px",
+              padding: "4px 6px",
+              marginBottom: "4px",
+              cursor: "pointer",
+              color: "white",
+              fontSize: "12px",
+              lineHeight: "14px",
+              position: "relative",
+            }}
+          >
+            {event.guest_name ||
+              event.cleaner_name ||
+              event.company_name ||
+              event.type}
+          </div>
         ))}
       </div>
-    </div>
-  );
-}
-
-function DraggableEvent({ event, onClick }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } =
-    useDraggable({
-      id: event.id,
-    });
-
-  const style = {
-    backgroundColor: event.color,
-    borderRadius: "4px",
-    padding: "4px 6px",
-    marginBottom: "4px",
-    cursor: "grab",
-    color: "white",
-    fontSize: "12px",
-    lineHeight: "14px",
-    position: "relative",
-    opacity: isDragging ? 0.7 : 1,
-    transform: transform
-      ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
-      : undefined,
-  };
-
-  return (
-    <div
-      ref={setNodeRef}
-      {...listeners}
-      {...attributes}
-      style={style}
-      onClick={onClick}
-    >
-      {event.guest_name ||
-        event.cleaner_name ||
-        event.company_name ||
-        event.type}
     </div>
   );
 }
