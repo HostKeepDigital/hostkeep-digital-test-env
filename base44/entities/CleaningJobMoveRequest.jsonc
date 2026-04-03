@@ -1,0 +1,48 @@
+{
+  "name": "CleaningJobMoveRequest",
+  "type": "object",
+  "properties": {
+    "cleaning_job_id": {
+      "type": "string",
+      "description": "Reference to the CleaningJob being moved"
+    },
+    "cleaner_id": {
+      "type": "string",
+      "description": "Reference to the Cleaner who requested the move"
+    },
+    "property_id": {
+      "type": "string",
+      "description": "Reference to the Property where the job takes place"
+    },
+    "requested_new_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The date the cleaner is requesting to move the job to"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "denied"
+      ],
+      "default": "pending",
+      "description": "Status of the request"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp when the host approved or denied the request"
+    },
+    "host_notes": {
+      "type": "string",
+      "description": "Optional notes from the host regarding the decision"
+    }
+  },
+  "required": [
+    "cleaning_job_id",
+    "cleaner_id",
+    "property_id",
+    "requested_new_date"
+  ]
+}
