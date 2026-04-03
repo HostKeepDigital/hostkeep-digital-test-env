@@ -704,7 +704,9 @@ export default function AdminPanel() {
   const [loading,       setLoading      ] = useState(true);
   const [actionLoading, setActionLoading] = useState({});
   const [subscriptions, setSubscriptions] = useState([]);
-  const [crmLoading,    setCrmLoading   ] = useState(true);
+const [crmLoading,    setCrmLoading   ] = useState(true);
+  const [pageViews,     setPageViews    ] = useState([]);
+  const [viewsLoading,  setViewsLoading ] = useState(true);
 
   const fetchMembers = async () => {
     setLoading(true);
@@ -722,7 +724,16 @@ export default function AdminPanel() {
     setCrmLoading(false);
   };
 
-  useEffect(() => { fetchMembers(); fetchSubscriptions(); }, []);
+  const fetchPageViews = async () => {
+    setViewsLoading(true);
+    try {
+      const data = await base44.entities.PageView.list("-timestamp", 5000);
+      setPageViews(data || []);
+    } catch { setPageViews([]); }
+    setViewsLoading(false);
+  };
+
+  useEffect(() => { fetchMembers(); fetchSubscriptions(); fetchPageViews(); }, []);
 
   const setML = (id, val) => setActionLoading(p => ({ ...p, [id]: val }));
 
