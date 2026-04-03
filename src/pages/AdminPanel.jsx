@@ -1150,6 +1150,8 @@ const handleDelete = async (member) => {
             <div className="text-center py-20 text-gray-300 text-sm">Loading revenue data...</div>
           ) : (
             <div className="space-y-8">
+              <SiteVisitorWidget />
+
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                 <MetricCard icon={PoundSterling} label="Monthly Recurring Revenue" value={`£${mrr.toFixed(2)}`}         sub="All active subscriptions"                                                                                                            color="teal"   />
                 <MetricCard icon={TrendingUp}    label="Annual Projection"          value={`£${(mrr*12).toFixed(0)}`}    sub="Based on current MRR"                                                                                                                 color="navy"   />
