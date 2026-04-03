@@ -1,5 +1,3 @@
-// src/components/CalendarEventDrawer.jsx
-
 import React, { useState } from "react";
 import {
   startCleaningJob,
@@ -9,10 +7,13 @@ import {
   approveProposedCleaningTime,
 } from "@/api/cleaningJobs";
 
-import { useQueryClient } from "@tanstack/react-query";
+import { getCleanerStats } from "@/api/cleanerStats";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function CalendarEventDrawer({ event, onClose }) {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [showReschedule, setShowReschedule] = useState(false);
@@ -20,9 +21,11 @@ export default function CalendarEventDrawer({ event, onClose }) {
   const [newEnd, setNewEnd] = useState("");
 
   const {
+    id,
     type,
     guest_name,
     cleaner_name,
+    cleaner_id,
     company_name,
     scheduled_start,
     scheduled_end,
@@ -34,21 +37,21 @@ export default function CalendarEventDrawer({ event, onClose }) {
     proposed_end,
   } = event;
 
-  const id = event.id;
+  const isCleaner = user?.role === "cleaner";
+  const isHost = user?.role === "host";
 
-  const start = new Date(scheduled_start);
-  const end = new Date(scheduled_end);
-
-  const startTime = start.toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
+  //
+  // Fetch cleaner reliability stats
+  //
+  const { data: stats } = useQuery({
+    queryKey: ["cleaner-stats", cleaner_id],
+    queryFn: () => getCleanerStats(cleaner_id),
+    enabled: type === "cleaning" && !!cleaner_id,
   });
 
-  const endTime = end.toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-
+  //
+  // ACTION HANDLERS
+  //
   async function handleStartJob() {
     setLoading(true);
     await startCleaningJob(id);
@@ -87,9 +90,32 @@ export default function CalendarEventDrawer({ event, onClose }) {
     onClose();
   }
 
+  //
+  // Reliability badge colour
+  //
+  function reliabilityColor(score) {
+    if (score >= 90) return "#16a34a"; // green
+    if (score >= 70) return "#f59e0b"; // amber
+    return "#dc2626"; // red
+  }
+
+  const start = new Date(scheduled_start);
+  const end = new Date(scheduled_end);
+
+  const startTime = start.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const endTime = end.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
   return (
     <div className="drawer-overlay">
       <div className="drawer">
+        {/* Header */}
         <div className="drawer-header">
           <h2>
             {type === "booking" && guest_name}
@@ -103,6 +129,7 @@ export default function CalendarEventDrawer({ event, onClose }) {
           </button>
         </div>
 
+        {/* Time Window */}
         <div className="drawer-section">
           <h3>Time Window</h3>
           <p>
@@ -110,6 +137,7 @@ export default function CalendarEventDrawer({ event, onClose }) {
           </p>
         </div>
 
+        {/* Booking Details */}
         {type === "booking" && (
           <div className="drawer-section">
             <h3>Booking Details</h3>
@@ -118,6 +146,7 @@ export default function CalendarEventDrawer({ event, onClose }) {
           </div>
         )}
 
+        {/* Cleaning Job Details */}
         {type === "cleaning" && (
           <div className="drawer-section">
             <h3>Cleaning Job</h3>
@@ -144,29 +173,66 @@ export default function CalendarEventDrawer({ event, onClose }) {
             )}
 
             {delay_reported && <p>Delay reported by cleaner</p>}
+          </div>
+        )}
 
-            {proposed_start && proposed_end && (
-              <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded">
-                <p className="font-medium text-amber-700">
-                  Cleaner proposed new time:
-                </p>
-                <p className="text-sm text-amber-700">
-                  {new Date(proposed_start).toLocaleString()} →{" "}
-                  {new Date(proposed_end).toLocaleString()}
-                </p>
+        {/* Reliability Section */}
+        {type === "cleaning" && stats && (
+          <div className="drawer-section">
+            <h3>Cleaner Reliability</h3>
 
-                <button
-                  className="drawer-btn-primary mt-2"
-                  disabled={loading}
-                  onClick={handleApproveTime}
-                >
-                  Approve New Time
-                </button>
+            <div className="flex items-center gap-3 mb-2">
+              <div
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: "50%",
+                  backgroundColor: reliabilityColor(stats.reliabilityScore),
+                }}
+              />
+
+              <p className="font-medium">
+                {stats.reliabilityScore}% reliability
+              </p>
+            </div>
+
+            {/* Host sees full detail */}
+            {isHost && (
+              <div className="text-sm text-gray-700 space-y-1">
+                <p>Completed jobs: {stats.completedJobs}/{stats.totalJobs}</p>
+                <p>On-time starts: {stats.onTimeStarts}</p>
+                <p>Late starts: {stats.lateStarts}</p>
+                <p>Delays reported: {stats.delaysReported}</p>
+                <p>Strikes: {stats.strikes}</p>
+
+                {stats.averageLatenessMinutes > 0 && (
+                  <p>
+                    Avg lateness: {stats.averageLatenessMinutes} min
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Cleaner sees simplified version */}
+            {isCleaner && (
+              <div className="text-sm text-gray-700 space-y-1">
+                <p>On-time starts: {stats.onTimeStarts}</p>
+                <p>Delays reported: {stats.delaysReported}</p>
+
+                <p className="text-teal-600 font-medium mt-2">
+                  {stats.reliabilityScore >= 90 &&
+                    "Excellent work — keep it up!"}
+                  {stats.reliabilityScore >= 70 &&
+                    "You're doing well — stay consistent."}
+                  {stats.reliabilityScore < 70 &&
+                    "Try to improve your punctuality."}
+                </p>
               </div>
             )}
           </div>
         )}
 
+        {/* Actions */}
         {type === "cleaning" && (
           <div className="drawer-section drawer-actions">
             {(status === "assigned" || status === "awaiting_start") && (
@@ -210,6 +276,7 @@ export default function CalendarEventDrawer({ event, onClose }) {
           </div>
         )}
 
+        {/* Reschedule Modal */}
         {showReschedule && (
           <div className="drawer-section mt-4">
             <h3>Propose New Time</h3>
@@ -242,6 +309,9 @@ export default function CalendarEventDrawer({ event, onClose }) {
   );
 }
 
+//
+// Status label mapping
+//
 function statusLabel(status) {
   switch (status) {
     case "assigned":
