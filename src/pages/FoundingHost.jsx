@@ -84,7 +84,18 @@ export default function FoundingHost() {
         full_name: fullName(), email: form.email.toLowerCase().trim(),
         postcode: form.postcode.toUpperCase().trim(), role: "host",
       });
-      if (result?.error === "duplicate_email") { setErrors({ email: "Email already registered." }); setSubmitting(false); return; }
+     if (result?.data?.error === "duplicate_email") {
+        const s = result?.data?.status;
+        if (s === "interest") {
+          setDuplicateInfo({ type: "resend", email: form.email.toLowerCase().trim() });
+        } else if (s === "out_of_area") {
+          setDuplicateInfo({ type: "out_of_area" });
+        } else {
+          setDuplicateInfo({ type: "already_registered" });
+        }
+        setSubmitting(false);
+        return;
+      }
       if (result?.data?.out_of_area || isOutOfArea) {
         try { await base44.functions.invoke("sendVerificationCode", { email: form.email.toLowerCase().trim(), name: form.forename.trim() }); } catch (_) {}
         navigate(`/verify-email?email=${encodeURIComponent(form.email.toLowerCase().trim())}&status=out_of_area`);
