@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import StripeStatusBanner from "@/components/host/StripeStatusBanner";
 import { useQuery } from "@tanstack/react-query";
@@ -27,7 +27,8 @@ import {
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import StatsCard from "@/components/dashboard/StatsCard";
-import BookingCalendar from "@/components/dashboard/BookingCalendar";
+// Removed old BookingCalendar import
+// import BookingCalendar from "@/components/dashboard/BookingCalendar";
 import {
   parseISO,
   isAfter,
@@ -48,6 +49,9 @@ import {
 import NewMessageModal from "@/components/messaging/NewMessageModal";
 import { useAuth } from "@/lib/AuthContext";
 
+// NEW: unified calendar component (you’ll create this in Phase 2)
+import UnifiedCalendar from "@/components/calendar/UnifiedCalendar";
+
 export default function HostDashboard() {
   const { user, isAuthenticated } = useAuth();
   const { refreshing } = usePullToRefresh([
@@ -55,9 +59,12 @@ export default function HostDashboard() {
     ["host-bookings", user?.id],
     ["host-messages", user?.id],
     ["subscription", user?.id],
-  ]); // ← custom auth
+  ]);
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
+
+  // NEW: selected property for unified calendar
+  const [selectedPropertyId, setSelectedPropertyId] = useState(null);
 
   // Load properties
   const { data: properties = [] } = useQuery({
@@ -194,6 +201,13 @@ export default function HostDashboard() {
       window.location.href = createPageUrl("CreateProperty");
     }
   };
+
+  // NEW: default selected property when properties load
+  useEffect(() => {
+    if (!selectedPropertyId && properties.length > 0) {
+      setSelectedPropertyId(properties[0].id);
+    }
+  }, [properties, selectedPropertyId]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -482,11 +496,40 @@ export default function HostDashboard() {
               )}
             </motion.div>
 
-            {/* Calendar */}
-            <BookingCalendar
-              bookings={bookings}
-              properties={properties}
-            />
+            {/* NEW: Unified Calendar */}
+            {properties.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Calendar
+                  </h2>
+
+                  <select
+                    className="border rounded px-2 py-1 text-sm"
+                    value={selectedPropertyId || ""}
+                    onChange={(e) => setSelectedPropertyId(e.target.value)}
+                  >
+                    {properties.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {selectedPropertyId ? (
+                  <UnifiedCalendar propertyId={selectedPropertyId} />
+                ) : (
+                  <p className="text-sm text-gray-500">
+                    Select a property to view its calendar.
+                  </p>
+                )}
+              </motion.div>
+            )}
           </div>
 
           {/* Sidebar */}
@@ -555,7 +598,7 @@ export default function HostDashboard() {
                   to={createPageUrl("HostSettings")}
                   className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors"
                 >
-                                    <Settings className="w-5 h-5 text-teal-600" />
+                  <Settings className="w-5 h-5 text-teal-600" />
                   <span className="text-gray-700">Settings</span>
                 </Link>
               </div>
