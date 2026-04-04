@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 
-export function useCalendarEvents(propertyId) {
+export default function useCalendarEvents(propertyId) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -88,6 +88,9 @@ export function useCalendarEvents(propertyId) {
 
   return { events, loading };
 }
+
+// Named export alias for backwards compatibility
+export { useCalendarEvents };
 
 function normaliseSource(source) {
   if (!source) return "HostKeep";
