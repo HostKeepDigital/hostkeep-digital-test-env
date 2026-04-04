@@ -91,6 +91,41 @@ export async function notifyHostMoveDeniedByCleaner(request, job) {
   });
 }
 
+/* ---------------------------------------------------------
+   NEW NOTIFICATIONS (Missing from your file)
+--------------------------------------------------------- */
+
+// 7. Notify host when cleaner cancels a job
+export async function notifyHostCleanerCancelled(job, late) {
+  await base44.services.Notifications.send({
+    to_host_id: job.host_id,
+    type: "cleaning_job_cancelled_by_cleaner",
+    message: late
+      ? `Cleaner cancelled job ${job.id} less than 24 hours before start.`
+      : `Cleaner cancelled job ${job.id}.`,
+    metadata: {
+      cleaning_job_id: job.id,
+      late_cancellation: late,
+    },
+  });
+}
+
+// 8. Notify cleaner when host cancels a job
+export async function notifyCleanerHostCancelled(job) {
+  await base44.services.Notifications.send({
+    to_cleaner_id: job.cleaner_id,
+    type: "cleaning_job_cancelled_by_host",
+    message: `The host has cancelled cleaning job ${job.id}.`,
+    metadata: {
+      cleaning_job_id: job.id,
+    },
+  });
+}
+
+/* ---------------------------------------------------------
+   Helper
+--------------------------------------------------------- */
+
 function formatDate(iso) {
   const d = new Date(iso);
   return d.toLocaleDateString([], {
