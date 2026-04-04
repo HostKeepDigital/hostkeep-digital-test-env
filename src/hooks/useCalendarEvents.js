@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 
-export default function useCalendarEvents(propertyId) {
+export function useCalendarEvents(propertyId) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 
