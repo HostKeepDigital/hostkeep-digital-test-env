@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import CalendarGrid from "./CalendarGrid";
 import CalendarEventDrawer from "./CalendarEventDrawer";
-import { useCalendarEvents } from "@/hooks/useCalendarEvents";
+import useCalendarEvents from "@/hooks/useCalendarEvents";
 import {
   startOfMonth,
   endOfMonth,
