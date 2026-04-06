@@ -517,15 +517,15 @@ export default function Subscription() {
                 key={i}
                 className={`rounded-2xl border p-5 text-center ${
                   tier.highlight
-                    ? "border-teal-300 bg-teal-50"
-                    : "border-gray-200 bg-white"
+                    ? "border-teal-300 bg-teal-50 dark:bg-teal-950 dark:border-teal-800"
+                    : "border-gray-200 bg-white dark:bg-gray-800 dark:border-gray-700"
                 }`}
               >
                 <Badge className={`${tier.badgeColor} text-white mb-2`}>{tier.badge}</Badge>
-                <p className="text-xs text-gray-500 mb-1">{tier.label}</p>
-                <p className="text-3xl font-black text-gray-900 mb-1">{tier.price}</p>
-                <p className="text-xs text-gray-400 mb-3">{tier.sublabel}</p>
-                <p className="text-sm text-gray-600">{tier.desc}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{tier.label}</p>
+                <p className="text-3xl font-black text-gray-900 dark:text-white mb-1">{tier.price}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mb-3">{tier.sublabel}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">{tier.desc}</p>
               </div>
             ))}
           </div>
