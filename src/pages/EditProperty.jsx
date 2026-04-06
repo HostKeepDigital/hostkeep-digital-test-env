@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import MobileSelect from "@/components/MobileSelect";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Tabs,
   TabsContent,
@@ -156,8 +156,9 @@ export default function EditProperty() {
           date_overrides: {},
         },
         status: property.status || "draft",
+        verification_document: property.verification_document || null,
 
-        // ⭐ NEW SMART LOCK FIELDS
+        // ⭐ SMART LOCK FIELDS
         smart_lock_enabled: property.smart_lock_enabled || false,
         smart_lock_code: property.smart_lock_code || "",
         smart_lock_send_hours: property.smart_lock_send_hours ?? null,
@@ -267,8 +268,9 @@ export default function EditProperty() {
       smart_lock_enabled: "Smart Lock Enabled",
       smart_lock_code: "Smart Lock Code",
       smart_lock_send_hours: "Smart Lock Auto-Send Timing",
-    };
-    return map[field] || field;
+      verification_document: "Verification Document",
+      };
+      return map[field] || field;
   };
 
   const handleBackClick = (e) => {
@@ -993,6 +995,7 @@ export default function EditProperty() {
           value={formData.booking_rules}
           onChange={(value) => handleChange("booking_rules", value)}
         />
+
         {/* CANCELLATION POLICY */}
         <Card className="mt-6">
           <CardHeader>
@@ -1022,13 +1025,107 @@ export default function EditProperty() {
                 triggerClassName="mt-1 w-full"
               />
             </div>
+            <div className="flex items-center gap-3">
+              <Checkbox
+                checked={formData.cleaning_fee_refundable}
+                onCheckedChange={(val) => handleChange("cleaning_fee_refundable", val)}
+                id="clean-refund-edit"
+              />
+              <Label htmlFor="clean-refund-edit" className="font-normal cursor-pointer">Refund cleaning fee if guest cancels before check-in</Label>
+            </div>
           </CardContent>
         </Card>
 
-        {/* ⭐ SMART LOCK AUTOMATION WILL BE INSERTED AFTER THIS IN PART 4 */}
-                {/* ⭐ SMART LOCK RESET LOGIC */}
-        {policies && (
-          <></>
+        {/* SMART LOCK AUTOMATION */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Smart Lock Automation</CardTitle>
+            <CardDescription>
+              If your property has a smart lock, enter the guest access code below. Guests will use this to gain entry to your property. You can optionally enable automatic delivery of this code before check‑in.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>Smart Lock Code</Label>
+              <Input
+                value={formData.smart_lock_code}
+                onChange={(e) => handleChange("smart_lock_code", e.target.value)}
+                placeholder="e.g. 4829# or app-generated code"
+                className="mt-1"
+              />
+            </div>
+            <div className="pt-2 border-t border-gray-100">
+              <label className="flex items-start gap-2 cursor-pointer">
+                <Checkbox
+                  checked={formData.smart_lock_enabled}
+                  disabled={!formData.cancellation_policy_id}
+                  onCheckedChange={(v) => {
+                    if (!v) {
+                      handleChange("smart_lock_send_hours", null);
+                    }
+                    handleChange("smart_lock_enabled", v);
+                  }}
+                  className="mt-0.5"
+                />
+                <div>
+                  <p className="text-sm font-medium">
+                    Enable smart lock automation
+                    {!formData.cancellation_policy_id && (
+                      <span className="text-gray-400 font-normal"> (select a cancellation policy first)</span>
+                    )}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Automatically send your smart lock code to guests before check‑in. The system will never send the code while the guest can still cancel.
+                  </p>
+                </div>
+              </label>
+              {formData.smart_lock_enabled && (
+                <div className="mt-4 pl-6 space-y-2">
+                  <Label>Auto-send timing</Label>
+                  <select
+                    value={formData.smart_lock_send_hours ?? ""}
+                    onChange={(e) => handleChange("smart_lock_send_hours", e.target.value ? parseInt(e.target.value) : null)}
+                    className="mt-1 w-full border rounded-md p-2"
+                  >
+                    <option value="">Select timing</option>
+                    {[24, 48, 72, 96, 120, 144, 168].map((hours) => {
+                      const policy = policies?.find(p => p.id === formData.cancellation_policy_id);
+                      const maxAllowed = policy ? Math.max((policy.tier_1_deadline_days ?? 0) * 24 - 12, 0) : 999;
+                      const disabled = hours > maxAllowed;
+                      return (
+                        <option key={hours} value={hours} disabled={disabled}>
+                          {hours} Hours ({hours / 24} Day{hours > 24 ? "s" : ""}){disabled ? " — too early for selected policy" : ""}
+                        </option>
+                      );
+                    })}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Options unavailable due to your cancellation policy window are marked above.
+                  </p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* VERIFICATION DOCUMENT - READ ONLY */}
+        {formData.verification_document && (
+          <Card className="mt-6 bg-gray-50 border-gray-200">
+            <CardHeader>
+              <CardTitle className="text-sm">Your Verification Document</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-gray-600 mb-3">Your uploaded verification proof (for host reference only)</p>
+              <a
+                href={formData.verification_document}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-teal-600 hover:text-teal-700 underline break-all"
+              >
+                View Document
+              </a>
+            </CardContent>
+          </Card>
         )}
       </TabsContent>
     </Tabs>
