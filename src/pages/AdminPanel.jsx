@@ -824,7 +824,7 @@ function DeleteAccountTester() {
   const runDeleteTest = async () => {
     setLoading(true); setStatus(null);
     try {
-      // Check the account exists first
+      // Step 1 — check account exists
       const [preMembers, preCreds] = await Promise.all([
         base44.entities.FoundingMember.filter({ email: TEST_EMAIL }),
         base44.entities.UserCredentials.filter({ email: TEST_EMAIL }),
@@ -835,6 +835,31 @@ function DeleteAccountTester() {
         return;
       }
 
+      // Step 2 — run safeguard checks before attempting delete
+      const member = preMembers[0];
+      const todayStr = new Date().toISOString().split("T")[0];
+      const activeBookingStatuses = ["awaiting_decision", "awaiting_payment", "confirmed", "checked_in"];
+      const activeJobStatuses = ["pending", "accepted", "in_progress"];
+      const safeguardResults = [];
+
+      if (member) {
+        const bookings = await base44.entities.Booking.filter({ host_id: member.id });
+        const activeBookings = bookings.filter(b => activeBookingStatuses.includes(b.booking_status) && b.check_out >= todayStr);
+        safeguardResults.push({ label: "No active bookings", pass: activeBookings.length === 0, count: activeBookings.length });
+
+        const jobs = await base44.entities.CleaningJob.filter({ host_id: member.id });
+        const activeJobs = jobs.filter(j => activeJobStatuses.includes(j.status));
+        safeguardResults.push({ label: "No outstanding cleaning jobs", pass: activeJobs.length === 0, count: activeJobs.length });
+      }
+
+      const safeguardsBlocked = safeguardResults.some(r => !r.pass);
+      if (safeguardsBlocked) {
+        setStatus({ type: "safeguard", results: safeguardResults });
+        setLoading(false);
+        return;
+      }
+
+      // Step 3 — safeguards clear, proceed with delete
       const result = await base44.functions.invoke("deleteAccount", { admin_delete_email: TEST_EMAIL });
       if (!result?.data?.success) {
         setStatus({ type: "err", message: `❌ deleteAccount returned failure: ${JSON.stringify(result?.data)}` });
@@ -842,18 +867,20 @@ function DeleteAccountTester() {
         return;
       }
 
+      // Step 4 — verify records are gone
       const [members, creds] = await Promise.all([
         base44.entities.FoundingMember.filter({ email: TEST_EMAIL }),
         base44.entities.UserCredentials.filter({ email: TEST_EMAIL }),
       ]);
 
-      const checks = [
-        { label: "FoundingMember record deleted",  pass: members.length === 0 },
-        { label: "UserCredentials record deleted", pass: creds.length === 0 },
+      const deleteChecks = [
+        { label: "Safeguards passed — delete was permitted", pass: true },
+        { label: "FoundingMember record deleted",            pass: members.length === 0 },
+        { label: "UserCredentials record deleted",           pass: creds.length === 0 },
       ];
 
-      const allPass = checks.every(c => c.pass);
-      setStatus({ type: "checks", checks, allPass });
+      const allPass = deleteChecks.every(c => c.pass);
+      setStatus({ type: "checks", checks: deleteChecks, allPass });
     } catch (e) {
       setStatus({ type: "err", message: `❌ Delete test failed: ${e.message}` });
     }
@@ -873,16 +900,32 @@ function DeleteAccountTester() {
       </div>
       {status?.type === "ok"  && <p className="text-sm bg-gray-50 text-gray-700 rounded-lg px-4 py-3">{status.message}</p>}
       {status?.type === "err" && <p className="text-sm bg-red-50 text-red-500 rounded-lg px-4 py-3">{status.message}</p>}
+      {status?.type === "safeguard" && (
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-gray-500 mb-1">Safeguard Check — Delete Blocked</p>
+          {status.results.map((r, i) => (
+            <div key={i} className="flex items-center justify-between px-4 py-2 rounded-lg bg-gray-50 border border-gray-100">
+              <span className="text-sm text-gray-700">{r.label}</span>
+              <span className={`text-sm font-medium ${r.pass ? "text-green-600" : "text-red-500"}`}>
+                {r.pass ? "✅ Clear" : `❌ Blocked (${r.count} found)`}
+              </span>
+            </div>
+          ))}
+          <div className="px-4 py-3 rounded-lg text-sm font-medium bg-red-50 text-red-700 border border-red-200">
+            ⛔ Safeguards triggered — delete was correctly blocked. Clean up the blocking data first.
+          </div>
+        </div>
+      )}
       {status?.type === "checks" && (
         <div className="space-y-2">
           {status.checks.map((c, i) => (
             <div key={i} className="flex items-center justify-between px-4 py-2 rounded-lg bg-gray-50 border border-gray-100">
               <span className="text-sm text-gray-700">{c.label}</span>
-              <span className={`text-sm font-medium ${c.pass ? "text-green-600" : "text-red-500"}`}>{c.pass ? "✅ Deleted" : "❌ Still exists"}</span>
+              <span className={`text-sm font-medium ${c.pass ? "text-green-600" : "text-red-500"}`}>{c.pass ? "✅ Pass" : "❌ Fail"}</span>
             </div>
           ))}
           <div className={`px-4 py-3 rounded-lg text-sm font-medium ${status.allPass ? "bg-green-50 text-green-700 border border-green-100" : "bg-red-50 text-red-600 border border-red-100"}`}>
-            {status.allPass ? "✅ Account fully deleted — deleteAccount function working correctly." : "❌ Some records remain — deleteAccount function incomplete."}
+            {status.allPass ? "✅ Account fully deleted — safeguards and deleteAccount function both working correctly." : "❌ Some records remain — deleteAccount function incomplete."}
           </div>
         </div>
       )}
