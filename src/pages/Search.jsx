@@ -697,40 +697,206 @@ export default function Search() {
       )}
       {/* Search Header */}
       <div className="bg-white border-b border-gray-100 sticky top-16 z-40">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex gap-3 items-center overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3">
+
+          {/* Mobile: stacked 2-row layout. Desktop: single scrolling row */}
+          <div className="flex flex-col gap-2 md:hidden">
+            {/* Row 1: Location + Filters */}
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <Input
+                  placeholder="Location or Postcode"
+                  value={filters.location}
+                  onChange={(e) => handleFilterChange("location", e.target.value)}
+                  className={`pl-9 h-11 text-sm ${
+                    postcodeError ? "border-red-400" : postcodeCoords ? "border-green-400" : ""
+                  }`}
+                />
+                {postcodeLoading ? (
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-gray-400" />
+                ) : postcodeCoords ? (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-xs font-medium">✓</span>
+                ) : null}
+              </div>
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" className="flex-shrink-0 h-11 px-3 gap-1.5">
+                    <SlidersHorizontal className="w-4 h-4" />
+                    <span className="text-sm">Filters</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+                  <SheetHeader className="border-b pb-4">
+                    <SheetTitle className="text-xl text-gray-900">Filter Properties</SheetTitle>
+                  </SheetHeader>
+                  <div className="mt-6 space-y-8">
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-semibold text-teal-700 uppercase tracking-wide">Property Details</h3>
+                      <div>
+                        <label className="text-sm font-medium text-gray-900 mb-2 block">Property Type</label>
+                        <Select value={filters.type} onValueChange={(v) => handleFilterChange("type", v)}>
+                          <SelectTrigger className="border-gray-300"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Types</SelectItem>
+                            <SelectItem value="lodges">Lodges</SelectItem>
+                            <SelectItem value="house">House</SelectItem>
+                            <SelectItem value="chalet">Chalet</SelectItem>
+                            <SelectItem value="caravan">Caravan</SelectItem>
+                            <SelectItem value="cabin">Cabin</SelectItem>
+                            <SelectItem value="bungalow">Bungalow</SelectItem>
+                            <SelectItem value="apartment">Apartment</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-900 mb-2 block">Bedrooms</label>
+                        <Select value={filters.bedrooms} onValueChange={(v) => handleFilterChange("bedrooms", v)}>
+                          <SelectTrigger className="border-gray-300"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="any">Any</SelectItem>
+                            <SelectItem value="1">1+</SelectItem>
+                            <SelectItem value="2">2+</SelectItem>
+                            <SelectItem value="3">3+</SelectItem>
+                            <SelectItem value="4">4+</SelectItem>
+                            <SelectItem value="5">5+</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-semibold text-teal-700 uppercase tracking-wide">Price Range</h3>
+                      <Slider
+                        value={[filters.minPrice, filters.maxPrice]}
+                        onValueChange={([min, max]) => setFilters((prev) => ({ ...prev, minPrice: min, maxPrice: max }))}
+                        min={0} max={1000} step={10}
+                      />
+                      <div className="flex justify-between text-sm text-gray-600">
+                        <span>£{filters.minPrice}</span>
+                        <span>£{filters.maxPrice}</span>
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-semibold text-teal-700 uppercase tracking-wide">Amenities</h3>
+                      <div className="space-y-6">
+                        {Object.entries(AMENITY_GROUPS).map(([groupName, slugs]) => (
+                          <div key={groupName}>
+                            <h4 className="text-sm font-semibold text-gray-700 mb-2">{groupName}</h4>
+                            <div className="grid grid-cols-2 gap-2">
+                              {slugs.map((slug) => {
+                                const amenity = AMENITY_MAP[slug];
+                                if (!amenity) return null;
+                                return (
+                                  <label key={slug} className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                    <Checkbox checked={filters.amenities.includes(slug)} onCheckedChange={() => toggleAmenity(slug)} />
+                                    <span className="text-sm">{amenity.name}</span>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-semibold text-teal-700 uppercase tracking-wide">Additional Filters</h3>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <Checkbox checked={filters.petsAllowed} onCheckedChange={(v) => handleFilterChange("petsAllowed", v)} />
+                        <span>Pet Friendly</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <Checkbox checked={filters.smokingAllowed} onCheckedChange={(v) => handleFilterChange("smokingAllowed", v)} />
+                        <span>Smoking Allowed</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <Checkbox checked={filters.childrenAllowed} onCheckedChange={(v) => handleFilterChange("childrenAllowed", v)} />
+                        <span>Children Allowed</span>
+                      </label>
+                    </div>
+                    <Button variant="outline" className="w-full" onClick={() => setFilters((prev) => ({ ...prev, amenities: [], petsAllowed: false, smokingAllowed: false, childrenAllowed: false, bedrooms: "any", minPrice: 0, maxPrice: 1000 }))}>
+                      Clear Filters
+                    </Button>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+
+            {/* Row 2: Dates + Guests */}
+            <div className="grid grid-cols-3 gap-2">
+              <div className="col-span-1">
+                <BookingCalendar
+                  value={filters.checkIn}
+                  onSelect={(date) => setFilters((prev) => ({ ...prev, checkIn: date ? format(date, "yyyy-MM-dd") : "", duration: "" }))}
+                  placeholder="Check-in"
+                  className="h-11 w-full text-sm"
+                  numberOfMonths={1}
+                />
+              </div>
+              <div className="col-span-1">
+                <Select
+                  disabled={!filters.checkIn}
+                  value={filters.duration}
+                  onValueChange={(v) => handleFilterChange("duration", v)}
+                >
+                  <SelectTrigger className="w-full h-11 text-sm">
+                    <SelectValue placeholder="Nights" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[...Array(28)].map((_, i) => (
+                      <SelectItem key={i + 1} value={(i + 1).toString()}>
+                        {i + 1} night{i + 1 !== 1 ? "s" : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="col-span-1">
+                <GuestSelector
+                  value={{ adults: filters.adults, children: filters.children, childAges: filters.childAges }}
+                  onChange={(val) => {
+                    if (val.isValid) setFilters((prev) => ({ ...prev, adults: val.adults, children: val.children, childAges: val.childAges }));
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Radius pill (when location matched) */}
+            {postcodeCoords && (
+              <Select value={String(filters.radiusMiles)} onValueChange={(v) => handleFilterChange("radiusMiles", parseInt(v))}>
+                <SelectTrigger className="h-9 bg-teal-50 border-teal-200 text-teal-800 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">Within 5 miles</SelectItem>
+                  <SelectItem value="10">Within 10 miles</SelectItem>
+                  <SelectItem value="25">Within 25 miles</SelectItem>
+                  <SelectItem value="50">Within 50 miles</SelectItem>
+                  <SelectItem value="100">Within 100 miles</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+
+          {/* Desktop: original single-row scrollable layout */}
+          <div className="hidden md:flex gap-3 items-center overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             <div className="relative flex-shrink-0 w-44 md:flex-1 md:min-w-[200px] md:w-auto">
               <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <Input
                 placeholder="Location or Postcode"
                 value={filters.location}
-                onChange={(e) =>
-                  handleFilterChange("location", e.target.value)
-                }
+                onChange={(e) => handleFilterChange("location", e.target.value)}
                 className={`pl-10 h-11 ${
-                  postcodeError
-                    ? "border-red-400"
-                    : postcodeCoords
-                    ? "border-green-400"
-                    : ""
+                  postcodeError ? "border-red-400" : postcodeCoords ? "border-green-400" : ""
                 }`}
               />
               {postcodeLoading ? (
                 <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-gray-400" />
               ) : postcodeCoords ? (
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-xs font-medium">
-                  ✓
-                </span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-xs font-medium">✓</span>
               ) : null}
             </div>
-
             {postcodeCoords && (
-              <Select
-                value={String(filters.radiusMiles)}
-                onValueChange={(v) =>
-                  handleFilterChange("radiusMiles", parseInt(v))
-                }
-              >
+              <Select value={String(filters.radiusMiles)} onValueChange={(v) => handleFilterChange("radiusMiles", parseInt(v))}>
                 <SelectTrigger className="flex-shrink-0 w-32 md:w-36 h-11 bg-teal-50 border-teal-200 text-teal-800">
                   <SelectValue />
                 </SelectTrigger>
@@ -743,34 +909,20 @@ export default function Search() {
                 </SelectContent>
               </Select>
             )}
-
             <div className="flex-shrink-0 w-40 md:w-44">
               <BookingCalendar
                 value={filters.checkIn}
-                onSelect={(date) =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    checkIn: date ? format(date, "yyyy-MM-dd") : "",
-                    duration: "",
-                  }))
-                }
+                onSelect={(date) => setFilters((prev) => ({ ...prev, checkIn: date ? format(date, "yyyy-MM-dd") : "", duration: "" }))}
                 placeholder="Trip Start"
                 className="h-11 bg-white"
                 numberOfMonths={1}
               />
             </div>
-
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="flex-shrink-0 w-36 md:w-40">
-                    <Select
-                      disabled={!filters.checkIn}
-                      value={filters.duration}
-                      onValueChange={(v) =>
-                        handleFilterChange("duration", v)
-                      }
-                    >
+                    <Select disabled={!filters.checkIn} value={filters.duration} onValueChange={(v) => handleFilterChange("duration", v)}>
                       <SelectTrigger className="w-full h-11 bg-white">
                         <SelectValue placeholder="Trip Duration" />
                       </SelectTrigger>
@@ -784,34 +936,17 @@ export default function Search() {
                     </Select>
                   </div>
                 </TooltipTrigger>
-                {!filters.checkIn && (
-                  <TooltipContent>
-                    <p>Select your trip start date</p>
-                  </TooltipContent>
-                )}
+                {!filters.checkIn && (<TooltipContent><p>Select your trip start date</p></TooltipContent>)}
               </Tooltip>
             </TooltipProvider>
-
             <div className="flex-shrink-0 w-52 md:w-64">
               <GuestSelector
-                value={{
-                  adults: filters.adults,
-                  children: filters.children,
-                  childAges: filters.childAges,
-                }}
+                value={{ adults: filters.adults, children: filters.children, childAges: filters.childAges }}
                 onChange={(val) => {
-                  if (val.isValid) {
-                    setFilters((prev) => ({
-                      ...prev,
-                      adults: val.adults,
-                      children: val.children,
-                      childAges: val.childAges,
-                    }));
-                  }
+                  if (val.isValid) setFilters((prev) => ({ ...prev, adults: val.adults, children: val.children, childAges: val.childAges }));
                 }}
               />
             </div>
-
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="outline" className="flex-shrink-0 h-11 gap-2">
@@ -819,34 +954,17 @@ export default function Search() {
                   Filters
                 </Button>
               </SheetTrigger>
-
               <SheetContent className="w-full sm:max-w-md overflow-y-auto">
                 <SheetHeader className="border-b pb-4">
-                  <SheetTitle className="text-xl text-gray-900">
-                    Filter Properties
-                  </SheetTitle>
+                  <SheetTitle className="text-xl text-gray-900">Filter Properties</SheetTitle>
                 </SheetHeader>
-
                 <div className="mt-6 space-y-8">
-                  {/* Property Details */}
                   <div className="space-y-4">
-                    <h3 className="text-sm font-semibold text-teal-700 uppercase tracking-wide">
-                      Property Details
-                    </h3>
-
+                    <h3 className="text-sm font-semibold text-teal-700 uppercase tracking-wide">Property Details</h3>
                     <div>
-                      <label className="text-sm font-medium text-gray-900 mb-2 block">
-                        Property Type
-                      </label>
-                      <Select
-                        value={filters.type}
-                        onValueChange={(v) =>
-                          handleFilterChange("type", v)
-                        }
-                      >
-                        <SelectTrigger className="border-gray-300">
-                          <SelectValue />
-                        </SelectTrigger>
+                      <label className="text-sm font-medium text-gray-900 mb-2 block">Property Type</label>
+                      <Select value={filters.type} onValueChange={(v) => handleFilterChange("type", v)}>
+                        <SelectTrigger className="border-gray-300"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">All Types</SelectItem>
                           <SelectItem value="lodges">Lodges</SelectItem>
@@ -859,20 +977,10 @@ export default function Search() {
                         </SelectContent>
                       </Select>
                     </div>
-
                     <div>
-                      <label className="text-sm font-medium text-gray-900 mb-2 block">
-                        Bedrooms
-                      </label>
-                      <Select
-                        value={filters.bedrooms}
-                        onValueChange={(v) =>
-                          handleFilterChange("bedrooms", v)
-                        }
-                      >
-                        <SelectTrigger className="border-gray-300">
-                          <SelectValue />
-                        </SelectTrigger>
+                      <label className="text-sm font-medium text-gray-900 mb-2 block">Bedrooms</label>
+                      <Select value={filters.bedrooms} onValueChange={(v) => handleFilterChange("bedrooms", v)}>
+                        <SelectTrigger className="border-gray-300"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="any">Any</SelectItem>
                           <SelectItem value="1">1+</SelectItem>
@@ -884,132 +992,56 @@ export default function Search() {
                       </Select>
                     </div>
                   </div>
-
-                  {/* Price Range */}
                   <div className="space-y-4">
-                    <h3 className="text-sm font-semibold text-teal-700 uppercase tracking-wide">
-                      Price Range
-                    </h3>
-
+                    <h3 className="text-sm font-semibold text-teal-700 uppercase tracking-wide">Price Range</h3>
                     <Slider
                       value={[filters.minPrice, filters.maxPrice]}
-                      onValueChange={([min, max]) =>
-                        setFilters((prev) => ({
-                          ...prev,
-                          minPrice: min,
-                          maxPrice: max,
-                        }))
-                      }
-                      min={0}
-                      max={1000}
-                      step={10}
+                      onValueChange={([min, max]) => setFilters((prev) => ({ ...prev, minPrice: min, maxPrice: max }))}
+                      min={0} max={1000} step={10}
                     />
-
                     <div className="flex justify-between text-sm text-gray-600">
                       <span>£{filters.minPrice}</span>
                       <span>£{filters.maxPrice}</span>
                     </div>
                   </div>
-
-                  {/* Amenities */}
                   <div className="space-y-4">
-                    <h3 className="text-sm font-semibold text-teal-700 uppercase tracking-wide">
-                      Amenities
-                    </h3>
-
+                    <h3 className="text-sm font-semibold text-teal-700 uppercase tracking-wide">Amenities</h3>
                     <div className="space-y-6">
-                      {Object.entries(AMENITY_GROUPS).map(
-                        ([groupName, slugs]) => (
-                          <div key={groupName}>
-                            <h4 className="text-sm font-semibold text-gray-700 mb-2">
-                              {groupName}
-                            </h4>
-
-                            <div className="grid grid-cols-2 gap-2">
-                              {slugs.map((slug) => {
-                                const amenity = AMENITY_MAP[slug];
-                                if (!amenity) return null;
-
-                                return (
-                                  <label
-                                    key={slug}
-                                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer"
-                                  >
-                                    <Checkbox
-                                      checked={filters.amenities.includes(
-                                        slug
-                                      )}
-                                      onCheckedChange={() =>
-                                        toggleAmenity(slug)
-                                      }
-                                    />
-                                    <span className="text-sm">
-                                      {amenity.name}
-                                    </span>
-                                  </label>
-                                );
-                              })}
-                            </div>
+                      {Object.entries(AMENITY_GROUPS).map(([groupName, slugs]) => (
+                        <div key={groupName}>
+                          <h4 className="text-sm font-semibold text-gray-700 mb-2">{groupName}</h4>
+                          <div className="grid grid-cols-2 gap-2">
+                            {slugs.map((slug) => {
+                              const amenity = AMENITY_MAP[slug];
+                              if (!amenity) return null;
+                              return (
+                                <label key={slug} className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                  <Checkbox checked={filters.amenities.includes(slug)} onCheckedChange={() => toggleAmenity(slug)} />
+                                  <span className="text-sm">{amenity.name}</span>
+                                </label>
+                              );
+                            })}
                           </div>
-                        )
-                      )}
+                        </div>
+                      ))}
                     </div>
                   </div>
-
-                  {/* Additional Filters */}
                   <div className="space-y-4">
-                    <h3 className="text-sm font-semibold text-teal-700 uppercase tracking-wide">
-                      Additional Filters
-                    </h3>
-
+                    <h3 className="text-sm font-semibold text-teal-700 uppercase tracking-wide">Additional Filters</h3>
                     <label className="flex items-center gap-2 cursor-pointer">
-                      <Checkbox
-                        checked={filters.petsAllowed}
-                        onCheckedChange={(v) =>
-                          handleFilterChange("petsAllowed", v)
-                        }
-                      />
+                      <Checkbox checked={filters.petsAllowed} onCheckedChange={(v) => handleFilterChange("petsAllowed", v)} />
                       <span>Pet Friendly</span>
                     </label>
-
                     <label className="flex items-center gap-2 cursor-pointer">
-                      <Checkbox
-                        checked={filters.smokingAllowed}
-                        onCheckedChange={(v) =>
-                          handleFilterChange("smokingAllowed", v)
-                        }
-                      />
+                      <Checkbox checked={filters.smokingAllowed} onCheckedChange={(v) => handleFilterChange("smokingAllowed", v)} />
                       <span>Smoking Allowed</span>
                     </label>
-
                     <label className="flex items-center gap-2 cursor-pointer">
-                      <Checkbox
-                        checked={filters.childrenAllowed}
-                        onCheckedChange={(v) =>
-                          handleFilterChange("childrenAllowed", v)
-                        }
-                      />
+                      <Checkbox checked={filters.childrenAllowed} onCheckedChange={(v) => handleFilterChange("childrenAllowed", v)} />
                       <span>Children Allowed</span>
                     </label>
                   </div>
-
-                  {/* Clear Filters */}
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        amenities: [],
-                        petsAllowed: false,
-                        smokingAllowed: false,
-                        childrenAllowed: false,
-                        bedrooms: "any",
-                        minPrice: 0,
-                        maxPrice: 1000,
-                      }))
-                    }
-                  >
+                  <Button variant="outline" className="w-full" onClick={() => setFilters((prev) => ({ ...prev, amenities: [], petsAllowed: false, smokingAllowed: false, childrenAllowed: false, bedrooms: "any", minPrice: 0, maxPrice: 1000 }))}>
                     Clear Filters
                   </Button>
                 </div>
@@ -1020,13 +1052,40 @@ export default function Search() {
       </div>
 
       {/* Results */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
+        {/* Results count + sort */}
+        {!isLoading && (
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-sm text-gray-500">
+              <span className="font-semibold text-gray-900">{sortedProperties.length}</span> {sortedProperties.length === 1 ? "property" : "properties"} found
+            </p>
+            <Select value={effectiveSortBy === "nearest" ? "nearest" : sortBy} onValueChange={setSortBy} disabled={effectiveSortBy === "nearest"}>
+              <SelectTrigger className="w-36 h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recommended">Recommended</SelectItem>
+                <SelectItem value="price_low">Price: Low–High</SelectItem>
+                <SelectItem value="price_high">Price: High–Low</SelectItem>
+                <SelectItem value="rating">Top Rated</SelectItem>
+                <SelectItem value="newest">Newest</SelectItem>
+                {effectiveSortBy === "nearest" && <SelectItem value="nearest">Nearest</SelectItem>}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         {isLoading ? (
           <div className="flex justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-teal-600" />
           </div>
+        ) : sortedProperties.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <SearchIcon className="w-12 h-12 text-gray-300 mb-4" />
+            <h3 className="text-lg font-semibold text-gray-700 mb-1">No properties found</h3>
+            <p className="text-sm text-gray-500">Try adjusting your filters or search area</p>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
             {sortedProperties.map((property) => (
               <PropertyCard
                 key={property.id}
