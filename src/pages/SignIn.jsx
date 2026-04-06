@@ -108,7 +108,7 @@ export default function SignIn() {
       </div>
 
       {/* Right panel — form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white">
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white dark:bg-gray-900">
         <div className="w-full max-w-sm">
 
           {/* Mobile logo */}
@@ -120,13 +120,13 @@ export default function SignIn() {
             />
           </div>
 
-          <h2 className="text-2xl font-bold text-[#111827] mb-1">Welcome back</h2>
-          <p className="text-sm text-gray-500 mb-8">Sign in to your HostKeep account</p>
+          <h2 className="text-2xl font-bold text-[#111827] dark:text-white mb-1">Welcome back</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">Sign in to your HostKeep account</p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
 
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5 tracking-wide uppercase">
+              <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1.5 tracking-wide uppercase">
                 Email address
               </label>
               <input
@@ -137,13 +137,13 @@ export default function SignIn() {
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
                 placeholder="you@example.com"
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#0d9488]/40 focus:border-[#0d9488] transition-colors"
+                className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#0d9488]/40 focus:border-[#0d9488] transition-colors"
               />
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-semibold text-gray-600 tracking-wide uppercase">
+                <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300 tracking-wide uppercase">
                   Password
                 </label>
                 <Link
@@ -162,7 +162,7 @@ export default function SignIn() {
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
                   placeholder="••••••••"
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 pr-11 focus:outline-none focus:ring-2 focus:ring-[#0d9488]/40 focus:border-[#0d9488] transition-colors"
+                  className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 pr-11 focus:outline-none focus:ring-2 focus:ring-[#0d9488]/40 focus:border-[#0d9488] transition-colors"
                 />
                 <button
                  type="button"
@@ -198,8 +198,8 @@ export default function SignIn() {
             </button>
           </form>
 
-          <div className="mt-8 pt-8 border-t border-gray-100 text-center">
-            <p className="text-sm text-gray-500">
+          <div className="mt-8 pt-8 border-t border-gray-100 dark:border-gray-700 text-center">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               Not a member yet?{" "}
               <Link to="/founding" className="text-[#0d9488] font-semibold hover:text-[#0f766e] transition-colors">
                 Apply for a founding spot
