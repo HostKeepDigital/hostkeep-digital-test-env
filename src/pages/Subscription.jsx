@@ -432,7 +432,7 @@ export default function Subscription() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-amber-50 border border-amber-200 rounded-2xl p-8 mb-8 text-center max-w-2xl mx-auto"
+            className="bg-amber-50 border border-amber-200 rounded-2xl p-6 mb-8 text-center max-w-2xl mx-auto"
           >
             <div className="w-14 h-14 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
               <Crown className="w-7 h-7 text-amber-600" />
@@ -449,209 +449,264 @@ export default function Subscription() {
           </motion.div>
         )}
 
-        {!isBetaUser && (
-          <>
-            {showBothTabs ? (
-              <div className="flex justify-center mb-8">
-                <div className="flex bg-white border border-gray-200 rounded-xl p-1 gap-1">
-                  <button
-                    onClick={() => setActiveTab("host")}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                      activeTab === "host"
-                        ? "bg-teal-600 text-white shadow"
-                        : "text-gray-600 hover:text-gray-900"
-                    }`}
-                  >
-                    <Building2 className="w-4 h-4" /> Host Plans
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("cleaner")}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                      activeTab === "cleaner"
-                        ? "bg-blue-600 text-white shadow"
-                        : "text-gray-600 hover:text-gray-900"
-                    }`}
-                  >
-                    <Sparkles className="w-4 h-4" /> Cleaner Plans
-                  </button>
-                </div>
+        {/* Pricing Tiers — always visible */}
+        <>
+          {showBothTabs ? (
+            <div className="flex justify-center mb-8">
+              <div className="flex bg-white border border-gray-200 rounded-xl p-1 gap-1">
+                <button
+                  onClick={() => setActiveTab("host")}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                    activeTab === "host"
+                      ? "bg-teal-600 text-white shadow"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  <Building2 className="w-4 h-4" /> Host Plans
+                </button>
+                <button
+                  onClick={() => setActiveTab("cleaner")}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                    activeTab === "cleaner"
+                      ? "bg-blue-600 text-white shadow"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  <Sparkles className="w-4 h-4" /> Cleaner Plans
+                </button>
               </div>
-            ) : null}
+            </div>
+          ) : null}
 
-            <div className="grid md:grid-cols-3 gap-6">
-              {(activeTab === "host" ? HOST_PLANS : CLEANER_PLANS).map(
-                (plan, idx) => {
-                  const isCurrentPlan =
-                    subscription?.plan === plan.id &&
-                    subscription?.status === "active";
-                  const Icon = plan.icon;
+          {/* Tier Overview */}
+          <div className="grid md:grid-cols-3 gap-4 mb-10">
+            {[
+              {
+                label: "🎉 Beta — Now",
+                sublabel: "While we're in beta",
+                price: "Free",
+                badge: "Current",
+                badgeColor: "bg-teal-500",
+                highlight: true,
+                desc: "All features unlocked for all founding members during beta.",
+              },
+              {
+                label: "⭐ Founding Rate",
+                sublabel: "Locked in for founding members",
+                price: activeTab === "host" ? "£19/mo" : "£9.99/mo",
+                badge: "Founding",
+                badgeColor: "bg-amber-500",
+                highlight: false,
+                desc: activeTab === "host"
+                  ? "Single property. Multi-property from £39/mo. Rate locked forever."
+                  : "Solo Basic locked in forever at this founding rate.",
+              },
+              {
+                label: "📋 Standard Rate",
+                sublabel: "After beta — for new members",
+                price: activeTab === "host" ? "£29/mo" : "£19.99/mo",
+                badge: "Future",
+                badgeColor: "bg-gray-400",
+                highlight: false,
+                desc: activeTab === "host"
+                  ? "Single property. Multi-property from £59/mo. Portfolio from £99/mo."
+                  : "Solo Basic £9.99 · Solo Pro £19.99 · Team £39.99/mo.",
+              },
+            ].map((tier, i) => (
+              <div
+                key={i}
+                className={`rounded-2xl border p-5 text-center ${
+                  tier.highlight
+                    ? "border-teal-300 bg-teal-50"
+                    : "border-gray-200 bg-white"
+                }`}
+              >
+                <Badge className={`${tier.badgeColor} text-white mb-2`}>{tier.badge}</Badge>
+                <p className="text-xs text-gray-500 mb-1">{tier.label}</p>
+                <p className="text-3xl font-black text-gray-900 mb-1">{tier.price}</p>
+                <p className="text-xs text-gray-400 mb-3">{tier.sublabel}</p>
+                <p className="text-sm text-gray-600">{tier.desc}</p>
+              </div>
+            ))}
+          </div>
 
-                  return (
-                    <motion.div
-                      key={plan.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: idx * 0.1 }}
-                    >
-                      <Card
-                        className={`relative h-full flex flex-col ${
-                          plan.popular
-                            ? "border-2 border-violet-500 shadow-lg"
-                            : "border border-gray-200"
-                        } ${
-                          isCurrentPlan
-                            ? `ring-2 ${
-                                activeTab === "cleaner"
-                                  ? "ring-blue-500"
-                                  : "ring-teal-500"
-                              }`
-                            : ""
-                        }`}
+          {!isBetaUser && (
+            <>
+              <div className="grid md:grid-cols-3 gap-6">
+                {(activeTab === "host" ? HOST_PLANS : CLEANER_PLANS).map(
+                  (plan, idx) => {
+                    const isCurrentPlan =
+                      subscription?.plan === plan.id &&
+                      subscription?.status === "active";
+                    const Icon = plan.icon;
+
+                    return (
+                      <motion.div
+                        key={plan.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.1 }}
                       >
-                        {plan.popular && (
-                          <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-violet-500">
-                            Most Popular
-                          </Badge>
-                        )}
-                        {isCurrentPlan && (
-                          <Badge
-                            className={`absolute -top-3 right-4 ${
-                              activeTab === "cleaner"
-                                ? "bg-blue-500"
-                                : "bg-teal-500"
-                            }`}
-                          >
-                            Current
-                          </Badge>
-                        )}
+                        <Card
+                          className={`relative h-full flex flex-col ${
+                            plan.popular
+                              ? "border-2 border-violet-500 shadow-lg"
+                              : "border border-gray-200"
+                          } ${
+                            isCurrentPlan
+                              ? `ring-2 ${
+                                  activeTab === "cleaner"
+                                    ? "ring-blue-500"
+                                    : "ring-teal-500"
+                                }`
+                              : ""
+                          }`}
+                        >
+                          {plan.popular && (
+                            <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-violet-500">
+                              Most Popular
+                            </Badge>
+                          )}
+                          {isCurrentPlan && (
+                            <Badge
+                              className={`absolute -top-3 right-4 ${
+                                activeTab === "cleaner"
+                                  ? "bg-blue-500"
+                                  : "bg-teal-500"
+                              }`}
+                            >
+                              Current
+                            </Badge>
+                          )}
 
-                        <CardHeader className="text-center pb-4">
-                          <div
-                            className={`w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center ${
-                              plan.color === "teal"
-                                ? activeTab === "cleaner"
-                                  ? "bg-blue-100"
-                                  : "bg-teal-100"
-                                : plan.color === "violet"
-                                ? "bg-violet-100"
-                                : "bg-amber-100"
-                            }`}
-                          >
-                            <Icon
-                              className={`w-6 h-6 ${
+                          <CardHeader className="text-center pb-4">
+                            <div
+                              className={`w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center ${
                                 plan.color === "teal"
                                   ? activeTab === "cleaner"
-                                    ? "text-blue-600"
-                                    : "text-teal-600"
+                                    ? "bg-blue-100"
+                                    : "bg-teal-100"
                                   : plan.color === "violet"
-                                  ? "text-violet-600"
-                                  : "text-amber-600"
+                                  ? "bg-violet-100"
+                                  : "bg-amber-100"
                               }`}
-                            />
-                          </div>
-                          <CardTitle className="text-xl">
-                            {plan.name}
-                          </CardTitle>
-                          <div className="mt-2">
-                            <span className="text-4xl font-bold text-gray-900">
-                              £{plan.price}
-                            </span>
-                            <span className="text-gray-500">/month</span>
-                          </div>
-                          {plan.max_properties != null && (
-                            <CardDescription className="mt-2 font-semibold text-gray-700">
-                              {plan.max_properties === 999
-                                ? "Unlimited properties"
-                                : plan.max_properties === 1
-                                ? "1 property"
-                                : `Up to ${plan.max_properties} properties`}
-                            </CardDescription>
-                          )}
-                        </CardHeader>
+                            >
+                              <Icon
+                                className={`w-6 h-6 ${
+                                  plan.color === "teal"
+                                    ? activeTab === "cleaner"
+                                      ? "text-blue-600"
+                                      : "text-teal-600"
+                                    : plan.color === "violet"
+                                    ? "text-violet-600"
+                                    : "text-amber-600"
+                                }`}
+                              />
+                            </div>
+                            <CardTitle className="text-xl">
+                              {plan.name}
+                            </CardTitle>
+                            <div className="mt-2">
+                              <span className="text-4xl font-bold text-gray-900">
+                                £{plan.price}
+                              </span>
+                              <span className="text-gray-500">/month</span>
+                            </div>
+                            {plan.max_properties != null && (
+                              <CardDescription className="mt-2 font-semibold text-gray-700">
+                                {plan.max_properties === 999
+                                  ? "Unlimited properties"
+                                  : plan.max_properties === 1
+                                  ? "1 property"
+                                  : `Up to ${plan.max_properties} properties`}
+                              </CardDescription>
+                            )}
+                          </CardHeader>
 
-                        <CardContent className="flex-1">
-                          <ul className="space-y-3">
-                            {plan.features.map((feature, i) => (
-                              <li
-                                key={i}
-                                className="flex items-start gap-3 text-sm text-gray-600"
+                          <CardContent className="flex-1">
+                            <ul className="space-y-3">
+                              {plan.features.map((feature, i) => (
+                                <li
+                                  key={i}
+                                  className="flex items-start gap-3 text-sm text-gray-600"
+                                >
+                                  <CheckCircle
+                                    className={`w-5 h-5 flex-shrink-0 ${
+                                      plan.color === "teal"
+                                        ? activeTab === "cleaner"
+                                          ? "text-blue-500"
+                                          : "text-teal-500"
+                                        : plan.color === "violet"
+                                        ? "text-violet-500"
+                                        : "text-amber-500"
+                                    }`}
+                                  />
+                                  {feature}
+                                </li>
+                              ))}
+                            </ul>
+                          </CardContent>
+
+                          <CardFooter>
+                            {isCurrentPlan ? (
+                              <Button
+                                variant="outline"
+                                className="w-full"
+                                disabled
                               >
-                                <CheckCircle
-                                  className={`w-5 h-5 flex-shrink-0 ${
-                                    plan.color === "teal"
-                                      ? activeTab === "cleaner"
-                                        ? "text-blue-500"
-                                        : "text-teal-500"
-                                      : plan.color === "violet"
-                                      ? "text-violet-500"
-                                      : "text-amber-500"
-                                  }`}
-                                />
-                                {feature}
-                              </li>
-                            ))}
-                          </ul>
-                        </CardContent>
+                                Currently Selected
+                              </Button>
+                            ) : (
+                              <Button
+                                className={`w-full ${
+                                  plan.popular
+                                    ? "bg-violet-600 hover:bg-violet-700"
+                                    : activeTab === "cleaner"
+                                    ? "bg-blue-600 hover:bg-blue-700"
+                                    : "bg-teal-600 hover:bg-teal-700"
+                                }`}
+                                onClick={() => handleSubscribe(plan.id)}
+                                disabled={!!checkoutLoading}
+                              >
+                                {checkoutLoading === plan.id ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : subscription?.status === "active" ? (
+                                  "Switch to " + plan.name
+                                ) : (
+                                  "Get Started"
+                                )}
+                              </Button>
+                            )}
+                          </CardFooter>
+                        </Card>
+                      </motion.div>
+                    );
+                  },
+                )}
+              </div>
 
-                        <CardFooter>
-                          {isCurrentPlan ? (
-                            <Button
-                              variant="outline"
-                              className="w-full"
-                              disabled
-                            >
-                              Currently Selected
-                            </Button>
-                          ) : (
-                            <Button
-                              className={`w-full ${
-                                plan.popular
-                                  ? "bg-violet-600 hover:bg-violet-700"
-                                  : activeTab === "cleaner"
-                                  ? "bg-blue-600 hover:bg-blue-700"
-                                  : "bg-teal-600 hover:bg-teal-700"
-                              }`}
-                              onClick={() => handleSubscribe(plan.id)}
-                              disabled={!!checkoutLoading}
-                            >
-                              {checkoutLoading === plan.id ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                              ) : subscription?.status === "active" ? (
-                                "Switch to " + plan.name
-                              ) : (
-                                "Get Started"
-                              )}
-                            </Button>
-                          )}
-                        </CardFooter>
-                      </Card>
-                    </motion.div>
-                  );
-                },
+              {subscription?.status === "active" && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                  className="mt-8 text-center"
+                >
+                  <p className="text-gray-600 mb-2">
+                    Do you want to{" "}
+                    <button
+                      onClick={() => setShowCancelDialog(true)}
+                      className="text-red-600 hover:text-red-700 font-medium underline"
+                    >
+                      cancel your subscription
+                    </button>
+                    ?
+                  </p>
+                </motion.div>
               )}
-            </div>
-
-            {subscription?.status === "active" && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.4 }}
-                className="mt-8 text-center"
-              >
-                <p className="text-gray-600 mb-2">
-                  Do you want to{" "}
-                  <button
-                    onClick={() => setShowCancelDialog(true)}
-                    className="text-red-600 hover:text-red-700 font-medium underline"
-                  >
-                    cancel your subscription
-                  </button>
-                  ?
-                </p>
-              </motion.div>
-            )}
-          </>
-        )}
+            </>
+          )}
+        </>
 
         <motion.div
           initial={{ opacity: 0 }}
