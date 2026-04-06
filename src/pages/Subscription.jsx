@@ -283,8 +283,8 @@ export default function Subscription() {
         (r.approval_status || "").toLowerCase() === "pending",
     );
 
-  const isHost = hasRole(userRoles, "host");
-  const isCleaner = hasRole(userRoles, "cleaner");
+  const isHost = hasRole(userRoles || [], "host");
+  const isCleaner = hasRole(userRoles || [], "cleaner");
   const showHostTab = isHost && !isCleaner;
   const showCleanerTab = isCleaner && !isHost;
   const showBothTabs = (isHost && isCleaner) || (!isHost && !isCleaner);
