@@ -25,7 +25,6 @@ import {
   X,
   AlertTriangle,
   Check,
-  Pencil,
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import StatsCard from "@/components/dashboard/StatsCard";
@@ -46,21 +45,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import PolicyPickerDialog from "@/components/properties/PolicyPickerDialog";
 import NewMessageModal from "@/components/messaging/NewMessageModal";
 import { useAuth } from "@/lib/AuthContext";
 
@@ -669,56 +654,17 @@ export default function HostDashboard() {
       </AlertDialog>
 
       {/* Change Policy Dialog */}
-      <Dialog open={showPolicyDialog} onOpenChange={setShowPolicyDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Change Cancellation Policy</DialogTitle>
-            <DialogDescription>
-              For <strong>{properties.find((p) => p.id === selectedPropertyId)?.title}</strong>.
-              This change will only apply to new bookings — existing bookings keep their original policy.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 py-2">
-            <Select value={policyDraft} onValueChange={setPolicyDraft}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a policy..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">No policy</SelectItem>
-                {cancellationPolicies.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>{p.policy_name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {policyDraft && policyDraft !== "none" && (() => {
-              const preview = cancellationPolicies.find((p) => p.id === policyDraft);
-              return preview ? (
-                <div className="p-3 rounded-lg bg-gray-50 border border-gray-100 space-y-1">
-                  {preview.description && (
-                    <p className="text-sm text-gray-600">{preview.description}</p>
-                  )}
-                  {preview.policy_name === "Super Strict" && (
-                    <p className="text-sm text-rose-600 font-medium">⚠️ This policy may reduce booking conversions.</p>
-                  )}
-                </div>
-              ) : null;
-            })()}
-            <div className="p-3 rounded-lg bg-amber-50 border border-amber-100">
-              <p className="text-xs text-amber-800"><strong>Note:</strong> Existing bookings will keep the policy they were made under. Only new bookings going forward will use this policy.</p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowPolicyDialog(false)}>Cancel</Button>
-            <Button
-              className="bg-teal-600 hover:bg-teal-700"
-              onClick={() => savePolicyMutation.mutate({ propertyId: selectedPropertyId, policyId: policyDraft === "none" ? "" : policyDraft })}
-              disabled={savePolicyMutation.isPending}
-            >
-              {savePolicyMutation.isPending ? "Saving…" : "Confirm Change"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <PolicyPickerDialog
+        open={showPolicyDialog}
+        onOpenChange={setShowPolicyDialog}
+        policies={cancellationPolicies}
+        value={policyDraft}
+        onChange={(val) => savePolicyMutation.mutate({ propertyId: selectedPropertyId, policyId: val })}
+        title="Change Cancellation Policy"
+        description={`For ${properties.find((p) => p.id === selectedPropertyId)?.title}. This change will only apply to new bookings — existing bookings keep their original policy.`}
+        confirmLabel={savePolicyMutation.isPending ? "Saving…" : "Confirm Change"}
+        showNote={true}
+      />
 
       {/* New Message Modal */}
       <NewMessageModal

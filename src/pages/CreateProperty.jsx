@@ -49,7 +49,7 @@ import {
 import LocationStep from "@/components/properties/LocationStep";
 import AmenitiesSelector from "@/components/properties/AmenitiesSelector";
 import { useAuth } from "@/lib/AuthContext";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import PolicyPickerDialog from "@/components/properties/PolicyPickerDialog";
 
 import { AMENITY_GROUPS, AMENITY_MAP } from "@/data/amenities";
 
@@ -97,6 +97,7 @@ export default function CreateProperty() {
   const [locationData, setLocationData] = useState({});
   const [uploadedFileIdentifiers, setUploadedFileIdentifiers] = useState([]);
   const [smartLockPolicyWarning, setSmartLockPolicyWarning] = useState(null);
+  const [showPolicyPicker, setShowPolicyPicker] = useState(false);
 
   const validateTitle = (value) => {
     const invalidChars = value.replace(/[a-zA-Z0-9\s\-&!.]/g, "");
@@ -735,40 +736,54 @@ export default function CreateProperty() {
                   <CardContent className="space-y-6">
                     <div>
                       <Label>Policy Type <span className="text-red-500">*</span></Label>
-                      <Select
-                        value={formData.cancellation_policy_id || undefined}
-                        onValueChange={(val) => {
+                      {formData.cancellation_policy_id ? (
+                        <button
+                          type="button"
+                          onClick={() => setShowPolicyPicker(true)}
+                          className="mt-1 w-full text-left p-4 rounded-xl border-2 border-teal-500 bg-teal-50 hover:bg-teal-100 transition-all"
+                        >
+                          <div className="flex items-center justify-between">
+                            <p className="font-semibold text-sm text-teal-700">
+                              {policies?.find(p => p.id === formData.cancellation_policy_id)?.policy_name}
+                            </p>
+                            <span className="text-xs text-teal-600 font-medium">Change</span>
+                          </div>
+                          {policies?.find(p => p.id === formData.cancellation_policy_id)?.description && (
+                            <p className="text-xs text-gray-600 mt-1 leading-relaxed">
+                              {policies?.find(p => p.id === formData.cancellation_policy_id)?.description}
+                            </p>
+                          )}
+                          {policies?.find(p => p.id === formData.cancellation_policy_id)?.policy_name === "Super Strict" && (
+                            <p className="text-xs text-rose-600 mt-1">⚠️ May reduce booking conversions.</p>
+                          )}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setShowPolicyPicker(true)}
+                          className="mt-1 w-full text-left p-4 rounded-xl border-2 border-dashed border-red-300 bg-white hover:bg-gray-50 transition-all"
+                        >
+                          <p className="text-sm text-gray-400">Click to select a cancellation policy...</p>
+                          <p className="text-xs text-red-500 mt-0.5">Required</p>
+                        </button>
+                      )}
+                      <PolicyPickerDialog
+                        open={showPolicyPicker}
+                        onOpenChange={setShowPolicyPicker}
+                        policies={policies || []}
+                        value={formData.cancellation_policy_id}
+                        onChange={(val) => {
                           const policy = policies?.find(p => p.id === val);
                           const isStrict = policy?.policy_name?.includes("Strict");
                           setFormData(prev => ({
                             ...prev,
                             cancellation_policy_id: val,
-                            cleaning_fee_refundable: !isStrict
+                            cleaning_fee_refundable: !isStrict,
                           }));
                         }}
-                      >
-                        <SelectTrigger className={`mt-1 ${!formData.cancellation_policy_id ? 'border-red-300' : ''}`}>
-                          <SelectValue placeholder="Select a policy..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {policies?.map(p => (
-                            <SelectItem key={p.id} value={p.id}>{p.policy_name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {!formData.cancellation_policy_id && (
-                        <p className="text-sm text-red-500 mt-1">Cancellation policy is required</p>
-                      )}
-                      {formData.cancellation_policy_id && (
-                        <div className="mt-3 p-4 bg-gray-50 rounded-lg text-sm text-gray-700">
-                          {policies?.find(p => p.id === formData.cancellation_policy_id)?.description}
-                        </div>
-                      )}
-                      {policies?.find(p => p.id === formData.cancellation_policy_id)?.policy_name === "Super Strict" && (
-                        <div className="mt-2 text-sm text-rose-600 font-medium">
-                          Warning: This policy may reduce booking conversions.
-                        </div>
-                      )}
+                        title="Select Cancellation Policy"
+                        confirmLabel="Select Policy"
+                      />
                     </div>
                     <div className="flex items-center gap-3">
                       <Checkbox
