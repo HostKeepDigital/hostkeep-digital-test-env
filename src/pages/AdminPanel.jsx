@@ -680,8 +680,11 @@ function CalendarRenderTester({ members }) {
         county:        "Cornwall",
         country:       "England",
         location:      { street: "1 Calendar Test Lane" },
-        nightly_rate:  150,
-        status:        "published",
+        nightly_rate:   150,
+        guest_capacity: 4,
+        bedrooms:       2,
+        bathrooms:      1,
+        status:         "published",
       });
       setCreatedPropertyId(prop.id);
 
