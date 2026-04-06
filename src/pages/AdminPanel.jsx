@@ -1082,6 +1082,55 @@ function DeleteSafeguardTester({ members }) {
     setLoading(false);
   };
 
+  const attemptDelete = async () => {
+    if (!selectedMember) return;
+    setLoading(true);
+    setTestStatus(null);
+
+    try {
+      const todayStr = new Date().toISOString().split("T")[0];
+      const activeBookingStatuses = ["awaiting_decision", "awaiting_payment", "confirmed", "checked_in"];
+      const activeJobStatuses     = ["pending", "accepted", "in_progress"];
+      let blockReason = null;
+
+      if (selectedRole === "host") {
+        const bookings   = await base44.entities.Booking.filter({ host_id: selectedMember.id });
+        const active     = bookings.filter(b => activeBookingStatuses.includes(b.booking_status) && b.check_out >= todayStr);
+        if (active.length > 0) blockReason = `${active.length} active booking(s) found — safeguard blocked the delete.`;
+        if (!blockReason) {
+          const jobs = await base44.entities.CleaningJob.filter({ host_id: selectedMember.id });
+          const activeJobs = jobs.filter(j => activeJobStatuses.includes(j.status));
+          if (activeJobs.length > 0) blockReason = `${activeJobs.length} outstanding cleaning job(s) found — safeguard blocked the delete.`;
+        }
+      }
+
+      if (selectedRole === "guest") {
+        const bookings = await base44.entities.Booking.filter({ guest_id: selectedMember.id });
+        const active   = bookings.filter(b => activeBookingStatuses.includes(b.booking_status) && b.check_out >= todayStr);
+        if (active.length > 0) blockReason = `${active.length} upcoming trip(s) found — safeguard blocked the delete.`;
+        if (!blockReason) {
+          const unpaid = bookings.filter(b => b.payment_status === "partial" && b.booking_status !== "cancelled");
+          if (unpaid.length > 0) blockReason = `${unpaid.length} outstanding balance(s) found — safeguard blocked the delete.`;
+        }
+      }
+
+      if (selectedRole === "cleaner") {
+        const jobs = await base44.entities.CleaningJob.filter({ cleaner_user_id: selectedMember.id });
+        const activeJobs = jobs.filter(j => activeJobStatuses.includes(j.status));
+        if (activeJobs.length > 0) blockReason = `${activeJobs.length} outstanding job(s) found — safeguard blocked the delete.`;
+      }
+
+      if (blockReason) {
+        setTestStatus({ type: "blocked", message: `⛔ Delete blocked — ${blockReason} This is the correct behaviour.` });
+      } else {
+        setTestStatus({ type: "allowed", message: `⚠️ No blocks found — delete would be permitted. Use the Delete Account Tester above to simulate the actual deletion on a test-only record.` });
+      }
+    } catch (e) {
+      setTestStatus({ type: "error", message: `❌ Attempt failed: ${e.message}` });
+    }
+    setLoading(false);
+  };
+
   const cleanUpTestData = async () => {
     setLoading(true);
     try {
@@ -1145,14 +1194,14 @@ function DeleteSafeguardTester({ members }) {
       {/* Action buttons */}
       {selectedMember && (
         <div>
-          <p className="text-xs font-medium text-gray-500 mb-2">3. Run Test</p>
+          <p className="text-xs font-medium text-gray-500 mb-2">3. Run Safeguard Check</p>
           <div className="flex flex-wrap gap-3">
             <button
-              onClick={createTestScenario}
-              disabled={loading}
-              className="px-4 py-2 text-sm bg-[#1E3A5F] text-white rounded-lg hover:bg-[#162d4a] disabled:opacity-50 transition-colors"
+              onClick={cleanUpTestData}
+              disabled={loading || (!createdBookingId && !createdJobId)}
+              className="px-4 py-2 text-sm border border-red-300 text-red-600 rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors"
             >
-              {loading ? "Working..." : "Create Test Scenario"}
+              {loading ? "Working..." : "Clean Up Test Data"}
             </button>
             <button
               onClick={runSafeguardCheck}
@@ -1161,7 +1210,7 @@ function DeleteSafeguardTester({ members }) {
             >
               {loading ? "Working..." : "Run Safeguard Check"}
             </button>
-            {(createdBookingId || createdJobId) && (
+           {(createdBookingId || createdJobId) && (
               <button
                 onClick={cleanUpTestData}
                 disabled={loading}
@@ -1172,7 +1221,7 @@ function DeleteSafeguardTester({ members }) {
             )}
           </div>
           <p className="text-xs text-gray-400 mt-2">
-            After creating test data, go to Settings as <strong>{selectedMember.full_name}</strong> and try Delete Account — the safeguard message should appear.
+           Test data is created by the Calendar Render Tester above. Run the safeguard check against <strong>{selectedMember.full_name}</strong>, then use Clean Up to remove any residual data.
           </p>
         </div>
       )}
