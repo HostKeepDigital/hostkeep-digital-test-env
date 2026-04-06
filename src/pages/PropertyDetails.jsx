@@ -934,8 +934,366 @@ export default function PropertyDetails() {
         </div>
       </div>
 
-      {/* Rest of the details layout (title, booking card, etc.) would follow here,
-          unchanged in structure—using currentUser from useAuth wherever needed. */}
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 md:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+          {/* Left Column: Details */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Header */}
+            <div className="space-y-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2">{property.title}</h1>
+                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                    <div className="flex items-center gap-1">
+                      <MapPin className="w-4 h-4" />
+                      <span>{property.town || property.county || property.postcode}</span>
+                    </div>
+                    {averageRating > 0 && (
+                      <div className="flex items-center gap-1">
+                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                        <span className="font-medium">{averageRating}</span>
+                        <span className="text-gray-500">({reviews.length})</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleWishlistClick}
+                    className="h-10 w-10 rounded-lg"
+                  >
+                    <Heart
+                      className={`w-5 h-5 ${wishlistStatus ? "fill-red-500 text-red-500" : "text-gray-600"}`}
+                    />
+                  </Button>
+                  <PropertyShareModal propertyId={propertyId} />
+                </div>
+              </div>
+            </div>
+
+            {/* Property Basics */}
+            <div className="grid grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg">
+              <div className="text-center">
+                <Users className="w-5 h-5 text-gray-600 mx-auto mb-1" />
+                <p className="text-sm text-gray-600">{property.guest_capacity} guests</p>
+              </div>
+              <div className="text-center">
+                <Bed className="w-5 h-5 text-gray-600 mx-auto mb-1" />
+                <p className="text-sm text-gray-600">{property.bedrooms} beds</p>
+              </div>
+              <div className="text-center">
+                <Bath className="w-5 h-5 text-gray-600 mx-auto mb-1" />
+                <p className="text-sm text-gray-600">{property.bathrooms} baths</p>
+              </div>
+            </div>
+
+            {/* Description */}
+            {property.description && (
+              <div className="space-y-3">
+                <h2 className="text-xl font-semibold text-gray-900">About this property</h2>
+                <p className="text-gray-700 leading-relaxed">{property.description}</p>
+              </div>
+            )}
+
+            {/* Amenities */}
+            {property.amenities && property.amenities.length > 0 && (
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold text-gray-900">What this place offers</h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {property.amenities.map((amenity, idx) => {
+                    const IconComponent = AMENITY_ICONS[amenity] || CheckCircle;
+                    return (
+                      <div key={idx} className="flex items-center gap-3">
+                        <IconComponent className="w-5 h-5 text-teal-600 flex-shrink-0" />
+                        <span className="text-gray-700">{amenity}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* House Rules */}
+            {property.house_rules && (
+              <div className="space-y-3">
+                <h2 className="text-xl font-semibold text-gray-900">House rules</h2>
+                <p className="text-gray-700 whitespace-pre-line">{property.house_rules}</p>
+              </div>
+            )}
+
+            {/* Cancellation Policy */}
+            {!policyLoading && cancellationPolicy && (
+              <div className="space-y-3">
+                <h2 className="text-xl font-semibold text-gray-900">Cancellation policy</h2>
+                <p className="text-gray-700">{cancellationPolicy.description}</p>
+              </div>
+            )}
+
+            {/* Reviews */}
+            {reviews.length > 0 && (
+              <div className="space-y-6">
+                <h2 className="text-xl font-semibold text-gray-900">Reviews</h2>
+                <ReviewList reviews={reviews} />
+              </div>
+            )}
+          </div>
+
+          {/* Right Column: Booking Card */}
+          <div className="lg:sticky lg:top-24">
+            <Card>
+              <CardContent className="pt-6 space-y-4">
+                {/* Pricing */}
+                <div className="text-center pb-4 border-b">
+                  <p className="text-gray-600 text-sm mb-1">From</p>
+                  <p className="text-3xl font-bold text-gray-900">£{displayStartingRate.toFixed(0)}</p>
+                  <p className="text-gray-600 text-sm">per night</p>
+                </div>
+
+                {/* Dates & Guests */}
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-xs text-gray-600 font-medium">Check-in</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start text-left font-normal mt-1 h-10"
+                        >
+                          <Calendar className="w-4 h-4 mr-2" />
+                          {checkIn ? format(parseISO(checkIn), "MMM d, yyyy") : "Select date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <CalendarComponent
+                          mode="single"
+                          selected={checkIn ? parseISO(checkIn) : undefined}
+                          onSelect={(date) => {
+                            if (date) {
+                              setCheckIn(format(date, "yyyy-MM-dd"));
+                              setNights("");
+                            }
+                          }}
+                          disabled={(date) =>
+                            date < startOfDay(new Date()) ||
+                            isDateBooked(date) ||
+                            !isDayAllowedForCheckIn(date, property)
+                          }
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  <div>
+                    <Label className="text-xs text-gray-600 font-medium">Nights</Label>
+                    <Select value={nights} onValueChange={setNights}>
+                      <SelectTrigger className="mt-1 h-10">
+                        <SelectValue placeholder="Select nights" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {allowedNights.map((n) => (
+                          <SelectItem key={n} value={n.toString()}>
+                            {n} night{n > 1 ? "s" : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label className="text-xs text-gray-600 font-medium">Guests</Label>
+                    <div className="flex gap-2 mt-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setGuestData((prev) => ({
+                            ...prev,
+                            adults: Math.max(1, prev.adults - 1),
+                          }))
+                        }
+                      >
+                        −
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        disabled
+                      >
+                        {guestData.adults + guestData.childrenAges.length} guests
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setGuestData((prev) => ({
+                            ...prev,
+                            adults: prev.adults + 1,
+                          }))
+                        }
+                      >
+                        +
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Price Breakdown */}
+                {getPriceBreakdownUI()}
+
+                {/* Booking Blocked Warning */}
+                {bookingBlocked && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800 flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <span>This host hasn't verified their payment method yet. Booking is temporarily unavailable.</span>
+                  </div>
+                )}
+
+                {/* Reserve Button */}
+                <Button
+                  onClick={() => {
+                    if (!currentUser) {
+                      toast.info("Please sign in to book this property.");
+                      setTimeout(() => openAuthModal?.(), 1500);
+                      return;
+                    }
+                    if (!checkIn || !nights) {
+                      toast.error("Please select dates.");
+                      return;
+                    }
+                    setShowBookingDialog(true);
+                  }}
+                  disabled={bookingBlocked || !checkIn || !nights || numNights === 0}
+                  className="w-full h-11 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-semibold"
+                >
+                  {bookingBlocked ? "Booking Unavailable" : "Reserve"}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+
+      {/* Booking Dialog */}
+      <Dialog open={showBookingDialog} onOpenChange={setShowBookingDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Complete Your Booking</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {getStayDatesUI()}
+            <Input
+              placeholder="Full name"
+              value={guestName}
+              onChange={(e) => {
+                setGuestName(e.target.value);
+                setErrors((prev) => ({ ...prev, guestName: null }));
+              }}
+              className={errors.guestName ? "border-red-500" : ""}
+            />
+            {errors.guestName && <p className="text-xs text-red-500">{errors.guestName}</p>}
+            <Input
+              type="email"
+              placeholder="Email"
+              value={guestEmail}
+              onChange={(e) => {
+                setGuestEmail(e.target.value);
+                setErrors((prev) => ({ ...prev, guestEmail: null }));
+              }}
+              className={errors.guestEmail ? "border-red-500" : ""}
+            />
+            {errors.guestEmail && <p className="text-xs text-red-500">{errors.guestEmail}</p>}
+            <Input
+              type="tel"
+              placeholder="Phone (optional)"
+              value={guestPhone}
+              onChange={(e) => {
+                setGuestPhone(e.target.value);
+                setErrors((prev) => ({ ...prev, guestPhone: null }));
+              }}
+              className={errors.guestPhone ? "border-red-500" : ""}
+            />
+            {errors.guestPhone && <p className="text-xs text-red-500">{errors.guestPhone}</p>}
+            <Textarea
+              placeholder="Message to host (optional)"
+              value={guestMessage}
+              onChange={(e) => setGuestMessage(e.target.value)}
+              className="min-h-24"
+            />
+            {getAcknowledgementsUI()}
+            <Button
+              onClick={handleBooking}
+              disabled={bookingMutation.isPending}
+              className="w-full bg-teal-600 hover:bg-teal-700"
+            >
+              {bookingMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                "Confirm Booking"
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Image Overlay */}
+      <AnimatePresence>
+        {showImageOverlay && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+          >
+            <button
+              onClick={() => setShowImageOverlay(false)}
+              className="absolute top-4 right-4 p-2 hover:bg-black/50 rounded-lg transition-colors z-10"
+            >
+              <X className="w-6 h-6 text-white" />
+            </button>
+            <div className="relative w-full h-full flex items-center justify-center">
+              <img
+                src={photos[currentImageIndex]}
+                alt={`${property.title} ${currentImageIndex + 1}`}
+                className="max-w-full max-h-full object-contain"
+              />
+              {photos.length > 1 && (
+                <>
+                  <button
+                    onClick={() =>
+                      setCurrentImageIndex((prev) =>
+                        prev === 0 ? photos.length - 1 : prev - 1
+                      )
+                    }
+                    className="absolute left-4 p-2 hover:bg-white/10 rounded-lg transition-colors"
+                  >
+                    <ChevronLeft className="w-6 h-6 text-white" />
+                  </button>
+                  <button
+                    onClick={() =>
+                      setCurrentImageIndex((prev) =>
+                        prev === photos.length - 1 ? 0 : prev + 1
+                      )
+                    }
+                    className="absolute right-4 p-2 hover:bg-white/10 rounded-lg transition-colors"
+                  >
+                    <ChevronRight className="w-6 h-6 text-white" />
+                  </button>
+                </>
+              )}
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+                {currentImageIndex + 1} / {photos.length}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
