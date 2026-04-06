@@ -392,14 +392,14 @@ export default function EditProperty() {
     if (!formData.location?.street?.trim()) {
       errorsByTab.location.push("Street address is required");
     }
-    if (!formData.location?.town_city?.trim()) {
-      errorsByTab.location.push("Town/City is required");
+    if (!formData.postcode?.trim()) {
+      errorsByTab.location.push("Postcode is required");
     }
-    if (!formData.location?.county?.trim()) {
+    if (!formData.county?.trim()) {
       errorsByTab.location.push("County is required");
     }
-    if (!formData.location?.postcode?.trim()) {
-      errorsByTab.location.push("Postcode is required");
+    if (!formData.town?.trim()) {
+      errorsByTab.location.push("Town/City is required");
     }
 
     if (!formData.photos || formData.photos.length < 5) {
