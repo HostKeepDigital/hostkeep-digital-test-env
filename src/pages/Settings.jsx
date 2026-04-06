@@ -237,7 +237,7 @@ export default function Settings() {
       setDeleteBlockReason(`You have ${activeBookings.length} active or upcoming booking(s). All bookings must be completed or cancelled before deleting your account.`);
       return;
     }
-    const jobs = await base44.entities.CleaningJob.filter({ host_id: foundingMemberId });
+    const jobs = await base44.entities.CleaningJob.filter({ host_id: sessionData?.user?.id });
     const activeJobs = jobs.filter(j => activeJobStatuses.includes(j.status));
     if (activeJobs.length > 0) {
       setDeleteBlockReason(`You have ${activeJobs.length} outstanding cleaning job(s). All jobs must be completed or cancelled before deleting your account.`);
