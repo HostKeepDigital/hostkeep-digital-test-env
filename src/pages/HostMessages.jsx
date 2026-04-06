@@ -22,7 +22,7 @@ export default function HostMessages() {
         </div>
       )}
       <div className="max-w-6xl mx-auto w-full flex-1 flex flex-col">
-        <div className="bg-white border-b border-gray-100 p-4 flex justify-between items-center shrink-0">
+        <div className="bg-white border-b border-gray-100 px-3 md:px-4 py-3 flex justify-between items-center shrink-0">
           <h1 className="text-2xl font-bold text-gray-900">Host Messages</h1>
 
           <Button

@@ -213,9 +213,9 @@ export default function HostDashboard() {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-3 md:px-4 py-4 md:py-8">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 md:mb-8">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
               Welcome back
@@ -308,7 +308,7 @@ export default function HostDashboard() {
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 md:mb-6">
           <StatsCard
             title="This Month"
             value={`£${monthlyEarnings.toFixed(0)}`}
@@ -337,7 +337,7 @@ export default function HostDashboard() {
           />
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-3 gap-4 md:gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Pending Bookings */}
@@ -471,11 +471,11 @@ export default function HostDashboard() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"
+                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6"
               >
                 {/* Header with property identity */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                  <div className="flex items-center gap-2 min-w-0">
                     <img
                       src={
                         properties.find((p) => p.id === selectedPropertyId)
@@ -483,23 +483,18 @@ export default function HostDashboard() {
                         "https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/default-property.jpg"
                       }
                       alt="Property"
-                      className="w-12 h-12 rounded-lg object-cover border"
+                      className="w-10 h-10 rounded-lg object-cover border flex-shrink-0"
                     />
-
-                    <div>
-                      <h2 className="text-lg font-semibold text-gray-900">
+                    <div className="min-w-0">
+                      <h2 className="text-base font-semibold text-gray-900 truncate">
                         {properties.find((p) => p.id === selectedPropertyId)
                           ?.title || "Select a property"}
                       </h2>
-                      <p className="text-xs text-gray-500">
-                        Viewing calendar for this property
-                      </p>
+                      <p className="text-xs text-gray-500">Viewing calendar</p>
                     </div>
                   </div>
-
-                  {/* Property selector */}
                   <select
-                    className="border rounded px-2 py-1 text-sm"
+                    className="border rounded px-2 py-1 text-sm w-full sm:w-auto"
                     value={selectedPropertyId || ""}
                     onChange={(e) => setSelectedPropertyId(e.target.value)}
                   >

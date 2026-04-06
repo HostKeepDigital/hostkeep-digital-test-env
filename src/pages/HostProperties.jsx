@@ -147,7 +147,7 @@ export default function HostProperties() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-3 md:px-4 py-4 md:py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
@@ -200,7 +200,7 @@ export default function HostProperties() {
               className={
                 properties.length === 1
                   ? "flex justify-center"
-                  : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                  : "grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6"
               }
             >
               {properties.map((property, idx) => (
