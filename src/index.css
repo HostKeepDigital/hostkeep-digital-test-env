@@ -141,6 +141,14 @@ nav, header, button, a, [role="button"] {
 }
 
 /* -------------------------------------------------- */
+/* 📝 INPUT TEXT COLOR — fix iOS Safari dark mode      */
+/* -------------------------------------------------- */
+
+input, textarea, select {
+  -webkit-text-fill-color: currentColor;
+}
+
+/* -------------------------------------------------- */
 /* 👆 TOUCH TARGETS — minimum 44px tap zones (mobile)  */
 /* -------------------------------------------------- */
 
