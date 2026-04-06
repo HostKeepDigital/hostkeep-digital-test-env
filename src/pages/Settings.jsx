@@ -264,7 +264,7 @@ export default function Settings() {
   }
 
   if (role === "cleaner") {
-    const jobs = await base44.entities.CleaningJob.filter({ cleaner_user_id: foundingMemberId });
+    const jobs = await base44.entities.CleaningJob.filter({ cleaner_user_id: sessionData?.user?.id });
     const activeJobs = jobs.filter(j => activeJobStatuses.includes(j.status));
     if (activeJobs.length > 0) {
       setDeleteBlockReason(`You have ${activeJobs.length} outstanding job(s). All jobs must be completed or removed before deleting your account.`);
