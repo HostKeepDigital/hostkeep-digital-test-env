@@ -816,41 +816,9 @@ function CalendarRenderTester({ members }) {
 // ── DEV TOOLS: DELETE ACCOUNT TESTER ─────────────────────────────────────────
 
 function DeleteAccountTester() {
-  const [status,  setStatus ] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [phase,   setPhase  ] = useState("idle");
 
   const TEST_EMAIL = "devtest-delete@hostkeep-test.com";
-
-  const createTestAccount = async () => {
-    setLoading(true); setStatus(null);
-    try {
-      const existing = await base44.entities.FoundingMember.filter({ email: TEST_EMAIL });
-      for (const m of existing) await base44.entities.FoundingMember.delete(m.id);
-      const existingCreds = await base44.entities.UserCredentials.filter({ email: TEST_EMAIL });
-      for (const c of existingCreds) await base44.entities.UserCredentials.delete(c.id);
-
-      await base44.entities.FoundingMember.create({
-        full_name:        "Dev Test Delete",
-        email:            TEST_EMAIL,
-        role:             "host",
-        postcode:         "TR1 1AA",
-        approval_status:  "pending",
-        signup_timestamp: new Date().toISOString(),
-      });
-
-      await base44.entities.UserCredentials.create({
-        email:         TEST_EMAIL,
-        password_hash: "test-hash-not-real",
-      });
-
-      setPhase("created");
-      setStatus({ type: "ok", message: `✅ Test account created — FoundingMember + UserCredentials records exist for ${TEST_EMAIL}.` });
-    } catch (e) {
-      setStatus({ type: "err", message: `❌ Create failed: ${e.message}` });
-    }
-    setLoading(false);
-  };
 
   const runDeleteTest = async () => {
     setLoading(true); setStatus(null);
