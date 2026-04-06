@@ -125,136 +125,112 @@ export default function PropertyCard({
       onClick={(e) => { if (!isAvailable) e.preventDefault(); }}
       className={!isAvailable ? "cursor-default block h-full" : "block h-full"}
     >
-      {/* Mobile: horizontal card. sm+: vertical card */}
       <motion.div
         whileHover={isAvailable ? { y: -2 } : {}}
-        className={`bg-white rounded-2xl overflow-hidden border border-gray-100 transition-shadow ${
+        className={`bg-white rounded-2xl overflow-hidden border border-gray-100 transition-shadow flex flex-col h-full ${
           !isAvailable ? "bg-gray-50" : "hover:shadow-lg"
-        } flex flex-row sm:flex-col h-full`}
+        }`}
       >
-        {/* Image */}
-        <div
-          className={`relative flex-shrink-0 w-32 sm:w-auto sm:aspect-[4/3] ${
-            !isAvailable ? "grayscale opacity-75" : ""
-          }`}
-          style={{ minHeight: "120px" }}
-        >
-          <img
-            src={mainPhoto}
-            alt={property.title}
-            className="w-full h-full object-cover"
-          />
+        {/* Image + Content row */}
+        <div className="flex flex-row sm:flex-col flex-1 min-h-0">
+          {/* Image */}
+          <div
+            className={`relative flex-shrink-0 w-28 sm:w-auto sm:aspect-[4/3] self-stretch ${
+              !isAvailable ? "grayscale opacity-75" : ""
+            }`}
+          >
+            <img
+              src={mainPhoto}
+              alt={property.title}
+              className="w-full h-full object-cover"
+            />
 
-          {!isAvailable && !property.suggestion && (
-            <div className="absolute inset-0 bg-white/30 backdrop-blur-[1px] flex items-center justify-center z-10 p-2">
-              <Badge className="bg-gray-900/90 text-white border-0 py-1 px-2 shadow-lg font-medium text-center whitespace-normal max-w-full text-xs">
-                {unavailableReason || "Not available"}
-              </Badge>
-            </div>
-          )}
-
-          {property.featured && (
-            <Badge className="absolute top-2 left-2 bg-amber-500 border-0 shadow-sm z-20 text-xs py-0.5 px-1.5">
-              Featured
-            </Badge>
-          )}
-
-          <div className="absolute top-2 right-2 flex flex-col items-end gap-1.5 z-20">
-            {(property.pets_allowed || property.children_allowed) && (
-              <div className="hidden sm:flex flex-wrap justify-end gap-1">
-                {property.pets_allowed && (
-                  <Badge variant="secondary" className="bg-white/90 text-xs border-0 shadow-sm">
-                    Pet-friendly
-                  </Badge>
-                )}
-                {property.children_allowed && (
-                  <Badge variant="secondary" className="bg-white/90 text-xs border-0 shadow-sm">
-                    Family
-                  </Badge>
-                )}
+            {!isAvailable && !property.suggestion && (
+              <div className="absolute inset-0 bg-white/30 backdrop-blur-[1px] flex items-center justify-center z-10 p-2">
+                <Badge className="bg-gray-900/90 text-white border-0 py-1 px-2 shadow-lg font-medium text-center whitespace-normal max-w-full text-xs">
+                  {unavailableReason || "Not available"}
+                </Badge>
               </div>
             )}
-            <button
-              onClick={handleToggleWishlist}
-              className="bg-white/90 hover:bg-white p-1.5 rounded-full transition-colors shadow-sm"
-            >
-              <Heart
-                className={`w-4 h-4 ${
-                  isWishlisted ? "text-red-500 fill-red-500" : "text-gray-600"
-                }`}
-              />
-            </button>
-          </div>
-        </div>
 
-        {/* Content */}
-        <div
-          className={`p-3 flex-1 flex flex-col min-w-0 ${
-            !isAvailable ? "opacity-60" : ""
-          }`}
-        >
-          <div className="flex items-start justify-between gap-1 mb-1">
-            <div className="min-w-0">
-              <h3 className="font-semibold text-gray-900 line-clamp-1 text-sm sm:text-base">
-                {property.title}
-              </h3>
-              {(property.location?.locality || property.county || property.postcode) && (
-                <p className="text-xs text-gray-500 flex items-center gap-0.5 line-clamp-1">
-                  <MapPin className="w-3 h-3 flex-shrink-0" />
-                  {[property.location?.locality, property.county]
-                    .filter(Boolean)
-                    .join(", ")}
-                  {distanceMiles != null && (
-                    <span className="ml-1 text-teal-600 font-medium flex-shrink-0">
-                      · {distanceMiles} mi
-                    </span>
-                  )}
-                </p>
+            {property.featured && (
+              <Badge className="absolute top-2 left-2 bg-amber-500 border-0 shadow-sm z-20 text-xs py-0.5 px-1.5">
+                Featured
+              </Badge>
+            )}
+
+            <div className="absolute top-2 right-2 flex flex-col items-end gap-1.5 z-20">
+              <button
+                onClick={handleToggleWishlist}
+                className="bg-white/90 hover:bg-white p-1.5 rounded-full transition-colors shadow-sm"
+              >
+                <Heart
+                  className={`w-4 h-4 ${
+                    isWishlisted ? "text-red-500 fill-red-500" : "text-gray-600"
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div
+            className={`p-3 flex-1 flex flex-col min-w-0 ${
+              !isAvailable ? "opacity-60" : ""
+            }`}
+          >
+            <div className="flex items-start justify-between gap-1 mb-1">
+              <div className="min-w-0">
+                <h3 className="font-semibold text-gray-900 line-clamp-2 text-sm leading-tight">
+                  {property.title}
+                </h3>
+                {(property.location?.locality || property.county || property.postcode) && (
+                  <p className="text-xs text-gray-500 flex items-center gap-0.5 mt-0.5 line-clamp-1">
+                    <MapPin className="w-3 h-3 flex-shrink-0" />
+                    {[property.location?.locality, property.county]
+                      .filter(Boolean)
+                      .join(", ")}
+                    {distanceMiles != null && (
+                      <span className="ml-1 text-teal-600 font-medium flex-shrink-0">
+                        · {distanceMiles} mi
+                      </span>
+                    )}
+                  </p>
+                )}
+              </div>
+              {reviews.length > 0 && (
+                <div className="flex items-center gap-0.5 text-xs flex-shrink-0">
+                  <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                  <span className="font-medium">{averageRating}</span>
+                </div>
               )}
             </div>
-            {reviews.length > 0 && (
-              <div className="flex items-center gap-0.5 text-xs flex-shrink-0">
-                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                <span className="font-medium">{averageRating}</span>
-              </div>
-            )}
-          </div>
 
-          <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
-            <span className="flex items-center gap-0.5">
-              <Users className="w-3.5 h-3.5" />
-              {property.guest_capacity}
-            </span>
-            <span className="flex items-center gap-0.5">
-              <Bed className="w-3.5 h-3.5" />
-              {property.bedrooms} bed{property.bedrooms !== 1 ? "s" : ""}
-            </span>
-            {/* Pet/family badges on mobile (since image overlay is hidden) */}
-            {property.pets_allowed && (
-              <span className="sm:hidden text-teal-600 font-medium">🐾</span>
-            )}
-          </div>
-
-          {topAmenities.length > 0 && (
-            <div className="hidden sm:flex items-center gap-2 mb-3">
-              {topAmenities.map((amenity) => (
-                <div key={amenity.slug} className="text-gray-400" title={amenity.name}>
-                  <AmenityIcon name={amenity.icon} className="w-4 h-4" />
-                </div>
-              ))}
+            <div className="flex items-center gap-2 text-xs text-gray-500 mb-2 flex-wrap">
+              <span className="flex items-center gap-0.5">
+                <Users className="w-3.5 h-3.5" />
+                {property.guest_capacity}
+              </span>
+              <span className="flex items-center gap-0.5">
+                <Bed className="w-3.5 h-3.5" />
+                {property.bedrooms} bed{property.bedrooms !== 1 ? "s" : ""}
+              </span>
+              {property.pets_allowed && <span title="Pet-friendly">🐾</span>}
+              {property.children_allowed && <span title="Family-friendly">👨‍👧</span>}
             </div>
-          )}
 
-          <div className="flex items-baseline gap-1 mt-auto">
-            <span className="text-base sm:text-xl font-bold text-gray-900">
-              £{property.nightly_rate}
-            </span>
-            <span className="text-gray-500 text-xs">/night</span>
+            <div className="flex items-baseline gap-1 mt-auto">
+              <span className="text-base sm:text-xl font-bold text-gray-900">
+                £{property.nightly_rate}
+              </span>
+              <span className="text-gray-500 text-xs">/night</span>
+            </div>
           </div>
         </div>
 
+        {/* Suggestion banner — always full width below the row */}
         {property.suggestion && !isAvailable && (
-          <div className="col-span-full bg-amber-50 border-t border-amber-100 p-3 text-xs text-amber-900">
+          <div className="bg-amber-50 border-t border-amber-100 p-3 text-xs text-amber-900">
             <p className="font-medium mb-2 leading-tight">{property.suggestion.message}</p>
             {property.suggestion.conflictDates && (
               <p className="font-semibold text-amber-800 mb-2">
