@@ -472,6 +472,21 @@ function FoundingFlowTester() {
     setLoading(false);
   };
 
+  const simulateApproval = async () => {
+    setLoading(true);
+    try {
+      const members = await base44.entities.FoundingMember.filter({ email: TEST_EMAIL });
+      if (!members.length) { setStatus({ type: "err", message: "❌ No test member found. Run step 1 first." }); setLoading(false); return; }
+      await base44.entities.FoundingMember.update(members[0].id, { approval_status: "invited" });
+      localStorage.setItem("devtools_founding_test", JSON.stringify({ memberId: members[0].id }));
+      setCreated({ memberId: members[0].id });
+      setStatus({ type: "ok", message: `✅ Test member promoted to 'invited'. Property Creation Tester will now show this host in its dropdown.` });
+    } catch (e) {
+      setStatus({ type: "err", message: `❌ Approval simulation failed: ${e.message}` });
+    }
+    setLoading(false);
+  };
+
   const cleanUp = async () => {
     setLoading(true);
     try {
@@ -490,7 +505,7 @@ function FoundingFlowTester() {
     <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-5">
       <div>
         <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-1">Founding Flow Tester</h2>
-        <p className="text-xs text-gray-400">Verifies the signup → pending → admin sees application pipeline. Uses email <code className="bg-gray-100 px-1 rounded">devtest-founding@hostkeep-test.com</code>, postcode <code className="bg-gray-100 px-1 rounded">TR1 1AA</code>.</p>
+        <p className="text-xs text-gray-400">Verifies the signup → pending → approval pipeline. Step 3 promotes to 'invited' so the Property Creation Tester can pick up this host. Uses email <code className="bg-gray-100 px-1 rounded">devtest-founding@hostkeep-test.com</code>, postcode <code className="bg-gray-100 px-1 rounded">TR1 1AA</code>.</p>
       </div>
       <div className="flex flex-wrap gap-3">
         <button onClick={createTestMember} disabled={loading} className="px-4 py-2 text-sm bg-[#1E3A5F] text-white rounded-lg hover:bg-[#162d4a] disabled:opacity-50">
@@ -499,9 +514,12 @@ function FoundingFlowTester() {
         <button onClick={checkAppearsInPending} disabled={loading || !created} className="px-4 py-2 text-sm bg-[#0d9488] text-white rounded-lg hover:bg-[#0f766e] disabled:opacity-50">
           {loading ? "Working..." : "2. Verify Appears in Pending"}
         </button>
+        <button onClick={simulateApproval} disabled={loading || !created} className="px-4 py-2 text-sm bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50">
+          {loading ? "Working..." : "3. Simulate Admin Approval"}
+        </button>
         {created && (
           <button onClick={cleanUp} disabled={loading} className="px-4 py-2 text-sm border border-red-300 text-red-600 rounded-lg hover:bg-red-50 disabled:opacity-50">
-            {loading ? "Working..." : "3. Clean Up"}
+            {loading ? "Working..." : "4. Clean Up"}
           </button>
         )}
       </div>
