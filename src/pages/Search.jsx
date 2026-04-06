@@ -821,18 +821,18 @@ export default function Search() {
               </Sheet>
             </div>
 
-            {/* Row 2: Dates + Guests */}
-            <div className="grid grid-cols-3 gap-2">
-              <div className="col-span-1">
+            {/* Row 2: Check-in + Nights (equal halves) */}
+            <div className="grid grid-cols-2 gap-2">
+              <div>
                 <BookingCalendar
                   value={filters.checkIn}
                   onSelect={(date) => setFilters((prev) => ({ ...prev, checkIn: date ? format(date, "yyyy-MM-dd") : "", duration: "" }))}
-                  placeholder="Check-in"
+                  placeholder="Check-in date"
                   className="h-11 w-full text-sm"
                   numberOfMonths={1}
                 />
               </div>
-              <div className="col-span-1">
+              <div>
                 <Select
                   disabled={!filters.checkIn}
                   value={filters.duration}
@@ -850,14 +850,16 @@ export default function Search() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="col-span-1">
-                <GuestSelector
-                  value={{ adults: filters.adults, children: filters.children, childAges: filters.childAges }}
-                  onChange={(val) => {
-                    if (val.isValid) setFilters((prev) => ({ ...prev, adults: val.adults, children: val.children, childAges: val.childAges }));
-                  }}
-                />
-              </div>
+            </div>
+
+            {/* Row 3: Guests full-width (dropdown expands downward) */}
+            <div className="w-full">
+              <GuestSelector
+                value={{ adults: filters.adults, children: filters.children, childAges: filters.childAges }}
+                onChange={(val) => {
+                  if (val.isValid) setFilters((prev) => ({ ...prev, adults: val.adults, children: val.children, childAges: val.childAges }));
+                }}
+              />
             </div>
 
             {/* Radius pill (when location matched) */}
