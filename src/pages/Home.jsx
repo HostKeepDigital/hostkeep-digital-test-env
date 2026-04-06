@@ -265,7 +265,7 @@ export default function Home() {
                       value={String(radiusMiles)}
                       onValueChange={(v) => setRadiusMiles(parseInt(v))}
                     >
-                      <SelectTrigger className="w-36 h-12 bg-teal-50 border-teal-200 text-teal-800 shrink-0">
+                      <SelectTrigger className="w-28 md:w-36 h-12 bg-teal-50 border-teal-200 text-teal-800 shrink-0">
                         <SelectValue />
                       </SelectTrigger>
 

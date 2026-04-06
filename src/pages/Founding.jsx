@@ -124,7 +124,7 @@ export default function Founding() {
           </div>
           <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full min-w-[420px] text-sm">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-100">
                     <th className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider"></th>

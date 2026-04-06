@@ -696,10 +696,10 @@ export default function Search() {
         </div>
       )}
       {/* Search Header */}
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-40">
+      <div className="bg-white border-b border-gray-100 sticky top-16 z-40">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex flex-wrap gap-3 items-center">
-            <div className="relative flex-1 min-w-[200px]">
+          <div className="flex gap-3 items-center overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <div className="relative flex-shrink-0 w-44 md:flex-1 md:min-w-[200px] md:w-auto">
               <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <Input
                 placeholder="Location or Postcode"
@@ -731,7 +731,7 @@ export default function Search() {
                   handleFilterChange("radiusMiles", parseInt(v))
                 }
               >
-                <SelectTrigger className="w-36 h-11 bg-teal-50 border-teal-200 text-teal-800">
+                <SelectTrigger className="flex-shrink-0 w-32 md:w-36 h-11 bg-teal-50 border-teal-200 text-teal-800">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -744,7 +744,7 @@ export default function Search() {
               </Select>
             )}
 
-            <div className="w-44">
+            <div className="flex-shrink-0 w-40 md:w-44">
               <BookingCalendar
                 value={filters.checkIn}
                 onSelect={(date) =>
@@ -763,7 +763,7 @@ export default function Search() {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="w-40">
+                  <div className="flex-shrink-0 w-36 md:w-40">
                     <Select
                       disabled={!filters.checkIn}
                       value={filters.duration}
@@ -792,7 +792,7 @@ export default function Search() {
               </Tooltip>
             </TooltipProvider>
 
-            <div className="w-64">
+            <div className="flex-shrink-0 w-52 md:w-64">
               <GuestSelector
                 value={{
                   adults: filters.adults,
@@ -814,7 +814,7 @@ export default function Search() {
 
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="outline" className="h-11 gap-2">
+                <Button variant="outline" className="flex-shrink-0 h-11 gap-2">
                   <SlidersHorizontal className="w-4 h-4" />
                   Filters
                 </Button>
