@@ -520,7 +520,7 @@ function PropertyCreationTester({ members }) {
   const [createdId,   setCreatedId  ] = useState(null);
   const [hostId,      setHostId     ] = useState("");
 
-  const hosts = members.filter(m => m.role === "host" && m.approval_status === "approved");
+const hosts = members.filter(m => m.role === "host" && ["invited", "password_protected", "awaiting_document_verification", "approved"].includes(m.approval_status));
 
   const createTestProperty = async () => {
     if (!hostId) { setStatus({ type: "err", message: "❌ Select a host first." }); return; }
@@ -639,7 +639,7 @@ function CalendarRenderTester({ members }) {
   const [createdBookingId,  setCreatedBookingId ] = useState(null);
   const [createdJobId,      setCreatedJobId     ] = useState(null);
 
-  const hosts = members.filter(m => m.role === "host" && m.approval_status === "approved");
+  const hosts = members.filter(m => m.role === "host" && ["invited", "password_protected", "awaiting_document_verification", "approved"].includes(m.approval_status));
 
   const futureDate = (daysAhead) => {
     const d = new Date();
