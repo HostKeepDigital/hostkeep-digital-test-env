@@ -77,88 +77,55 @@ export default function BookingBarCalendar({ propertyId }) {
   return (
     <div className="w-full">
       {/* MONTH NAVIGATION */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between mb-3 gap-2">
+        <div className="flex items-center gap-1">
           <button
             onClick={goPrevMonth}
-            className="px-3 py-1 border rounded hover:bg-gray-50"
+            className="w-8 h-8 flex items-center justify-center border rounded-lg hover:bg-gray-50 text-lg leading-none"
           >
             ‹
           </button>
-
           <button
             onClick={goToday}
-            className="px-3 py-1 border rounded hover:bg-gray-50"
+            className="px-2.5 h-8 border rounded-lg hover:bg-gray-50 text-xs font-medium"
           >
             Today
           </button>
-
           <button
             onClick={goNextMonth}
-            className="px-3 py-1 border rounded hover:bg-gray-50"
+            className="w-8 h-8 flex items-center justify-center border rounded-lg hover:bg-gray-50 text-lg leading-none"
           >
             ›
           </button>
         </div>
-
-        <div className="flex items-center gap-2">
-          {/* Month dropdown */}
+        <div className="flex items-center gap-1">
           <select
             value={currentMonth.getMonth()}
             onChange={handleMonthSelect}
-            className="border rounded px-2 py-1"
+            className="border rounded-lg px-2 py-1 text-xs font-medium"
           >
             {Array.from({ length: 12 }).map((_, i) => (
-              <option key={i} value={i}>
-                {format(new Date(2024, i, 1), "MMMM")}
-              </option>
+              <option key={i} value={i}>{format(new Date(2024, i, 1), "MMM")}</option>
             ))}
           </select>
-
-          {/* Year dropdown */}
           <select
             value={currentMonth.getFullYear()}
             onChange={handleYearSelect}
-            className="border rounded px-2 py-1"
+            className="border rounded-lg px-2 py-1 text-xs font-medium"
           >
             {years.map((y) => (
-              <option key={y} value={y}>
-                {y}
-              </option>
+              <option key={y} value={y}>{y}</option>
             ))}
           </select>
         </div>
       </div>
 
       {/* FILTER BAR */}
-      <div className="flex items-center gap-2 mb-4">
-        <FilterButton
-          label="Bookings"
-          active={filters.bookings}
-          color="#0ea5e9"
-          onClick={() => toggleFilter("bookings")}
-        />
-
-        <FilterButton
-          label="Cleaning"
-          active={filters.cleaning}
-          color="#16a34a"
-          onClick={() => toggleFilter("cleaning")}
-        />
-
-        <FilterButton
-          label="Blocked"
-          active={filters.blocked}
-          color="#6b7280"
-          onClick={() => toggleFilter("blocked")}
-        />
-
-        <FilterButton
-          label="Conflicts"
-          active={filters.conflict}
-          color="#dc2626"
-          onClick={() => toggleFilter("conflict")}
-        />
+      <div className="flex flex-wrap items-center gap-1.5 mb-3">
+        <FilterButton label="Bookings" active={filters.bookings} color="#0ea5e9" onClick={() => toggleFilter("bookings")} />
+        <FilterButton label="Cleaning" active={filters.cleaning} color="#16a34a" onClick={() => toggleFilter("cleaning")} />
+        <FilterButton label="Blocked" active={filters.blocked} color="#6b7280" onClick={() => toggleFilter("blocked")} />
+        <FilterButton label="Conflicts" active={filters.conflict} color="#dc2626" onClick={() => toggleFilter("conflict")} />
       </div>
 
       {/* CALENDAR GRID */}
@@ -185,13 +152,14 @@ function FilterButton({ label, active, color, onClick }) {
     <button
       onClick={onClick}
       style={{
-        backgroundColor: active ? color : "white",
-        color: active ? "white" : "#374151",
+        backgroundColor: active ? color : "transparent",
+        color: active ? "white" : color,
         border: `1px solid ${color}`,
-        padding: "6px 12px",
-        borderRadius: "6px",
-        fontSize: "13px",
-        fontWeight: 500,
+        padding: "3px 10px",
+        borderRadius: "999px",
+        fontSize: "11px",
+        fontWeight: 600,
+        lineHeight: "1.5",
       }}
     >
       {label}

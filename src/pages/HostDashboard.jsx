@@ -213,34 +213,26 @@ export default function HostDashboard() {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-3 md:px-4 py-4 md:py-8">
+      <div className="max-w-7xl mx-auto px-3 py-3 md:px-6 md:py-6">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 md:mb-8">
+        <div className="flex items-center justify-between gap-3 mb-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-              Welcome back
-              {user?.full_name ? `, ${user.full_name.split(" ")[0]}` : ""}
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900 leading-tight">
+              Welcome back{user?.full_name ? `, ${user.full_name.split(" ")[0]}` : ""}
             </h1>
-            <p className="text-gray-500">Manage your properties and bookings</p>
+            <p className="text-sm text-gray-500">Manage your properties and bookings</p>
           </div>
-
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 flex-shrink-0">
             {pendingBookings.length > 0 && (
-              <Badge
-                variant="outline"
-                className="bg-amber-50 text-amber-700 border-amber-200"
-              >
+              <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
                 <Bell className="w-3 h-3 mr-1" />
-                {pendingBookings.length} pending
+                {pendingBookings.length}
               </Badge>
             )}
-
-            <Button
-              onClick={handleAddPropertyClick}
-              className="bg-teal-600 hover:bg-teal-700 gap-2"
-            >
+            <Button onClick={handleAddPropertyClick} className="bg-teal-600 hover:bg-teal-700 gap-1.5 text-sm h-9 px-3">
               <Plus className="w-4 h-4" />
-              Add Property
+              <span className="hidden sm:inline">Add Property</span>
+              <span className="sm:hidden">Add</span>
             </Button>
           </div>
         </div>
@@ -286,111 +278,66 @@ export default function HostDashboard() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-r from-teal-600 to-emerald-600 rounded-2xl p-6 text-white mb-8"
+            className="bg-gradient-to-r from-teal-600 to-emerald-600 rounded-xl p-4 text-white mb-4"
           >
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center justify-between gap-3">
               <div>
-                <h3 className="text-lg font-semibold mb-1">
+                <h3 className="text-sm font-semibold">
                   {subscription ? "Your trial ends soon" : "Start your hosting journey"}
                 </h3>
-                <p className="text-teal-100">
-                  Subscribe to list your properties and start earning
-                </p>
+                <p className="text-xs text-teal-100">Subscribe to list properties and start earning</p>
               </div>
-
-              <Link to={createPageUrl("Subscription")}>
-                <Button className="bg-white text-teal-700 hover:bg-teal-50">
-                  View Plans
-                </Button>
+              <Link to={createPageUrl("Subscription")} className="flex-shrink-0">
+                <Button size="sm" className="bg-white text-teal-700 hover:bg-teal-50 h-8 text-xs">View Plans</Button>
               </Link>
             </div>
           </motion.div>
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 md:mb-6">
-          <StatsCard
-            title="This Month"
-            value={`£${monthlyEarnings.toFixed(0)}`}
-            icon={PoundSterling}
-            color="emerald"
-          />
-          <StatsCard
-            title="Total Earnings"
-            value={`£${totalEarnings.toFixed(0)}`}
-            icon={TrendingUp}
-            color="teal"
-          />
-          <StatsCard
-            title="Properties"
-            value={publishedProperties}
-            subtitle={`${properties.length} total`}
-            icon={Home}
-            color="violet"
-          />
-          <StatsCard
-            title="Upcoming"
-            value={confirmedBookings.length}
-            subtitle="bookings"
-            icon={Calendar}
-            color="amber"
-          />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+          <StatsCard title="This Month" value={`£${monthlyEarnings.toFixed(0)}`} icon={PoundSterling} color="emerald" />
+          <StatsCard title="Total Earnings" value={`£${totalEarnings.toFixed(0)}`} icon={TrendingUp} color="teal" />
+          <StatsCard title="Properties" value={publishedProperties} subtitle={`${properties.length} total`} icon={Home} color="violet" />
+          <StatsCard title="Upcoming" value={confirmedBookings.length} subtitle="bookings" icon={Calendar} color="amber" />
         </div>
 
-        <div className="grid md:grid-cols-3 gap-4 md:gap-6">
+        <div className="grid md:grid-cols-3 gap-4">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="md:col-span-2 space-y-4">
             {/* Pending Bookings */}
             {pendingBookings.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"
+                className="bg-white rounded-xl shadow-sm border border-gray-100 p-4"
               >
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Bell className="w-5 h-5 text-amber-500" />
+                <h2 className="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <Bell className="w-4 h-4 text-amber-500" />
                   Pending Requests ({pendingBookings.length})
                 </h2>
-
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {pendingBookings.slice(0, 3).map((booking) => (
                     <Link
                       key={booking.id}
                       to={createPageUrl("HostBookings") + `?id=${booking.id}`}
-                      className="block p-4 rounded-xl bg-amber-50 border border-amber-100 hover:bg-amber-100 transition-colors"
+                      className="flex items-center justify-between p-3 rounded-lg bg-amber-50 border border-amber-100 hover:bg-amber-100 transition-colors"
                     >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium text-gray-900">
-                            {booking.guest_name}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {format(parseISO(booking.check_in), "MMM d")} -{" "}
-                            {format(parseISO(booking.check_out), "MMM d")}
-                          </p>
-                        </div>
-
-                        <div className="text-right">
-                          <p className="font-semibold text-gray-900">
-                            £{booking.total_amount}
-                          </p>
-                          <Badge
-                            variant="outline"
-                            className="bg-amber-100 text-amber-700 border-amber-200"
-                          >
-                            Pending
-                          </Badge>
-                        </div>
+                      <div>
+                        <p className="font-medium text-gray-900 text-sm">{booking.guest_name}</p>
+                        <p className="text-xs text-gray-500">
+                          {format(parseISO(booking.check_in), "MMM d")} – {format(parseISO(booking.check_out), "MMM d")}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-gray-900 text-sm">£{booking.total_amount}</p>
+                        <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-200 text-xs">Pending</Badge>
                       </div>
                     </Link>
                   ))}
                 </div>
-
-                <Link
-                  to={createPageUrl("HostBookings")}
-                  className="text-teal-600 hover:text-teal-700 text-sm font-medium flex items-center gap-1 mt-4"
-                >
-                  View all bookings <ArrowRight className="w-4 h-4" />
+                <Link to={createPageUrl("HostBookings")} className="text-teal-600 text-sm font-medium flex items-center gap-1 mt-3">
+                  View all <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </motion.div>
             )}
@@ -399,65 +346,40 @@ export default function HostDashboard() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"
+              className="bg-white rounded-xl shadow-sm border border-gray-100 p-4"
             >
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Your Properties
-                </h2>
-
-                <Link
-                  to={createPageUrl("HostProperties")}
-                  className="text-teal-600 hover:text-teal-700 text-sm font-medium flex items-center gap-1"
-                >
-                  Manage <ArrowRight className="w-4 h-4" />
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-base font-semibold text-gray-900">Your Properties</h2>
+                <Link to={createPageUrl("HostProperties")} className="text-teal-600 text-sm font-medium flex items-center gap-1">
+                  Manage <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
-
               {properties.length === 0 ? (
-                <div className="text-center py-8">
-                  <Home className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                  <p className="text-gray-500 mb-4">No properties yet</p>
-
+                <div className="text-center py-6">
+                  <Home className="w-10 h-10 mx-auto mb-2 text-gray-300" />
+                  <p className="text-gray-500 text-sm mb-3">No properties yet</p>
                   <Link to={createPageUrl("CreateProperty")}>
-                    <Button className="bg-teal-600 hover:bg-teal-700">
-                      Add Your First Property
-                    </Button>
+                    <Button size="sm" className="bg-teal-600 hover:bg-teal-700">Add Your First Property</Button>
                   </Link>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {properties.slice(0, 3).map((property) => (
                     <Link
                       key={property.id}
                       to={createPageUrl("EditProperty") + `?id=${property.id}`}
-                      className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors"
+                      className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors"
                     >
                       <img
-                        src={
-                          property.photos?.[0] ||
-                          "https://lh3.googleusercontent.com/d/1Vr07gcaaC19XEmxcvTbq-DTn8PZKn-_a"
-                        }
+                        src={property.photos?.[0] || "https://lh3.googleusercontent.com/d/1Vr07gcaaC19XEmxcvTbq-DTn8PZKn-_a"}
                         alt={property.title}
-                        className="w-16 h-16 rounded-lg object-cover"
+                        className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
                       />
-
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 truncate">
-                          {property.title}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          £{property.nightly_rate}/night
-                        </p>
+                        <p className="font-medium text-gray-900 truncate text-sm">{property.title}</p>
+                        <p className="text-xs text-gray-500">£{property.nightly_rate}/night</p>
                       </div>
-
-                      <Badge
-                        variant={
-                          property.status === "published"
-                            ? "default"
-                            : "secondary"
-                        }
-                      >
+                      <Badge variant={property.status === "published" ? "default" : "secondary"} className="text-xs">
                         {property.status}
                       </Badge>
                     </Link>
@@ -471,119 +393,61 @@ export default function HostDashboard() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6"
+                className="bg-white rounded-xl shadow-sm border border-gray-100 p-4"
               >
-                {/* Header with property identity */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <img
-                      src={
-                        properties.find((p) => p.id === selectedPropertyId)
-                          ?.photos?.[0] ||
-                        "https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/default-property.jpg"
-                      }
-                      alt="Property"
-                      className="w-10 h-10 rounded-lg object-cover border flex-shrink-0"
-                    />
-                    <div className="min-w-0">
-                      <h2 className="text-base font-semibold text-gray-900 truncate">
-                        {properties.find((p) => p.id === selectedPropertyId)
-                          ?.title || "Select a property"}
-                      </h2>
-                      <p className="text-xs text-gray-500">Viewing calendar</p>
-                    </div>
-                  </div>
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                  <h2 className="text-base font-semibold text-gray-900">Calendar</h2>
                   <select
-                    className="border rounded px-2 py-1 text-sm w-full sm:w-auto"
+                    className="border rounded px-2 py-1 text-xs flex-shrink-0 max-w-[180px] truncate"
                     value={selectedPropertyId || ""}
                     onChange={(e) => setSelectedPropertyId(e.target.value)}
                   >
                     {properties.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.title}
-                      </option>
+                      <option key={p.id} value={p.id}>{p.title}</option>
                     ))}
                   </select>
                 </div>
-
-                {/* Calendar */}
                 {selectedPropertyId ? (
                   <BookingBarCalendar propertyId={selectedPropertyId} />
                 ) : (
-                  <p className="text-sm text-gray-500">
-                    Select a property to view its calendar.
-                  </p>
+                  <p className="text-sm text-gray-500">Select a property to view its calendar.</p>
                 )}
               </motion.div>
             )}
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Quick Actions */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"
+              className="bg-white rounded-xl shadow-sm border border-gray-100 p-4"
             >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-900">Quick Actions</h3>
-              </div>
-
-              <div className="space-y-2">
-                <Link
-                  to={createPageUrl("HostBookings")}
-                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors"
-                >
-                  <Calendar className="w-5 h-5 text-teal-600" />
-                  <span className="text-gray-700">Bookings</span>
-
-                  {pendingBookings.length > 0 && (
-                    <Badge className="ml-auto bg-amber-100 text-amber-700">
-                      {pendingBookings.length}
-                    </Badge>
-                  )}
+              <h3 className="font-semibold text-gray-900 mb-3 text-sm">Quick Actions</h3>
+              <div className="space-y-1">
+                <Link to={createPageUrl("HostBookings")} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                  <Calendar className="w-4 h-4 text-teal-600" />
+                  <span className="text-sm text-gray-700">Bookings</span>
+                  {pendingBookings.length > 0 && <Badge className="ml-auto bg-amber-100 text-amber-700 text-xs">{pendingBookings.length}</Badge>}
                 </Link>
-
-                <div className="flex items-center gap-2">
-                  <Link
-                    to={createPageUrl("HostMessages")}
-                    className="flex-1 flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors"
-                  >
-                    <MessageSquare className="w-5 h-5 text-teal-600" />
-                    <span className="text-gray-700">Messages</span>
-
-                    {messages.length > 0 && (
-                      <Badge className="ml-auto bg-teal-100 text-teal-700">
-                        {messages.length}
-                      </Badge>
-                    )}
+                <div className="flex items-center gap-1">
+                  <Link to={createPageUrl("HostMessages")} className="flex-1 flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                    <MessageSquare className="w-4 h-4 text-teal-600" />
+                    <span className="text-sm text-gray-700">Messages</span>
+                    {messages.length > 0 && <Badge className="ml-auto bg-teal-100 text-teal-700 text-xs">{messages.length}</Badge>}
                   </Link>
-
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setShowMessageModal(true)}
-                    className="rounded-xl hover:bg-teal-50"
-                  >
-                    <Plus className="w-5 h-5 text-teal-600" />
+                  <Button variant="ghost" size="icon" onClick={() => setShowMessageModal(true)} className="rounded-lg hover:bg-teal-50 h-9 w-9">
+                    <Plus className="w-4 h-4 text-teal-600" />
                   </Button>
                 </div>
-
-                <Link
-                  to={createPageUrl("HostProperties")}
-                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors"
-                >
-                  <Home className="w-5 h-5 text-teal-600" />
-                  <span className="text-gray-700">Properties</span>
+                <Link to={createPageUrl("HostProperties")} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                  <Home className="w-4 h-4 text-teal-600" />
+                  <span className="text-sm text-gray-700">Properties</span>
                 </Link>
-
-                <Link
-                  to={createPageUrl("HostSettings")}
-                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors"
-                >
-                  <Settings className="w-5 h-5 text-teal-600" />
-                  <span className="text-gray-700">Settings</span>
+                <Link to={createPageUrl("Settings")} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                  <Settings className="w-4 h-4 text-teal-600" />
+                  <span className="text-sm text-gray-700">Settings</span>
                 </Link>
               </div>
             </motion.div>
@@ -593,46 +457,24 @@ export default function HostDashboard() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-4"
+                className="bg-white rounded-xl shadow-sm border border-gray-100 p-4"
               >
-                <h3 className="font-semibold text-gray-900">
-                  Cancellation Policies
-                </h3>
-
-                <div className="space-y-3 max-h-64 overflow-y-auto">
+                <h3 className="font-semibold text-gray-900 mb-3 text-sm">Cancellation Policies</h3>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
                   {properties.map((property) => {
-                    const policy = cancellationPolicies.find(
-                      (p) => p.id === property.cancellation_policy_id
-                    );
-
+                    const policy = cancellationPolicies.find((p) => p.id === property.cancellation_policy_id);
                     return (
-                      <div
-                        key={property.id}
-                        className="p-3 rounded-lg bg-gray-50 border border-gray-100"
-                      >
-                        <p className="text-sm font-medium text-gray-900 mb-1">
-                          {property.title}
-                        </p>
-
+                      <div key={property.id} className="p-2.5 rounded-lg bg-gray-50 border border-gray-100">
+                        <p className="text-xs font-medium text-gray-900 mb-0.5 truncate">{property.title}</p>
                         {policy ? (
                           <>
-                            <p className="text-sm font-semibold text-teal-700 mb-1">
-                              {policy.policy_name}
-                            </p>
-                            <p className="text-xs text-gray-600 mb-2">
-                              {policy.description}
-                            </p>
-
+                            <p className="text-xs font-semibold text-teal-700">{policy.policy_name}</p>
                             {policy.policy_name === "Super Strict" && (
-                              <p className="text-xs font-medium text-rose-600">
-                                ⚠️ This policy may reduce booking conversions.
-                              </p>
+                              <p className="text-xs text-rose-600 mt-0.5">⚠️ May reduce conversions</p>
                             )}
                           </>
                         ) : (
-                          <p className="text-xs text-gray-500 italic">
-                            No policy assigned
-                          </p>
+                          <p className="text-xs text-gray-400 italic">No policy assigned</p>
                         )}
                       </div>
                     );
@@ -645,7 +487,7 @@ export default function HostDashboard() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"
+              className="bg-white rounded-xl shadow-sm border border-gray-100 p-4"
             >
               <h3 className="font-semibold text-gray-900 mb-4">
                 Subscription
