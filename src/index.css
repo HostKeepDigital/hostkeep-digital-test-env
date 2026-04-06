@@ -149,41 +149,107 @@ input, textarea, select {
 }
 
 /* ------------------------------------------------------------------ */
-/* 🌙 GLOBAL DARK MODE AUTO-OVERRIDES                                  */
-/* Covers all pages/components using standard Tailwind gray/white      */
-/* classes without requiring dark: variants on every element.          */
-/* Intentional colored sections (teal, blue, amber) are unaffected.   */
+/* 🌙 GLOBAL DARK MODE — comprehensive auto-overrides                    */
+/* Covers all pages/components on mobile, tablet, and desktop.         */
+/* Intentional coloured sections (teal, blue, amber) are unaffected.   */
 /* ------------------------------------------------------------------ */
 
-/* Backgrounds */
-.dark .bg-white        { background-color: hsl(0 0% 7%); }
-.dark .bg-gray-50      { background-color: hsl(0 0% 9%); }
-.dark .bg-gray-100     { background-color: hsl(0 0% 12%); }
-.dark .bg-gray-200     { background-color: hsl(0 0% 16%); }
+/* ---- Base element overrides ---- */
+.dark body {
+  background-color: hsl(0 0% 7%);
+  color: hsl(0 0% 92%);
+}
 
-/* Text */
-.dark .text-gray-900   { color: hsl(0 0% 95%); }
-.dark .text-gray-800   { color: hsl(0 0% 88%); }
-.dark .text-gray-700   { color: hsl(0 0% 78%); }
-.dark .text-gray-600   { color: hsl(0 0% 68%); }
-.dark .text-gray-500   { color: hsl(0 0% 56%); }
-.dark .text-gray-400   { color: hsl(0 0% 46%); }
+/* Bare inputs/textareas/selects with no explicit bg class */
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: hsl(0 0% 12%);
+  color: hsl(0 0% 92%);
+  border-color: hsl(0 0% 22%);
+}
 
-/* Borders */
-.dark .border-gray-50  { border-color: hsl(0 0% 14%); }
-.dark .border-gray-100 { border-color: hsl(0 0% 16%); }
-.dark .border-gray-200 { border-color: hsl(0 0% 20%); }
-.dark .border-gray-300 { border-color: hsl(0 0% 26%); }
+/* ---- White & gray backgrounds ---- */
+.dark .bg-white        { background-color: hsl(0 0% 8%) !important; }
+.dark .bg-gray-50      { background-color: hsl(0 0% 10%) !important; }
+.dark .bg-gray-100     { background-color: hsl(0 0% 13%) !important; }
+.dark .bg-gray-200     { background-color: hsl(0 0% 17%) !important; }
+.dark .bg-gray-300     { background-color: hsl(0 0% 22%) !important; }
+.dark .bg-gray-400     { background-color: hsl(0 0% 30%) !important; }
 
-/* Divide */
-.dark .divide-gray-100 > * + * { border-color: hsl(0 0% 16%); }
-.dark .divide-gray-200 > * + * { border-color: hsl(0 0% 20%); }
+/* Slate (used in some components) */
+.dark .bg-slate-50     { background-color: hsl(0 0% 10%) !important; }
+.dark .bg-slate-100    { background-color: hsl(0 0% 13%) !important; }
+.dark .bg-slate-200    { background-color: hsl(0 0% 17%) !important; }
+.dark .bg-slate-800    { background-color: hsl(0 0% 10%) !important; }
+.dark .bg-slate-900    { background-color: hsl(0 0% 7%) !important; }
 
-/* Rings */
-.dark .ring-gray-100   { --tw-ring-color: hsl(0 0% 16%); }
-.dark .ring-gray-200   { --tw-ring-color: hsl(0 0% 20%); }
+/* ---- Text colors ---- */
+.dark .text-black      { color: hsl(0 0% 95%) !important; }
+.dark .text-gray-900   { color: hsl(0 0% 95%) !important; }
+.dark .text-gray-800   { color: hsl(0 0% 88%) !important; }
+.dark .text-gray-700   { color: hsl(0 0% 78%) !important; }
+.dark .text-gray-600   { color: hsl(0 0% 68%) !important; }
+.dark .text-gray-500   { color: hsl(0 0% 56%) !important; }
+.dark .text-gray-400   { color: hsl(0 0% 48%) !important; }
+.dark .text-gray-300   { color: hsl(0 0% 38%) !important; }
 
-/* Prose (react-markdown / rich text) */
+.dark .text-slate-900  { color: hsl(0 0% 95%) !important; }
+.dark .text-slate-800  { color: hsl(0 0% 88%) !important; }
+.dark .text-slate-700  { color: hsl(0 0% 78%) !important; }
+.dark .text-slate-600  { color: hsl(0 0% 68%) !important; }
+.dark .text-slate-500  { color: hsl(0 0% 56%) !important; }
+.dark .text-slate-400  { color: hsl(0 0% 48%) !important; }
+
+/* ---- Borders ---- */
+.dark .border-gray-50  { border-color: hsl(0 0% 14%) !important; }
+.dark .border-gray-100 { border-color: hsl(0 0% 17%) !important; }
+.dark .border-gray-200 { border-color: hsl(0 0% 21%) !important; }
+.dark .border-gray-300 { border-color: hsl(0 0% 27%) !important; }
+.dark .border-gray-400 { border-color: hsl(0 0% 34%) !important; }
+
+.dark .border-slate-100 { border-color: hsl(0 0% 17%) !important; }
+.dark .border-slate-200 { border-color: hsl(0 0% 21%) !important; }
+.dark .border-slate-300 { border-color: hsl(0 0% 27%) !important; }
+
+/* ---- Dividers ---- */
+.dark .divide-gray-100 > * + * { border-color: hsl(0 0% 17%); }
+.dark .divide-gray-200 > * + * { border-color: hsl(0 0% 21%); }
+.dark .divide-slate-100 > * + * { border-color: hsl(0 0% 17%); }
+.dark .divide-slate-200 > * + * { border-color: hsl(0 0% 21%); }
+
+/* ---- Rings ---- */
+.dark .ring-gray-100   { --tw-ring-color: hsl(0 0% 17%); }
+.dark .ring-gray-200   { --tw-ring-color: hsl(0 0% 21%); }
+
+/* ---- Hover states ---- */
+.dark .hover\:bg-white:hover     { background-color: hsl(0 0% 12%) !important; }
+.dark .hover\:bg-gray-50:hover   { background-color: hsl(0 0% 13%) !important; }
+.dark .hover\:bg-gray-100:hover  { background-color: hsl(0 0% 16%) !important; }
+.dark .hover\:bg-gray-200:hover  { background-color: hsl(0 0% 20%) !important; }
+.dark .hover\:text-gray-900:hover { color: hsl(0 0% 98%) !important; }
+.dark .hover\:text-gray-700:hover { color: hsl(0 0% 85%) !important; }
+.dark .hover\:text-gray-600:hover { color: hsl(0 0% 75%) !important; }
+
+/* ---- Gradients ---- */
+.dark .from-gray-50    { --tw-gradient-from: hsl(0 0% 8%); }
+.dark .from-gray-100   { --tw-gradient-from: hsl(0 0% 10%); }
+.dark .to-gray-50      { --tw-gradient-to: hsl(0 0% 8%); }
+.dark .to-gray-100     { --tw-gradient-to: hsl(0 0% 11%); }
+.dark .to-gray-200     { --tw-gradient-to: hsl(0 0% 14%); }
+.dark .via-gray-50     { --tw-gradient-via: hsl(0 0% 9%); }
+.dark .via-gray-100    { --tw-gradient-via: hsl(0 0% 11%); }
+
+/* ---- Shadows ---- */
+.dark .shadow          { --tw-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.5); }
+.dark .shadow-md       { --tw-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.6), 0 2px 4px -2px rgb(0 0 0 / 0.6); }
+.dark .shadow-lg       { --tw-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.6), 0 4px 6px -4px rgb(0 0 0 / 0.6); }
+.dark .shadow-xl       { --tw-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.7), 0 8px 10px -6px rgb(0 0 0 / 0.7); }
+
+/* ---- Placeholders ---- */
+.dark ::placeholder    { color: hsl(0 0% 40%); }
+
+/* ---- Prose (react-markdown / rich text) ---- */
 .dark .prose           { color: hsl(0 0% 78%); }
 .dark .prose h1, .dark .prose h2, .dark .prose h3,
 .dark .prose h4, .dark .prose h5, .dark .prose h6 { color: hsl(0 0% 92%); }
@@ -193,21 +259,16 @@ input, textarea, select {
 .dark .prose pre       { background-color: hsl(0 0% 10%); }
 .dark .prose blockquote { border-color: hsl(0 0% 25%); color: hsl(0 0% 65%); }
 
-/* Shadows — soften in dark mode */
-.dark .shadow          { --tw-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4); }
-.dark .shadow-md       { --tw-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.5); }
-.dark .shadow-lg       { --tw-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5); }
-.dark .shadow-xl       { --tw-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.6), 0 8px 10px -6px rgb(0 0 0 / 0.6); }
+/* ---- Scrollbar in dark mode ---- */
+.dark .scroll-area::-webkit-scrollbar-thumb { background: hsl(0 0% 28%); }
+.dark .scroll-area::-webkit-scrollbar-thumb:hover { background: hsl(0 0% 38%); }
 
-/* Placeholders */
-.dark ::placeholder    { color: hsl(0 0% 40%); }
-
-/* Gradient backgrounds used as page wrappers */
-.dark .from-gray-50    { --tw-gradient-from: hsl(0 0% 8%); }
-.dark .from-gray-100   { --tw-gradient-from: hsl(0 0% 10%); }
-.dark .to-gray-100     { --tw-gradient-to: hsl(0 0% 11%); }
-.dark .to-gray-200     { --tw-gradient-to: hsl(0 0% 13%); }
-.dark .via-gray-50     { --tw-gradient-via: hsl(0 0% 9%); }
+/* ---- Focus rings ---- */
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  outline-color: hsl(173 58% 45%);
+}
 
 /* -------------------------------------------------- */
 /* 👆 TOUCH TARGETS — minimum 44px tap zones (mobile)  */
