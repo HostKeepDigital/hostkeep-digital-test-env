@@ -63,17 +63,6 @@ Deno.serve(async (req) => {
     try {
       let b44UserId = cred.id;
       
-      try {
-        const users = await serviceRole.entities.User.filter({
-          email: normalisedEmail,
-        });
-        if (users?.[0]?.id) {
-          b44UserId = users[0].id;
-        }
-      } catch (_) {
-        // User entity lookup failed, use cred.id as fallback
-      }
-
       if (b44UserId) {
         const userRoles = await serviceRole.entities.UserRole.filter({
           user_id: b44UserId,

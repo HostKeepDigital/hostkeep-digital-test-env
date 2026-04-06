@@ -15,11 +15,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    const stripeAccounts = await serviceRole.entities.User.filter({
+    const credentials = await serviceRole.entities.UserCredentials.filter({
       id: user_id,
     });
 
-    const user = stripeAccounts?.[0];
+    const user = credentials?.[0];
 
     if (!user) {
       return Response.json({
