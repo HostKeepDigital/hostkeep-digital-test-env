@@ -170,7 +170,7 @@ export default function CreatePassword() {
       </div>
 
       {/* Right panel — form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white">
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white dark:bg-gray-900">
         <div className="w-full max-w-sm">
 
           <div className="lg:hidden flex justify-center mb-8">
@@ -181,8 +181,8 @@ export default function CreatePassword() {
             />
           </div>
 
-          <h2 className="text-2xl font-bold text-[#111827] mb-1">Create your password</h2>
-          <p className="text-sm text-gray-500 mb-2">
+          <h2 className="text-2xl font-bold text-[#111827] dark:text-white mb-1">Create your password</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
             Setting up account for
           </p>
           <p className="text-sm font-semibold text-[#1E3A5F] mb-8 bg-blue-50 px-3 py-2 rounded-lg inline-block">
@@ -192,7 +192,7 @@ export default function CreatePassword() {
           <form onSubmit={handleSubmit} className="space-y-5">
 
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5 tracking-wide uppercase">
+              <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1.5 tracking-wide uppercase">
                 Password
               </label>
               <div className="relative">
@@ -203,7 +203,7 @@ export default function CreatePassword() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Choose a secure password"
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 pr-11 focus:outline-none focus:ring-2 focus:ring-[#0d9488]/40 focus:border-[#0d9488] transition-colors"
+                  className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 pr-11 focus:outline-none focus:ring-2 focus:ring-[#0d9488]/40 focus:border-[#0d9488] transition-colors"
                 />
                 <button
                   type="button"
@@ -225,7 +225,7 @@ export default function CreatePassword() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5 tracking-wide uppercase">
+              <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1.5 tracking-wide uppercase">
                 Confirm password
               </label>
               <div className="relative">
@@ -236,7 +236,7 @@ export default function CreatePassword() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Retype your password"
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 pr-11 focus:outline-none focus:ring-2 focus:ring-[#0d9488]/40 focus:border-[#0d9488] transition-colors"
+                  className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 pr-11 focus:outline-none focus:ring-2 focus:ring-[#0d9488]/40 focus:border-[#0d9488] transition-colors"
                 />
                 <button
                   type="button"

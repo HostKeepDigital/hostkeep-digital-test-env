@@ -127,13 +127,13 @@ export default function ResetPassword() {
     return (
       <div className="min-h-screen flex">
         <LeftPanel />
-        <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white">
+        <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white dark:bg-gray-900">
           <div className="w-full max-w-sm text-center">
             <MobileLogo />
             <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
               <CheckCircle className="w-8 h-8 text-green-500" />
             </div>
-            <h2 className="text-2xl font-bold text-[#111827] mb-3">Password updated</h2>
+            <h2 className="text-2xl font-bold text-[#111827] dark:text-white mb-3">Password updated</h2>
             <p className="text-sm text-gray-500 mb-8">
               Your password has been successfully changed. You can now sign in with your new password.
             </p>
@@ -154,7 +154,7 @@ export default function ResetPassword() {
     return (
       <div className="min-h-screen flex">
         <LeftPanel />
-        <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white">
+        <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white dark:bg-gray-900">
           <div className="w-full max-w-sm text-center">
             <MobileLogo />
             <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -162,7 +162,7 @@ export default function ResetPassword() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M12 3a9 9 0 100 18A9 9 0 0012 3z" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-[#111827] mb-3">Link already used</h2>
+            <h2 className="text-2xl font-bold text-[#111827] dark:text-white mb-3">Link already used</h2>
             <p className="text-sm text-gray-500 mb-8">
               This reset link has already been used or is invalid. Reset links can only be used once — please request a new one if you need to change your password.
             </p>
@@ -191,7 +191,7 @@ export default function ResetPassword() {
     return (
       <div className="min-h-screen flex">
         <LeftPanel />
-        <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white">
+        <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white dark:bg-gray-900">
           <div className="w-full max-w-sm text-center">
             <MobileLogo />
             <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -199,7 +199,7 @@ export default function ResetPassword() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-[#111827] mb-3">Link expired</h2>
+            <h2 className="text-2xl font-bold text-[#111827] dark:text-white mb-3">Link expired</h2>
             <p className="text-sm text-gray-500 mb-8">
               This reset link has expired — links are valid for 1 hour. Please request a new one and complete the process within that window.
             </p>
@@ -228,19 +228,19 @@ export default function ResetPassword() {
     return (
       <div className="min-h-screen flex">
         <LeftPanel />
-        <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white">
+        <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white dark:bg-gray-900">
           <div className="w-full max-w-sm">
             <MobileLogo />
 
-            <h2 className="text-2xl font-bold text-[#111827] mb-1">Forgot your password?</h2>
-            <p className="text-sm text-gray-500 mb-8">
+            <h2 className="text-2xl font-bold text-[#111827] dark:text-white mb-1">Forgot your password?</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">
               Enter your email and we'll send you a reset link.
             </p>
 
             {!emailSent ? (
               <form onSubmit={handleRequestReset} className="space-y-5">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1.5 tracking-wide uppercase">
+                  <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1.5 tracking-wide uppercase">
                     Email address
                   </label>
                   <div className="relative">
@@ -253,7 +253,7 @@ export default function ResetPassword() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="you@example.com"
-                      className="w-full border border-gray-200 rounded-xl px-4 py-3 pl-10 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#0d9488]/40 focus:border-[#0d9488] transition-colors"
+                      className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 pl-10 text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#0d9488]/40 focus:border-[#0d9488] transition-colors"
                     />
                   </div>
                 </div>
@@ -302,16 +302,16 @@ export default function ResetPassword() {
   return (
     <div className="min-h-screen flex">
       <LeftPanel />
-      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white">
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-white dark:bg-gray-900">
         <div className="w-full max-w-sm">
           <MobileLogo />
 
-          <h2 className="text-2xl font-bold text-[#111827] mb-1">Set new password</h2>
+          <h2 className="text-2xl font-bold text-[#111827] dark:text-white mb-1">Set new password</h2>
           <p className="text-sm text-gray-500 mb-8">Choose a strong password for your account.</p>
 
           <form onSubmit={handleSubmitNewPassword} className="space-y-5">
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5 tracking-wide uppercase">
+              <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1.5 tracking-wide uppercase">
                 New password
               </label>
               <div className="relative">
@@ -322,7 +322,7 @@ export default function ResetPassword() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Choose a secure password"
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 pr-11 focus:outline-none focus:ring-2 focus:ring-[#0d9488]/40 focus:border-[#0d9488] transition-colors"
+                  className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 pr-11 focus:outline-none focus:ring-2 focus:ring-[#0d9488]/40 focus:border-[#0d9488] transition-colors"
                 />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} tabIndex={-1} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                   {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
@@ -331,7 +331,7 @@ export default function ResetPassword() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5 tracking-wide uppercase">
+              <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1.5 tracking-wide uppercase">
                 Confirm new password
               </label>
               <div className="relative">
@@ -342,7 +342,7 @@ export default function ResetPassword() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Retype your new password"
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 pr-11 focus:outline-none focus:ring-2 focus:ring-[#0d9488]/40 focus:border-[#0d9488] transition-colors"
+                  className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 pr-11 focus:outline-none focus:ring-2 focus:ring-[#0d9488]/40 focus:border-[#0d9488] transition-colors"
                 />
                 <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} tabIndex={-1} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                   {showConfirmPassword ? <EyeOff size={17} /> : <Eye size={17} />}
