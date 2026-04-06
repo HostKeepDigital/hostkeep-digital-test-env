@@ -46,6 +46,21 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import NewMessageModal from "@/components/messaging/NewMessageModal";
 import { useAuth } from "@/lib/AuthContext";
 
@@ -479,40 +494,40 @@ export default function HostDashboard() {
                   animate={{ opacity: 1, y: 0 }}
                   className="bg-white rounded-xl shadow-sm border border-gray-100 p-4"
                 >
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-gray-900 text-sm">Cancellation Policy</h3>
-                    {selectedProperty && (
+                  <h3 className="font-semibold text-gray-900 mb-3 text-sm">Cancellation Policy</h3>
+                  {selectedProperty ? (
+                    <div className="space-y-3">
+                      {policy ? (
+                        <div className="p-3 rounded-lg bg-gray-50 border border-gray-100 space-y-1">
+                          <p className="text-xs font-semibold text-teal-700">{policy.policy_name}</p>
+                          {policy.description && (
+                            <p className="text-xs text-gray-600 leading-relaxed">{policy.description}</p>
+                          )}
+                          {policy.policy_name === "Super Strict" && (
+                            <p className="text-xs text-rose-600">⚠️ May reduce conversions</p>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="p-3 rounded-lg bg-gray-50 border border-gray-100">
+                          <p className="text-xs text-gray-400 italic">No policy assigned</p>
+                        </div>
+                      )}
+                      {policySaved && (
+                        <p className="text-xs text-green-600 flex items-center gap-1">
+                          <Check className="w-3 h-3" /> Policy updated — applies to new bookings only
+                        </p>
+                      )}
                       <Button
-                        variant="ghost"
                         size="sm"
-                        className="h-7 px-2 text-xs text-teal-600 hover:text-teal-700"
+                        variant="outline"
+                        className="w-full text-xs"
                         onClick={() => {
                           setPolicyDraft(selectedProperty.cancellation_policy_id || "");
                           setShowPolicyDialog(true);
                         }}
                       >
-                        <Pencil className="w-3 h-3 mr-1" /> Change
+                        Change Cancellation Policy
                       </Button>
-                    )}
-                  </div>
-                  {selectedProperty ? (
-                    <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-100">
-                      <p className="text-xs font-medium text-gray-900 mb-0.5 truncate">{selectedProperty.title}</p>
-                      {policy ? (
-                        <>
-                          <p className="text-xs font-semibold text-teal-700">{policy.policy_name}</p>
-                          {policy.policy_name === "Super Strict" && (
-                            <p className="text-xs text-rose-600 mt-0.5">⚠️ May reduce conversions</p>
-                          )}
-                        </>
-                      ) : (
-                        <p className="text-xs text-gray-400 italic">No policy assigned</p>
-                      )}
-                      {policySaved && (
-                        <p className="text-xs text-green-600 flex items-center gap-1 mt-1">
-                          <Check className="w-3 h-3" /> Saved
-                        </p>
-                      )}
                     </div>
                   ) : (
                     <p className="text-xs text-gray-400 italic">Select a property to view its policy</p>
@@ -654,48 +669,56 @@ export default function HostDashboard() {
       </AlertDialog>
 
       {/* Change Policy Dialog */}
-      <AlertDialog open={showPolicyDialog} onOpenChange={setShowPolicyDialog}>
-        <AlertDialogContent>
-          <button
-            onClick={() => setShowPolicyDialog(false)}
-            className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100"
-          >
-            <X className="h-4 w-4" />
-          </button>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Change Cancellation Policy</AlertDialogTitle>
-            <AlertDialogDescription>
-              Select a cancellation policy for{" "}
-              <strong>{properties.find((p) => p.id === selectedPropertyId)?.title}</strong>.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="py-2">
-            <select
-              className="w-full border rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-teal-500"
-              value={policyDraft}
-              onChange={(e) => setPolicyDraft(e.target.value)}
-            >
-              <option value="">No policy</option>
-              {cancellationPolicies.map((p) => (
-                <option key={p.id} value={p.id}>{p.policy_name}</option>
-              ))}
-            </select>
-            {policyDraft && cancellationPolicies.find((p) => p.id === policyDraft)?.policy_name === "Super Strict" && (
-              <p className="text-xs text-rose-600 mt-1.5">⚠️ Super Strict may reduce booking conversions.</p>
-            )}
+      <Dialog open={showPolicyDialog} onOpenChange={setShowPolicyDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Change Cancellation Policy</DialogTitle>
+            <DialogDescription>
+              For <strong>{properties.find((p) => p.id === selectedPropertyId)?.title}</strong>.
+              This change will only apply to new bookings — existing bookings keep their original policy.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <Select value={policyDraft} onValueChange={setPolicyDraft}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a policy..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No policy</SelectItem>
+                {cancellationPolicies.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>{p.policy_name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {policyDraft && policyDraft !== "none" && (() => {
+              const preview = cancellationPolicies.find((p) => p.id === policyDraft);
+              return preview ? (
+                <div className="p-3 rounded-lg bg-gray-50 border border-gray-100 space-y-1">
+                  {preview.description && (
+                    <p className="text-sm text-gray-600">{preview.description}</p>
+                  )}
+                  {preview.policy_name === "Super Strict" && (
+                    <p className="text-sm text-rose-600 font-medium">⚠️ This policy may reduce booking conversions.</p>
+                  )}
+                </div>
+              ) : null;
+            })()}
+            <div className="p-3 rounded-lg bg-amber-50 border border-amber-100">
+              <p className="text-xs text-amber-800"><strong>Note:</strong> Existing bookings will keep the policy they were made under. Only new bookings going forward will use this policy.</p>
+            </div>
           </div>
-          <AlertDialogFooter>
+          <DialogFooter>
             <Button variant="outline" onClick={() => setShowPolicyDialog(false)}>Cancel</Button>
             <Button
               className="bg-teal-600 hover:bg-teal-700"
-              onClick={() => savePolicyMutation.mutate({ propertyId: selectedPropertyId, policyId: policyDraft })}
+              onClick={() => savePolicyMutation.mutate({ propertyId: selectedPropertyId, policyId: policyDraft === "none" ? "" : policyDraft })}
               disabled={savePolicyMutation.isPending}
             >
-              {savePolicyMutation.isPending ? "Saving…" : "Save Policy"}
+              {savePolicyMutation.isPending ? "Saving…" : "Confirm Change"}
             </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* New Message Modal */}
       <NewMessageModal
