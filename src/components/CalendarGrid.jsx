@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import {
   startOfWeek,
   endOfWeek,
@@ -8,37 +8,15 @@ import {
   format,
 } from "date-fns";
 
-export default function CalendarGrid({
-  events,
-  monthStart,
-  monthEnd,
-  onEventClick,
-}) {
-  const gridRef = useRef(null);
+const DAY_HEADERS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+export default function CalendarGrid({ events, monthStart, monthEnd, onEventClick }) {
   const today = new Date();
 
   const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
   const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
 
-  const days = eachDayOfInterval({
-    start: calendarStart,
-    end: calendarEnd,
-  });
-
-  useEffect(() => {
-    if (!isSameMonth(today, monthStart)) return;
-
-    const el = document.querySelector(
-      `[data-day="${format(today, "yyyy-MM-dd")}"]`
-    );
-    if (el && gridRef.current) {
-      el.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-        inline: "center",
-      });
-    }
-  }, [monthStart]);
+  const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
   const eventsByDay = {};
   for (const event of events) {
@@ -47,102 +25,73 @@ export default function CalendarGrid({
     eventsByDay[dayKey].push(event);
   }
 
-  return (
-    <div
-      ref={gridRef}
-      className="calendar-grid"
-      style={{
-        display: "grid",
-        gridTemplateColumns: `repeat(${days.length}, 1fr)`,
-        overflowX: "auto",
-        borderTop: "1px solid #e5e7eb",
-        borderBottom: "1px solid #e5e7eb",
-        paddingBottom: "20px",
-      }}
-    >
-      {days.map((day) => {
-        const dayKey = format(day, "yyyy-MM-dd");
-        const isToday = isSameDay(day, today);
+  // Split days into weeks
+  const weeks = [];
+  for (let i = 0; i < days.length; i += 7) {
+    weeks.push(days.slice(i, i + 7));
+  }
 
-        return (
-          <DayColumn
-            key={dayKey}
-            day={day}
-            dayKey={dayKey}
-            isToday={isToday}
-            events={eventsByDay[dayKey] || []}
-            onEventClick={onEventClick}
-          />
-        );
-      })}
-    </div>
-  );
-}
-
-function DayColumn({ day, dayKey, isToday, events, onEventClick }) {
   return (
-    <div
-      data-day={dayKey}
-      style={{
-        borderRight: "1px solid #e5e7eb",
-        minWidth: "140px",
-        position: "relative",
-        backgroundColor: "white",
-      }}
-    >
-      {/* TODAY HEADER HIGHLIGHT */}
-      <div
-        style={{
-          padding: "6px 0",
-          textAlign: "center",
-          fontWeight: isToday ? 700 : 500,
-          color: isToday ? "#0f766e" : "#374151",
-          backgroundColor: isToday ? "#ccfbf1" : "transparent",
-          borderBottom: "1px solid #e5e7eb",
-          borderTop: isToday ? "2px solid #0d9488" : "2px solid transparent",
-        }}
-      >
-        {format(day, "d")}
+    <div className="w-full border border-gray-200 rounded-xl overflow-hidden">
+      {/* Day headers */}
+      <div className="grid grid-cols-7 border-b border-gray-200 bg-gray-50">
+        {DAY_HEADERS.map((d) => (
+          <div key={d} className="py-2 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">
+            {d}
+          </div>
+        ))}
       </div>
 
-      {/* TODAY COLUMN BORDER */}
-      {isToday && (
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            bottom: 0,
-            left: 0,
-            right: 0,
-            borderLeft: "2px solid #0d9488",
-            borderRight: "2px solid #0d9488",
-            pointerEvents: "none",
-          }}
-        />
-      )}
+      {/* Weeks */}
+      <div>
+        {weeks.map((week, wi) => (
+          <div key={wi} className="grid grid-cols-7 divide-x divide-gray-100" style={{ borderBottom: wi < weeks.length - 1 ? "1px solid #f3f4f6" : "none" }}>
+            {week.map((day) => {
+              const dayKey = format(day, "yyyy-MM-dd");
+              const isToday = isSameDay(day, today);
+              const inMonth = isSameMonth(day, monthStart);
+              const dayEvents = eventsByDay[dayKey] || [];
 
-      {/* EVENTS */}
-      <div style={{ padding: "4px" }}>
-        {events.map((event) => (
-          <div
-            key={event.id}
-            onClick={() => onEventClick(event)}
-            style={{
-              backgroundColor: event.color,
-              borderRadius: "4px",
-              padding: "4px 6px",
-              marginBottom: "4px",
-              cursor: "pointer",
-              color: "white",
-              fontSize: "12px",
-              lineHeight: "14px",
-              position: "relative",
-            }}
-          >
-            {event.guest_name ||
-              event.cleaner_name ||
-              event.company_name ||
-              event.type}
+              return (
+                <div
+                  key={dayKey}
+                  data-day={dayKey}
+                  className={`min-h-[80px] p-1.5 ${!inMonth ? "bg-gray-50" : "bg-white"}`}
+                >
+                  {/* Date number */}
+                  <div className="flex justify-end mb-1">
+                    <span
+                      className={`text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full ${
+                        isToday
+                          ? "bg-teal-600 text-white font-bold"
+                          : inMonth
+                          ? "text-gray-700"
+                          : "text-gray-300"
+                      }`}
+                    >
+                      {format(day, "d")}
+                    </span>
+                  </div>
+
+                  {/* Events */}
+                  <div className="space-y-0.5">
+                    {dayEvents.slice(0, 3).map((event) => (
+                      <button
+                        key={event.id}
+                        onClick={() => onEventClick(event)}
+                        className="w-full text-left text-white rounded px-1.5 py-0.5 text-[10px] font-medium leading-tight truncate block hover:opacity-80 transition-opacity"
+                        style={{ backgroundColor: event.color }}
+                      >
+                        {event.guest_name || event.cleaner_name || event.company_name || event.type}
+                      </button>
+                    ))}
+                    {dayEvents.length > 3 && (
+                      <span className="text-[10px] text-gray-400 pl-1">+{dayEvents.length - 3} more</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         ))}
       </div>
