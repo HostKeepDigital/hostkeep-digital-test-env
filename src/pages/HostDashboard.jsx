@@ -548,7 +548,7 @@ export default function HostDashboard() {
 
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-gray-600">Plan</span>
-                    <Badge className="capitalize">{subscription.plan}</Badge>
+                    <Badge className="capitalize bg-teal-100 text-teal-700 border border-teal-200 font-semibold">{subscription.plan.replace(/_/g, ' ')}</Badge>
                   </div>
 
                   <div className="flex items-center justify-between mb-2">
