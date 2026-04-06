@@ -150,8 +150,12 @@ export default function PropertyDetails() {
     queryKey: ["host", property?.owner_id],
     queryFn: async () => {
       if (!property?.owner_id) return null;
-      const users = await base44.entities.User.filter({ id: property.owner_id });
-      return users[0];
+      try {
+        const creds = await base44.entities.UserCredentials.filter({ user_id: property.owner_id });
+        return creds[0] || null;
+      } catch {
+        return null;
+      }
     },
     enabled: !!property?.owner_id,
   });
