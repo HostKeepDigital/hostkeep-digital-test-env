@@ -65,6 +65,21 @@
       "type": "string",
       "description": "References the founding pricing tier they're locked into"
     },
+    "next_subscription": {
+      "type": "string",
+      "enum": [
+        "founding_host_solo",
+        "founding_host_multi",
+        "founding_host_portfolio",
+        "founding_cleaner_solo"
+      ],
+      "description": "Which founding subscription they'll move to when beta exits"
+    },
+    "moved_to_founding": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether subscription has been transitioned to founding tier after beta exit"
+    },
     "features": {
       "type": "array",
       "items": {

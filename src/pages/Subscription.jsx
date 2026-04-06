@@ -297,6 +297,22 @@ export default function Subscription() {
   }, [showHostTab, showCleanerTab, userRoles]);
 
   const [checkoutLoading, setCheckoutLoading] = useState(null);
+  const [nextSubscriptionLoading, setNextSubscriptionLoading] = useState(false);
+
+  const handleSetNextSubscription = async (planId) => {
+    setNextSubscriptionLoading(true);
+    try {
+      await base44.entities.Subscription.update(subscription.id, {
+        next_subscription: planId,
+      });
+      queryClient.invalidateQueries({ queryKey: ["subscription"] });
+      toast.success("Your founding subscription has been set!");
+    } catch (error) {
+      toast.error("Failed to set subscription. Please try again.");
+    } finally {
+      setNextSubscriptionLoading(false);
+    }
+  };
 
   const handleSubscribe = async (planId) => {
     if (!user) {
@@ -441,10 +457,11 @@ export default function Subscription() {
             <h2 className="text-2xl font-bold text-gray-900 mb-3">
               You have free beta access
             </h2>
-            <p className="text-gray-600 text-base leading-relaxed">
-              You are a Founding Member with free beta access. When beta ends,
-              you will be invited to choose your plan at your founding member
-              discount rate.
+            <p className="text-gray-600 text-base leading-relaxed mb-6">
+              Future date TBC → <strong>{subscription?.next_subscription ? PLAN_DISPLAY_NAMES[subscription.next_subscription] || subscription.next_subscription : "Select your founding subscription below"}</strong>
+            </p>
+            <p className="text-sm text-gray-500">
+              Choose which founding subscription tier you'll move to when beta ends. Your pricing will be locked in for life.
             </p>
           </motion.div>
         )}
@@ -487,26 +504,71 @@ export default function Subscription() {
             <p className="text-sm text-gray-600 dark:text-gray-300">All features unlocked for all founding members during beta.</p>
           </div>
 
-          {/* Founding Pricing Cards (for host plans only) */}
+          {/* Founding Pricing Cards with selection for beta users */}
           {activeTab === "host" && (
-            <div className="grid md:grid-cols-3 gap-4 mb-10">
-              <div className="rounded-2xl border border-amber-200 bg-white p-5 text-center">
+            <div className="mb-10">
+              <div className="grid md:grid-cols-3 gap-4">
+                {[
+                  { id: 'founding_host_solo', name: 'Solo Host Founding', price: 19, standard: 29 },
+                  { id: 'founding_host_multi', name: 'Multi Host Founding', price: 49, standard: 59 },
+                  { id: 'founding_host_portfolio', name: 'Portfolio Host Founding', price: 89, standard: 99 },
+                ].map((plan) => (
+                  <div key={plan.id} className={`rounded-2xl border-2 p-5 text-center transition-all ${subscription?.next_subscription === plan.id ? 'border-amber-500 bg-amber-50' : 'border-amber-200 bg-white'}`}>
+                    <Badge className="bg-amber-500 text-white mb-2">Founding</Badge>
+                    <p className="text-sm font-semibold text-gray-900 mb-1">{plan.name}</p>
+                    <p className="text-4xl font-black text-gray-900 mb-3">£{plan.price}</p>
+                    <p className="text-xs text-gray-500 mb-4">Locked in for founding members<br /><strong>Standard: £{plan.standard}/mo</strong></p>
+                    {isBetaUser ? (
+                      <Button
+                        onClick={() => handleSetNextSubscription(plan.id)}
+                        disabled={nextSubscriptionLoading || subscription?.next_subscription === plan.id}
+                        className={`w-full ${
+                          subscription?.next_subscription === plan.id
+                            ? 'bg-amber-600 hover:bg-amber-700'
+                            : 'bg-gray-600 hover:bg-gray-700'
+                        }`}
+                      >
+                        {nextSubscriptionLoading ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : subscription?.next_subscription === plan.id ? (
+                          'Selected for Beta Exit'
+                        ) : (
+                          'Choose This Plan'
+                        )}
+                      </Button>
+                    ) : (
+                      <div className="text-xs text-gray-500">Choose your plan above</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {/* Founding Pricing Cards (for cleaner plans) */}
+          {activeTab === "cleaner" && isBetaUser && (
+            <div className="mb-10">
+              <div className="rounded-2xl border-2 border-amber-200 bg-white p-5 text-center max-w-sm mx-auto">
                 <Badge className="bg-amber-500 text-white mb-2">Founding</Badge>
-                <p className="text-sm font-semibold text-gray-900 mb-1">Solo Host Founding</p>
+                <p className="text-sm font-semibold text-gray-900 mb-1">Cleaner Solo Founding</p>
                 <p className="text-4xl font-black text-gray-900 mb-3">£19</p>
-                <p className="text-xs text-gray-500">Locked in for founding members<br /><strong>Standard: £29/mo</strong></p>
-              </div>
-              <div className="rounded-2xl border border-amber-200 bg-white p-5 text-center">
-                <Badge className="bg-amber-500 text-white mb-2">Founding</Badge>
-                <p className="text-sm font-semibold text-gray-900 mb-1">Multi Host Founding</p>
-                <p className="text-4xl font-black text-gray-900 mb-3">£49</p>
-                <p className="text-xs text-gray-500">Locked in for founding members<br /><strong>Standard: £59/mo</strong></p>
-              </div>
-              <div className="rounded-2xl border border-amber-200 bg-white p-5 text-center">
-                <Badge className="bg-amber-500 text-white mb-2">Founding</Badge>
-                <p className="text-sm font-semibold text-gray-900 mb-1">Portfolio Host Founding</p>
-                <p className="text-4xl font-black text-gray-900 mb-3">£89</p>
-                <p className="text-xs text-gray-500">Locked in for founding members<br /><strong>Standard: £99/mo</strong></p>
+                <p className="text-xs text-gray-500 mb-4">Locked in for founding members<br /><strong>Standard: £19.99/mo</strong></p>
+                <Button
+                  onClick={() => handleSetNextSubscription('founding_cleaner_solo')}
+                  disabled={nextSubscriptionLoading || subscription?.next_subscription === 'founding_cleaner_solo'}
+                  className={`w-full ${
+                    subscription?.next_subscription === 'founding_cleaner_solo'
+                      ? 'bg-blue-600 hover:bg-blue-700'
+                      : 'bg-gray-600 hover:bg-gray-700'
+                  }`}
+                >
+                  {nextSubscriptionLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : subscription?.next_subscription === 'founding_cleaner_solo' ? (
+                    'Selected for Beta Exit'
+                  ) : (
+                    'Choose This Plan'
+                  )}
+                </Button>
               </div>
             </div>
           )}

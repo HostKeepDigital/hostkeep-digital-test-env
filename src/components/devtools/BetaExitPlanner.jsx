@@ -7,6 +7,7 @@ export default function BetaExitPlanner() {
   const [selectedDate, setSelectedDate] = useState('');
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [migrationLoading, setMigrationLoading] = useState(false);
   const [settings, setSettings] = useState(null);
 
   // Fetch current settings on mount
@@ -17,6 +18,24 @@ export default function BetaExitPlanner() {
     } catch {
       setSettings(null);
     }
+  };
+
+  const handleMigrateToBaseline = async () => {
+    setMigrationLoading(true);
+    setStatus(null);
+
+    try {
+      const result = await base44.functions.invoke('migrateToBaselineSubscriptions', {});
+
+      setStatus({
+        type: 'ok',
+        message: `✅ Migrated ${result.data.migratedCount}/${result.data.totalHostCleaners} host/cleaner subscriptions to beta. All have 'founding_host_solo' as default next plan.`
+      });
+    } catch (e) {
+      setStatus({ type: 'err', message: `❌ Migration failed: ${e.message}` });
+    }
+
+    setMigrationLoading(false);
   };
 
   const handleSetDate = async () => {
@@ -64,9 +83,19 @@ export default function BetaExitPlanner() {
         </div>
       )}
 
+      <div className="flex flex-wrap gap-3 mb-5">
+        <Button
+          onClick={handleMigrateToBaseline}
+          disabled={migrationLoading}
+          className="bg-purple-600 hover:bg-purple-700 text-white"
+        >
+          {migrationLoading ? 'Migrating...' : 'Step 1: Migrate All to Beta'}
+        </Button>
+      </div>
+
       <div className="space-y-3">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Select Exit Date</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Step 2: Select Exit Date</label>
           <div className="flex gap-3">
             <input
               type="date"
@@ -99,14 +128,20 @@ export default function BetaExitPlanner() {
         )}
       </div>
 
+      {status?.type === 'ok' && status.message.includes('Migrated') && (
+       <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm text-green-800">
+         {status.message}
+       </div>
+      )}
+
       <div className="bg-gray-50 rounded-lg px-4 py-3 text-xs text-gray-600 space-y-1">
-        <p><strong>What happens:</strong></p>
-        <ul className="list-disc list-inside space-y-0.5">
-          <li>Founding members receive transition notice email</li>
-          <li>Beta subscriptions remain free until the selected date</li>
-          <li>On exit date, members automatically switch to their founding tier</li>
-          <li>Pricing is locked in for life</li>
-        </ul>
+       <p><strong>Workflow:</strong></p>
+       <ul className="list-disc list-inside space-y-0.5">
+         <li><strong>Step 1:</strong> Click "Migrate All to Beta" — moves all host/cleaner subs to beta with default founding tier selected</li>
+         <li><strong>Step 2:</strong> Users log in to Subscription page and choose their founding tier (£19/£49/£89)</li>
+         <li><strong>Step 3:</strong> Select the beta exit date — transition emails sent automatically</li>
+         <li>On exit date, members switch to their chosen founding tier (pricing locked for life)</li>
+       </ul>
       </div>
     </div>
   );
