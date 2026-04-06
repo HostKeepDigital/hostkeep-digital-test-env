@@ -11,8 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { useAuth } from "@/lib/AuthContext";
 import ChannelManagerIntegrationTester from "@/components/devtools/ChannelManagerIntegrationTester";
+import { useAuth } from "@/lib/AuthContext";
 
 // ── STATUS MAPS ──────────────────────────────────────────────────────────────
 
@@ -1756,6 +1756,15 @@ const handleDelete = async (member) => {
             <DeleteSafeguardTester members={members} />
           </div>
 
+          {/* Channel Manager Tests */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0" />
+              <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Channel Manager Tests</h2>
+            </div>
+            <ChannelManagerIntegrationTester hostId={user?.id} />
+          </div>
+
           {/* Placeholder for cleaner system tests */}
           <div className="bg-gray-50 border border-dashed border-gray-200 rounded-xl px-5 py-6 text-center">
             <p className="text-xs text-gray-400">Cleaner System Tests will appear here — Job Timeline, Calendar Display, iCal Auto-Job, Strike System.</p>
@@ -1763,7 +1772,6 @@ const handleDelete = async (member) => {
 
         </div>
       )}
-        <ChannelManagerIntegrationTester hostId={user?.id} />
     </div>
   );
 }
