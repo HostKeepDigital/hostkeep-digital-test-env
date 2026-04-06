@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import ChannelManagerIntegrationTester from "@/components/devtools/ChannelManagerIntegrationTester";
 import SubscriptionTester from "@/components/devtools/SubscriptionTester";
+import BetaExitPlanner from "@/components/devtools/BetaExitPlanner";
 import { useAuth } from "@/lib/AuthContext";
 
 // ── STATUS MAPS ──────────────────────────────────────────────────────────────
@@ -1954,6 +1955,15 @@ const handleDelete = async (member) => {
             </div>
             <DeleteAccountTester />
             <DeleteSafeguardTester members={members} />
+          </div>
+
+          {/* Beta Exit Planner */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-purple-400 flex-shrink-0" />
+              <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Beta Management</h2>
+            </div>
+            <BetaExitPlanner />
           </div>
 
           {/* Subscription Tests */}

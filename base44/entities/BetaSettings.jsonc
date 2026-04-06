@@ -1,0 +1,22 @@
+{
+  "name": "BetaSettings",
+  "type": "object",
+  "properties": {
+    "beta_end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date when beta period ends and founding members transition to paid tiers"
+    },
+    "emails_sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp when transition emails were sent"
+    },
+    "emails_sent_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of transition emails sent"
+    }
+  },
+  "required": []
+}

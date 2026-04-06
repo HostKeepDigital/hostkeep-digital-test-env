@@ -33,7 +33,6 @@ Deno.serve(async (req) => {
 
   const betaPlan = member.role === 'host' ? 'beta_host_access' : 'beta_cleaner_access';
   const now = new Date();
-  const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
   if (!existingSubs.length) {
     await base44.asServiceRole.entities.Subscription.create({
@@ -43,7 +42,6 @@ Deno.serve(async (req) => {
       is_founding_member: true,
       price_monthly: 0,
       start_date: now.toISOString().split('T')[0],
-      end_date: thirtyDaysFromNow.toISOString().split('T')[0],
     });
   }
   
