@@ -47,19 +47,20 @@ Deno.serve(async (req) => {
       await serviceRole.entities.FoundingMember.delete(m.id);
     }
 
-    // 4. Delete Property records owned by this user
-    if (user_id) {
-      const properties = await serviceRole.entities.Property.filter({ owner_id: user_id });
-      for (const p of properties) {
-        await serviceRole.entities.Property.delete(p.id);
+    // 4. Delete UserRole records — look up user_id from credentials if not in session
+    const resolvedUserId = user_id || (creds?.[0]?.id ?? null);
+    if (resolvedUserId) {
+      const roles = await serviceRole.entities.UserRole.filter({ user_id: resolvedUserId });
+      for (const r of roles) {
+        await serviceRole.entities.UserRole.delete(r.id);
       }
     }
 
-    // 5. Delete UserRole records if we have a user_id
-    if (user_id) {
-      const roles = await serviceRole.entities.UserRole.filter({ user_id });
-      for (const r of roles) {
-        await serviceRole.entities.UserRole.delete(r.id);
+    // 5. Delete Property records owned by this user
+    if (resolvedUserId) {
+      const properties = await serviceRole.entities.Property.filter({ owner_id: resolvedUserId });
+      for (const p of properties) {
+        await serviceRole.entities.Property.delete(p.id);
       }
     }
 
