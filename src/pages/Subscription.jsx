@@ -492,34 +492,22 @@ export default function Subscription() {
             <div className="grid md:grid-cols-3 gap-4 mb-10">
               <div className="rounded-2xl border border-amber-200 bg-white p-5 text-center">
                 <Badge className="bg-amber-500 text-white mb-2">Founding</Badge>
-                <p className="text-xs text-gray-500 mb-2">⭐ Founding Reward</p>
-                <p className="text-4xl font-black text-gray-900 mb-1">£19/mo</p>
-                <p className="text-xs text-gray-500 mb-3">Locked in for founding members</p>
-                <p className="text-xs text-gray-600">Single property <strong>should be £29/mo.</strong></p>
+                <p className="text-sm font-semibold text-gray-900 mb-1">Solo Host Founding</p>
+                <p className="text-4xl font-black text-gray-900 mb-3">£19</p>
+                <p className="text-xs text-gray-500">Locked in for founding members<br /><strong>Standard: £29/mo</strong></p>
               </div>
               <div className="rounded-2xl border border-amber-200 bg-white p-5 text-center">
                 <Badge className="bg-amber-500 text-white mb-2">Founding</Badge>
-                <p className="text-xs text-gray-500 mb-2">⭐ Founding Reward</p>
-                <p className="text-4xl font-black text-gray-900 mb-1">£49/mo</p>
-                <p className="text-xs text-gray-500 mb-3">Locked in for founding members</p>
-                <p className="text-xs text-gray-600">Multi-property <strong>should be £59/mo.</strong><br />Up to 5 properties</p>
+                <p className="text-sm font-semibold text-gray-900 mb-1">Multi Host Founding</p>
+                <p className="text-4xl font-black text-gray-900 mb-3">£49</p>
+                <p className="text-xs text-gray-500">Locked in for founding members<br /><strong>Standard: £59/mo</strong></p>
               </div>
               <div className="rounded-2xl border border-amber-200 bg-white p-5 text-center">
                 <Badge className="bg-amber-500 text-white mb-2">Founding</Badge>
-                <p className="text-xs text-gray-500 mb-2">⭐ Founding Reward</p>
-                <p className="text-4xl font-black text-gray-900 mb-1">£89/mo</p>
-                <p className="text-xs text-gray-500 mb-3">Locked in for founding members</p>
-                <p className="text-xs text-gray-600">Portfolio <strong>should be £99/mo.</strong> Unlimited properties</p>
+                <p className="text-sm font-semibold text-gray-900 mb-1">Portfolio Host Founding</p>
+                <p className="text-4xl font-black text-gray-900 mb-3">£89</p>
+                <p className="text-xs text-gray-500">Locked in for founding members<br /><strong>Standard: £99/mo</strong></p>
               </div>
-            </div>
-          )}
-
-          {/* Cleaner founding info */}
-          {activeTab === "cleaner" && isBetaUser && (
-            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-6 text-center">
-              <p className="text-blue-800 font-semibold text-sm">
-                🎁 As a founding member, your first 3 months are free when beta ends — then standard pricing applies.
-              </p>
             </div>
           )}
 
