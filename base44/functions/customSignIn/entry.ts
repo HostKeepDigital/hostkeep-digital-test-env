@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
 
     let role = null;
     let founding_member_id = null;
-    let userId = null; // <-- dynamic type, Deno-safe
+    let userId = cred.id;
 
     // Check FoundingMember
     const members = await serviceRole.entities.FoundingMember.filter({
@@ -59,16 +59,20 @@ Deno.serve(async (req) => {
       founding_member_id = members[0].id;
     }
 
-    // ⭐ Always use UserCredentials ID as user_id — this is our auth identity
-    userId = cred.id;
-
     // Resolve role via UserRole (approved)
     try {
-      // Try Base44 User entity for UserRole lookup (may or may not exist)
-      const users = await serviceRole.entities.User.filter({
-        email: normalisedEmail,
-      });
-      const b44UserId = users?.[0]?.id || cred.id;
+      let b44UserId = cred.id;
+      
+      try {
+        const users = await serviceRole.entities.User.filter({
+          email: normalisedEmail,
+        });
+        if (users?.[0]?.id) {
+          b44UserId = users[0].id;
+        }
+      } catch (_) {
+        // User entity lookup failed, use cred.id as fallback
+      }
 
       if (b44UserId) {
         const userRoles = await serviceRole.entities.UserRole.filter({
@@ -91,15 +95,17 @@ Deno.serve(async (req) => {
           role = "guest";
         }
       }
-    } catch (_) {}
+    } catch (_) {
+      // Role lookup failed, will use fallback below
+    }
 
-    // ⭐ ADMIN OVERRIDE — MUST RUN BEFORE ANY FALLBACK LOGIC
+    // ADMIN OVERRIDE
     const adminEmails = ["admin@hostkeepdigital.co.uk"];
     if (adminEmails.includes(normalisedEmail)) {
       role = "admin";
     }
 
-    // ⭐ FALLBACK TO FOUNDING MEMBER ROLE — ONLY IF NOT ADMIN
+    // FALLBACK TO FOUNDING MEMBER ROLE
     if (!role && !adminEmails.includes(normalisedEmail) && members?.[0]?.role) {
       role = members[0].role;
     }
@@ -129,7 +135,7 @@ Deno.serve(async (req) => {
       email: normalisedEmail,
       role,
       founding_member_id,
-      user_id: userId || null, // ⭐ FIXED: now correct User.id
+      user_id: userId || null,
       expires_at,
     });
 
