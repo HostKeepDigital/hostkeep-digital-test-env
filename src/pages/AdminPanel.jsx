@@ -1108,6 +1108,14 @@ const [crmLoading,    setCrmLoading   ] = useState(true);
 
   useEffect(() => { fetchMembers(); fetchSubscriptions(); fetchPageViews(); }, []);
 
+  // Auto-refresh onboarding when FoundingMember records change
+  useEffect(() => {
+    const unsubscribe = base44.entities.FoundingMember.subscribe((event) => {
+      fetchMembers();
+    });
+    return unsubscribe;
+  }, []);
+
   const setML = (id, val) => setActionLoading(p => ({ ...p, [id]: val }));
 
   // ── ONBOARDING HANDLERS ───────────────────────────────────────────────────
