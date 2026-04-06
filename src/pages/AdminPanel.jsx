@@ -816,13 +816,25 @@ function CalendarRenderTester({ members }) {
 // ── DEV TOOLS: DELETE ACCOUNT TESTER ─────────────────────────────────────────
 
 function DeleteAccountTester() {
+  const [status,  setStatus ] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const TEST_EMAIL = "devtest-delete@hostkeep-test.com";
+  const TEST_EMAIL = "devtest-founding@hostkeep-test.com";
 
   const runDeleteTest = async () => {
     setLoading(true); setStatus(null);
     try {
+      // Check the account exists first
+      const [preMembers, preCreds] = await Promise.all([
+        base44.entities.FoundingMember.filter({ email: TEST_EMAIL }),
+        base44.entities.UserCredentials.filter({ email: TEST_EMAIL }),
+      ]);
+      if (!preMembers.length && !preCreds.length) {
+        setStatus({ type: "err", message: `❌ No test account found for ${TEST_EMAIL}. Run the Founding Flow Tester first to create one.` });
+        setLoading(false);
+        return;
+      }
+
       const result = await base44.functions.invoke("deleteAccount", { admin_delete_email: TEST_EMAIL });
       if (!result?.data?.success) {
         setStatus({ type: "err", message: `❌ deleteAccount returned failure: ${JSON.stringify(result?.data)}` });
@@ -841,7 +853,6 @@ function DeleteAccountTester() {
       ];
 
       const allPass = checks.every(c => c.pass);
-      setPhase(allPass ? "deleted" : "created");
       setStatus({ type: "checks", checks, allPass });
     } catch (e) {
       setStatus({ type: "err", message: `❌ Delete test failed: ${e.message}` });
@@ -849,26 +860,16 @@ function DeleteAccountTester() {
     setLoading(false);
   };
 
-  const reset = () => { setPhase("idle"); setStatus(null); };
-
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-5">
       <div>
         <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-1">Delete Account Tester</h2>
-        <p className="text-xs text-gray-400">Creates a test account then calls the <code className="bg-gray-100 px-1 rounded">deleteAccount</code> backend function and verifies all records are fully removed.</p>
+        <p className="text-xs text-gray-400">Uses the test account from the Founding Flow Tester above. Calls <code className="bg-gray-100 px-1 rounded">deleteAccount</code> and verifies all records are fully removed.</p>
       </div>
       <div className="flex flex-wrap gap-3">
-        <button onClick={createTestAccount} disabled={loading || phase === "created"} className="px-4 py-2 text-sm bg-[#1E3A5F] text-white rounded-lg hover:bg-[#162d4a] disabled:opacity-50">
-          {loading && phase === "idle" ? "Working..." : "1. Create Test Account"}
+        <button onClick={runDeleteTest} disabled={loading} className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50">
+          {loading ? "Working..." : "Delete Test Account + Verify"}
         </button>
-        <button onClick={runDeleteTest} disabled={loading || phase !== "created"} className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50">
-          {loading && phase === "created" ? "Working..." : "2. Run Delete + Verify"}
-        </button>
-        {phase === "deleted" && (
-          <button onClick={reset} disabled={loading} className="px-4 py-2 text-sm border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 disabled:opacity-50">
-            Reset
-          </button>
-        )}
       </div>
       {status?.type === "ok"  && <p className="text-sm bg-gray-50 text-gray-700 rounded-lg px-4 py-3">{status.message}</p>}
       {status?.type === "err" && <p className="text-sm bg-red-50 text-red-500 rounded-lg px-4 py-3">{status.message}</p>}
