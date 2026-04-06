@@ -246,7 +246,7 @@ export default function Layout({ children, currentPageName }) {
             )}
           </div>
 
-          <main className="lg:pl-64 pt-16 pb-16 lg:pb-0">
+          <main className="lg:pl-64 pt-16 mobile-bottom-pad">
             <NavigationContext.Provider value={setNavBlocker}>
               {children}
             </NavigationContext.Provider>
@@ -468,7 +468,7 @@ export default function Layout({ children, currentPageName }) {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 pt-16 pb-16 lg:pb-0">
+        <main className="flex-1 pt-16 mobile-bottom-pad">
           <NavigationContext.Provider value={setNavBlocker}>
             {children}
           </NavigationContext.Provider>

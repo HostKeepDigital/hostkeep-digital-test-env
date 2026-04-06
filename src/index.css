@@ -139,3 +139,30 @@ nav, header, button, a, [role="button"] {
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
+
+/* -------------------------------------------------- */
+/* 👆 TOUCH TARGETS — minimum 44px tap zones (mobile)  */
+/* -------------------------------------------------- */
+
+/* On mobile only, ensure buttons/roles have minimum 44px tap height */
+@media (max-width: 1023px) {
+  button:not([data-no-touch]),
+  [role="button"]:not([data-no-touch]) {
+    min-height: 44px;
+  }
+}
+
+/* -------------------------------------------------- */
+/* 📐 SAFE AREA — bottom nav & content padding        */
+/* -------------------------------------------------- */
+
+/* Content pushed above mobile bottom nav + safe area */
+.mobile-bottom-pad {
+  padding-bottom: calc(64px + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 1024px) {
+  .mobile-bottom-pad {
+    padding-bottom: 0;
+  }
+}

@@ -116,7 +116,7 @@ export default function SignIn() {
             <img
               src={LOGO_IMG}
               alt="HostKeep Digital"
-              className="h-60 w-auto"
+              className="h-20 w-auto"
             />
           </div>
 
@@ -131,6 +131,7 @@ export default function SignIn() {
               </label>
               <input
                 type="email"
+                inputMode="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -155,6 +156,7 @@ export default function SignIn() {
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
+                  inputMode="text"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -182,7 +184,7 @@ export default function SignIn() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#1E3A5F] hover:bg-[#162d4a] disabled:opacity-60 text-white font-semibold text-sm rounded-xl py-3.5 transition-colors"
+              className="w-full bg-[#1E3A5F] hover:bg-[#162d4a] disabled:opacity-60 text-white font-semibold text-sm rounded-xl py-3.5 transition-colors min-h-[52px]"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">

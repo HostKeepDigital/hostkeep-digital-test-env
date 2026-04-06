@@ -247,6 +247,8 @@ export default function ResetPassword() {
                     <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <input
                       type="email"
+                      inputMode="email"
+                      autoComplete="email"
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -265,7 +267,7 @@ export default function ResetPassword() {
                 <button
                   type="submit"
                   disabled={emailLoading}
-                  className="w-full bg-[#1E3A5F] hover:bg-[#162d4a] disabled:opacity-60 text-white font-semibold text-sm rounded-xl py-3.5 transition-colors"
+                  className="w-full bg-[#1E3A5F] hover:bg-[#162d4a] disabled:opacity-60 text-white font-semibold text-sm rounded-xl py-3.5 min-h-[52px] transition-colors"
                 >
                   {emailLoading ? "Sending..." : "Send reset link"}
                 </button>

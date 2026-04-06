@@ -269,7 +269,7 @@ export default function FoundingHost() {
             {[["forename","Forename *","Jane"],["middle_name","Middle name","Optional"],["surname","Surname *","Smith"]].map(([k,l,p]) => (
               <div key={k}>
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">{l}</label>
-                <input type="text" value={form[k]} onChange={e => field(k, e.target.value)} placeholder={p}
+                <input type="text" inputMode="text" autoComplete={k === "forename" ? "given-name" : k === "surname" ? "family-name" : "off"} value={form[k]} onChange={e => field(k, e.target.value)} placeholder={p}
                   className={`w-full border rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 transition-colors ${errors[k] ? "border-red-300" : "border-gray-200"}`} />
                 {errors[k] && <p className="text-xs text-red-500 mt-1">{errors[k]}</p>}
               </div>
@@ -278,7 +278,7 @@ export default function FoundingHost() {
 
           <div>
             <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Email address *</label>
-            <input type="email" value={form.email} onChange={e => field("email", e.target.value)} placeholder="jane@example.com"
+            <input type="email" inputMode="email" autoComplete="email" value={form.email} onChange={e => field("email", e.target.value)} placeholder="jane@example.com"
               className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 transition-colors ${errors.email ? "border-red-300" : "border-gray-200"}`} />
             {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
             {duplicateInfo?.type === "resend" && (
@@ -304,8 +304,8 @@ export default function FoundingHost() {
 
           <div>
             <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Property postcode *</label>
-            <input type="text" value={form.postcode}
-              onChange={e => { field("postcode", e.target.value); setCornwallWarn(false); }}              
+            <input type="text" inputMode="text" autoComplete="postal-code" autoCapitalize="characters" value={form.postcode}
+              onChange={e => { field("postcode", e.target.value.toUpperCase()); setCornwallWarn(false); }}              
           onBlur={(e) => {
             const value = e.target.value;
             if (value && !isCornwallPostcode(value)) {
@@ -320,7 +320,7 @@ export default function FoundingHost() {
           {errors.submit && <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-sm text-red-600">{errors.submit}</div>}
 
           <button type="submit" disabled={submitting || loading}
-            className="w-full bg-[#0d9488] hover:bg-[#0f766e] disabled:opacity-60 text-white font-semibold text-sm rounded-xl py-3.5 transition-colors flex items-center justify-center gap-2">
+            className="w-full bg-[#0d9488] hover:bg-[#0f766e] disabled:opacity-60 text-white font-semibold text-sm rounded-xl py-3.5 min-h-[52px] transition-colors flex items-center justify-center gap-2">
             {submitting
               ? <><Loader2 className="w-4 h-4 animate-spin" />Submitting...</>
               : isOutOfArea ? "Register my interest" : "Apply as a Founding Host"}

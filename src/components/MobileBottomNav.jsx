@@ -85,11 +85,17 @@ export default function MobileBottomNav({ userRoles = [] }) {
               navigate(dest);
               restoreScroll(dest);
             }}
-            className={`flex-1 flex flex-col items-center justify-center py-2 gap-0.5 transition-colors select-none
-              ${active ? "text-teal-600" : "text-gray-400 hover:text-gray-600"}`}
+            className={`flex-1 flex flex-col items-center justify-center py-2 gap-0.5 transition-colors select-none min-h-[56px]
+              ${active ? "text-teal-600" : "text-gray-400"}`}
+            style={{ minHeight: 56 }}
           >
-            <Icon className="w-5 h-5" />
-            <span className="text-[10px] font-medium">{label}</span>
+            <div className="relative">
+              <Icon className="w-5 h-5" />
+              {active && (
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-teal-500" />
+              )}
+            </div>
+            <span className={`text-[10px] font-medium mt-0.5 ${active ? "font-semibold" : ""}`}>{label}</span>
           </button>
         );
       })}
