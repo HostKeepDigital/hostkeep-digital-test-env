@@ -11,6 +11,10 @@ const PLAN_DETAILS = {
   cleaner_solo_monthly: { name: 'Cleaner Solo', price: 9.99, max_properties: null, role: 'cleaner' },
   cleaner_pro_monthly: { name: 'Cleaner Pro', price: 19.99, max_properties: null, role: 'cleaner' },
   cleaner_team_monthly: { name: 'Cleaner Team', price: 39.99, max_properties: null, role: 'cleaner' },
+  founding_host_solo: { name: 'Founding Host Solo', price: 19, max_properties: 1, role: 'host', is_founding: true },
+  founding_host_multi: { name: 'Founding Host Multi', price: 49, max_properties: 5, role: 'host', is_founding: true },
+  founding_host_portfolio: { name: 'Founding Host Portfolio', price: 89, max_properties: 999, role: 'host', is_founding: true },
+  founding_cleaner_solo: { name: 'Founding Cleaner Solo', price: 9.99, max_properties: null, role: 'cleaner', is_founding: true },
 };
 
 Deno.serve(async (req) => {
@@ -58,6 +62,7 @@ Deno.serve(async (req) => {
         start_date: startDateStr,
         end_date: endDateStr,
         stripe_subscription_id: session.subscription,
+        is_founding_member: planDetails.is_founding || false,
       };
 
       if (existingSub) {

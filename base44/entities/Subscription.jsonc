@@ -9,9 +9,18 @@
     "plan": {
       "type": "string",
       "enum": [
-        "basic",
-        "pro",
-        "premium"
+        "host_starter_monthly",
+        "host_growth_monthly",
+        "host_pro_monthly",
+        "cleaner_solo_monthly",
+        "cleaner_pro_monthly",
+        "cleaner_team_monthly",
+        "beta_host_access",
+        "beta_cleaner_access",
+        "founding_host_solo",
+        "founding_host_multi",
+        "founding_host_portfolio",
+        "founding_cleaner_solo"
       ],
       "description": "Subscription plan"
     },
@@ -46,6 +55,15 @@
     },
     "stripe_subscription_id": {
       "type": "string"
+    },
+    "is_founding_member": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether user is a founding member with locked-in pricing"
+    },
+    "founding_plan_id": {
+      "type": "string",
+      "description": "References the founding pricing tier they're locked into"
     },
     "features": {
       "type": "array",

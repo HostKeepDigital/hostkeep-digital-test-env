@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import ChannelManagerIntegrationTester from "@/components/devtools/ChannelManagerIntegrationTester";
+import SubscriptionTester from "@/components/devtools/SubscriptionTester";
 import { useAuth } from "@/lib/AuthContext";
 
 // ── STATUS MAPS ──────────────────────────────────────────────────────────────
@@ -1953,6 +1954,15 @@ const handleDelete = async (member) => {
             </div>
             <DeleteAccountTester />
             <DeleteSafeguardTester members={members} />
+          </div>
+
+          {/* Subscription Tests */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" />
+              <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Subscription & Founding Member Tests</h2>
+            </div>
+            <SubscriptionTester />
           </div>
 
           {/* Channel Manager Tests */}

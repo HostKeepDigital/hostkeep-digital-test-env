@@ -10,6 +10,10 @@ const PLAN_LOOKUP_KEYS = {
   cleaner_solo_monthly: "cleaner_solo_monthly",
   cleaner_pro_monthly: "cleaner_pro_monthly",
   cleaner_team_monthly: "cleaner_team_monthly",
+  founding_host_solo: "founding_host_solo",
+  founding_host_multi: "founding_host_multi",
+  founding_host_portfolio: "founding_host_portfolio",
+  founding_cleaner_solo: "founding_cleaner_solo",
 };
 
 Deno.serve(async (req) => {

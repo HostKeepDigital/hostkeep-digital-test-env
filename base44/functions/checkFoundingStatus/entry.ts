@@ -27,6 +27,26 @@ Deno.serve(async (req) => {
       user_id: user_id 
     });
 
+  // Auto-create beta subscription for founding members
+  const existingSubs = await base44.asServiceRole
+    .entities.Subscription.filter({ user_id });
+
+  const betaPlan = member.role === 'host' ? 'beta_host_access' : 'beta_cleaner_access';
+  const now = new Date();
+  const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+  if (!existingSubs.length) {
+    await base44.asServiceRole.entities.Subscription.create({
+      user_id,
+      plan: betaPlan,
+      status: 'active',
+      is_founding_member: true,
+      price_monthly: 0,
+      start_date: now.toISOString().split('T')[0],
+      end_date: thirtyDaysFromNow.toISOString().split('T')[0],
+    });
+  }
+  
   const hasRole = existingRoles?.some(r => 
     r.role === member.role
   );
