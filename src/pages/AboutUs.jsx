@@ -33,7 +33,7 @@ export default function AboutUs() {
   ];
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-teal-600 to-teal-800 text-white py-20 lg:py-32">
         <div className="max-w-5xl mx-auto px-4 text-center">
@@ -68,10 +68,10 @@ export default function AboutUs() {
       </section>
 
       {/* Our Story */}
-      <section className="py-16 lg:py-24 bg-gray-50">
+      <section className="py-16 lg:py-24 bg-gray-50 dark:bg-gray-800">
         <div className="max-w-4xl mx-auto px-4">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">Our Story</h2>
-          <div className="prose prose-lg text-gray-600 space-y-4">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Our Story</h2>
+          <div className="prose prose-lg text-gray-600 dark:text-gray-300 space-y-4">
             <p>
               We started HostKeep because we saw something that didn't sit right. Holiday home owners across the UK were doing all the hard work — maintaining their properties, welcoming guests, handling every little detail — only to hand over a big chunk of their earnings to booking platforms.
             </p>
@@ -81,7 +81,7 @@ export default function AboutUs() {
             <p>
               So we built HostKeep: a simple, subscription-based alternative. No percentage cuts. No surprise charges. Just a fair monthly fee that lets hosts list their homes and keep 100% of what they earn.
             </p>
-            <p className="font-medium text-gray-800">
+            <p className="font-medium text-gray-800 dark:text-gray-200">
               Our goal is straightforward — simplicity, transparency, and giving hosts back the control they deserve.
             </p>
           </div>
@@ -89,43 +89,43 @@ export default function AboutUs() {
       </section>
 
       {/* Our Mission */}
-      <section className="py-16 lg:py-24">
+      <section className="py-16 lg:py-24 bg-white dark:bg-gray-900">
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Our Mission</h2>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Our Mission</h2>
+            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               We exist to empower independent holiday home owners — making hosting simple, profitable, and free from hidden fees. We help guests discover unique stays, directly from the people who know them best.
             </p>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
-            <Card className="border-0 shadow-lg">
+            <Card className="border-0 shadow-lg dark:bg-gray-800">
               <CardContent className="p-8 text-center">
-                <div className="w-14 h-14 bg-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <PoundSterling className="w-7 h-7 text-teal-600" />
+                <div className="w-14 h-14 bg-teal-100 dark:bg-teal-900 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <PoundSterling className="w-7 h-7 text-teal-600 dark:text-teal-400" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Fair Pricing</h3>
-                <p className="text-gray-600">A simple subscription — no commissions, no hidden fees. You keep what you earn.</p>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Fair Pricing</h3>
+                <p className="text-gray-600 dark:text-gray-300">A simple subscription — no commissions, no hidden fees. You keep what you earn.</p>
               </CardContent>
             </Card>
             
-            <Card className="border-0 shadow-lg">
+            <Card className="border-0 shadow-lg dark:bg-gray-800">
               <CardContent className="p-8 text-center">
-                <div className="w-14 h-14 bg-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Shield className="w-7 h-7 text-teal-600" />
+                <div className="w-14 h-14 bg-teal-100 dark:bg-teal-900 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Shield className="w-7 h-7 text-teal-600 dark:text-teal-400" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Host Control</h3>
-                <p className="text-gray-600">Set your own prices, rules, and availability. Your property, your way.</p>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Host Control</h3>
+                <p className="text-gray-600 dark:text-gray-300">Set your own prices, rules, and availability. Your property, your way.</p>
               </CardContent>
             </Card>
             
-            <Card className="border-0 shadow-lg">
+            <Card className="border-0 shadow-lg dark:bg-gray-800">
               <CardContent className="p-8 text-center">
-                <div className="w-14 h-14 bg-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle className="w-7 h-7 text-teal-600" />
+                <div className="w-14 h-14 bg-teal-100 dark:bg-teal-900 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle className="w-7 h-7 text-teal-600 dark:text-teal-400" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Simple Technology</h3>
-                <p className="text-gray-600">Easy-to-use tools that make listing and managing bookings effortless.</p>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Simple Technology</h3>
+                <p className="text-gray-600 dark:text-gray-300">Easy-to-use tools that make listing and managing bookings effortless.</p>
               </CardContent>
             </Card>
           </div>
@@ -133,26 +133,26 @@ export default function AboutUs() {
       </section>
 
       {/* Comparison Table */}
-      <section className="py-12 lg:py-20 bg-gray-50">
+      <section className="py-12 lg:py-20 bg-gray-50 dark:bg-gray-800">
         <div className="max-w-4xl mx-auto px-4">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 text-center">Why HostKeep Is Different</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6 text-center">Why HostKeep Is Different</h2>
           
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden overflow-x-auto">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg overflow-hidden overflow-x-auto">
             <div className="min-w-[320px]">
-              <div className="grid grid-cols-3 bg-gray-100 font-semibold text-xs sm:text-sm">
-                <div className="p-3 sm:p-4 text-gray-600"></div>
-                <div className="p-3 sm:p-4 text-center text-teal-700 bg-teal-50">HostKeep</div>
-                <div className="p-3 sm:p-4 text-center text-gray-600">Others</div>
+              <div className="grid grid-cols-3 bg-gray-100 dark:bg-gray-700 font-semibold text-xs sm:text-sm">
+                <div className="p-3 sm:p-4 text-gray-600 dark:text-gray-300"></div>
+                <div className="p-3 sm:p-4 text-center text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/40">HostKeep</div>
+                <div className="p-3 sm:p-4 text-center text-gray-600 dark:text-gray-300">Others</div>
               </div>
               {comparisonData.map((row, index) => (
-                <div key={index} className="grid grid-cols-3 border-t border-gray-100">
-                  <div className="p-3 sm:p-4 font-medium text-gray-800 text-xs sm:text-sm">{row.feature}</div>
-                  <div className="p-3 sm:p-4 text-center text-xs sm:text-sm bg-teal-50/50">
-                    <span className="inline-flex items-center gap-1 text-teal-700">
+                <div key={index} className="grid grid-cols-3 border-t border-gray-100 dark:border-gray-700">
+                  <div className="p-3 sm:p-4 font-medium text-gray-800 dark:text-gray-200 text-xs sm:text-sm">{row.feature}</div>
+                  <div className="p-3 sm:p-4 text-center text-xs sm:text-sm bg-teal-50/50 dark:bg-teal-900/20">
+                    <span className="inline-flex items-center gap-1 text-teal-700 dark:text-teal-400">
                       <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" /> <span className="leading-tight">{row.hostkeep}</span>
                     </span>
                   </div>
-                  <div className="p-3 sm:p-4 text-center text-xs sm:text-sm text-gray-500">
+                  <div className="p-3 sm:p-4 text-center text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                     <span className="inline-flex items-center gap-1">
                       <X className="w-3 h-3 sm:w-4 sm:h-4 text-red-400 flex-shrink-0" /> <span className="leading-tight">{row.others}</span>
                     </span>
@@ -165,12 +165,12 @@ export default function AboutUs() {
       </section>
 
       {/* UK Focus */}
-      <section className="py-16 lg:py-24">
+      <section className="py-16 lg:py-24 bg-white dark:bg-gray-900">
         <div className="max-w-6xl mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-6">Built for the UK Holiday Market</h2>
-              <p className="text-lg text-gray-600 mb-8">
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Built for the UK Holiday Market</h2>
+              <p className="text-lg text-gray-600 dark:text-gray-300 mb-8">
                 HostKeep was born from a love of the British countryside and coastline. We're focused on helping local holiday home owners thrive — not competing on global scale, but delivering real value close to home.
               </p>
               <ul className="space-y-4">
@@ -180,9 +180,9 @@ export default function AboutUs() {
                   { icon: Heart, text: "Supporting local owners and the staycation movement" },
                   { icon: Star, text: "Quality listings over quantity" },
                 ].map((item, i) => (
-                  <li key={i} className="flex items-center gap-3 text-gray-700">
-                    <div className="w-10 h-10 bg-teal-100 rounded-xl flex items-center justify-center">
-                      <item.icon className="w-5 h-5 text-teal-600" />
+                  <li key={i} className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
+                    <div className="w-10 h-10 bg-teal-100 dark:bg-teal-900 rounded-xl flex items-center justify-center">
+                      <item.icon className="w-5 h-5 text-teal-600 dark:text-teal-400" />
                     </div>
                     {item.text}
                   </li>
@@ -201,18 +201,18 @@ export default function AboutUs() {
       </section>
 
       {/* Trust & Safety */}
-      <section className="py-16 lg:py-24 bg-gray-50">
+      <section className="py-16 lg:py-24 bg-gray-50 dark:bg-gray-800">
         <div className="max-w-6xl mx-auto px-4">
-          <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">Trust & Safety</h2>
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-12 text-center">Trust & Safety</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {trustFeatures.map((feature, i) => (
-              <Card key={i} className="border-0 shadow-md">
+              <Card key={i} className="border-0 shadow-md dark:bg-gray-700">
                 <CardContent className="p-6 text-center">
-                  <div className="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center mx-auto mb-4">
-                    <feature.icon className="w-6 h-6 text-teal-600" />
+                  <div className="w-12 h-12 bg-teal-100 dark:bg-teal-900 rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <feature.icon className="w-6 h-6 text-teal-600 dark:text-teal-400" />
                   </div>
-                  <h3 className="font-semibold text-gray-900 mb-2">{feature.title}</h3>
-                  <p className="text-sm text-gray-600">{feature.desc}</p>
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{feature.title}</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">{feature.desc}</p>
                 </CardContent>
               </Card>
             ))}
@@ -221,11 +221,11 @@ export default function AboutUs() {
       </section>
 
       {/* Community Focus */}
-      <section className="py-16 lg:py-24">
+      <section className="py-16 lg:py-24 bg-white dark:bg-gray-900">
         <div className="max-w-5xl mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Community Focus</h2>
-            <p className="text-lg text-gray-600">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Community Focus</h2>
+            <p className="text-lg text-gray-600 dark:text-gray-300">
               HostKeep isn't just a platform — it's a community of independent hosts who believe there's a better way to do things.
             </p>
           </div>
@@ -233,11 +233,11 @@ export default function AboutUs() {
           <div className="grid md:grid-cols-3 gap-8">
             {communityFeatures.map((feature, i) => (
               <div key={i} className="text-center">
-                <div className="w-14 h-14 bg-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <feature.icon className="w-7 h-7 text-teal-600" />
+                <div className="w-14 h-14 bg-teal-100 dark:bg-teal-900 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <feature.icon className="w-7 h-7 text-teal-600 dark:text-teal-400" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">{feature.title}</h3>
-                <p className="text-gray-600">{feature.desc}</p>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{feature.title}</h3>
+                <p className="text-gray-600 dark:text-gray-300">{feature.desc}</p>
               </div>
             ))}
           </div>
