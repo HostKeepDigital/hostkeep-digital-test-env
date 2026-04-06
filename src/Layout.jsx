@@ -125,7 +125,7 @@ export default function Layout({ children, currentPageName }) {
                 <Link to={createPageUrl("HostMessages")} className={`text-sm font-medium ${currentPageName === "HostMessages" ? "text-teal-600" : "text-gray-600 hover:text-gray-900"}`}>Messages</Link>
               </nav>
               <div className="flex items-center gap-3">
-                <RoleSwitcher userRoles={userRoles} />
+                <RoleSwitcher userRoles={userRoles} currentPageName={currentPageName} />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="gap-2">
@@ -329,7 +329,7 @@ export default function Layout({ children, currentPageName }) {
               <div className="flex items-center gap-3">
                 {isAuthenticated ? (
                   <>
-                    <RoleSwitcher userRoles={userRoles} />
+                    <RoleSwitcher userRoles={userRoles} currentPageName={currentPageName} />
 
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
