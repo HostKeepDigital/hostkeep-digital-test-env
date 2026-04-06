@@ -424,7 +424,7 @@ function SiteVisitorWidget() {
 function FoundingFlowTester() {
   const [status,   setStatus  ] = useState(null);
   const [loading,  setLoading ] = useState(false);
-  const [created, setCreated] = useState(() => { // { memberId }
+  const [created, setCreated] = useState(() => {
     const saved = localStorage.getItem("devtools_founding_test");
     return saved ? JSON.parse(saved) : null;
   });
@@ -472,21 +472,6 @@ function FoundingFlowTester() {
     setLoading(false);
   };
 
-  const simulateApproval = async () => {
-    setLoading(true);
-    try {
-      const members = await base44.entities.FoundingMember.filter({ email: TEST_EMAIL });
-      if (!members.length) { setStatus({ type: "err", message: "❌ No test member found. Run step 1 first." }); setLoading(false); return; }
-      await base44.entities.FoundingMember.update(members[0].id, { approval_status: "invited" });
-      localStorage.setItem("devtools_founding_test", JSON.stringify({ memberId: members[0].id }));
-      setCreated({ memberId: members[0].id });
-      setStatus({ type: "ok", message: `✅ Test member promoted to 'invited'. Property Creation Tester will now show this host in its dropdown.` });
-    } catch (e) {
-      setStatus({ type: "err", message: `❌ Approval simulation failed: ${e.message}` });
-    }
-    setLoading(false);
-  };
-
   const cleanUp = async () => {
     setLoading(true);
     try {
@@ -497,6 +482,22 @@ function FoundingFlowTester() {
       setStatus({ type: "ok", message: "🧹 Test member cleaned up." });
     } catch (e) {
       setStatus({ type: "err", message: `❌ Clean-up failed: ${e.message}` });
+    }
+    setLoading(false);
+  };
+
+  const simulateApproval = async () => {
+    setLoading(true);
+    try {
+      const members = await base44.entities.FoundingMember.filter({ email: TEST_EMAIL });
+      if (!members.length) { setStatus({ type: "err", message: "❌ No test member found. Run step 1 first." }); setLoading(false); return; }
+      await base44.entities.FoundingMember.update(members[0].id, { approval_status: "invited" });
+      const createdData = { memberId: members[0].id };
+      setCreated(createdData);
+      localStorage.setItem("devtools_founding_test", JSON.stringify(createdData));
+      setStatus({ type: "ok", message: `✅ Test member promoted to 'invited'. Property Creation Tester will now show this host in its dropdown.` });
+    } catch (e) {
+      setStatus({ type: "err", message: `❌ Approval simulation failed: ${e.message}` });
     }
     setLoading(false);
   };
@@ -538,7 +539,7 @@ function PropertyCreationTester({ members }) {
   const [createdId,   setCreatedId  ] = useState(null);
   const [hostId,      setHostId     ] = useState("");
 
-const hosts = members.filter(m => m.role === "host" && ["invited", "password_protected", "awaiting_document_verification", "approved"].includes(m.approval_status));
+  const hosts = members.filter(m => m.role === "host" && ["invited", "password_protected", "awaiting_document_verification", "approved"].includes(m.approval_status));
 
   const createTestProperty = async () => {
     if (!hostId) { setStatus({ type: "err", message: "❌ Select a host first." }); return; }
@@ -680,11 +681,11 @@ function CalendarRenderTester({ members }) {
         county:        "Cornwall",
         country:       "England",
         location:      { street: "1 Calendar Test Lane" },
-        nightly_rate:   150,
+        nightly_rate:  150,
         guest_capacity: 4,
         bedrooms:       2,
         bathrooms:      1,
-        status:         "published",
+        status:        "published",
       });
       setCreatedPropertyId(prop.id);
 
@@ -817,20 +818,18 @@ function CalendarRenderTester({ members }) {
 function DeleteAccountTester() {
   const [status,  setStatus ] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [phase,   setPhase  ] = useState("idle"); // idle | created | deleted
+  const [phase,   setPhase  ] = useState("idle");
 
   const TEST_EMAIL = "devtest-delete@hostkeep-test.com";
 
   const createTestAccount = async () => {
     setLoading(true); setStatus(null);
     try {
-      // Clean up any stale test data first
       const existing = await base44.entities.FoundingMember.filter({ email: TEST_EMAIL });
       for (const m of existing) await base44.entities.FoundingMember.delete(m.id);
       const existingCreds = await base44.entities.UserCredentials.filter({ email: TEST_EMAIL });
       for (const c of existingCreds) await base44.entities.UserCredentials.delete(c.id);
 
-      // Create a FoundingMember record simulating a signed-up user
       await base44.entities.FoundingMember.create({
         full_name:        "Dev Test Delete",
         email:            TEST_EMAIL,
@@ -840,14 +839,13 @@ function DeleteAccountTester() {
         signup_timestamp: new Date().toISOString(),
       });
 
-      // Create a UserCredentials record simulating a user who set a password
       await base44.entities.UserCredentials.create({
         email:         TEST_EMAIL,
         password_hash: "test-hash-not-real",
       });
 
       setPhase("created");
-      setStatus({ type: "ok", message: `✅ Test account created — FoundingMember + UserCredentials records exist for ${TEST_EMAIL}. Now run the delete test.` });
+      setStatus({ type: "ok", message: `✅ Test account created — FoundingMember + UserCredentials records exist for ${TEST_EMAIL}.` });
     } catch (e) {
       setStatus({ type: "err", message: `❌ Create failed: ${e.message}` });
     }
@@ -857,26 +855,21 @@ function DeleteAccountTester() {
   const runDeleteTest = async () => {
     setLoading(true); setStatus(null);
     try {
-      // Call the deleteAccount backend function
-      const result = await base44.functions.invoke("deleteAccount", {
-        admin_delete_email: TEST_EMAIL,
-      });
-
+      const result = await base44.functions.invoke("deleteAccount", { admin_delete_email: TEST_EMAIL });
       if (!result?.data?.success) {
         setStatus({ type: "err", message: `❌ deleteAccount returned failure: ${JSON.stringify(result?.data)}` });
         setLoading(false);
         return;
       }
 
-      // Verify records are actually gone
       const [members, creds] = await Promise.all([
         base44.entities.FoundingMember.filter({ email: TEST_EMAIL }),
         base44.entities.UserCredentials.filter({ email: TEST_EMAIL }),
       ]);
 
       const checks = [
-        { label: "FoundingMember record deleted",    pass: members.length === 0 },
-        { label: "UserCredentials record deleted",   pass: creds.length === 0 },
+        { label: "FoundingMember record deleted",  pass: members.length === 0 },
+        { label: "UserCredentials record deleted", pass: creds.length === 0 },
       ];
 
       const allPass = checks.every(c => c.pass);
@@ -888,10 +881,7 @@ function DeleteAccountTester() {
     setLoading(false);
   };
 
-  const reset = () => {
-    setPhase("idle");
-    setStatus(null);
-  };
+  const reset = () => { setPhase("idle"); setStatus(null); };
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-5">
@@ -912,7 +902,7 @@ function DeleteAccountTester() {
           </button>
         )}
       </div>
-      {status?.type === "ok" && <p className="text-sm bg-gray-50 text-gray-700 rounded-lg px-4 py-3">{status.message}</p>}
+      {status?.type === "ok"  && <p className="text-sm bg-gray-50 text-gray-700 rounded-lg px-4 py-3">{status.message}</p>}
       {status?.type === "err" && <p className="text-sm bg-red-50 text-red-500 rounded-lg px-4 py-3">{status.message}</p>}
       {status?.type === "checks" && (
         <div className="space-y-2">
@@ -1086,7 +1076,6 @@ function DeleteSafeguardTester({ members }) {
     if (!selectedMember) return;
     setLoading(true);
     setTestStatus(null);
-
     try {
       const todayStr = new Date().toISOString().split("T")[0];
       const activeBookingStatuses = ["awaiting_decision", "awaiting_payment", "confirmed", "checked_in"];
@@ -1103,7 +1092,6 @@ function DeleteSafeguardTester({ members }) {
           if (activeJobs.length > 0) blockReason = `${activeJobs.length} outstanding cleaning job(s) found — safeguard blocked the delete.`;
         }
       }
-
       if (selectedRole === "guest") {
         const bookings = await base44.entities.Booking.filter({ guest_id: selectedMember.id });
         const active   = bookings.filter(b => activeBookingStatuses.includes(b.booking_status) && b.check_out >= todayStr);
@@ -1113,7 +1101,6 @@ function DeleteSafeguardTester({ members }) {
           if (unpaid.length > 0) blockReason = `${unpaid.length} outstanding balance(s) found — safeguard blocked the delete.`;
         }
       }
-
       if (selectedRole === "cleaner") {
         const jobs = await base44.entities.CleaningJob.filter({ cleaner_user_id: selectedMember.id });
         const activeJobs = jobs.filter(j => activeJobStatuses.includes(j.status));
@@ -1210,18 +1197,16 @@ function DeleteSafeguardTester({ members }) {
             >
               {loading ? "Working..." : "Run Safeguard Check"}
             </button>
-           {(createdBookingId || createdJobId) && (
-              <button
-                onClick={cleanUpTestData}
-                disabled={loading}
-                className="px-4 py-2 text-sm border border-red-300 text-red-600 rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors"
-              >
-                {loading ? "Working..." : "Clean Up Test Data"}
-              </button>
-            )}
+            <button
+              onClick={attemptDelete}
+              disabled={loading}
+              className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
+            >
+              {loading ? "Working..." : "Attempt Delete"}
+            </button>
           </div>
           <p className="text-xs text-gray-400 mt-2">
-           Test data is created by the Calendar Render Tester above. Run the safeguard check against <strong>{selectedMember.full_name}</strong>, then use Clean Up to remove any residual data.
+            Test data is created by the Calendar Render Tester above. Run the safeguard check against <strong>{selectedMember.full_name}</strong>, then use Attempt Delete to verify the safeguard blocks or allows deletion correctly.
           </p>
         </div>
       )}
@@ -1232,6 +1217,12 @@ function DeleteSafeguardTester({ members }) {
       )}
       {testStatus?.type === "error" && (
         <p className="text-sm text-red-500 bg-red-50 rounded-lg px-4 py-3">{testStatus.message}</p>
+      )}
+      {testStatus?.type === "blocked" && (
+        <p className="text-sm bg-red-50 text-red-700 border border-red-200 rounded-lg px-4 py-3 font-medium">{testStatus.message}</p>
+      )}
+      {testStatus?.type === "allowed" && (
+        <p className="text-sm bg-amber-50 text-amber-700 border border-amber-200 rounded-lg px-4 py-3 font-medium">{testStatus.message}</p>
       )}
       {testStatus?.type === "results" && (
         <div className="space-y-2">
@@ -1296,14 +1287,6 @@ const [crmLoading,    setCrmLoading   ] = useState(true);
   };
 
   useEffect(() => { fetchMembers(); fetchSubscriptions(); fetchPageViews(); }, []);
-
-  // Auto-refresh onboarding when FoundingMember records change
-  useEffect(() => {
-    const unsubscribe = base44.entities.FoundingMember.subscribe((event) => {
-      fetchMembers();
-    });
-    return unsubscribe;
-  }, []);
 
   const setML = (id, val) => setActionLoading(p => ({ ...p, [id]: val }));
 
@@ -1956,6 +1939,7 @@ const handleDelete = async (member) => {
               <span className="w-2 h-2 rounded-full bg-[#1E3A5F] flex-shrink-0" />
               <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Account Management Tests</h2>
             </div>
+            <DeleteAccountTester />
             <DeleteSafeguardTester members={members} />
           </div>
 
