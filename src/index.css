@@ -148,6 +148,67 @@ input, textarea, select {
   -webkit-text-fill-color: currentColor;
 }
 
+/* ------------------------------------------------------------------ */
+/* 🌙 GLOBAL DARK MODE AUTO-OVERRIDES                                  */
+/* Covers all pages/components using standard Tailwind gray/white      */
+/* classes without requiring dark: variants on every element.          */
+/* Intentional colored sections (teal, blue, amber) are unaffected.   */
+/* ------------------------------------------------------------------ */
+
+/* Backgrounds */
+.dark .bg-white        { background-color: hsl(0 0% 7%); }
+.dark .bg-gray-50      { background-color: hsl(0 0% 9%); }
+.dark .bg-gray-100     { background-color: hsl(0 0% 12%); }
+.dark .bg-gray-200     { background-color: hsl(0 0% 16%); }
+
+/* Text */
+.dark .text-gray-900   { color: hsl(0 0% 95%); }
+.dark .text-gray-800   { color: hsl(0 0% 88%); }
+.dark .text-gray-700   { color: hsl(0 0% 78%); }
+.dark .text-gray-600   { color: hsl(0 0% 68%); }
+.dark .text-gray-500   { color: hsl(0 0% 56%); }
+.dark .text-gray-400   { color: hsl(0 0% 46%); }
+
+/* Borders */
+.dark .border-gray-50  { border-color: hsl(0 0% 14%); }
+.dark .border-gray-100 { border-color: hsl(0 0% 16%); }
+.dark .border-gray-200 { border-color: hsl(0 0% 20%); }
+.dark .border-gray-300 { border-color: hsl(0 0% 26%); }
+
+/* Divide */
+.dark .divide-gray-100 > * + * { border-color: hsl(0 0% 16%); }
+.dark .divide-gray-200 > * + * { border-color: hsl(0 0% 20%); }
+
+/* Rings */
+.dark .ring-gray-100   { --tw-ring-color: hsl(0 0% 16%); }
+.dark .ring-gray-200   { --tw-ring-color: hsl(0 0% 20%); }
+
+/* Prose (react-markdown / rich text) */
+.dark .prose           { color: hsl(0 0% 78%); }
+.dark .prose h1, .dark .prose h2, .dark .prose h3,
+.dark .prose h4, .dark .prose h5, .dark .prose h6 { color: hsl(0 0% 92%); }
+.dark .prose strong    { color: hsl(0 0% 88%); }
+.dark .prose a         { color: hsl(173 58% 55%); }
+.dark .prose code      { background-color: hsl(0 0% 14%); color: hsl(0 0% 88%); }
+.dark .prose pre       { background-color: hsl(0 0% 10%); }
+.dark .prose blockquote { border-color: hsl(0 0% 25%); color: hsl(0 0% 65%); }
+
+/* Shadows — soften in dark mode */
+.dark .shadow          { --tw-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4); }
+.dark .shadow-md       { --tw-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.5); }
+.dark .shadow-lg       { --tw-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5); }
+.dark .shadow-xl       { --tw-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.6), 0 8px 10px -6px rgb(0 0 0 / 0.6); }
+
+/* Placeholders */
+.dark ::placeholder    { color: hsl(0 0% 40%); }
+
+/* Gradient backgrounds used as page wrappers */
+.dark .from-gray-50    { --tw-gradient-from: hsl(0 0% 8%); }
+.dark .from-gray-100   { --tw-gradient-from: hsl(0 0% 10%); }
+.dark .to-gray-100     { --tw-gradient-to: hsl(0 0% 11%); }
+.dark .to-gray-200     { --tw-gradient-to: hsl(0 0% 13%); }
+.dark .via-gray-50     { --tw-gradient-via: hsl(0 0% 9%); }
+
 /* -------------------------------------------------- */
 /* 👆 TOUCH TARGETS — minimum 44px tap zones (mobile)  */
 /* -------------------------------------------------- */
