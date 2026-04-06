@@ -453,35 +453,36 @@ export default function HostDashboard() {
             </motion.div>
 
             {/* Cancellation Policies */}
-            {properties.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-xl shadow-sm border border-gray-100 p-4"
-              >
-                <h3 className="font-semibold text-gray-900 mb-3 text-sm">Cancellation Policies</h3>
-                <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {properties.map((property) => {
-                    const policy = cancellationPolicies.find((p) => p.id === property.cancellation_policy_id);
-                    return (
-                      <div key={property.id} className="p-2.5 rounded-lg bg-gray-50 border border-gray-100">
-                        <p className="text-xs font-medium text-gray-900 mb-0.5 truncate">{property.title}</p>
-                        {policy ? (
-                          <>
-                            <p className="text-xs font-semibold text-teal-700">{policy.policy_name}</p>
-                            {policy.policy_name === "Super Strict" && (
-                              <p className="text-xs text-rose-600 mt-0.5">⚠️ May reduce conversions</p>
-                            )}
-                          </>
-                        ) : (
-                          <p className="text-xs text-gray-400 italic">No policy assigned</p>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </motion.div>
-            )}
+            {properties.length > 0 && (() => {
+              const selectedProperty = properties.find((p) => p.id === selectedPropertyId);
+              const policy = selectedProperty ? cancellationPolicies.find((p) => p.id === selectedProperty.cancellation_policy_id) : null;
+              return (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-white rounded-xl shadow-sm border border-gray-100 p-4"
+                >
+                  <h3 className="font-semibold text-gray-900 mb-3 text-sm">Cancellation Policy</h3>
+                  {selectedProperty ? (
+                    <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-100">
+                      <p className="text-xs font-medium text-gray-900 mb-0.5 truncate">{selectedProperty.title}</p>
+                      {policy ? (
+                        <>
+                          <p className="text-xs font-semibold text-teal-700">{policy.policy_name}</p>
+                          {policy.policy_name === "Super Strict" && (
+                            <p className="text-xs text-rose-600 mt-0.5">⚠️ May reduce conversions</p>
+                          )}
+                        </>
+                      ) : (
+                        <p className="text-xs text-gray-400 italic">No policy assigned</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-gray-400 italic">Select a property to view its policy</p>
+                  )}
+                </motion.div>
+              );
+            })()}
 
             {/* Subscription Status */}
             <motion.div
