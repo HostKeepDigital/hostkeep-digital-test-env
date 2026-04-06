@@ -478,60 +478,47 @@ export default function Subscription() {
             </div>
           ) : null}
 
-          {/* Tier Overview — Free at top, then Founding vs Standard side-by-side */}
-          <div className="mb-10">
-            {/* Free Tier — full width */}
-            <div className="rounded-2xl border-2 border-teal-300 bg-teal-50 dark:bg-teal-950 dark:border-teal-800 p-5 text-center mb-6">
-              <Badge className="bg-teal-500 text-white mb-2">Current</Badge>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">🎉 Beta — Now</p>
-              <p className="text-4xl font-black text-gray-900 dark:text-white mb-1">Free</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mb-3">While we're in beta</p>
-              <p className="text-sm text-gray-600 dark:text-gray-300">All features unlocked for all founding members during beta.</p>
-            </div>
-
-            {/* Founding vs Standard Prices — side by side */}
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Founding Prices */}
-              <div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 text-center">⭐ Founding Prices</h3>
-                <div className="rounded-2xl border border-amber-200 bg-white dark:bg-gray-800 dark:border-gray-700 p-5 text-center">
-                  <Badge className="bg-amber-500 text-white mb-2">Founding</Badge>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Founding Reward</p>
-                  <p className="text-3xl font-black text-gray-900 dark:text-white mb-1">{activeTab === "host" ? "£19/mo" : "3 months free"}</p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mb-3">{activeTab === "host" ? "Locked in for founding members" : "As a thank-you for founding members"}</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">{activeTab === "host"
-                    ? "Single property. Multi-property from £39/mo. Rate locked in forever."
-                    : "After your 3 free months, standard pricing applies — no discount needed."}</p>
-                </div>
-              </div>
-
-              {/* Standard Prices */}
-              <div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 text-center">📋 Standard Prices</h3>
-                <div className="rounded-2xl border border-gray-200 bg-white dark:bg-gray-800 dark:border-gray-700 p-5 text-center">
-                  <Badge className="bg-gray-400 text-white mb-2">Future</Badge>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Standard Rate</p>
-                  <p className="text-3xl font-black text-gray-900 dark:text-white mb-1">{activeTab === "host" ? "£29/mo" : "from £9.99/mo"}</p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mb-3">After beta — for new members</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">{activeTab === "host"
-                    ? "Single property. Multi-property from £59/mo. Portfolio from £99/mo."
-                    : "Solo Basic £9.99 · Solo Pro £19.99 · Team £39.99/mo."}</p>
-                </div>
-              </div>
-            </div>
+          {/* Free Tier — full width */}
+          <div className="rounded-2xl border-2 border-teal-300 bg-teal-50 dark:bg-teal-950 dark:border-teal-800 p-6 text-center mb-8">
+            <Badge className="bg-teal-500 text-white mb-3">Current</Badge>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">🎉 Beta — Now</p>
+            <p className="text-5xl font-black text-gray-900 dark:text-white mb-2">Free</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mb-3">While we're in beta</p>
+            <p className="text-sm text-gray-600 dark:text-gray-300">All features unlocked for all founding members during beta.</p>
           </div>
 
-          {isBetaUser && activeTab === "cleaner" && (
+          {/* Founding Pricing Cards (for host plans only) */}
+          {activeTab === "host" && (
+            <div className="grid md:grid-cols-3 gap-4 mb-10">
+              <div className="rounded-2xl border border-amber-200 bg-white p-5 text-center">
+                <Badge className="bg-amber-500 text-white mb-2">Founding</Badge>
+                <p className="text-xs text-gray-500 mb-2">⭐ Founding Reward</p>
+                <p className="text-4xl font-black text-gray-900 mb-1">£19/mo</p>
+                <p className="text-xs text-gray-500 mb-3">Locked in for founding members</p>
+                <p className="text-xs text-gray-600">Single property <strong>should be £29/mo.</strong></p>
+              </div>
+              <div className="rounded-2xl border border-amber-200 bg-white p-5 text-center">
+                <Badge className="bg-amber-500 text-white mb-2">Founding</Badge>
+                <p className="text-xs text-gray-500 mb-2">⭐ Founding Reward</p>
+                <p className="text-4xl font-black text-gray-900 mb-1">£49/mo</p>
+                <p className="text-xs text-gray-500 mb-3">Locked in for founding members</p>
+                <p className="text-xs text-gray-600">Multi-property <strong>should be £59/mo.</strong><br />Up to 5 properties</p>
+              </div>
+              <div className="rounded-2xl border border-amber-200 bg-white p-5 text-center">
+                <Badge className="bg-amber-500 text-white mb-2">Founding</Badge>
+                <p className="text-xs text-gray-500 mb-2">⭐ Founding Reward</p>
+                <p className="text-4xl font-black text-gray-900 mb-1">£89/mo</p>
+                <p className="text-xs text-gray-500 mb-3">Locked in for founding members</p>
+                <p className="text-xs text-gray-600">Portfolio <strong>should be £99/mo.</strong> Unlimited properties</p>
+              </div>
+            </div>
+          )}
+
+          {/* Cleaner founding info */}
+          {activeTab === "cleaner" && isBetaUser && (
             <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-6 text-center">
               <p className="text-blue-800 font-semibold text-sm">
                 🎁 As a founding member, your first 3 months are free when beta ends — then standard pricing applies.
-              </p>
-            </div>
-          )}
-          {isBetaUser && activeTab === "host" && (
-            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6 text-center">
-              <p className="text-amber-800 font-semibold text-sm">
-                ⭐ As a founding host, your discounted rate is locked in forever — you'll be invited to choose your plan when beta ends.
               </p>
             </div>
           )}
