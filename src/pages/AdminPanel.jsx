@@ -424,7 +424,10 @@ function SiteVisitorWidget() {
 function FoundingFlowTester() {
   const [status,   setStatus  ] = useState(null);
   const [loading,  setLoading ] = useState(false);
-  const [created,  setCreated ] = useState(null); // { memberId }
+  const [created, setCreated] = useState(() => { // { memberId }
+    const saved = localStorage.getItem("devtools_founding_test");
+    return saved ? JSON.parse(saved) : null;
+  });
 
   const TEST_EMAIL    = "devtest-founding@hostkeep-test.com";
   const TEST_POSTCODE = "TR1 1AA";
@@ -444,7 +447,9 @@ function FoundingFlowTester() {
         approval_status: "pending",
         signup_timestamp: new Date().toISOString(),
       });
-      setCreated({ memberId: member.id });
+      const createdData = { memberId: member.id };
+      setCreated(createdData);
+      localStorage.setItem("devtools_founding_test", JSON.stringify(createdData));
       setStatus({ type: "ok", message: `✅ Test member created (ID: ${member.id.slice(0,8)}...). Check Onboarding tab — should appear in Pending Applications.` });
     } catch (e) {
       setStatus({ type: "err", message: `❌ Create failed: ${e.message}` });
@@ -473,6 +478,7 @@ function FoundingFlowTester() {
       const existing = await base44.entities.FoundingMember.filter({ email: TEST_EMAIL });
       for (const m of existing) await base44.entities.FoundingMember.delete(m.id);
       setCreated(null);
+      localStorage.removeItem("devtools_founding_test");
       setStatus({ type: "ok", message: "🧹 Test member cleaned up." });
     } catch (e) {
       setStatus({ type: "err", message: `❌ Clean-up failed: ${e.message}` });
