@@ -897,7 +897,7 @@ export default function PropertyDetails() {
                 </div>
               </div>
             </div>
-            <div className="col-span-5 lg:col-span-4 grid grid-rows-2 gap-2 md:gap-3 lg:gap-4">
+            <div className="col-span-5 lg:col-span-4 grid grid-rows-3 gap-2 md:gap-3 lg:gap-4">
               {/* Row 1: second photo */}
               {photos[1] && (
                 <div
@@ -1261,7 +1261,8 @@ export default function PropertyDetails() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+            className="fixed inset-0 z-50 bg-black flex items-center justify-center"
+          onClick={() => setShowImageOverlay(false)}
           >
             <button
               onClick={() => setShowImageOverlay(false)}
@@ -1269,7 +1270,7 @@ export default function PropertyDetails() {
             >
               <X className="w-6 h-6 text-white" />
             </button>
-            <div className="relative w-full h-full flex items-center justify-center">
+            <div className="relative w-full h-full flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
               <img
                 src={photos[currentImageIndex]}
                 alt={`${property.title} ${currentImageIndex + 1}`}
