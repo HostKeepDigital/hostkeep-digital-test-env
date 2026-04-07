@@ -160,6 +160,20 @@ export default function PropertyCard({
             )}
 
             <div className="absolute top-2 right-2 flex flex-col items-end gap-1.5 z-20">
+              {(property.pets_allowed || property.children_allowed) && (
+                <div className="flex flex-wrap justify-end gap-1">
+                  {property.pets_allowed && (
+                    <Badge variant="secondary" className="bg-white/90 text-xs border-0 shadow-sm">
+                      Pet-friendly
+                    </Badge>
+                  )}
+                  {property.children_allowed && (
+                    <Badge variant="secondary" className="bg-white/90 text-xs border-0 shadow-sm">
+                      Family
+                    </Badge>
+                  )}
+                </div>
+              )}
               <button
                 onClick={handleToggleWishlist}
                 className="bg-white/90 hover:bg-white p-1.5 rounded-full transition-colors shadow-sm"
@@ -215,8 +229,7 @@ export default function PropertyCard({
                 <Bed className="w-3.5 h-3.5" />
                 {property.bedrooms} bed{property.bedrooms !== 1 ? "s" : ""}
               </span>
-              {property.pets_allowed && <span title="Pet-friendly">🐾</span>}
-              {property.children_allowed && <span title="Family-friendly">👨‍👧</span>}
+
             </div>
 
             <div className="flex items-baseline gap-1 mt-auto">
