@@ -73,7 +73,7 @@ export default function GuestSelector({ value, onChange }) {
           <span className="truncate">{displayText}</span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[calc(100vw-2rem)] max-w-sm p-4" align="start" side="top" sideOffset={8} avoidCollisions={false}>
+      <PopoverContent className="w-72 p-4" align="end" side="top" sideOffset={8} avoidCollisions={true} collisionPadding={12}>
         <div className="space-y-4">
           {/* Adults */}
           <div className="flex items-center justify-between">
