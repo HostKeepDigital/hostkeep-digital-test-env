@@ -901,7 +901,7 @@ export default function PropertyDetails() {
               {/* Row 1: second photo */}
               {photos[1] && (
                 <div
-                  className="relative cursor-pointer group overflow-hidden"
+                  className="relative h-full cursor-pointer group overflow-hidden"
                   onClick={() => setShowImageOverlay(true)}
                 >
                   <img
@@ -915,7 +915,7 @@ export default function PropertyDetails() {
               {/* Row 2: third photo with optional view-all overlay */}
               {photos[2] && (
                 <div
-                  className="relative cursor-pointer group overflow-hidden"
+                  className="relative h-full cursor-pointer group overflow-hidden"
                   onClick={() => setShowImageOverlay(true)}
                 >
                   <img
