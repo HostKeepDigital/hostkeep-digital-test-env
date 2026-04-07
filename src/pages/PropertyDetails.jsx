@@ -46,6 +46,7 @@ import { format, parseISO, differenceInDays, addDays, isBefore, startOfDay } fro
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import ReviewList from "@/components/reviews/ReviewList";
+import GuestSelector from "@/components/search/GuestSelector";
 import BookingCalendar from "@/components/shared/BookingCalendar";
 import PropertyShareModal from "@/components/properties/PropertyShareModal";
 import { useAuth } from "@/lib/AuthContext";
@@ -1106,20 +1107,11 @@ export default function PropertyDetails() {
                 {/* Guests */}
                 <div className="flex items-center gap-4">
                   <span className="w-20 text-sm font-bold text-gray-900 shrink-0">Guests</span>
-                  <div className="flex items-center gap-2 flex-1">
-                    <div className="flex-1 h-11 border-2 border-[#0d9488] rounded-md flex items-center px-3 text-sm text-gray-700">
-                      {guestData.adults + guestData.childrenAges.length} guest{guestData.adults + guestData.childrenAges.length !== 1 ? 's' : ''}
-                    </div>
-                    <div className="flex items-center bg-[#0d9488] rounded-full overflow-hidden">
-                      <button
-                        onClick={() => setGuestData((prev) => ({ ...prev, adults: Math.max(1, prev.adults - 1) }))}
-                        className="text-white px-3 py-2 text-lg font-bold hover:bg-[#0f766e] transition-colors"
-                      >−</button>
-                      <button
-                        onClick={() => setGuestData((prev) => ({ ...prev, adults: prev.adults + 1 }))}
-                        className="text-white px-3 py-2 text-lg font-bold hover:bg-[#0f766e] transition-colors"
-                      >+</button>
-                    </div>
+                  <div className="flex-1 [&_button]:border-2 [&_button]:border-[#0d9488]">
+                    <GuestSelector
+                      value={{ adults: guestData.adults, children: guestData.childrenAges.length, childAges: guestData.childrenAges }}
+                      onChange={(val) => setGuestData({ adults: val.adults, childrenAges: val.childAges || [] })}
+                    />
                   </div>
                 </div>
 
