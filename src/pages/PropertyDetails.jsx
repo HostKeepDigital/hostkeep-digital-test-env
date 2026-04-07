@@ -1012,7 +1012,7 @@ export default function PropertyDetails() {
             {property.amenities && property.amenities.length > 0 && (
               <div className="space-y-3">
                 <h2 className="text-xl font-semibold text-gray-900">What this place offers</h2>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                   {property.amenities.map((amenity, idx) => {
                     const IconComponent = AMENITY_ICONS[amenity] || CheckCircle;
                     return (
