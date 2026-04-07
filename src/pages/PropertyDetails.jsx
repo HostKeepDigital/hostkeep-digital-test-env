@@ -1246,7 +1246,7 @@ export default function PropertyDetails() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black flex items-center justify-center overflow-hidden"
+            className="fixed inset-0 z-50 bg-black flex items-center justify-center" style={{overflow:'hidden',height:'100dvh',width:'100vw'}}
             onClick={() => setShowImageOverlay(false)}
           >
             <button
