@@ -897,7 +897,7 @@ export default function PropertyDetails() {
                 </div>
               </div>
             </div>
-            <div className="col-span-5 lg:col-span-4 grid grid-rows-3 gap-2 md:gap-3 lg:gap-4">
+            <div className="col-span-5 lg:col-span-4 flex flex-col gap-2 md:gap-3 lg:gap-4">
               {/* Row 1: second photo */}
               {photos[1] && (
                 <div
@@ -923,7 +923,7 @@ export default function PropertyDetails() {
                     alt={`${property.title} 3`}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                   />
-                  {photos.length > 3 ? (
+                  {photos.length > 1 ? (
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                       <Button
                         variant="outline"
