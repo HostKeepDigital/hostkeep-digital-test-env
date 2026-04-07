@@ -907,7 +907,7 @@ export default function PropertyDetails() {
                   <img
                     src={photos[1]}
                     alt={`${property.title} 2`}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-black/5 pointer-events-none" />
                 </div>
@@ -921,7 +921,7 @@ export default function PropertyDetails() {
                   <img
                     src={photos[2]}
                     alt={`${property.title} 3`}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                   />
                   {photos.length > 3 ? (
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
