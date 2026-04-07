@@ -1040,106 +1040,92 @@ export default function PropertyDetails() {
 
           {/* Right Column: Booking Card */}
           <div className="lg:sticky lg:top-24">
-            <Card>
-              <CardContent className="pt-6 space-y-4">
-                {/* Pricing */}
-                <div className="text-center pb-4 border-b">
-                  <p className="text-gray-600 text-sm mb-1">From</p>
-                  <p className="text-3xl font-bold text-gray-900">£{displayStartingRate.toFixed(0)}</p>
-                  <p className="text-gray-600 text-sm">per night</p>
+            <div className="rounded-2xl overflow-hidden shadow-xl border border-gray-100">
+              {/* Navy Header */}
+              <div className="bg-[#1E3A5F] px-6 py-6">
+                <p className="text-white/70 text-sm font-medium mb-1">From</p>
+                <p className="text-white text-4xl font-bold tracking-tight">£{displayStartingRate.toFixed(0)}</p>
+                <p className="text-white/60 text-sm mt-1">per night</p>
+              </div>
+
+              {/* White Body */}
+              <div className="bg-white px-6 py-6 space-y-4">
+
+                {/* Check-in */}
+                <div className="flex items-center gap-4">
+                  <span className="w-20 text-sm font-bold text-gray-900 shrink-0">Check-in</span>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="flex-1 justify-start text-left font-normal h-11 border-2 border-[#0d9488] text-gray-700 hover:border-[#0d9488] hover:bg-teal-50 focus:ring-0"
+                      >
+                        <Calendar className="w-4 h-4 mr-2 text-[#0d9488]" />
+                        {checkIn ? format(parseISO(checkIn), "MMM d, yyyy") : "Select date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={checkIn ? parseISO(checkIn) : undefined}
+                        onSelect={(date) => {
+                          if (date) {
+                            setCheckIn(format(date, "yyyy-MM-dd"));
+                            setNights("");
+                          }
+                        }}
+                        disabled={(date) =>
+                          date < startOfDay(new Date()) ||
+                          isDateBooked(date) ||
+                          !isDayAllowedForCheckIn(date, property)
+                        }
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
-                {/* Dates & Guests */}
-                <div className="space-y-3">
-                  <div>
-                    <Label className="text-xs text-gray-600 font-medium">Check-in</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start text-left font-normal mt-1 h-10"
-                        >
-                          <Calendar className="w-4 h-4 mr-2" />
-                          {checkIn ? format(parseISO(checkIn), "MMM d, yyyy") : "Select date"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <CalendarComponent
-                          mode="single"
-                          selected={checkIn ? parseISO(checkIn) : undefined}
-                          onSelect={(date) => {
-                            if (date) {
-                              setCheckIn(format(date, "yyyy-MM-dd"));
-                              setNights("");
-                            }
-                          }}
-                          disabled={(date) =>
-                            date < startOfDay(new Date()) ||
-                            isDateBooked(date) ||
-                            !isDayAllowedForCheckIn(date, property)
-                          }
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
+                {/* Nights */}
+                <div className="flex items-center gap-4">
+                  <span className="w-20 text-sm font-bold text-gray-900 shrink-0">Nights</span>
+                  <Select value={nights} onValueChange={setNights}>
+                    <SelectTrigger className="flex-1 h-11 border-2 border-[#0d9488] focus:ring-0">
+                      <SelectValue placeholder="Select nights" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {allowedNights.map((n) => (
+                        <SelectItem key={n} value={n.toString()}>
+                          {n} night{n > 1 ? "s" : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                  <div>
-                    <Label className="text-xs text-gray-600 font-medium">Nights</Label>
-                    <Select value={nights} onValueChange={setNights}>
-                      <SelectTrigger className="mt-1 h-10">
-                        <SelectValue placeholder="Select nights" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {allowedNights.map((n) => (
-                          <SelectItem key={n} value={n.toString()}>
-                            {n} night{n > 1 ? "s" : ""}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label className="text-xs text-gray-600 font-medium">Guests</Label>
-                    <div className="flex gap-2 mt-1">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          setGuestData((prev) => ({
-                            ...prev,
-                            adults: Math.max(1, prev.adults - 1),
-                          }))
-                        }
-                      >
-                        −
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1"
-                        disabled
-                      >
-                        {guestData.adults + guestData.childrenAges.length} guests
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          setGuestData((prev) => ({
-                            ...prev,
-                            adults: prev.adults + 1,
-                          }))
-                        }
-                      >
-                        +
-                      </Button>
+                {/* Guests */}
+                <div className="flex items-center gap-4">
+                  <span className="w-20 text-sm font-bold text-gray-900 shrink-0">Guests</span>
+                  <div className="flex items-center gap-2 flex-1">
+                    <div className="flex-1 h-11 border-2 border-[#0d9488] rounded-md flex items-center px-3 text-sm text-gray-700">
+                      {guestData.adults + guestData.childrenAges.length} guest{guestData.adults + guestData.childrenAges.length !== 1 ? 's' : ''}
+                    </div>
+                    <div className="flex items-center bg-[#0d9488] rounded-full overflow-hidden">
+                      <button
+                        onClick={() => setGuestData((prev) => ({ ...prev, adults: Math.max(1, prev.adults - 1) }))}
+                        className="text-white px-3 py-2 text-lg font-bold hover:bg-[#0f766e] transition-colors"
+                      >−</button>
+                      <button
+                        onClick={() => setGuestData((prev) => ({ ...prev, adults: prev.adults + 1 }))}
+                        className="text-white px-3 py-2 text-lg font-bold hover:bg-[#0f766e] transition-colors"
+                      >+</button>
                     </div>
                   </div>
                 </div>
 
-                {/* Price Breakdown */}
-                {getPriceBreakdownUI()}
+                {/* Separator */}
+                <div className="border-t border-gray-200 pt-4">
+                  {/* Price Breakdown */}
+                  {getPriceBreakdownUI()}
+                </div>
 
                 {/* Booking Blocked Warning */}
                 {bookingBlocked && (
@@ -1164,12 +1150,12 @@ export default function PropertyDetails() {
                     setShowBookingDialog(true);
                   }}
                   disabled={bookingBlocked || !checkIn || !nights || numNights === 0}
-                  className="w-full h-11 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-semibold"
+                  className="w-full h-12 bg-[#1E3A5F] hover:bg-[#162d4a] text-white rounded-full font-bold text-base tracking-wide disabled:opacity-50"
                 >
                   {bookingBlocked ? "Booking Unavailable" : "Reserve"}
                 </Button>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         </div>
       </div>
