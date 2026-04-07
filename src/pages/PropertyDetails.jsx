@@ -880,9 +880,10 @@ export default function PropertyDetails() {
           </div>
 
           {/* Desktop: Grid */}
-          <div className="hidden md:grid grid-cols-12 gap-2 md:gap-3 lg:gap-4 h-[420px] rounded-2xl overflow-hidden">
+          <div className="hidden md:grid grid-cols-12 gap-2 h-[480px] rounded-2xl overflow-hidden">
+            {/* Main large photo */}
             <div
-              className="col-span-7 lg:col-span-8 relative cursor-pointer group"
+              className="col-span-7 relative cursor-pointer overflow-hidden group"
               onClick={() => setShowImageOverlay(true)}
             >
               <img
@@ -890,50 +891,36 @@ export default function PropertyDetails() {
                 alt={property.title}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-black/10 pointer-events-none" />
-              <div className="absolute bottom-4 left-4 flex items-center gap-2">
-                <div className="bg-black/60 text-white text-xs px-2 py-1 rounded-full">
-                  {photos.length} photos
-                </div>
-              </div>
             </div>
-            <div className="col-span-5 lg:col-span-4 flex flex-col gap-2 md:gap-3 lg:gap-4">
-              {/* Row 1: second photo */}
-              {photos[1] && (
-                <div
-                  className="relative h-full cursor-pointer group overflow-hidden"
-                  onClick={() => setShowImageOverlay(true)}
-                >
-                  <img
-                    src={photos[1]}
-                    alt={`${property.title} 2`}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-black/5 pointer-events-none" />
-                </div>
-              )}
-              {/* Row 2: view-all overlay slot */}
-              {photos.length > 1 && (
-                <div
-                  className="relative h-full cursor-pointer group overflow-hidden"
-                  onClick={() => setShowImageOverlay(true)}
-                >
-                  <img
-                    src={photos[Math.min(photos.length - 1, 3)]}
-                    alt={`${property.title} gallery`}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                  />
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="bg-white/95 hover:bg-white text-gray-900 border border-gray-200 shadow-sm"
-                    >
-                      View all photos
-                    </Button>
+
+            {/* Right 2x2 grid */}
+            <div className="col-span-5 grid grid-cols-2 grid-rows-2 gap-2">
+              {[1, 2, 3, 4].map((idx) => {
+                const photo = photos[idx];
+                const isLast = idx === 4;
+                const remaining = photos.length - 4; // photos not shown (index 5+)
+                if (!photo && idx > 1) return null;
+                return (
+                  <div
+                    key={idx}
+                    className="relative cursor-pointer overflow-hidden group bg-gray-200"
+                    onClick={() => setShowImageOverlay(true)}
+                  >
+                    {photo ? (
+                      <img
+                        src={photo}
+                        alt={`${property.title} ${idx + 1}`}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                      />
+                    ) : null}
+                    {isLast && remaining > 0 && (
+                      <div className="absolute inset-0 bg-black/55 flex items-center justify-center">
+                        <span className="text-white text-2xl font-bold">+{remaining}</span>
+                      </div>
+                    )}
                   </div>
-                </div>
-              )}
+                );
+              })}
             </div>
           </div>
         </div>
