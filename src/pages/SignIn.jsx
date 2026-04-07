@@ -43,7 +43,9 @@ export default function SignIn() {
         localStorage.setItem("session_expires_at", data.expires_at);
       }
 
-      window.location.href = "/";
+      const params = new URLSearchParams(window.location.search);
+      const next = params.get("next");
+      window.location.href = next || "/";
     } catch (err) {
       console.error("SignIn error:", err);
       setError("Something went wrong. Please try again.");

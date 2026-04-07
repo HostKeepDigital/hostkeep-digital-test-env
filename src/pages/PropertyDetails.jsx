@@ -221,7 +221,7 @@ export default function PropertyDetails() {
   const handleWishlistClick = (e) => {
     if (!currentUser) {
       toast.info("Create an account to save properties to your wishlist.");
-      setTimeout(() => { window.location.href = "/SignIn"; }, 1500);
+      setTimeout(() => { window.location.href = `/SignIn?next=${encodeURIComponent(window.location.pathname + window.location.search)}`; }, 1500);
       return;
     }
 
@@ -1154,7 +1154,7 @@ export default function PropertyDetails() {
                   onClick={() => {
                     if (!currentUser) {
                       toast.info("Please sign in to book this property.");
-                      setTimeout(() => { window.location.href = "/SignIn"; }, 1500);
+                      setTimeout(() => { window.location.href = `/SignIn?next=${encodeURIComponent(window.location.pathname + window.location.search)}`; }, 1500);
                       return;
                     }
                     if (!checkIn || !nights) {
