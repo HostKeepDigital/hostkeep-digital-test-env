@@ -537,7 +537,7 @@ export default function Subscription() {
                         )}
                       </Button>
                     ) : (
-                      <div className="text-xs text-gray-500">Choose your plan above</div>
+                      <div className="text-xs text-gray-500">Choose your plan below</div>
                     )}
                   </div>
                 ))}
