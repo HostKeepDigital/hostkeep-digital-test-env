@@ -983,23 +983,25 @@ export default function PropertyDetails() {
             </div>
 
             {/* Property Basics */}
-            <div className="grid grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg">
-              <div className="text-center">
-                <Users className="w-5 h-5 text-gray-600 mx-auto mb-1" />
-                <p className="text-sm text-gray-600">{property.guest_capacity} guests</p>
-              </div>
-              <div className="text-center">
-                <Bed className="w-5 h-5 text-gray-600 mx-auto mb-1" />
-                <p className="text-sm text-gray-600">{property.bedrooms} beds</p>
-              </div>
-              <div className="text-center">
-                <Bath className="w-5 h-5 text-gray-600 mx-auto mb-1" />
-                <p className="text-sm text-gray-600">{property.bathrooms} baths</p>
-              </div>
+            <div className="flex items-center gap-4 text-sm text-gray-600 flex-wrap">
+              <span className="flex items-center gap-1.5">
+                <Users className="w-4 h-4 text-gray-400" />
+                {property.guest_capacity} guests
+              </span>
+              <span className="text-gray-300">·</span>
+              <span className="flex items-center gap-1.5">
+                <Bed className="w-4 h-4 text-gray-400" />
+                {property.bedrooms} bedroom{property.bedrooms !== 1 ? 's' : ''}
+              </span>
+              <span className="text-gray-300">·</span>
+              <span className="flex items-center gap-1.5">
+                <Bath className="w-4 h-4 text-gray-400" />
+                {property.bathrooms} bathroom{property.bathrooms !== 1 ? 's' : ''}
+              </span>
             </div>
 
             {/* Description */}
-            {property.description && (
+              {property.description && (
               <div className="space-y-3">
                 <h2 className="text-xl font-semibold text-gray-900">About this property</h2>
                 <p className="text-gray-700 leading-relaxed">{property.description}</p>
@@ -1008,15 +1010,15 @@ export default function PropertyDetails() {
 
             {/* Amenities */}
             {property.amenities && property.amenities.length > 0 && (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <h2 className="text-xl font-semibold text-gray-900">What this place offers</h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 gap-2">
                   {property.amenities.map((amenity, idx) => {
                     const IconComponent = AMENITY_ICONS[amenity] || CheckCircle;
                     return (
-                      <div key={idx} className="flex items-center gap-3">
-                        <IconComponent className="w-5 h-5 text-teal-600 flex-shrink-0" />
-                        <span className="text-gray-700">{amenity}</span>
+                      <div key={idx} className="flex items-center gap-2.5 py-2 px-3 bg-gray-50 rounded-lg">
+                        <IconComponent className="w-4 h-4 text-teal-600 flex-shrink-0" />
+                        <span className="text-sm text-gray-700">{amenity}</span>
                       </div>
                     );
                   })}
