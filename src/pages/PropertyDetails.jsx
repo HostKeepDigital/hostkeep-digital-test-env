@@ -973,7 +973,10 @@ export default function PropertyDetails() {
                       className={`w-5 h-5 ${wishlistStatus ? "fill-red-500 text-red-500" : "text-gray-600"}`}
                     />
                   </Button>
-                  <PropertyShareModal propertyId={propertyId} />
+                  <PropertyShareModal
+                    propertyTitle={property?.title}
+                    propertyUrl={`https://hostkeepdigital.co.uk/PropertyDetails?id=${propertyId}`}
+                  />
                 </div>
               </div>
             </div>
