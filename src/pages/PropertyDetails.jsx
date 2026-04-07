@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
@@ -91,12 +91,17 @@ export default function PropertyDetails() {
   const [errors, setErrors] = useState({});
   const queryClient = useQueryClient();
 
-  // Prevent scrolling when image overlay is open
-  if (showImageOverlay) {
-    document.body.style.overflow = "hidden";
-  } else {
-    document.body.style.overflow = "unset";
-  }
+  // Prevent scrolling when image overlay is open + Esc to close
+  useEffect(() => {
+    if (showImageOverlay) {
+      document.body.style.overflow = "hidden";
+      const handleKey = (e) => { if (e.key === "Escape") setShowImageOverlay(false); };
+      window.addEventListener("keydown", handleKey);
+      return () => { window.removeEventListener("keydown", handleKey); document.body.style.overflow = "unset"; };
+    } else {
+      document.body.style.overflow = "unset";
+    }
+  }, [showImageOverlay]);
 
   // Check if check-in date is allowed based on booking rules
   const isDayAllowedForCheckIn = (date, property) => {
@@ -1241,8 +1246,8 @@ export default function PropertyDetails() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black flex items-center justify-center"
-          onClick={() => setShowImageOverlay(false)}
+            className="fixed inset-0 z-50 bg-black flex items-center justify-center overflow-hidden"
+            onClick={() => setShowImageOverlay(false)}
           >
             <button
               onClick={() => setShowImageOverlay(false)}
@@ -1250,11 +1255,11 @@ export default function PropertyDetails() {
             >
               <X className="w-6 h-6 text-white" />
             </button>
-            <div className="relative w-full h-full flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            <div className="relative flex items-center justify-center w-full h-full" onClick={(e) => e.stopPropagation()}>
               <img
                 src={photos[currentImageIndex]}
                 alt={`${property.title} ${currentImageIndex + 1}`}
-                className="max-w-full max-h-full object-contain"
+                className="max-w-[90vw] max-h-[90vh] object-contain"
               />
               {photos.length > 1 && (
                 <>
