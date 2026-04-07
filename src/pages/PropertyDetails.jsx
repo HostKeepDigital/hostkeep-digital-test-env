@@ -65,7 +65,7 @@ export default function PropertyDetails() {
   const urlParams = new URLSearchParams(window.location.search);
   const propertyId = urlParams.get("id");
 
-  const { user: currentUser, openAuthModal } = useAuth();
+  const { user: currentUser } = useAuth();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showImageOverlay, setShowImageOverlay] = useState(false);
   const [checkIn, setCheckIn] = useState(() => urlParams.get("checkIn") || "");
@@ -221,7 +221,7 @@ export default function PropertyDetails() {
   const handleWishlistClick = (e) => {
     if (!currentUser) {
       toast.info("Create an account to save properties to your wishlist.");
-      setTimeout(() => openAuthModal?.(), 1500);
+      setTimeout(() => { window.location.href = "/SignIn"; }, 1500);
       return;
     }
 
@@ -1154,7 +1154,7 @@ export default function PropertyDetails() {
                   onClick={() => {
                     if (!currentUser) {
                       toast.info("Please sign in to book this property.");
-                      setTimeout(() => openAuthModal?.(), 1500);
+                      setTimeout(() => { window.location.href = "/SignIn"; }, 1500);
                       return;
                     }
                     if (!checkIn || !nights) {
