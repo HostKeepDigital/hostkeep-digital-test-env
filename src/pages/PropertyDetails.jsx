@@ -912,30 +912,26 @@ export default function PropertyDetails() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-black/5 pointer-events-none" />
                 </div>
               )}
-              {/* Row 2: third photo with optional view-all overlay */}
-              {photos[2] && (
+              {/* Row 2: view-all overlay slot */}
+              {photos.length > 1 && (
                 <div
                   className="relative h-full cursor-pointer group overflow-hidden"
                   onClick={() => setShowImageOverlay(true)}
                 >
                   <img
-                    src={photos[2]}
-                    alt={`${property.title} 3`}
+                    src={photos[Math.min(photos.length - 1, 3)]}
+                    alt={`${property.title} gallery`}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                   />
-                  {photos.length > 1 ? (
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="bg-white/95 hover:bg-white text-gray-900 border border-gray-200 shadow-sm"
-                      >
-                        View all photos
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-black/5 pointer-events-none" />
-                  )}
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="bg-white/95 hover:bg-white text-gray-900 border border-gray-200 shadow-sm"
+                    >
+                      View all photos
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
