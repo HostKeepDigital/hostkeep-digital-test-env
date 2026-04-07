@@ -83,6 +83,7 @@ export default function PropertyDetails() {
   const [guestPhone, setGuestPhone] = useState("");
   const [guestMessage, setGuestMessage] = useState("");
   const [showBookingDialog, setShowBookingDialog] = useState(false);
+  const [checkInPopoverOpen, setCheckInPopoverOpen] = useState(false);
   const [agreedHouseRules, setAgreedHouseRules] = useState(false);
   const [agreedCancellation, setAgreedCancellation] = useState(false);
   const [agreedTerms, setAgreedTerms] = useState(false);
@@ -1054,7 +1055,7 @@ export default function PropertyDetails() {
                 {/* Check-in */}
                 <div className="flex items-center gap-4">
                   <span className="w-20 text-sm font-bold text-gray-900 shrink-0">Check-in</span>
-                  <Popover>
+                  <Popover open={checkInPopoverOpen} onOpenChange={setCheckInPopoverOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
@@ -1072,6 +1073,7 @@ export default function PropertyDetails() {
                           if (date) {
                             setCheckIn(format(date, "yyyy-MM-dd"));
                             setNights("");
+                            setCheckInPopoverOpen(false);
                           }
                         }}
                         disabled={(date) =>
