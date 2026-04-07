@@ -939,7 +939,7 @@ export default function PropertyDetails() {
                   <div className="flex items-center gap-4 text-sm text-gray-600">
                     <div className="flex items-center gap-1">
                       <MapPin className="w-4 h-4" />
-                      <span>{[property.location?.street, property.location?.locality, property.town, property.county, property.postcode].filter(Boolean).join(', ')}</span>
+                      <span>{[property.location?.street, property.location?.locality, property.town, property.county].filter(Boolean).join(', ')}</span>
                     </div>
                     {averageRating > 0 && (
                       <div className="flex items-center gap-1">
