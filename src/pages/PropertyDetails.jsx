@@ -1255,7 +1255,7 @@ export default function PropertyDetails() {
             >
               <X className="w-6 h-6 text-white" />
             </button>
-            <div className="relative flex items-center justify-center w-full h-full" onClick={(e) => e.stopPropagation()}>
+            <div className="relative flex items-center justify-center w-full h-full overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <img
                 src={photos[currentImageIndex]}
                 alt={`${property.title} ${currentImageIndex + 1}`}
