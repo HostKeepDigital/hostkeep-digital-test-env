@@ -898,39 +898,44 @@ export default function PropertyDetails() {
               </div>
             </div>
             <div className="col-span-5 lg:col-span-4 grid grid-rows-2 gap-2 md:gap-3 lg:gap-4">
-              {photos.slice(1, 3).map((photo, idx) => (
+              {/* Row 1: second photo */}
+              {photos[1] && (
                 <div
-                  key={idx}
-                  className="relative cursor-pointer group"
+                  className="relative cursor-pointer group overflow-hidden"
                   onClick={() => setShowImageOverlay(true)}
                 >
                   <img
-                    src={photo}
-                    alt={`${property.title} ${idx + 2}`}
+                    src={photos[1]}
+                    alt={`${property.title} 2`}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-black/5 pointer-events-none" />
                 </div>
-              ))}
-              {photos.length > 3 && (
+              )}
+              {/* Row 2: third photo with optional view-all overlay */}
+              {photos[2] && (
                 <div
-                  className="relative cursor-pointer group"
+                  className="relative cursor-pointer group overflow-hidden"
                   onClick={() => setShowImageOverlay(true)}
                 >
                   <img
-                    src={photos[3]}
-                    alt={`${property.title} 4`}
+                    src={photos[2]}
+                    alt={`${property.title} 3`}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                   />
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="bg-white/95 hover:bg-white text-gray-900 border border-gray-200 shadow-sm"
-                    >
-                      View all photos
-                    </Button>
-                  </div>
+                  {photos.length > 3 ? (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="bg-white/95 hover:bg-white text-gray-900 border border-gray-200 shadow-sm"
+                      >
+                        View all photos
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-black/5 pointer-events-none" />
+                  )}
                 </div>
               )}
             </div>
