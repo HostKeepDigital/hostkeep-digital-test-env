@@ -1082,6 +1082,21 @@ export default function PropertyDetails() {
                           isDateBooked(date) ||
                           !isDayAllowedForCheckIn(date, property)
                         }
+                        components={{
+                          DayContent: ({ date }) => {
+                            const dateStr = format(date, "yyyy-MM-dd");
+                            const rate = calculateNightlyRate(dateStr);
+                            const isDisabled = date < startOfDay(new Date()) || isDateBooked(date) || !isDayAllowedForCheckIn(date, property);
+                            return (
+                              <div className="flex flex-col items-center leading-none">
+                                <span>{date.getDate()}</span>
+                                {!isDisabled && (
+                                  <span className="text-[8px] text-teal-600 font-medium mt-0.5">£{rate.toFixed(0)}</span>
+                                )}
+                              </div>
+                            );
+                          }
+                        }}
                       />
                     </PopoverContent>
                   </Popover>
