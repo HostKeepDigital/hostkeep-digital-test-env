@@ -300,6 +300,7 @@ export default function Subscription() {
 
   const [checkoutLoading, setCheckoutLoading] = useState(null);
   const [nextSubscriptionLoading, setNextSubscriptionLoading] = useState(false);
+  const [pendingPlan, setPendingPlan] = useState(null); // plan awaiting confirmation
 
   const handleSetNextSubscription = async (planId) => {
     setNextSubscriptionLoading(true);
@@ -308,7 +309,8 @@ export default function Subscription() {
         next_subscription: planId,
       });
       queryClient.invalidateQueries({ queryKey: ["subscription"] });
-      toast.success("Your founding subscription has been set!");
+      setPendingPlan(null);
+      navigate(createPageUrl("HostDashboard"));
     } catch (error) {
       toast.error("Failed to set subscription. Please try again.");
     } finally {
@@ -551,17 +553,15 @@ export default function Subscription() {
                     <p className="text-xs text-gray-500 mb-4">Locked in for founding members<br /><strong>Standard: £{plan.standard}/mo</strong></p>
                     {isBetaUser ? (
                       <Button
-                        onClick={() => handleSetNextSubscription(plan.id)}
-                        disabled={nextSubscriptionLoading || subscription?.next_subscription === plan.id}
+                        onClick={() => setPendingPlan(plan)}
+                        disabled={subscription?.next_subscription === plan.id}
                         className={`w-full ${
                           subscription?.next_subscription === plan.id
                             ? 'bg-amber-600 hover:bg-amber-700'
                             : 'bg-gray-600 hover:bg-gray-700'
                         }`}
                       >
-                        {nextSubscriptionLoading ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : subscription?.next_subscription === plan.id ? (
+                        {subscription?.next_subscription === plan.id ? (
                           'Selected for Beta Exit'
                         ) : (
                           'Choose This Plan'
@@ -584,17 +584,15 @@ export default function Subscription() {
                 <p className="text-4xl font-black text-gray-900 mb-3">£19</p>
                 <p className="text-xs text-gray-500 mb-4">Locked in for founding members<br /><strong>Standard: £19.99/mo</strong></p>
                 <Button
-                  onClick={() => handleSetNextSubscription('founding_cleaner_solo')}
-                  disabled={nextSubscriptionLoading || subscription?.next_subscription === 'founding_cleaner_solo'}
+                  onClick={() => setPendingPlan({ id: 'founding_cleaner_solo', name: 'Cleaner Solo Founding', price: 19 })}
+                  disabled={subscription?.next_subscription === 'founding_cleaner_solo'}
                   className={`w-full ${
                     subscription?.next_subscription === 'founding_cleaner_solo'
                       ? 'bg-blue-600 hover:bg-blue-700'
                       : 'bg-gray-600 hover:bg-gray-700'
                   }`}
                 >
-                  {nextSubscriptionLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : subscription?.next_subscription === 'founding_cleaner_solo' ? (
+                  {subscription?.next_subscription === 'founding_cleaner_solo' ? (
                     'Selected for Beta Exit'
                   ) : (
                     'Choose This Plan'
@@ -825,6 +823,73 @@ export default function Subscription() {
           </div>
         </motion.div>
       </div>
+
+      {/* Plan confirmation overlay */}
+      <AnimatePresence>
+        {pendingPlan && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setPendingPlan(null)}
+              className="fixed inset-0 bg-black/50 z-50"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            >
+              <Card className="max-w-md w-full relative">
+                <button
+                  onClick={() => setPendingPlan(null)}
+                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+                <CardHeader className="text-center pb-4">
+                  <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
+                    <Crown className="w-8 h-8 text-amber-600" />
+                  </div>
+                  <CardTitle className="text-xl">Confirm Your Founding Plan</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-5">
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
+                    <p className="text-sm text-amber-700 font-medium mb-1">You're selecting</p>
+                    <p className="text-xl font-bold text-gray-900">{pendingPlan.name}</p>
+                    <p className="text-2xl font-black text-amber-700 mt-1">£{pendingPlan.price}<span className="text-sm font-normal text-gray-500">/month</span></p>
+                  </div>
+                  <p className="text-sm text-gray-600 text-center leading-relaxed">
+                    Once beta is complete, this will be the subscription plan you move to. Your founding price is <strong>locked in for life</strong>. The exact start date will be confirmed by the HostKeep team.
+                  </p>
+                  <div className="space-y-2 pt-1">
+                    <Button
+                      className="w-full bg-teal-600 hover:bg-teal-700"
+                      onClick={() => handleSetNextSubscription(pendingPlan.id)}
+                      disabled={nextSubscriptionLoading}
+                    >
+                      {nextSubscriptionLoading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        "Yes, Please!"
+                      )}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="w-full text-gray-500 hover:text-gray-700"
+                      onClick={() => setPendingPlan(null)}
+                      disabled={nextSubscriptionLoading}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {showCancelDialog && (

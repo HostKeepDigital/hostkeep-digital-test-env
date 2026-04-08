@@ -527,81 +527,114 @@ export default function HostDashboard() {
               animate={{ opacity: 1, y: 0 }}
               className="bg-white rounded-xl shadow-sm border border-gray-100 p-4"
             >
-              <h3 className="font-semibold text-gray-900 mb-4">
-                Subscription
-              </h3>
+              <h3 className="font-semibold text-gray-900 mb-4">Subscription</h3>
 
-              {subscription ? (
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-gray-600">Status</span>
-                    <Badge
-                      variant={
-                        subscription.status === "active"
-                          ? "default"
-                          : "secondary"
-                      }
-                    >
-                      {subscription.status}
-                    </Badge>
-                  </div>
+              {subscription ? (() => {
+                const isBeta = ["beta_host_access", "beta_cleaner_access"].includes(subscription.plan);
+                const FOUNDING_PLANS = {
+                  founding_host_solo:      { name: "Solo Host Founding",      price: 19, max: 1 },
+                  founding_host_multi:     { name: "Multi Host Founding",     price: 49, max: 5 },
+                  founding_host_portfolio: { name: "Portfolio Host Founding", price: 89, max: null },
+                  founding_cleaner_solo:   { name: "Cleaner Solo Founding",   price: 19, max: null },
+                };
+                const nextPlan = subscription.next_subscription ? FOUNDING_PLANS[subscription.next_subscription] : null;
+                const allowedProps = nextPlan ? nextPlan.max : (subscription.max_properties ?? null);
 
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-gray-600">Plan</span>
-                    <Badge className="capitalize bg-teal-100 text-teal-700 border border-teal-200 font-semibold">
-                      {(subscription.plan || '').replace(/_/g, ' ')}
-                    </Badge>
-                  </div>
-
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-gray-600">Cost</span>
-                    <span className="font-medium">
-                      £{subscription.price_monthly}/month
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-gray-600">Properties</span>
-                    <span>
-                      {properties.length} /{" "}
-                      {subscription.max_properties || "∞"}
-                    </span>
-                  </div>
-
-                  {subscription.end_date && (
-                    <div className="flex items-center justify-between pt-2 border-t border-gray-200">
-                      <span className="text-gray-600 text-sm">
-                        {subscription.status === "cancelled"
-                          ? "Expires on"
-                          : "Renews"}
-                      </span>
-                      <span className="text-sm font-medium">
-                        {format(
-                          parseISO(subscription.end_date),
-                          "MMM d, yyyy"
+                if (isBeta) {
+                  return (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600 text-sm">Status</span>
+                        <Badge className="bg-amber-100 text-amber-700 border border-amber-200 font-semibold">
+                          Beta Access
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600 text-sm">Cost</span>
+                        <span className="font-semibold text-teal-700">Free</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600 text-sm">Properties allowed</span>
+                        <span className="font-medium text-gray-900">
+                          {allowedProps === null ? "Unlimited" : allowedProps === 1 ? "1" : `Up to ${allowedProps}`}
+                        </span>
+                      </div>
+                      <div className="border-t border-gray-100 pt-3 space-y-2">
+                        <p className="text-xs text-gray-400 uppercase tracking-wide font-semibold">After Beta</p>
+                        {nextPlan ? (
+                          <>
+                            <div className="flex items-center justify-between">
+                              <span className="text-gray-600 text-sm">Plan</span>
+                              <span className="font-medium text-gray-900 text-sm">{nextPlan.name}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-gray-600 text-sm">Price</span>
+                              <span className="font-semibold text-amber-700">£{nextPlan.price}/mo</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-gray-600 text-sm">Start date</span>
+                              <span className="text-sm text-gray-400 italic">TBC</span>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="text-center pt-1">
+                            <p className="text-xs text-amber-600 mb-2">No founding plan selected yet</p>
+                            <Link to={createPageUrl("Subscription")}>
+                              <Button size="sm" variant="outline" className="text-xs w-full border-amber-300 text-amber-700 hover:bg-amber-50">
+                                Choose Your Plan
+                              </Button>
+                            </Link>
+                          </div>
                         )}
-                      </span>
+                      </div>
                     </div>
-                  )}
+                  );
+                }
 
-                  {subscription.status === "cancelled" && (
-                    <Link
-                      to={createPageUrl("Subscription")}
-                      className="block mt-4"
-                    >
-                      <Button className="w-full bg-teal-600 hover:bg-teal-700 text-white">
-                        Resubscribe
-                      </Button>
-                    </Link>
-                  )}
-                </div>
-              ) : (
+                return (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-gray-600">Status</span>
+                      <Badge variant={subscription.status === "active" ? "default" : "secondary"}>
+                        {subscription.status}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-gray-600">Plan</span>
+                      <Badge className="capitalize bg-teal-100 text-teal-700 border border-teal-200 font-semibold">
+                        {(subscription.plan || '').replace(/_/g, ' ')}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-gray-600">Cost</span>
+                      <span className="font-medium">£{subscription.price_monthly}/month</span>
+                    </div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-gray-600">Properties</span>
+                      <span>{properties.length} / {subscription.max_properties || "∞"}</span>
+                    </div>
+                    {subscription.end_date && (
+                      <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+                        <span className="text-gray-600 text-sm">
+                          {subscription.status === "cancelled" ? "Expires on" : "Renews"}
+                        </span>
+                        <span className="text-sm font-medium">
+                          {format(parseISO(subscription.end_date), "MMM d, yyyy")}
+                        </span>
+                      </div>
+                    )}
+                    {subscription.status === "cancelled" && (
+                      <Link to={createPageUrl("Subscription")} className="block mt-4">
+                        <Button className="w-full bg-teal-600 hover:bg-teal-700 text-white">Resubscribe</Button>
+                      </Link>
+                    )}
+                  </div>
+                );
+              })() : (
                 <div className="text-center">
                   <p className="text-gray-500 mb-3">No active subscription</p>
                   <Link to={createPageUrl("Subscription")}>
-                    <Button variant="outline" size="sm">
-                      View Plans
-                    </Button>
+                    <Button variant="outline" size="sm">View Plans</Button>
                   </Link>
                 </div>
               )}
