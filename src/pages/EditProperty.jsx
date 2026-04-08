@@ -115,18 +115,6 @@ export default function EditProperty() {
     }).catch(() => setHostSubscription(null));
   }, []);
 
-  // Warn on browser back/tab close when there are unsaved changes
-  useEffect(() => {
-    const handler = (e) => {
-      if (hasChanges) {
-        e.preventDefault();
-        e.returnValue = "";
-      }
-    };
-    window.addEventListener("beforeunload", handler);
-    return () => window.removeEventListener("beforeunload", handler);
-  }, [hasChanges]);
-
   const { data: property, isLoading } = useQuery({
     queryKey: ["property", propertyId],
     queryFn: async () => {
@@ -246,6 +234,18 @@ export default function EditProperty() {
     });
   }
   const hasChanges = changedFields.length > 0;
+
+  // Warn on browser back/tab close when there are unsaved changes
+  useEffect(() => {
+    const handler = (e) => {
+      if (hasChanges) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [hasChanges]);
 
   useEffect(() => {
     if (setNavBlocker) {
