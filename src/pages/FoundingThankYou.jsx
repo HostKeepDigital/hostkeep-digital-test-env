@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { CheckCircle, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const CORNWALL_IMG = "https://drive.google.com/uc?export=view&id=1ZmljdO7m9HdHdT_KKSa0S-p2e9ctR5BU";
+const CORNWALL_IMG = "https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/vecteezy_cornwall-coast-in-england_2524414.jpg";
 const LOGO_IMG = "https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/HostKeep_Digital_Navy_Background.png";
 
 export default function FoundingThankYou() {
@@ -26,7 +26,7 @@ export default function FoundingThankYou() {
           <img
             src={LOGO_IMG}
             alt="HostKeep Digital"
-            className="h-12 w-auto"
+            className="h-60 w-auto"
           />
 
           <div>
