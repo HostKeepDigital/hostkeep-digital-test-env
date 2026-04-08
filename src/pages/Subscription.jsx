@@ -206,6 +206,17 @@ export default function Subscription() {
     };
   }, [user?.id, loading]);
 
+  // Handle Stripe Connect return from subscription page
+  useEffect(() => {
+    const stripeConnectReturn = urlParams.get('stripe_connect_return');
+    if (stripeConnectReturn === 'success') {
+      window.history.replaceState({}, '', window.location.pathname);
+      toast.success("Stripe setup submitted! Your account is being verified.");
+    } else if (stripeConnectReturn === 'refresh') {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
   // Handle Stripe redirect back to page
   useEffect(() => {
     const success = urlParams.get("success");
@@ -301,6 +312,9 @@ export default function Subscription() {
   const [checkoutLoading, setCheckoutLoading] = useState(null);
   const [nextSubscriptionLoading, setNextSubscriptionLoading] = useState(false);
   const [pendingPlan, setPendingPlan] = useState(null); // plan awaiting confirmation
+  const [showStripePrompt, setShowStripePrompt] = useState(false);
+  const [stripeConnecting, setStripeConnecting] = useState(false);
+  const [stripeStatus, setStripeStatus] = useState(null); // null=unchecked
 
   const handleSetNextSubscription = async (planId) => {
     setNextSubscriptionLoading(true);
@@ -310,11 +324,44 @@ export default function Subscription() {
       });
       queryClient.invalidateQueries({ queryKey: ["subscription"] });
       setPendingPlan(null);
+
+      // Check stripe status — skip prompt if already connected
+      try {
+        const res = await base44.functions.invoke('getStripeConnectStatus', {});
+        const st = res.data?.status || 'not_connected';
+        setStripeStatus(st);
+        if (st === 'not_connected') {
+          setShowStripePrompt(true);
+          return;
+        }
+      } catch (_) {
+        // If check fails, just skip the stripe prompt
+      }
+
       navigate(createPageUrl("HostDashboard"));
     } catch (error) {
       toast.error("Failed to set subscription. Please try again.");
     } finally {
       setNextSubscriptionLoading(false);
+    }
+  };
+
+  const handleStripeConnect = async () => {
+    setStripeConnecting(true);
+    try {
+      const res = await base44.functions.invoke('createStripeConnectLink', {
+        return_url: `${window.location.origin}/Subscription?stripe_connect_return=success`,
+        refresh_url: `${window.location.origin}/Subscription?stripe_connect_return=refresh`,
+      });
+      if (res.data?.url) {
+        window.location.href = res.data.url;
+      } else {
+        toast.error(res.data?.error || 'Failed to start Stripe setup');
+        setStripeConnecting(false);
+      }
+    } catch {
+      toast.error('Failed to connect to Stripe. Please try again.');
+      setStripeConnecting(false);
     }
   };
 
@@ -882,6 +929,80 @@ export default function Subscription() {
                       disabled={nextSubscriptionLoading}
                     >
                       Cancel
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Stripe Connect prompt — shown after plan selection if not yet connected */}
+      <AnimatePresence>
+        {showStripePrompt && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-50"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            >
+              <Card className="max-w-md w-full relative">
+                <CardHeader className="text-center pb-4">
+                  <div className="w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle className="w-8 h-8 text-teal-600" />
+                  </div>
+                  <CardTitle className="text-xl">Plan locked in! 🎉</CardTitle>
+                  <CardDescription className="text-base mt-2">
+                    One more optional step to start accepting guest bookings now
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-5">
+                  <div className="bg-teal-50 border border-teal-200 rounded-xl p-4 space-y-3">
+                    <p className="text-sm font-semibold text-teal-900">Connect your payment account</p>
+                    <ul className="space-y-2">
+                      {[
+                        "Start receiving guest bookings during beta",
+                        "You won't be charged anything until beta closes",
+                        "HostKeep remains completely free until then",
+                        "Just your name, card details & ID for verification",
+                      ].map((item, i) => (
+                        <li key={i} className="flex items-start gap-2 text-sm text-teal-800">
+                          <CheckCircle className="w-4 h-4 text-teal-500 mt-0.5 flex-shrink-0" />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <p className="text-xs text-gray-500 text-center">
+                    Powered by Stripe Express — you don't need your own Stripe account. Takes about 2 minutes.
+                  </p>
+                  <div className="space-y-2">
+                    <Button
+                      className="w-full bg-teal-600 hover:bg-teal-700"
+                      onClick={handleStripeConnect}
+                      disabled={stripeConnecting}
+                    >
+                      {stripeConnecting ? (
+                        <><Loader2 className="w-4 h-4 animate-spin" /> Redirecting to Stripe...</>
+                      ) : (
+                        "Set Up Payments — Free During Beta"
+                      )}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="w-full text-gray-500 hover:text-gray-700"
+                      onClick={() => { setShowStripePrompt(false); navigate(createPageUrl("HostDashboard")); }}
+                      disabled={stripeConnecting}
+                    >
+                      Maybe Later
                     </Button>
                   </div>
                 </CardContent>

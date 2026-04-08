@@ -57,7 +57,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    const origin = req.headers.get("origin") || "https://app.base44.com";
+    const origin = req.headers.get("origin") || "https://hostkeepdigital.co.uk";
+    const customReturnUrl = body.return_url;
+    const customRefreshUrl = body.refresh_url;
 
     // Reuse existing account or create new one
     let accountId = user.stripe_connect_account_id;
@@ -89,10 +91,8 @@ Deno.serve(async (req) => {
     // Create onboarding link
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
-      refresh_url:
-        `https://hostkeepdigital.co.uk/Settings?tab=payments&stripe_return=refresh`,
-      return_url:
-        `https://hostkeepdigital.co.uk/Settings?tab=payments&stripe_return=success`,
+      refresh_url: customRefreshUrl || `https://hostkeepdigital.co.uk/Settings?tab=payments&stripe_return=refresh`,
+      return_url: customReturnUrl || `https://hostkeepdigital.co.uk/Settings?tab=payments&stripe_return=success`,
       type: "account_onboarding",
     });
 
