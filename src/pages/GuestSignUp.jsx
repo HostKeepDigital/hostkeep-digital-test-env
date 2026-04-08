@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
@@ -13,6 +13,19 @@ export default function GuestSignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [propertyCount, setPropertyCount] = useState(0);
+
+  useEffect(() => {
+    const fetchPropertyCount = async () => {
+      try {
+        const properties = await base44.entities.Property.filter({ status: 'published' });
+        setPropertyCount(properties?.length || 0);
+      } catch (err) {
+        console.error('Failed to fetch property count:', err);
+      }
+    };
+    fetchPropertyCount();
+  }, []);
 
   const handleSignUp = async (e) => {
     e.preventDefault();
@@ -82,7 +95,7 @@ export default function GuestSignUp() {
             {[
               { value: "0%", label: "Platform markup" },
               { value: "10%+", label: "Savings vs Airbnb" },
-              { value: "1000s", label: "Hand-picked homes" },
+              ...(propertyCount >= 1000 ? [{ value: "1000s", label: "Hand-picked homes" }] : []),
             ].map((s) => (
               <div key={s.label}>
                 <p className="text-white text-2xl font-bold">{s.value}</p>
