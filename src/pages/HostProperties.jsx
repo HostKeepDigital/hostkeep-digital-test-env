@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
@@ -99,6 +99,16 @@ export default function HostProperties() {
   });
 
   const isFoundingMember = foundingMemberData?.is_founding_member === true;
+
+  const [stripeConnected, setStripeConnected] = useState(false);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    const session_token = localStorage.getItem("session_token");
+    base44.functions.invoke("getStripeConnectStatus", { session_token })
+      .then(res => setStripeConnected(res.data?.status === "verified"))
+      .catch(() => setStripeConnected(false));
+  }, [user?.id]);
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Property.update(id, data),
@@ -214,16 +224,18 @@ export default function HostProperties() {
                   }
                 >
                   <PropertyListingCard
-                    property={property}
-                    cleanerSettings={cleanerSettings.find(
-                      (cs) => cs.property_id === property.id
-                    )}
-                    upcomingBookings={upcomingBookings}
-                    cleaningJobs={cleaningJobs}
-                    isSingle={properties.length === 1}
-                    onStatusToggle={() => toggleStatus(property)}
-                    onDelete={() => setDeleteProperty(property)}
-                    isFoundingMember={isFoundingMember}
+                   property={property}
+                   cleanerSettings={cleanerSettings.find(
+                     (cs) => cs.property_id === property.id
+                   )}
+                   upcomingBookings={upcomingBookings}
+                   cleaningJobs={cleaningJobs}
+                   isSingle={properties.length === 1}
+                   onStatusToggle={() => toggleStatus(property)}
+                   onDelete={() => setDeleteProperty(property)}
+                   isFoundingMember={isFoundingMember}
+                   subscription={subscription}
+                   stripeConnected={stripeConnected}
                   />
                 </motion.div>
               ))}

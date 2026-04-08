@@ -39,22 +39,24 @@ export default function PropertyListingCard({
   onStatusToggle,
   onDelete,
   isFoundingMember,
+  subscription,
+  stripeConnected,
 }) {
   const [showActions, setShowActions] = useState(false);
 
-  // Updated completeness score (uses new amenity system)
-  let score = 0;
-  if (property.photos?.length > 0) score += 20;
-  if (property.description?.length > 20) score += 20;
-  if (Array.isArray(property.amenities) && property.amenities.length > 0)
-    score += 20;
-  if (property.nightly_rate > 0) score += 20;
-  if (
-    property.ical_url ||
-    property.blocked_dates?.length > 0 ||
-    property.day_based_restrictions_enabled
-  )
-    score += 20;
+  // Profile completeness score (7 criteria)
+  const criteria = [
+    property.photos?.length > 0,
+    property.description?.length > 20,
+    Array.isArray(property.amenities) && property.amenities.length > 0,
+    property.nightly_rate > 0,
+    property.ical_url || property.blocked_dates?.length > 0 || property.day_based_restrictions_enabled,
+    !!(subscription && subscription.status === "active"),
+    !!stripeConnected,
+  ];
+  const score = Math.round((criteria.filter(Boolean).length / criteria.length) * 100);
+  const hasActiveSubscription = criteria[5];
+  const hasStripe = criteria[6];
 
   const statusColors = {
     draft: "bg-gray-100 text-gray-700",
@@ -263,8 +265,25 @@ export default function PropertyListingCard({
           </div>
 
           <div className="flex items-center gap-2 text-sm">
-            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-            <span className="text-gray-700">Smart Lock Setup</span>
+            {hasActiveSubscription ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+            ) : (
+              <AlertTriangle className="w-4 h-4 text-amber-500" />
+            )}
+            <span className={hasActiveSubscription ? "text-gray-700" : "text-gray-500"}>
+              {hasActiveSubscription ? "Subscribed" : "No Subscription"}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 text-sm">
+            {hasStripe ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+            ) : (
+              <AlertTriangle className="w-4 h-4 text-amber-500" />
+            )}
+            <span className={hasStripe ? "text-gray-700" : "text-gray-500"}>
+              {hasStripe ? "Stripe Connected" : "No Stripe"}
+            </span>
           </div>
         </div>
 
