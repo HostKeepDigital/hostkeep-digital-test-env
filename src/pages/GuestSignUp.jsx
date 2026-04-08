@@ -212,13 +212,18 @@ export default function GuestSignUp() {
             </button>
           </form>
 
-          <div className="mt-8 pt-8 border-t border-gray-100 dark:border-gray-700 text-center">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+          <div className="mt-8 pt-8 border-t border-gray-100 dark:border-gray-700 space-y-3">
+            <p className="text-center text-sm text-gray-500 dark:text-gray-400">
               Already have an account?{" "}
               <Link to="/SignIn" className="text-[#0d9488] font-semibold hover:text-[#0f766e] transition-colors">
                 Sign In
               </Link>
             </p>
+            <div className="text-center">
+              <Link to="/" className="text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                ← Back to Home
+              </Link>
+            </div>
           </div>
 
           <p className="text-center text-xs text-gray-400 mt-6">

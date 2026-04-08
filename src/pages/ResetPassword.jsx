@@ -183,15 +183,21 @@ export default function ResetPassword() {
               >
                 Back to Sign In
               </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+              <Link
+                to="/"
+                className="inline-block w-full text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors py-2 text-center"
+              >
+                Back to Home
+              </Link>
+              </div>
+              </div>
+              </div>
+              </div>
+              );
+              }
 
-  // Expired token
-  if (step === "expired") {
+              // Expired token
+              if (step === "expired") {
     return (
       <div className="min-h-screen flex">
         <LeftPanel />
@@ -220,15 +226,21 @@ export default function ResetPassword() {
               >
                 Back to Sign In
               </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+              <Link
+                to="/"
+                className="inline-block w-full text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors py-2 text-center"
+              >
+                Back to Home
+              </Link>
+              </div>
+              </div>
+              </div>
+              </div>
+              );
+              }
 
-  // No token — email entry form
-  if (!token) {
+              // No token — email entry form
+              if (!token) {
     return (
       <div className="min-h-screen flex">
         <LeftPanel />
@@ -287,10 +299,17 @@ export default function ResetPassword() {
               </div>
             )}
 
-            <div className="mt-8 text-center">
-              <Link to="/SignIn" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
-                ← Back to Sign In
-              </Link>
+            <div className="mt-8 pt-8 border-t border-gray-100 dark:border-gray-700 space-y-3">
+              <div className="text-center">
+                <Link to="/SignIn" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
+                  ← Back to Sign In
+                </Link>
+              </div>
+              <div className="text-center">
+                <Link to="/" className="text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                  Back to Home
+                </Link>
+              </div>
             </div>
 
             <p className="text-center text-xs text-gray-400 mt-6">
@@ -369,10 +388,17 @@ export default function ResetPassword() {
             </button>
           </form>
 
-          <div className="mt-8 text-center">
-            <Link to="/SignIn" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
-              ← Back to Sign In
-            </Link>
+          <div className="mt-8 pt-8 border-t border-gray-100 dark:border-gray-700 space-y-3">
+            <div className="text-center">
+              <Link to="/SignIn" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
+                ← Back to Sign In
+              </Link>
+            </div>
+            <div className="text-center">
+              <Link to="/" className="text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                Back to Home
+              </Link>
+            </div>
           </div>
 
           <p className="text-center text-xs text-gray-400 mt-6">

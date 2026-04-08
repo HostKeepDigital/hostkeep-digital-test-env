@@ -273,10 +273,17 @@ export default function CreatePassword() {
             </button>
           </form>
 
-          <div className="mt-8 text-center">
-            <Link to="/SignIn" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
-              ← Back to Sign In
-            </Link>
+          <div className="mt-8 pt-8 border-t border-gray-100 dark:border-gray-700 space-y-3">
+            <div className="text-center">
+              <Link to="/SignIn" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
+                ← Back to Sign In
+              </Link>
+            </div>
+            <div className="text-center">
+              <Link to="/" className="text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                Back to Home
+              </Link>
+            </div>
           </div>
 
           <p className="text-center text-xs text-gray-400 mt-6">
