@@ -198,7 +198,13 @@ export default function SignIn() {
 
           <div className="mt-8 pt-8 border-t border-gray-100 dark:border-gray-700 space-y-3">
             <p className="text-center text-sm text-gray-500 dark:text-gray-400">
-              Not a member yet?{" "}
+              Looking to book a stay?{" "}
+              <Link to="/GuestSignUp" className="text-[#0d9488] font-semibold hover:text-[#0f766e] transition-colors">
+                Create a guest account
+              </Link>
+            </p>
+            <p className="text-center text-sm text-gray-500 dark:text-gray-400">
+              Want to host?{" "}
               <Link to="/founding" className="text-[#0d9488] font-semibold hover:text-[#0f766e] transition-colors">
                 Apply for a founding spot
               </Link>
