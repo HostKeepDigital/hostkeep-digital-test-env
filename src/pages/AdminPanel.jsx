@@ -17,6 +17,7 @@ import SubscriptionTester from "@/components/devtools/SubscriptionTester";
 import BetaExitPlanner from "@/components/devtools/BetaExitPlanner";
 import { useAuth } from "@/lib/AuthContext";
 import ComplaintsTab from "@/components/admin/ComplaintsTab";
+import BalancePaymentTester from "@/components/devtools/BalancePaymentTester";
 
 // ── STATUS MAPS ──────────────────────────────────────────────────────────────
 
@@ -1528,6 +1529,15 @@ const handleApproveGuestAsHost = async (member) => {
               <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Beta Management</h2>
             </div>
             <BetaExitPlanner />
+          </div>
+
+          {/* Balance Payment Tests */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-orange-400 flex-shrink-0" />
+              <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Balance Payment & Failed Payment Tests</h2>
+            </div>
+            <BalancePaymentTester />
           </div>
 
           {/* Subscription Tests */}
