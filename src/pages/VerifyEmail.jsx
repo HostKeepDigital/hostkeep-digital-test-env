@@ -35,7 +35,7 @@ export default function VerifyEmail() {
           <img
             src={LOGO_IMG}
             alt="HostKeep Digital"
-            className="h-60 w-auto"
+            className="h-60 w-60"
           />
 
           <div>
