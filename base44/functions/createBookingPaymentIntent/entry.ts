@@ -6,16 +6,26 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
 
+  const user = await base44.auth.me();
+  if (!user) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const { booking_id } = await req.json();
   if (!booking_id) {
     return Response.json({ error: 'booking_id is required' }, { status: 400 });
   }
 
   // Load the booking
-  const bookings = await base44.asServiceRole.entities.Booking.filter({ id: booking_id });
+  const bookings = await base44.entities.Booking.filter({ id: booking_id });
   const booking = bookings?.[0];
   if (!booking) {
     return Response.json({ error: 'Booking not found' }, { status: 404 });
+  }
+
+  // Verify the booking belongs to the current user (guest)
+  if (booking.guest_id !== user.id) {
+    return Response.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   // Load the host user to get their Stripe Connect account
@@ -66,7 +76,7 @@ Deno.serve(async (req) => {
     updateData.stripe_deposit_intent_id = depositIntent.id;
   }
 
-  await base44.asServiceRole.entities.Booking.update(booking_id, updateData);
+  await base44.entities.Booking.update(booking_id, updateData);
 
   return Response.json({
     rental_client_secret: rentalIntent.client_secret,
