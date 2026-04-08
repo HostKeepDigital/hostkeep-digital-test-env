@@ -28,6 +28,13 @@ Deno.serve(async (req) => {
     return Response.json({ error: 'Forbidden' }, { status: 403 });
   }
 
+  // Load the property to get its name
+  const properties = await base44.entities.Property.filter({ id: booking.property_id });
+  const property = properties?.[0];
+  if (!property) {
+    return Response.json({ error: 'Property not found' }, { status: 404 });
+  }
+
   // Load the host user to get their Stripe Connect account
   const hosts = await base44.asServiceRole.entities.User.filter({ id: booking.host_id });
   const host = hosts?.[0];
@@ -35,10 +42,14 @@ Deno.serve(async (req) => {
     return Response.json({ error: 'Host has not connected their bank account' }, { status: 400 });
   }
 
+  // Create statement descriptor: "Hostkeep Digital - Property Name"
+  const statementDescriptor = `Hostkeep Digital - ${property.title}`.substring(0, 22);
+
   // Create rental PaymentIntent — routed through host's Express connected account
   const rentalIntent = await stripe.paymentIntents.create({
     amount: Math.round(booking.total_amount * 100),
     currency: 'gbp',
+    statement_descriptor: statementDescriptor,
     transfer_data: {
       destination: host.stripe_connect_account_id,
     },
@@ -56,6 +67,7 @@ Deno.serve(async (req) => {
       amount: Math.round(booking.security_deposit * 100),
       currency: 'gbp',
       capture_method: 'manual',
+      statement_descriptor: statementDescriptor,
       transfer_data: {
         destination: host.stripe_connect_account_id,
       },
