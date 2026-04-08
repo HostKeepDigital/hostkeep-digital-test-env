@@ -514,7 +514,7 @@ export default function PropertyDetails() {
 
   const cleaningFee = property?.cleaning_fee || 0;
   const securityDeposit = property?.security_deposit || 0;
-  const total = subtotal + cleaningFee;
+  const total = subtotal + cleaningFee + securityDeposit;
 
   const isWithin14Days = checkIn
     ? differenceInDays(parseISO(checkIn), startOfDay(new Date())) <= 14
