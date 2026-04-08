@@ -1174,11 +1174,6 @@ export default function PropertyDetails() {
                 >
                   {bookingBlocked ? "Booking Unavailable" : "Reserve"}
                 </Button>
-                <div className="text-center pt-2">
-                  <Link to="/GuestSignUp" className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
-                    Don't have an account? Book as a guest
-                  </Link>
-                </div>
               </div>
             </div>
           </div>
