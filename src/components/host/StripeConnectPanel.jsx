@@ -11,31 +11,6 @@ import { toast } from "sonner";
 export default function StripeConnectPanel({ user }) {
   const [status, setStatus] = useState(null); // null=loading
   const [connecting, setConnecting] = useState(false);
-
-  const checkStatus = async () => {
-    if (!user?.id) return;
-    // Handle Stripe return redirect
-    const params = new URLSearchParams(window.location.search);
-    const stripeReturn = params.get('stripe_return');
-    if (stripeReturn) {
-      window.history.replaceState({}, '', window.location.pathname + '?tab=payments');
-      if (stripeReturn === 'success') {
-        toast.success("Stripe setup submitted! We'll update your status once verified.");
-      }
-    }
-    try {
-      const res = await base44.functions.invoke('getStripeConnectStatus', {});
-      setStatus(res.data?.status || 'not_connected');
-    } catch {
-      setStatus('not_connected');
-    }
-  };
-
-  useEffect(() => {
-    if (user?.id) checkStatus();
-  }, [user?.id]);
-
-  const handleConnect = async () => {
     setConnecting(true);
     try {
       const res = await base44.functions.invoke('createStripeConnectLink', {});
@@ -50,6 +25,16 @@ export default function StripeConnectPanel({ user }) {
       setConnecting(false);
     }
   };
+
+  if (!user) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-8">
+          <Loader2 className="w-6 h-6 animate-spin text-teal-600" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
