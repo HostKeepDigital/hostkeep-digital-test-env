@@ -36,10 +36,11 @@ import {
 import { toast } from "sonner";
 import BookingCard from "@/components/bookings/BookingCard";
 import ReviewForm from "@/components/reviews/ReviewForm";
-import { useState } from "react";
 import DepositReturnTimer from "@/components/bookings/DepositReturnTimer";
 import DamageClaimModal from "@/components/bookings/DamageClaimModal";
 import { useAuth } from "@/lib/AuthContext";
+import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
 
 export default function HostBookings() {
   const { user, isAuthenticated } = useAuth(); // ← custom auth
