@@ -32,6 +32,7 @@ import CancelBookingModal from "@/components/bookings/CancelBookingModal";
 import RentalPaymentTimer from "@/components/bookings/RentalPaymentTimer";
 import CheckInLogModal from "@/components/bookings/CheckInLogModal";
 import ComplaintModal from "@/components/bookings/ComplaintModal";
+import BalancePaymentAlert from "@/components/bookings/BalancePaymentAlert";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/lib/AuthContext";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
@@ -50,6 +51,7 @@ export default function MyTrips() {
   const [cancelBooking, setCancelBooking] = useState(null);
   const [checkInBooking, setCheckInBooking] = useState(null);
   const [complaintBooking, setComplaintBooking] = useState(null);
+  const [balancePaymentBooking, setBalancePaymentBooking] = useState(null);
 
   const queryClient = useQueryClient();
 
@@ -320,11 +322,33 @@ export default function MyTrips() {
       !booking.rental_frozen &&
       isBefore(new Date(), new Date(booking.rental_release_due_at));
 
+    const showBalanceAlert =
+      booking.balance_payment_status === 'failed' &&
+      booking.booking_status !== 'cancelled';
+
     return (
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
+        className="space-y-4"
       >
+        {showBalanceAlert && (
+          <BalancePaymentAlert
+            booking={booking}
+            property={property}
+            onPaymentSuccess={() => {
+              queryClient.invalidateQueries({ queryKey: ["guest-bookings"] });
+              setBalancePaymentBooking(null);
+            }}
+          />
+        )}
+
+        {booking.balance_payment_status === 'paid' && (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex items-center gap-2">
+            <span className="text-emerald-600 font-medium text-sm">✓ Balance paid</span>
+          </div>
+        )}
+
         <Card className="overflow-hidden hover:shadow-md transition-shadow">
           <CardContent className="p-0">
             <div className="flex flex-col sm:flex-row">
