@@ -1,0 +1,159 @@
+{
+  "name": "Complaint",
+  "type": "object",
+  "properties": {
+    "booking_id": {
+      "type": "string",
+      "description": "The booking this complaint relates to"
+    },
+    "raised_by": {
+      "type": "string",
+      "enum": [
+        "guest",
+        "host"
+      ],
+      "description": "Who raised the complaint"
+    },
+    "raised_by_user_id": {
+      "type": "string",
+      "description": "User ID of who raised the complaint"
+    },
+    "complaint_type": {
+      "type": "string",
+      "enum": [
+        "rental_dispute",
+        "damage_claim"
+      ],
+      "description": "Type of complaint"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "not_as_described",
+        "property_condition",
+        "host_conduct",
+        "checkin_issue",
+        "partial_stay",
+        "damage"
+      ],
+      "description": "The claim category"
+    },
+    "specific_issue": {
+      "type": "string",
+      "description": "The specific issue selected within the category"
+    },
+    "description": {
+      "type": "string",
+      "description": "Written description from the claimant"
+    },
+    "evidence_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Uploaded photo or video evidence URLs"
+    },
+    "guest_situation": {
+      "type": "string",
+      "enum": [
+        "never_got_in",
+        "left_same_day",
+        "left_early",
+        "still_in_property",
+        "completed_stay"
+      ],
+      "description": "Guest's current situation at time of complaint"
+    },
+    "nights_stayed": {
+      "type": "number",
+      "description": "How many nights the guest has stayed at time of complaint"
+    },
+    "requested_resolution": {
+      "type": "string",
+      "enum": [
+        "full_refund",
+        "partial_refund",
+        "on_record_only"
+      ],
+      "description": "What the claimant is asking for"
+    },
+    "requested_amount": {
+      "type": "number",
+      "description": "If partial, what amount the claimant says is fair"
+    },
+    "damage_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "item_name": {
+            "type": "string"
+          },
+          "cost": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "item_name",
+          "cost"
+        ]
+      },
+      "description": "For host damage claims, itemised list of damaged items"
+    },
+    "damage_total_claimed": {
+      "type": "number",
+      "description": "Total \u00a3 amount host is claiming from the deposit"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "under_review",
+        "resolved",
+        "dismissed"
+      ],
+      "default": "open",
+      "description": "Current status of the complaint"
+    },
+    "admin_resolution": {
+      "type": "string",
+      "enum": [
+        "full_refund_to_guest",
+        "partial_refund_to_guest",
+        "released_to_host",
+        "deposit_full_to_host",
+        "deposit_partial_to_host",
+        "deposit_returned_to_guest"
+      ],
+      "description": "What admin decided"
+    },
+    "admin_resolution_amount": {
+      "type": "number",
+      "description": "Exact \u00a3 amount admin awarded to the claimant"
+    },
+    "admin_notes": {
+      "type": "string",
+      "description": "Admin's internal notes on the decision"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When admin resolved it"
+    },
+    "resolved_by": {
+      "type": "string",
+      "description": "Admin user ID who resolved it"
+    },
+    "auto_dismissed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "If auto-dismissed due to no evidence"
+    }
+  },
+  "required": [
+    "booking_id",
+    "raised_by",
+    "raised_by_user_id",
+    "complaint_type"
+  ]
+}
