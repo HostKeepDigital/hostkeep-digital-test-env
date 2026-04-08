@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
+import { base44 } from "@/api/base44Client";
 
 const CORNWALL_IMG = "https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/vecteezy_cornwall-coast-in-england_2524414.jpg";
 const LOGO_IMG = "https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/HostKeep_Digital_Navy_Background.png";
@@ -20,13 +21,8 @@ export default function SignIn() {
     try {
       const isApp = localStorage.getItem("is_app") === "true";
 
-      const res = await fetch("/functions/customSignIn", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, is_app: isApp }),
-      });
-
-      const data = await res.json();
+      const res = await base44.functions.invoke("customSignIn", { email, password, is_app: isApp });
+      const data = res.data;
 
       if (!data.success) {
         const messages = {
