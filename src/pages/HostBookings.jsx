@@ -36,6 +36,9 @@ import {
 import { toast } from "sonner";
 import BookingCard from "@/components/bookings/BookingCard";
 import ReviewForm from "@/components/reviews/ReviewForm";
+import { useState } from "react";
+import DepositReturnTimer from "@/components/bookings/DepositReturnTimer";
+import DamageClaimModal from "@/components/bookings/DamageClaimModal";
 import { useAuth } from "@/lib/AuthContext";
 
 export default function HostBookings() {
@@ -46,6 +49,7 @@ export default function HostBookings() {
     booking: null,
   });
   const [reviewBooking, setReviewBooking] = useState(null);
+  const [damageClaimBooking, setDamageClaimBooking] = useState(null);
   const queryClient = useQueryClient();
 
   // Load bookings
@@ -428,13 +432,60 @@ export default function HostBookings() {
               </div>
             ) : (
               completed.map((booking) => (
-                <BookingCard
-                  key={booking.id}
-                  booking={booking}
-                  property={getProperty(booking.property_id)}
-                  onReview={() => setReviewBooking(booking)}
-                  hasReviewed={hasReviewedGuest(booking.id)}
-                />
+                <motion.div key={booking.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                  <div className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+                    <div className="p-6 space-y-4">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h3 className="font-semibold text-gray-900 text-lg">
+                            {getProperty(booking.property_id)?.title || "Property"}
+                          </h3>
+                          <p className="text-sm text-gray-600 mt-1">
+                            {booking.guest_name} • {format(parseISO(booking.check_in), "MMM d")} – {format(parseISO(booking.check_out), "MMM d, yyyy")}
+                          </p>
+                        </div>
+                        <Badge>Completed</Badge>
+                      </div>
+
+                      {booking.booking_status === "completed" && booking.deposit_status === "held" && (
+                        <div className="space-y-3 pt-3 border-t border-gray-100">
+                          <DepositReturnTimer
+                            checkOutDate={booking.check_out}
+                            depositFrozen={booking.deposit_frozen}
+                          />
+
+                          {!booking.deposit_frozen && (
+                            <button
+                              onClick={() => setDamageClaimBooking(booking)}
+                              className="w-full px-4 py-3 border-2 border-red-200 text-red-600 font-semibold rounded-lg hover:bg-red-50 transition-colors text-sm"
+                            >
+                              Raise a Damage Claim
+                            </button>
+                          )}
+
+                          {booking.deposit_frozen && (
+                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                              <p className="text-sm text-amber-900 font-medium">
+                                Damage claim submitted — under review
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-2 pt-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setReviewBooking(booking)}
+                          disabled={hasReviewedGuest(booking.id)}
+                        >
+                          {hasReviewedGuest(booking.id) ? "Reviewed" : "Leave a Review"}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
               ))
             )}
           </TabsContent>
@@ -467,6 +518,16 @@ export default function HostBookings() {
             reviewType="host_to_guest"
             reviewerName={user?.full_name}
             reviewerId={user?.id}
+          />
+        )}
+
+        {/* DAMAGE CLAIM MODAL */}
+        {damageClaimBooking && (
+          <DamageClaimModal
+            isOpen={!!damageClaimBooking}
+            onClose={() => setDamageClaimBooking(null)}
+            booking={damageClaimBooking}
+            onSuccess={() => queryClient.invalidateQueries({ queryKey: ["host-bookings"] })}
           />
         )}
       </div>
