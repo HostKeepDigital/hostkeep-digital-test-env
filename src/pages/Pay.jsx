@@ -7,7 +7,8 @@ import { Home, Calendar, Shield, CheckCircle2, AlertCircle, Loader2, Lock } from
 import { format, parseISO, differenceInDays } from "date-fns";
 import { createPageUrl } from "@/utils";
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+// stripePromise is set dynamically after fetching the publishable key from the backend
+let stripePromise = null;
 
 // ── Inner payment form (must be inside <Elements>) ──────────────────────────
 function PaymentForm({ booking, rentalSecret, depositSecret }) {
@@ -156,6 +157,7 @@ export default function Pay() {
   const [booking, setBooking] = useState(null);
   const [rentalSecret, setRentalSecret] = useState(null);
   const [depositSecret, setDepositSecret] = useState(null);
+  const [stripeReady, setStripeReady] = useState(null);
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState(null);
 
@@ -167,6 +169,12 @@ export default function Pay() {
     }
 
     const init = async () => {
+      // Fetch Stripe publishable key from backend
+      const keyRes = await base44.functions.invoke('getStripePublishableKey', {});
+      if (!keyRes?.data?.publishable_key) throw new Error('Could not load payment config.');
+      if (!stripePromise) stripePromise = loadStripe(keyRes.data.publishable_key);
+      setStripeReady(stripePromise);
+
       // Load booking
       const bookings = await base44.entities.Booking.filter({ id: bookingId });
       const b = bookings?.[0];
@@ -229,7 +237,7 @@ export default function Pay() {
 
         {/* Card */}
         <div className="bg-white rounded-2xl shadow-sm p-6">
-          <Elements stripe={stripePromise}>
+          <Elements stripe={stripeReady}>
             <PaymentForm
               booking={booking}
               rentalSecret={rentalSecret}
