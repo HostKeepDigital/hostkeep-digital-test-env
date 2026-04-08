@@ -671,7 +671,7 @@ export default function PropertyDetails() {
         )}
         {securityDeposit > 0 && (
           <div className="flex justify-between text-sm text-gray-600">
-            <span>Security deposit (refundable)</span>
+            <span>Security deposit <span className="text-xs text-gray-400 font-normal">(Refundable 48 hours after checkout unless dispute is raised.)</span></span>
             <span>£{securityDeposit.toFixed(2)}</span>
           </div>
         )}
