@@ -27,7 +27,7 @@ import FoundingCleaner from "./pages/FoundingCleaner";
 
 // Pages accessible without authentication
 const PUBLIC_ROUTES = new Set([
-  "/", "/Home", "/Search", "/PropertyDetails", "/Pay",
+  "/", "/Home", "/Search", "/PropertyDetails",
   "/AboutUs", "/LegalCentre", "/TermsAndConditions", "/PrivacyPolicy",
   "/CookiePolicy", "/GuestTerms", "/HostTerms", "/CleanerTerms",
   "/DisputePolicy", "/PaymentPolicy", "/RefundPolicy", "/Accessibility",
