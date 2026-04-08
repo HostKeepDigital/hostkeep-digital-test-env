@@ -35,10 +35,13 @@ Deno.serve(async (req) => {
     return Response.json({ error: 'Host has not connected their bank account' }, { status: 400 });
   }
 
-  // Create rental PaymentIntent
+  // Create rental PaymentIntent — routed through host's Express connected account
   const rentalIntent = await stripe.paymentIntents.create({
     amount: Math.round(booking.total_amount * 100),
     currency: 'gbp',
+    transfer_data: {
+      destination: host.stripe_connect_account_id,
+    },
     metadata: {
       booking_id,
       type: 'rental',
@@ -47,12 +50,15 @@ Deno.serve(async (req) => {
 
   let depositIntent = null;
 
-  // Create deposit PaymentIntent if applicable
+  // Create deposit PaymentIntent if applicable — also routed to host
   if (booking.security_deposit > 0) {
     depositIntent = await stripe.paymentIntents.create({
       amount: Math.round(booking.security_deposit * 100),
       currency: 'gbp',
       capture_method: 'manual',
+      transfer_data: {
+        destination: host.stripe_connect_account_id,
+      },
       metadata: {
         booking_id,
         type: 'security_deposit',
