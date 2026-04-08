@@ -39,6 +39,20 @@
       ],
       "default": "not_connected",
       "description": "Stripe Connect onboarding status"
+    },
+    "account_flagged": {
+      "type": "boolean",
+      "default": false,
+      "description": "true when admin or system has flagged this account for review"
+    },
+    "account_flag_reason": {
+      "type": "string",
+      "description": "the reason the account was flagged"
+    },
+    "account_flagged_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "when the flag was set"
     }
   },
   "required": []
