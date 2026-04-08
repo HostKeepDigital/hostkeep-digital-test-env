@@ -153,6 +153,50 @@
     "stripe_payment_id": {
       "type": "string"
     },
+    "stripe_rental_intent_id": {
+      "type": "string",
+      "description": "Stripe PaymentIntent ID for the rental payment"
+    },
+    "stripe_deposit_intent_id": {
+      "type": "string",
+      "description": "Stripe PaymentIntent ID for the security deposit hold"
+    },
+    "rental_payment_status": {
+      "type": "string",
+      "enum": [
+        "unpaid",
+        "held",
+        "transferred"
+      ],
+      "default": "unpaid",
+      "description": "Status of the rental payment"
+    },
+    "deposit_status": {
+      "type": "string",
+      "enum": [
+        "none",
+        "held",
+        "returned",
+        "claimed"
+      ],
+      "default": "none",
+      "description": "Status of the security deposit"
+    },
+    "checkin_confirmed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When host confirms check-in"
+    },
+    "payout_triggered_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When rental funds were sent to host"
+    },
+    "deposit_resolved_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When security deposit was returned or claimed"
+    },
     "guest_message": {
       "type": "string"
     },
