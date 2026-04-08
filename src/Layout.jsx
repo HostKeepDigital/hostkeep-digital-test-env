@@ -450,7 +450,10 @@ export default function Layout({ children, currentPageName }) {
                     <Link to="/founding" className="hidden sm:inline-flex">
                       <Button variant="ghost">Become a Cleaner</Button>
                     </Link>
-                    <Link to="/login">
+                    <Link to="/GuestSignUp">
+                      <Button variant="outline">Sign Up</Button>
+                    </Link>
+                    <Link to="/SignIn">
                       <Button className="bg-teal-600 hover:bg-teal-700">
                         Sign In
                       </Button>
