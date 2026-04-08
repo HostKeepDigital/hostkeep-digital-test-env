@@ -24,10 +24,11 @@ import CreatePassword from "./pages/CreatePassword";
 import ResetPassword from "./pages/ResetPassword";
 import FoundingHost from "./pages/FoundingHost";
 import FoundingCleaner from "./pages/FoundingCleaner";
+import GuestSignUp from "./pages/GuestSignUp";
 
 // Pages accessible without authentication
 const PUBLIC_ROUTES = new Set([
-  "/", "/Home", "/Search", "/PropertyDetails",
+  "/", "/Home", "/Search", "/PropertyDetails", "/GuestSignUp",
   "/AboutUs", "/LegalCentre", "/TermsAndConditions", "/PrivacyPolicy",
   "/CookiePolicy", "/GuestTerms", "/HostTerms", "/CleanerTerms",
   "/DisputePolicy", "/PaymentPolicy", "/RefundPolicy", "/Accessibility",
@@ -297,6 +298,7 @@ const AuthenticatedApp = () => {
           <Route path="/ForgotPassword" element={<Slide><ForgotPassword /></Slide>} />
           <Route path="/CreatePassword" element={<Slide><CreatePassword /></Slide>} />
           <Route path="/ResetPassword" element={<Slide><ResetPassword /></Slide>} />
+          <Route path="/GuestSignUp" element={<Slide><GuestSignUp /></Slide>} />
           <Route
             path="/"
             element={
