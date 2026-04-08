@@ -42,8 +42,8 @@ Deno.serve(async (req) => {
     return Response.json({ error: 'Host has not connected their bank account' }, { status: 400 });
   }
 
-  // Create statement descriptor: "Hostkeep Digital - Property Name"
-  const statementDescriptor = `Hostkeep Digital - ${property.title}`.substring(0, 22);
+  // Create statement descriptor: "HKD - Property Name"
+  const statementDescriptor = `HKD - ${property.title}`.substring(0, 22);
 
   // Create rental PaymentIntent — routed through host's Express connected account
   const rentalIntent = await stripe.paymentIntents.create({
