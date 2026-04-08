@@ -458,17 +458,15 @@ export default function EditProperty() {
   const handleSave = async (proceed) => {
     let currentFormData = { ...formData };
 
+    // Validate deposit amount if enabled
     if (currentFormData.deposit_enabled && (!currentFormData.deposit_value || currentFormData.deposit_value < 1)) {
       toast.error("A minimum booking deposit of £1 is required to process guest payments securely");
       return;
     }
 
-    if (
-      currentFormData.deposit_enabled &&
-      (!currentFormData.deposit_value || currentFormData.deposit_value === 0)
-    ) {
-      currentFormData.deposit_enabled = false;
-      currentFormData.deposit_value = null;
+    // Set minimum deposit value if empty or zero
+    if (currentFormData.deposit_enabled && (!currentFormData.deposit_value || currentFormData.deposit_value === 0)) {
+      currentFormData.deposit_value = 1;
     }
 
     const changedData = {};
