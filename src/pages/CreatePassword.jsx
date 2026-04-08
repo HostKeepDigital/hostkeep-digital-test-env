@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Eye, EyeOff, CheckCircle } from "lucide-react";
 
-const CORNWALL_IMG = "https://drive.google.com/uc?export=view&id=1Vr07gcaaC19XEmxcvTbq-DTn8PZKn-_a";
+const CORNWALL_IMG = "https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/vecteezy_cornwall-coast-in-england_2524414.jpg";
 const LOGO_IMG = "https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/HostKeep_Digital_Navy_Background.png";
 
 export default function CreatePassword() {
@@ -125,44 +125,40 @@ export default function CreatePassword() {
   return (
     <div className="min-h-screen flex">
 
-      {/* Left panel — Polperro photography */}
+      {/* Left panel */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
         <img
           src={CORNWALL_IMG}
-          alt="Polperro, Cornwall"
+          alt="Cornwall coast"
           className="absolute inset-0 w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-[#1E3A5F]/85 via-[#1E3A5F]/65 to-[#0d9488]/40" />
-
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1E3A5F]/90 via-[#1E3A5F]/70 to-[#0d9488]/50" />
         <div className="relative z-10 flex flex-col justify-between p-12 w-full">
-          <img
-            src={LOGO_IMG}
-            alt="HostKeep Digital"
-            className="h-60 w-auto"
-          />
-
+          <div className="flex items-center gap-3">
+            <img src={LOGO_IMG} alt="HostKeep Digital" className="h-60 w-auto" />
+          </div>
           <div>
             <p className="text-white/60 text-sm font-medium tracking-[0.2em] uppercase mb-4">
-              Almost there
+              Cornwall · Summer 2026
             </p>
             <h1 className="text-white text-4xl font-bold leading-tight mb-6">
-              You're in.<br />
-              <span className="text-[#0d9488]">Let's get set up.</span>
+              Your property.<br />
+              Your price.<br />
+              <span className="text-[#0d9488]">Zero commission.</span>
             </h1>
             <p className="text-white/70 text-base leading-relaxed max-w-sm">
-              Create your password to activate your founding member account and start setting up your property.
+              HostKeep gives Cornwall hosts everything Airbnb offers at a flat monthly rate — not a cut of every booking.
             </p>
           </div>
-
-          <div className="space-y-3">
+          <div className="flex gap-8">
             {[
-              "Flat monthly subscription — 0% commission",
-              "Direct payments to your account",
-              "Your founding rate locked forever",
-            ].map((item) => (
-              <div key={item} className="flex items-center gap-3">
-                <CheckCircle className="w-4 h-4 text-[#0d9488] flex-shrink-0" />
-                <p className="text-white/80 text-sm">{item}</p>
+              { value: "0%", label: "Commission" },
+              { value: "£29", label: "From /month" },
+              { value: "50", label: "Founding spots" },
+            ].map((s) => (
+              <div key={s.label}>
+                <p className="text-white text-2xl font-bold">{s.value}</p>
+                <p className="text-white/50 text-xs mt-0.5">{s.label}</p>
               </div>
             ))}
           </div>
@@ -177,7 +173,7 @@ export default function CreatePassword() {
             <img
               src={LOGO_IMG}
               alt="HostKeep Digital"
-              className="h-60 w-auto"
+              className="h-20 w-auto"
             />
           </div>
 
