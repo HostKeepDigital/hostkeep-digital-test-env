@@ -75,6 +75,8 @@ export default function EditProperty() {
 
   const [isUploading, setIsUploading] = useState(false);
   const [formData, setFormData] = useState(null);
+  const [stripeStatus, setStripeStatus] = useState(null);
+  const [hostSubscription, setHostSubscription] = useState(undefined); // undefined = loading
   const [originalData, setOriginalData] = useState(null);
   const [uploadedFileIdentifiers, setUploadedFileIdentifiers] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState(null);
@@ -91,6 +93,39 @@ export default function EditProperty() {
     queryKey: ["cancellation-policies"],
     queryFn: () => base44.entities.CancellationPolicy.list(),
   });
+
+  // Fetch stripe status and subscription on mount
+  useEffect(() => {
+    const session_token = localStorage.getItem("session_token");
+    base44.functions.invoke("getStripeConnectStatus", { session_token })
+      .then(res => setStripeStatus(res.data?.status || "not_connected"))
+      .catch(() => setStripeStatus("not_connected"));
+  }, []);
+
+  useEffect(() => {
+    const urlP = new URLSearchParams(window.location.search);
+    const propId = urlP.get("id");
+    if (!propId) return;
+    // Get owner_id from property to look up subscription
+    base44.entities.Property.filter({ id: propId }).then(async (results) => {
+      const prop = results[0];
+      if (!prop?.owner_id) { setHostSubscription(null); return; }
+      const subs = await base44.entities.Subscription.filter({ user_id: prop.owner_id });
+      setHostSubscription(subs[0] || null);
+    }).catch(() => setHostSubscription(null));
+  }, []);
+
+  // Warn on browser back/tab close when there are unsaved changes
+  useEffect(() => {
+    const handler = (e) => {
+      if (hasChanges) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [hasChanges]);
 
   const { data: property, isLoading } = useQuery({
     queryKey: ["property", propertyId],
@@ -473,27 +508,15 @@ export default function EditProperty() {
 
   const handlePublish = async () => {
     const errorsByTab = validateMandatoryFields();
-    const tabsWithErrors = Object.entries(errorsByTab).filter(
-      ([_, errors]) => errors.length > 0
-    );
+    const stripeOk = stripeStatus === "verified";
+    const subscriptionOk = hostSubscription && hostSubscription.status === "active";
 
-    if (tabsWithErrors.length > 0) {
-      setValidationErrors(errorsByTab);
+    const hasTabErrors = Object.values(errorsByTab).some(e => e.length > 0);
+    const hasBlockers = !stripeOk || !subscriptionOk;
+
+    if (hasTabErrors || hasBlockers) {
+      setValidationErrors({ ...errorsByTab, _stripeOk: stripeOk, _subscriptionOk: subscriptionOk });
       setShowValidationDialog(true);
-      return;
-    }
-
-    // Check Stripe connection before publishing
-    try {
-      const session_token = localStorage.getItem("session_token");
-      const stripeRes = await base44.functions.invoke("getStripeConnectStatus", { session_token });
-      const stripeStatus = stripeRes.data?.status;
-      if (stripeStatus !== "verified") {
-        toast.error("You need to connect and verify your bank account with Stripe before publishing.", { duration: 5000 });
-        return;
-      }
-    } catch {
-      toast.error("Could not verify your Stripe account. Please try again.");
       return;
     }
 
@@ -533,34 +556,82 @@ export default function EditProperty() {
           <DialogHeader>
             <DialogTitle>Cannot Publish Property</DialogTitle>
             <DialogDescription>
-              Please complete the following required fields:
+              The following must be completed before your listing can go live:
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 mt-4">
+            {/* Tab field errors */}
             {Object.entries(validationErrors)
-              .filter(([_, errors]) => errors.length > 0)
+              .filter(([key, errors]) => !key.startsWith("_") && errors.length > 0)
               .map(([tab, errors]) => (
-                <div
-                  key={tab}
-                  className="bg-red-50 border border-red-200 rounded-lg p-4"
-                >
-                  <h3 className="font-semibold text-red-900 mb-2">
-                    {tabNames[tab]}
-                  </h3>
+                <div key={tab} className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <h3 className="font-semibold text-red-900 mb-2">{tabNames[tab]}</h3>
                   <ul className="list-disc pl-5 space-y-1">
                     {errors.map((error, idx) => (
-                      <li key={idx} className="text-sm text-red-700">
-                        {error}
-                      </li>
+                      <li key={idx} className="text-sm text-red-700">{error}</li>
                     ))}
                   </ul>
                 </div>
               ))}
+
+            {/* Stripe section */}
+            {validationErrors._stripeOk === false && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <h3 className="font-semibold text-amber-900 mb-1">💳 Bank Account Not Connected</h3>
+                <p className="text-sm text-amber-800 mb-3">
+                  You need to connect a Stripe account to receive payments from guests before your listing can go live.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <a
+                    href="https://dashboard.stripe.com/register"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white text-sm font-medium rounded-lg transition-colors"
+                  >
+                    Create a Stripe Account →
+                  </a>
+                  <button
+                    onClick={async () => {
+                      const session_token = localStorage.getItem("session_token");
+                      const res = await base44.functions.invoke("createStripeConnectLink", { session_token });
+                      if (res.data?.url) window.location.href = res.data.url;
+                    }}
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white hover:bg-amber-50 text-amber-800 border border-amber-300 text-sm font-medium rounded-lg transition-colors"
+                  >
+                    Connect Existing Stripe Account
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Subscription section */}
+            {validationErrors._subscriptionOk === false && (
+              <div className="bg-violet-50 border border-violet-200 rounded-lg p-4">
+                <h3 className="font-semibold text-violet-900 mb-1">📋 No Active Subscription</h3>
+                <p className="text-sm text-violet-800 mb-3">
+                  You need an active subscription to publish and list your property.
+                </p>
+                <button
+                  onClick={() => {
+                    setShowValidationDialog(false);
+                    if (hasChanges) {
+                      setPendingAction(() => () => { window.location.href = "/Subscription"; });
+                      setShowUnsavedDialog(true);
+                    } else {
+                      window.location.href = "/Subscription";
+                    }
+                  }}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  View Subscription Plans →
+                </button>
+              </div>
+            )}
           </div>
 
           <DialogFooter>
-            <Button onClick={() => setShowValidationDialog(false)}>OK</Button>
+            <Button onClick={() => setShowValidationDialog(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
