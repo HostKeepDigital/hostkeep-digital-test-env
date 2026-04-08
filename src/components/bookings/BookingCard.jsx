@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,9 +19,11 @@ export default function BookingCard({
   onCheckIn, 
   onComplete, 
   onReview,
+  onConfirmCheckin,
   hasReviewed,
   showCompetingBadge = false
 }) {
+  const [confirmingCheckin, setConfirmingCheckin] = useState(false);
   const nights = differenceInDays(parseISO(booking.check_out), parseISO(booking.check_in));
 
   const statusColors = {
@@ -175,13 +178,26 @@ export default function BookingCard({
           )}
 
           {booking.booking_status === 'confirmed' && (
-            <Button
-              size="sm"
-              onClick={() => onCheckIn(booking)}
-              className="bg-teal-600 hover:bg-teal-700"
-            >
-              Check In Guest
-            </Button>
+            <>
+              {booking.checkin_confirmed_at ? (
+                <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs">
+                  <Check className="w-3 h-3 mr-1" />
+                  Checked in ✓ {format(parseISO(booking.checkin_confirmed_at), "MMM d, h:mm a")}
+                </Badge>
+              ) : (
+                <Button
+                  size="sm"
+                  disabled={confirmingCheckin}
+                  onClick={async () => {
+                    setConfirmingCheckin(true);
+                    await onConfirmCheckin(booking);
+                  }}
+                  className="bg-teal-600 hover:bg-teal-700 disabled:opacity-60"
+                >
+                  {confirmingCheckin ? "Confirming…" : "Confirm Check-in"}
+                </Button>
+              )}
+            </>
           )}
 
           {booking.booking_status === 'checked_in' && (

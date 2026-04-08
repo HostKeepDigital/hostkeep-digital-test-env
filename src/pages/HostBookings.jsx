@@ -198,6 +198,15 @@ export default function HostBookings() {
     });
   };
 
+  const handleConfirmCheckin = async (booking) => {
+    await base44.entities.Booking.update(booking.id, {
+      checkin_confirmed_at: new Date().toISOString(),
+      booking_status: "checked_in",
+    });
+    queryClient.invalidateQueries({ queryKey: ["host-bookings"] });
+    toast.success("Check-in confirmed — payment will be released to your account within 24 hours");
+  };
+
   const handleComplete = (booking) => {
     updateMutation.mutate({
       id: booking.id,
@@ -385,6 +394,7 @@ export default function HostBookings() {
                   booking={booking}
                   property={getProperty(booking.property_id)}
                   onCheckIn={handleCheckIn}
+                  onConfirmCheckin={handleConfirmCheckin}
                 />
               ))
             )}
