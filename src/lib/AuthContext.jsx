@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { base44 } from '@/api/base44Client';
 
 const AuthContext = createContext();
 
@@ -27,13 +28,8 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      const res = await fetch("/functions/checkSession", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ session_token }),
-      });
-
-      const data = await res.json();
+      const res = await base44.functions.invoke("checkSession", { session_token });
+      const data = res.data;
 
       if (!data.authenticated) {
         localStorage.removeItem("session_token");
