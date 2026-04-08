@@ -105,5 +105,37 @@ Deno.serve(async (req) => {
     }
   }
 
+  if (event.type === 'payment_intent.succeeded') {
+    const pi = event.data.object;
+    const { booking_id, type } = pi.metadata || {};
+    if (booking_id) {
+      const bookings = await base44.asServiceRole.entities.Booking.filter({ id: booking_id });
+      const booking = bookings?.[0];
+      if (booking) {
+        const update = {};
+        if (type === 'rental') {
+          update.rental_payment_status = 'held';
+        } else if (type === 'security_deposit') {
+          update.deposit_status = 'held';
+        }
+        if (booking.booking_status === 'awaiting_payment') {
+          update.booking_status = 'confirmed';
+        }
+        await base44.asServiceRole.entities.Booking.update(booking_id, update);
+      }
+    }
+  }
+
+  if (event.type === 'payment_intent.payment_failed') {
+    const pi = event.data.object;
+    const { booking_id } = pi.metadata || {};
+    if (booking_id) {
+      await base44.asServiceRole.entities.Booking.update(booking_id, {
+        booking_status: 'awaiting_payment',
+        rental_payment_status: 'unpaid',
+      });
+    }
+  }
+
   return Response.json({ received: true });
 });
