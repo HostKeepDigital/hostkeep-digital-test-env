@@ -135,6 +135,42 @@ export default function CreateProperty() {
 
   const [currentStep, setCurrentStep] = useState(1);
   const [isUploading, setIsUploading] = useState(false);
+  const [showSubOverlay, setShowSubOverlay] = useState(false);
+  const [pendingPlan, setPendingPlan] = useState(null);
+  const [showConfirmOverlay, setShowConfirmOverlay] = useState(false);
+  const [savingPlan, setSavingPlan] = useState(false);
+
+  const FOUNDING_PLANS = [
+    { id: "founding_host_solo",      label: "Founding Solo",      price: "£29/mo",  desc: "1 property",     maxProps: 1 },
+    { id: "founding_host_multi",     label: "Founding Multi",     price: "£59/mo",  desc: "Up to 5 properties", maxProps: 5 },
+    { id: "founding_host_portfolio", label: "Founding Portfolio", price: "£99/mo",  desc: "Unlimited properties", maxProps: 999 },
+  ];
+
+  const handleSelectPlan = (planId) => {
+    setPendingPlan(planId);
+    setShowConfirmOverlay(true);
+  };
+
+  const handleConfirmPlan = async () => {
+    setSavingPlan(true);
+    try {
+      const existingSubs = await base44.entities.Subscription.filter({ user_id: user?.id });
+      if (existingSubs.length > 0) {
+        await base44.entities.Subscription.update(existingSubs[0].id, { next_subscription: pendingPlan });
+      } else {
+        await base44.entities.Subscription.create({
+          user_id: user?.id,
+          plan: "beta_host_access",
+          status: "active",
+          next_subscription: pendingPlan,
+        });
+      }
+      window.location.href = createPageUrl("HostDashboard");
+    } catch {
+      toast.error("Failed to save subscription. Please try again.");
+      setSavingPlan(false);
+    }
+  };
 
   const { data: policies } = useQuery({
     queryKey: ["cancellation-policies"],
@@ -279,15 +315,15 @@ export default function CreateProperty() {
         const isBeta = sub && BETA_PLANS.includes(sub.plan) && sub.status === 'active';
         const hasActiveSub = sub && sub.status === 'active' && !isBeta;
 
-        // No subscription at all
+        // No subscription at all — show inline plan picker
         if (!sub || sub.status !== 'active') {
-          window.location.href = '/Subscription?tab=host&reason=new_property';
+          setShowSubOverlay(true);
           return;
         }
 
         // Beta user: must have chosen a next_subscription
         if (isBeta && !sub.next_subscription) {
-          window.location.href = '/Subscription?tab=host&reason=new_property';
+          setShowSubOverlay(true);
           return;
         }
 
@@ -1072,6 +1108,68 @@ export default function CreateProperty() {
           )}
         </div>
       </div>
+      {/* ── Subscription Plan Picker Overlay ── */}
+      {showSubOverlay && !showConfirmOverlay && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8">
+            <h2 className="text-xl font-bold text-gray-900 mb-1">Choose Your Founding Plan</h2>
+            <p className="text-sm text-gray-500 mb-6">Your property has been saved! During beta, HostKeep is free. Select the plan you'd like to move to once beta ends.</p>
+            <div className="space-y-3">
+              {FOUNDING_PLANS.map(plan => (
+                <button
+                  key={plan.id}
+                  onClick={() => handleSelectPlan(plan.id)}
+                  className="w-full text-left p-4 rounded-xl border-2 border-gray-200 hover:border-teal-500 hover:bg-teal-50 transition-all group"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold text-gray-900 group-hover:text-teal-700">{plan.label}</p>
+                      <p className="text-sm text-gray-500">{plan.desc}</p>
+                    </div>
+                    <span className="text-lg font-bold text-[#1E3A5F] group-hover:text-teal-700">{plan.price}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Subscription Confirmation Overlay ── */}
+      {showConfirmOverlay && pendingPlan && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
+            <div className="w-14 h-14 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Check className="w-7 h-7 text-teal-600" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Confirm Your Plan</h2>
+            <p className="text-sm text-gray-600 mb-2">
+              You've selected the <strong className="text-[#1E3A5F]">{FOUNDING_PLANS.find(p => p.id === pendingPlan)?.label}</strong> plan ({FOUNDING_PLANS.find(p => p.id === pendingPlan)?.price}).
+            </p>
+            <p className="text-sm text-gray-500 mb-8">
+              HostKeep is currently in beta — this plan won't be charged until beta ends. Once beta is complete, this will be your active subscription.
+            </p>
+            <div className="flex flex-col gap-3">
+              <Button
+                onClick={handleConfirmPlan}
+                disabled={savingPlan}
+                className="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold h-12"
+              >
+                {savingPlan ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                Yes, Please!
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => { setShowConfirmOverlay(false); setPendingPlan(null); }}
+                disabled={savingPlan}
+                className="w-full h-12"
+              >
+                Cancel — Choose a Different Plan
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
