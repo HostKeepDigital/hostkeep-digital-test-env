@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import ChannelManagerIntegrationTester from "@/components/devtools/ChannelManagerIntegrationTester";
+import SiteVisitorWidget from "@/components/admin/SiteVisitorWidget";
 import SubscriptionTester from "@/components/devtools/SubscriptionTester";
 import BetaExitPlanner from "@/components/devtools/BetaExitPlanner";
 import { useAuth } from "@/lib/AuthContext";
@@ -310,118 +311,8 @@ function UKMap({ sectorData }) {
   );
 }
 
-function SiteVisitorWidget() {
-  const RANGES = [
-    { label: "24h",  hours: 24,   bucket: "hour"  },
-    { label: "48h",  hours: 48,   bucket: "day"   },
-    { label: "72h",  hours: 72,   bucket: "day"   },
-    { label: "1w",   hours: 168,  bucket: "day"   },
-    { label: "2w",   hours: 336,  bucket: "day"   },
-    { label: "1m",   hours: 720,  bucket: "day"   },
-    { label: "3m",   hours: 2160, bucket: "week"  },
-  ];
-
-  const [rangeIdx, setRangeIdx] = useState(0);
-  const [views, setViews] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const range = RANGES[rangeIdx];
-
-  useEffect(() => {
-    setLoading(true);
-    base44.entities.PageView.list("-timestamp", 5000)
-      .then(data => { setViews(data || []); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, []);
-
-  const cutoff = new Date(Date.now() - range.hours * 60 * 60 * 1000);
-
-  const inRange = views.filter(v => v.timestamp && new Date(v.timestamp) >= cutoff);
-  const uniqueVisitors = new Set(inRange.map(v => v.visitor_id)).size;
-
-  // Build buckets
-  const buckets = [];
-  if (range.bucket === "hour") {
-    for (let i = range.hours - 1; i >= 0; i--) {
-      const start = new Date(Date.now() - (i + 1) * 60 * 60 * 1000);
-      const end   = new Date(Date.now() - i * 60 * 60 * 1000);
-      const ids   = new Set(views.filter(v => { const t = new Date(v.timestamp); return t >= start && t < end; }).map(v => v.visitor_id));
-      buckets.push({ label: `${end.getHours()}:00`, count: ids.size });
-    }
-  } else if (range.bucket === "day") {
-    const days = range.hours / 24;
-    for (let i = days - 1; i >= 0; i--) {
-      const start = new Date(Date.now() - (i + 1) * 24 * 60 * 60 * 1000);
-      const end   = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
-      const ids   = new Set(views.filter(v => { const t = new Date(v.timestamp); return t >= start && t < end; }).map(v => v.visitor_id));
-      const d     = new Date(end); d.setDate(d.getDate() - 1);
-      buckets.push({ label: d.toLocaleDateString("en-GB", { day: "numeric", month: "short" }), count: ids.size });
-    }
-  } else {
-    const weeks = range.hours / 168;
-    for (let i = weeks - 1; i >= 0; i--) {
-      const start = new Date(Date.now() - (i + 1) * 7 * 24 * 60 * 60 * 1000);
-      const end   = new Date(Date.now() - i * 7 * 24 * 60 * 60 * 1000);
-      const ids   = new Set(views.filter(v => { const t = new Date(v.timestamp); return t >= start && t < end; }).map(v => v.visitor_id));
-      buckets.push({ label: `w/e ${end.toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`, count: ids.size });
-    }
-  }
-
-  const maxCount = Math.max(...buckets.map(b => b.count), 1);
-
-  // Show every Nth label to avoid crowding
-  const labelEvery = buckets.length <= 7 ? 1 : buckets.length <= 24 ? 4 : 7;
-
-  return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
-      <div className="flex items-center justify-between mb-5">
-        <div>
-          <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Site Visitors — Home Page</h2>
-          <p className="text-xs text-gray-400 mt-0.5">Unique browsers landing on the home page</p>
-        </div>
-        <div className="flex gap-1 flex-wrap justify-end">
-          {RANGES.map((r, i) => (
-            <button key={r.label} onClick={() => setRangeIdx(i)}
-              className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${rangeIdx === i ? "bg-[#1E3A5F] text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}>
-              {r.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex items-end gap-2 mb-6">
-        <p className="text-4xl font-bold text-[#1E3A5F]">{loading ? "—" : uniqueVisitors}</p>
-        <p className="text-sm text-gray-400 mb-1.5">unique visitors</p>
-      </div>
-
-      {loading ? (
-        <div className="h-32 flex items-center justify-center text-xs text-gray-300">Loading...</div>
-      ) : (
-        <div className="flex items-end gap-px h-32 w-full overflow-hidden">
-          {buckets.map((b, i) => (
-            <div key={i} className="flex-1 flex flex-col items-center justify-end gap-1 group relative">
-              <div
-                className="w-full bg-[#0d9488] rounded-t transition-all duration-300 hover:bg-[#0f766e] min-h-[2px]"
-                style={{ height: `${Math.max(2, (b.count / maxCount) * 100)}%` }}
-              />
-              {i % labelEvery === 0 && (
-                <span className="text-[9px] text-gray-400 rotate-45 origin-left mt-1 whitespace-nowrap absolute -bottom-5 left-0">
-                  {b.label}
-                </span>
-              )}
-              <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                {b.count}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-      <div className="mt-8" />
-    </div>
-  );
-}
-
 // ── DEV TOOLS: FOUNDING FLOW TESTER ──────────────────────────────────────────
+
 
 function FoundingFlowTester() {
   const [status,   setStatus  ] = useState(null);
@@ -1370,6 +1261,7 @@ const handleDelete = async (member) => {
   // ── VERIFICATION QUERIES ──────────────────────────────────────────────────
 
   const { data: pendingDocs   = [] } = useQuery({ queryKey:["pending-verifications"], queryFn: () => base44.entities.VerificationDocuments.filter({ verification_status:"pending" }, "-created_date") });
+  const { data: allVerificationDocs = [] } = useQuery({ queryKey:["all-verification-docs"], queryFn: () => base44.entities.VerificationDocuments.list("-created_date", 1000) });
   const { data: pendingRoles  = [] } = useQuery({ queryKey:["pending-roles"],         queryFn: () => base44.entities.UserRole.filter({ approval_status:"pending" }, "-created_date") });
   const { data: highRiskUsers = [] } = useQuery({ queryKey:["high-risk-users"],       queryFn: () => base44.entities.RiskScores.filter({ risk_level:"high" }, "-score") });
 
@@ -1607,7 +1499,66 @@ const handleDelete = async (member) => {
               <Section title="Pending Applications"           count={pendingMembers.length}           accent="amber">  <MemberTable members={pendingMembers}           showActions /></Section>
               <Section title="Invited"                        count={invitedMembers.length}           accent="blue">   <MemberTable members={invitedMembers}           showActions /></Section>
               <Section title="Password Protected"             count={passwordProtectedMembers.length} accent="indigo"> <MemberTable members={passwordProtectedMembers} showActions /></Section>
-              <Section title="Awaiting Document Verification" count={awaitingDocMembers.length}       accent="purple"> <MemberTable members={awaitingDocMembers}       showActions /></Section>
+              <Section title="Awaiting Document Verification" count={awaitingDocMembers.length} accent="purple">
+                <div className="max-h-[220px] overflow-y-auto rounded-xl border border-gray-200 bg-white">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-100 bg-gray-50">
+                        {["Full Name","Email","Role","Postcode","Signed Up","Document","Actions"].map(h => (
+                          <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {awaitingDocMembers.map(m => {
+                        const doc = allVerificationDocs.find(d => d.user_id === m.id || d.user_id === m.user_id);
+                        return (
+                          <tr key={m.id} className="hover:bg-gray-50 transition-colors">
+                            <td className="px-4 py-3 font-medium text-gray-900">{m.full_name}</td>
+                            <td className="px-4 py-3 text-gray-500">{m.email}</td>
+                            <td className="px-4 py-3">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${m.role==="host" ? "bg-teal-50 text-teal-700" : "bg-purple-50 text-purple-700"}`}>
+                                {m.role==="host" ? "Host" : "Cleaner"}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-gray-500 uppercase tracking-wide text-xs">{m.postcode}</td>
+                            <td className="px-4 py-3 text-gray-400 text-xs">
+                              {m.signup_timestamp ? new Date(m.signup_timestamp).toLocaleDateString("en-GB") : "—"}
+                            </td>
+                            <td className="px-4 py-3">
+                              {doc ? (
+                                <a href={doc.file_url} target="_blank" rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-xs text-[#0d9488] hover:text-[#0f766e] font-medium underline underline-offset-2">
+                                  <FileText className="w-3 h-3" />
+                                  View {(doc.document_type||"").replace(/_/g," ") || "Document"}
+                                </a>
+                              ) : (
+                                <span className="text-xs text-gray-300">No doc found</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <Button size="sm" className="h-7 px-3 text-xs bg-green-600 hover:bg-green-700 text-white" disabled={!!actionLoading[m.id]} onClick={() => handleApprove(m)}>
+                                  {actionLoading[m.id]==="approve" ? "..." : <><Check className="w-3 h-3 mr-1"/>Approve</>}
+                                </Button>
+                                <Button size="sm" variant="outline" className="h-7 px-3 text-xs border-red-300 text-red-600 hover:bg-red-50" disabled={!!actionLoading[m.id]} onClick={() => handleReject(m)}>
+                                  {actionLoading[m.id]==="reject" ? "..." : <><X className="w-3 h-3 mr-1"/>Reject</>}
+                                </Button>
+                                <Button size="sm" variant="outline" className="h-7 px-3 text-xs border-gray-200 text-gray-400 hover:bg-gray-50" disabled={!!actionLoading[m.id]} onClick={() => handleDelete(m)}>
+                                  {actionLoading[m.id]==="delete" ? "..." : "Delete"}
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {awaitingDocMembers.length === 0 && (
+                        <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-300 text-sm">No records in this section</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </Section>
               <Section title="Doc Failed — Attempt 1"         count={docFail1Members.length}          accent="orange"> <MemberTable members={docFail1Members}          showActions /></Section>
               <Section title="Doc Failed — Attempt 2"         count={docFail2Members.length}          accent="red">    <MemberTable members={docFail2Members}          showActions /></Section>
 

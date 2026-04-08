@@ -95,6 +95,13 @@ Deno.serve(async (req) => {
       founding_member_id,
     });
 
+    // Move FoundingMember from invited → password_protected
+    if (founding_member_id) {
+      await serviceRole.entities.FoundingMember.update(founding_member_id, {
+        approval_status: "password_protected",
+      });
+    }
+
     // Create session
     const session_token = generateToken();
     const expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();

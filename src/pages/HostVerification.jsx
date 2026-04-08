@@ -64,6 +64,15 @@ export default function HostVerification() {
     setLoading(true);
 
     try {
+      // Move FoundingMember to awaiting_document_verification
+      const foundingMembers = await base44.entities.FoundingMember.filter({ user_id: user.id });
+      if (foundingMembers.length === 0) {
+        // fallback: try by id directly
+        try { await base44.entities.FoundingMember.update(user.id, { approval_status: "awaiting_document_verification" }); } catch (_) {}
+      } else {
+        await base44.entities.FoundingMember.update(foundingMembers[0].id, { approval_status: "awaiting_document_verification" });
+      }
+
       // Assign host role (pending approval)
       await addUserRole(user.id, "host");
 
