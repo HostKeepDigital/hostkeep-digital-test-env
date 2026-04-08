@@ -104,6 +104,11 @@ function PaymentForm({ booking, rentalSecret, depositSecret }) {
         </div>
       </div>
 
+      {/* Deposit info note */}
+      <div className="rounded-xl px-4 py-3 text-xs" style={{ backgroundColor: '#f4f4f5', color: '#374151' }}>
+        All bookings require a minimum £1 booking deposit to securely save your payment details. This amount is deducted from your total.
+      </div>
+
       {/* Stripe card element */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">Card details</label>

@@ -1139,6 +1139,11 @@ export default function PropertyDetails() {
                 <div className="border-t border-gray-200 pt-4">
                   {/* Price Breakdown */}
                   {getPriceBreakdownUI()}
+                  {checkIn && numNights > 0 && (
+                    <p className="text-xs text-gray-500 mt-3 px-3 py-2 rounded-lg" style={{ backgroundColor: '#f4f4f5', color: '#374151' }}>
+                      All bookings require a minimum £1 booking deposit to securely save your payment details. This amount is deducted from your total.
+                    </p>
+                  )}
                 </div>
 
                 {/* Booking Blocked Warning */}
