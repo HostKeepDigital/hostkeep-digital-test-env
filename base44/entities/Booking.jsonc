@@ -153,6 +153,10 @@
     "stripe_payment_id": {
       "type": "string"
     },
+    "stripe_customer_id": {
+      "type": "string",
+      "description": "Stripe Customer ID for the guest's saved card"
+    },
     "stripe_rental_intent_id": {
       "type": "string",
       "description": "Stripe PaymentIntent ID for the rental payment"
@@ -181,6 +185,52 @@
       ],
       "default": "none",
       "description": "Status of the security deposit"
+    },
+    "balance_due_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Exact date and time the balance charge should fire, calculated as 56 days before check-in"
+    },
+    "balance_payment_status": {
+      "type": "string",
+      "enum": [
+        "not_applicable",
+        "pending",
+        "paid",
+        "failed",
+        "overdue"
+      ],
+      "default": "not_applicable",
+      "description": "Status of the outstanding balance charge"
+    },
+    "balance_failed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the balance charge first failed"
+    },
+    "rental_release_due_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Exact date and time the 24hr rental release should fire, set at check-in date and time"
+    },
+    "rental_frozen": {
+      "type": "boolean",
+      "default": false,
+      "description": "True when a guest complaint is freezing the rental release"
+    },
+    "deposit_frozen": {
+      "type": "boolean",
+      "default": false,
+      "description": "True when a host damage complaint is freezing the deposit return"
+    },
+    "guest_checkin_logged_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When guest optionally logged their check-in"
+    },
+    "guest_checkin_notes": {
+      "type": "string",
+      "description": "Optional notes the guest adds when logging check-in"
     },
     "checkin_confirmed_at": {
       "type": "string",
