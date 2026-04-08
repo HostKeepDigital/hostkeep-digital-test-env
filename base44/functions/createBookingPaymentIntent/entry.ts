@@ -1,97 +1,114 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
-import Stripe from 'npm:stripe@14';
+import Stripe from 'npm:stripe@17.0.0';
+import { addDays, addHours, startOfDay, differenceInDays } from 'npm:date-fns@3.6.0';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
 
 Deno.serve(async (req) => {
-  const base44 = createClientFromRequest(req);
+  try {
+    const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
 
-  const user = await base44.auth.me();
-  if (!user) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-  const { booking_id } = await req.json();
-  if (!booking_id) {
-    return Response.json({ error: 'booking_id is required' }, { status: 400 });
-  }
+    const body = await req.json();
+    const { booking_id } = body;
 
-  // Load the booking
-  const bookings = await base44.entities.Booking.filter({ id: booking_id });
-  const booking = bookings?.[0];
-  if (!booking) {
-    return Response.json({ error: 'Booking not found' }, { status: 404 });
-  }
+    if (!booking_id) {
+      return Response.json({ error: 'booking_id is required' }, { status: 400 });
+    }
 
-  // Verify the booking belongs to the current user (guest)
-  if (booking.guest_id !== user.id) {
-    return Response.json({ error: 'Forbidden' }, { status: 403 });
-  }
+    // Load booking and verify guest
+    const booking = await base44.entities.Booking.get(booking_id);
+    if (!booking || booking.guest_id !== user.id) {
+      return Response.json({ error: 'Booking not found or unauthorized' }, { status: 404 });
+    }
 
-  // Load the property to get its name
-  const properties = await base44.entities.Property.filter({ id: booking.property_id });
-  const property = properties?.[0];
-  if (!property) {
-    return Response.json({ error: 'Property not found' }, { status: 404 });
-  }
+    // Load host user and check Stripe Connect
+    const host = await base44.asServiceRole.entities.User.get(booking.host_id);
+    if (!host?.stripe_connect_account_id) {
+      return Response.json(
+        { error: 'Host has not connected their bank account' },
+        { status: 400 }
+      );
+    }
 
-  // Load the host user to get their Stripe Connect account
-  const hosts = await base44.asServiceRole.entities.User.filter({ id: booking.host_id });
-  const host = hosts?.[0];
-  if (!host?.stripe_connect_account_id) {
-    return Response.json({ error: 'Host has not connected their bank account' }, { status: 400 });
-  }
+    // Create or retrieve Stripe Customer
+    let customerId = booking.stripe_customer_id;
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: booking.guest_email,
+        name: booking.guest_name,
+      });
+      customerId = customer.id;
+    }
 
-  // Create statement descriptor: "HKD - Property Name"
-  const statementDescriptor = `HKD - ${property.title}`.substring(0, 22);
+    // Calculate payment amounts and dates
+    const today = new Date();
+    const checkInDate = new Date(booking.check_in);
+    const daysUntilCheckIn = differenceInDays(checkInDate, today);
 
-  // Create rental PaymentIntent — routed through host's Express connected account
-  const rentalIntent = await stripe.paymentIntents.create({
-    amount: Math.round(booking.total_amount * 100),
-    currency: 'gbp',
-    statement_descriptor: statementDescriptor,
-    transfer_data: {
-      destination: host.stripe_connect_account_id,
-    },
-    metadata: {
-      booking_id,
-      type: 'rental',
-    },
-  });
+    let chargeAmount;
+    let balancePaymentStatus;
+    let balanceDueDate = null;
 
-  let depositIntent = null;
+    if (daysUntilCheckIn > 56) {
+      chargeAmount = booking.deposit_amount;
+      balancePaymentStatus = 'pending';
+      // Balance due 56 days before check-in at midnight
+      balanceDueDate = startOfDay(addDays(checkInDate, -56)).toISOString();
+    } else {
+      chargeAmount = booking.total_amount;
+      balancePaymentStatus = 'not_applicable';
+    }
 
-  // Create deposit PaymentIntent if applicable — also routed to host
-  if (booking.security_deposit > 0) {
-    depositIntent = await stripe.paymentIntents.create({
-      amount: Math.round(booking.security_deposit * 100),
+    // Create rental PaymentIntent
+    const rentalIntent = await stripe.paymentIntents.create({
+      amount: Math.round(chargeAmount * 100),
       currency: 'gbp',
-      capture_method: 'manual',
-      statement_descriptor: statementDescriptor,
-      transfer_data: {
-        destination: host.stripe_connect_account_id,
-      },
-      metadata: {
-        booking_id,
-        type: 'security_deposit',
-      },
+      customer: customerId,
+      setup_future_usage: 'off_session',
+      metadata: { booking_id, type: 'rental' },
     });
+
+    // Create deposit PaymentIntent if applicable
+    let depositIntentId = null;
+    if (booking.security_deposit > 0) {
+      const depositIntent = await stripe.paymentIntents.create({
+        amount: Math.round(booking.security_deposit * 100),
+        currency: 'gbp',
+        customer: customerId,
+        capture_method: 'manual',
+        metadata: { booking_id, type: 'security_deposit' },
+      });
+      depositIntentId = depositIntent.id;
+    }
+
+    // Calculate rental_release_due_at (check-in at 14:00 + 24 hours)
+    const checkInAt14 = new Date(checkInDate);
+    checkInAt14.setHours(14, 0, 0, 0);
+    const rentalReleaseDueAt = addHours(checkInAt14, 24).toISOString();
+
+    // Update booking with payment data
+    await base44.entities.Booking.update(booking_id, {
+      stripe_customer_id: customerId,
+      stripe_rental_intent_id: rentalIntent.id,
+      stripe_deposit_intent_id: depositIntentId,
+      rental_payment_status: 'unpaid',
+      deposit_status: booking.security_deposit > 0 ? 'held' : 'none',
+      balance_due_date: balanceDueDate,
+      balance_payment_status: balancePaymentStatus,
+      rental_release_due_at: rentalReleaseDueAt,
+    });
+
+    return Response.json({
+      rental_client_secret: rentalIntent.client_secret,
+      deposit_client_secret: depositIntentId ? (await stripe.paymentIntents.retrieve(depositIntentId)).client_secret : null,
+    });
+  } catch (error) {
+    console.error('createBookingPaymentIntent error:', error);
+    return Response.json({ error: error.message }, { status: 500 });
   }
-
-  // Update booking record
-  const updateData = {
-    stripe_rental_intent_id: rentalIntent.id,
-    rental_payment_status: 'unpaid',
-    deposit_status: depositIntent ? 'held' : 'none',
-  };
-  if (depositIntent) {
-    updateData.stripe_deposit_intent_id = depositIntent.id;
-  }
-
-  await base44.entities.Booking.update(booking_id, updateData);
-
-  return Response.json({
-    rental_client_secret: rentalIntent.client_secret,
-    deposit_client_secret: depositIntent?.client_secret || null,
-  });
 });
