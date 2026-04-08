@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import FoundingFooter from "@/components/founding/FoundingFooter";
 import { useNavigate, Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
 import { CheckCircle, AlertTriangle, Loader2, ArrowLeft, Home, ArrowRight, Shield } from "lucide-react";
 
 const HOST_LIMIT        = 50;
@@ -43,11 +44,13 @@ const INCLUDES = [
 export default function FoundingHost() {
   const navigate = useNavigate();
   const formRef  = useRef(null);
+  const { user, isAuthenticated } = useAuth();
   const [hostCount,    setHostCount   ] = useState(0);
   const [loading,      setLoading     ] = useState(true);
   const [submitting,   setSubmitting  ] = useState(false);
   const [cornwallWarn, setCornwallWarn] = useState(false);
-  const [form, setForm] = useState({ forename: "", middle_name: "", surname: "", email: "", postcode: "" });
+  const isGuest = isAuthenticated && user?.role === 'guest';
+  const [form, setForm] = useState({ forename: isGuest ? user?.full_name?.split(' ')[0] || "" : "", middle_name: "", surname: isGuest ? user?.full_name?.split(' ').slice(1).join(' ') || "" : "", email: isGuest ? user?.email || "" : "", postcode: "" });
   const [errors, setErrors] = useState({});
   const [duplicateInfo, setDuplicateInfo] = useState(null);
 
@@ -66,12 +69,14 @@ export default function FoundingHost() {
   const isOutOfArea = form.postcode && !isCornwallPostcode(form.postcode);
 
   const validate = () => {
-    const e = {};
-    if (!form.forename.trim()) e.forename = "Required";
-    if (!form.surname.trim())  e.surname  = "Required";
-    if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Valid email required";
-    if (!form.postcode.trim()) e.postcode = "Required";
-    return e;
+   const e = {};
+   if (!isGuest) {
+     if (!form.forename.trim()) e.forename = "Required";
+     if (!form.surname.trim())  e.surname  = "Required";
+     if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Valid email required";
+   }
+   if (!form.postcode.trim()) e.postcode = "Required";
+   return e;
   };
 
   const handleSubmit = async (e) => {

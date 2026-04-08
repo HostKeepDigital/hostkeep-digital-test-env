@@ -9,7 +9,9 @@ const LOGO_IMG = "https://raw.githubusercontent.com/HostKeepDigital/hostkeep-ass
 export default function GuestSignUp() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
+  const [forename, setForename] = useState('');
+  const [middleName, setMiddleName] = useState('');
+  const [surname, setSurname] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -27,8 +29,14 @@ export default function GuestSignUp() {
     fetchPropertyCount();
   }, []);
 
+  const fullName = () => [forename.trim(), middleName.trim(), surname.trim()].filter(Boolean).join(' ');
+
   const handleSignUp = async (e) => {
     e.preventDefault();
+    if (!forename.trim() || !surname.trim()) {
+      setError('First and last name are required');
+      return;
+    }
     setError('');
     setLoading(true);
 
@@ -36,11 +44,10 @@ export default function GuestSignUp() {
       const response = await base44.functions.invoke('customSignUp', {
         email,
         password,
-        full_name: fullName,
+        full_name: fullName(),
       });
 
       if (response.data?.success) {
-        // Redirect to sign-in after successful registration
         window.location.href = '/SignIn?registered=true';
       } else {
         setError(response.data?.message || 'Sign-up failed');
@@ -124,18 +131,20 @@ export default function GuestSignUp() {
 
           <form onSubmit={handleSignUp} className="space-y-5">
 
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1.5 tracking-wide uppercase">
-                Full Name
-              </label>
-              <input
-                type="text"
-                required
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="John Doe"
-                className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#0d9488]/40 focus:border-[#0d9488] transition-colors"
-              />
+            <div className="grid grid-cols-3 gap-3">
+              {[['forename','Forename','Jane'],['middleName','Middle name','Optional'],['surname','Surname','Smith']].map(([field, label, placeholder]) => (
+                <div key={field}>
+                  <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1.5 tracking-wide uppercase">{label}</label>
+                  <input
+                    type="text"
+                    required={field !== 'middleName'}
+                    value={field === 'forename' ? forename : field === 'middleName' ? middleName : surname}
+                    onChange={(e) => field === 'forename' ? setForename(e.target.value) : field === 'middleName' ? setMiddleName(e.target.value) : setSurname(e.target.value)}
+                    placeholder={placeholder}
+                    className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-3 text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-800 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#0d9488]/40 focus:border-[#0d9488] transition-colors"
+                  />
+                </div>
+              ))}
             </div>
 
             <div>
@@ -188,7 +197,7 @@ export default function GuestSignUp() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !forename.trim() || !surname.trim()}
               className="w-full bg-[#1E3A5F] hover:bg-[#162d4a] disabled:opacity-60 text-white font-semibold text-sm rounded-xl py-3.5 transition-colors min-h-[52px]"
             >
               {loading ? (

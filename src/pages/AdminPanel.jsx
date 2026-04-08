@@ -1245,17 +1245,30 @@ const [crmLoading,    setCrmLoading   ] = useState(true);
   };
 
 const handleDelete = async (member) => {
-  if (!window.confirm(`Delete ${member.full_name}? This will remove their account and all credentials. This cannot be undone.`)) return;
-  setML(member.id, "delete");
-  try {
-    await base44.functions.invoke("deleteAccount", { admin_delete_email: member.email });
-    toast.success("Account fully deleted");
-  } catch (e) {
-    toast.error("Delete failed");
-    console.error(e);
-  }
-  setML(member.id, null);
-  fetchMembers();
+ if (!window.confirm(`Delete ${member.full_name}? This will remove their account and all credentials. This cannot be undone.`)) return;
+ setML(member.id, "delete");
+ try {
+   await base44.functions.invoke("deleteAccount", { admin_delete_email: member.email });
+   toast.success("Account fully deleted");
+ } catch (e) {
+   toast.error("Delete failed");
+   console.error(e);
+ }
+ setML(member.id, null);
+ fetchMembers();
+};
+
+const handleApproveGuestAsHost = async (member) => {
+ setML(member.id, "approve_guest");
+ try {
+   await base44.functions.invoke("approveGuestAsHost", { member_id: member.id });
+   toast.success(`${member.full_name} approved as host — can now access Host Dashboard`);
+ } catch (e) {
+   toast.error("Approval failed");
+   console.error(e);
+ }
+ setML(member.id, null);
+ fetchMembers();
 };
 
   // ── VERIFICATION QUERIES ──────────────────────────────────────────────────
@@ -1497,6 +1510,34 @@ const handleDelete = async (member) => {
 
               <Section title="Interest / Sign-Ups"            count={interestMembers.length}          accent="gray">   <MemberTable members={interestMembers}          showActions /></Section>
               <Section title="Pending Applications"           count={pendingMembers.length}           accent="amber">  <MemberTable members={pendingMembers}           showActions /></Section>
+              <Section title="Pending Applications (Existing Guest)" count={passwordProtectedMembers.filter(m => !m.user_id).length} accent="blue">
+                <div className="max-h-[220px] overflow-y-auto rounded-xl border border-gray-200 bg-white">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-100 bg-gray-50">
+                        {["Full Name","Email","Role","Postcode","Status","Actions"].map(h => <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">{h}</th>)}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {passwordProtectedMembers.map(m => (
+                        <tr key={m.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-4 py-3 font-medium text-gray-900">{m.full_name}</td>
+                          <td className="px-4 py-3 text-gray-500">{m.email}</td>
+                          <td className="px-4 py-3"><span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-teal-50 text-teal-700">Host</span></td>
+                          <td className="px-4 py-3 text-gray-500 uppercase tracking-wide text-xs">{m.postcode}</td>
+                          <td className="px-4 py-3"><span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">Password Protected</span></td>
+                          <td className="px-4 py-3">
+                            <Button size="sm" className="h-7 px-3 text-xs bg-green-600 hover:bg-green-700 text-white" disabled={!!actionLoading[m.id]} onClick={() => handleApproveGuestAsHost(m)}>
+                              {actionLoading[m.id]==="approve_guest" ? "..." : <>Approve</>}
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                      {passwordProtectedMembers.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-300 text-sm">No pending guest applications</td></tr>}
+                    </tbody>
+                  </table>
+                </div>
+              </Section>
               <Section title="Invited"                        count={invitedMembers.length}           accent="blue">   <MemberTable members={invitedMembers}           showActions /></Section>
               <Section title="Password Protected"             count={passwordProtectedMembers.length} accent="indigo"> <MemberTable members={passwordProtectedMembers} showActions /></Section>
               <Section title="Awaiting Document Verification" count={awaitingDocMembers.length} accent="purple">
