@@ -16,7 +16,9 @@ import {
   Bed,
   Users,
   X,
-  MessageSquare
+  MessageSquare,
+  AlertCircle,
+  Clock
 } from "lucide-react";
 import {
   format,
@@ -27,6 +29,9 @@ import {
 import ReviewForm from "@/components/reviews/ReviewForm";
 import RaiseQuestionModal from "@/components/messaging/RaiseQuestionModal";
 import CancelBookingModal from "@/components/bookings/CancelBookingModal";
+import RentalPaymentTimer from "@/components/bookings/RentalPaymentTimer";
+import CheckInLogModal from "@/components/bookings/CheckInLogModal";
+import ComplaintModal from "@/components/bookings/ComplaintModal";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/lib/AuthContext";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
@@ -43,6 +48,8 @@ export default function MyTrips() {
   const [reviewBooking, setReviewBooking] = useState(null);
   const [questionBooking, setQuestionBooking] = useState(null);
   const [cancelBooking, setCancelBooking] = useState(null);
+  const [checkInBooking, setCheckInBooking] = useState(null);
+  const [complaintBooking, setComplaintBooking] = useState(null);
 
   const queryClient = useQueryClient();
 
@@ -297,6 +304,22 @@ export default function MyTrips() {
       "confirmed"
     ].includes(booking.booking_status);
 
+    const showPaymentTimer =
+      (booking.booking_status === 'checked_in' ||
+        booking.booking_status === 'confirmed') &&
+      booking.rental_payment_status === 'held';
+
+    const showCheckInLog =
+      booking.booking_status === 'checked_in' &&
+      !booking.guest_checkin_logged_at;
+
+    const showComplaintButton =
+      (booking.booking_status === 'checked_in' ||
+        booking.booking_status === 'confirmed') &&
+      booking.rental_payment_status === 'held' &&
+      !booking.rental_frozen &&
+      isBefore(new Date(), new Date(booking.rental_release_due_at));
+
     return (
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -351,54 +374,105 @@ export default function MyTrips() {
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2 flex-wrap">
-                  {canCancel && (
+                <div className="space-y-2">
+                  {showPaymentTimer && (
+                    <RentalPaymentTimer
+                      releaseDueAt={booking.rental_release_due_at}
+                      rentalFrozen={booking.rental_frozen}
+                    />
+                  )}
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {canCancel && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCancelBooking(booking)}
+                        className="text-rose-600 border-rose-200 hover:bg-rose-50"
+                      >
+                        Cancel
+                      </Button>
+                    )}
+
+                    <Link
+                      to={
+                        createPageUrl("PropertyDetails") +
+                        `?id=${booking.property_id}`
+                      }
+                    >
+                      <Button variant="outline" size="sm">
+                        Manage Booking
+                      </Button>
+                    </Link>
+
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setCancelBooking(booking)}
-                      className="text-rose-600 border-rose-200 hover:bg-rose-50"
+                      onClick={() => setQuestionBooking(booking)}
                     >
-                      Cancel
+                      <MessageSquare className="w-4 h-4 mr-1" /> Message Host
                     </Button>
-                  )}
 
-                  <Link
-                    to={
-                      createPageUrl("PropertyDetails") +
-                      `?id=${booking.property_id}`
-                    }
-                  >
-                    <Button variant="outline" size="sm">
-                      Manage Booking
-                    </Button>
-                  </Link>
+                    {showReviewButton && (
+                      <Button
+                        size="sm"
+                        onClick={() => setReviewBooking(booking)}
+                        className="bg-teal-600 hover:bg-teal-700"
+                      >
+                        <Star className="w-4 h-4 mr-1" /> Leave Review
+                      </Button>
+                    )}
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setQuestionBooking(booking)}
-                  >
-                    <MessageSquare className="w-4 h-4 mr-1" /> Message Host
-                  </Button>
+                    {reviewed && (
+                      <Badge
+                        variant="outline"
+                        className="text-emerald-600 border-emerald-200"
+                      >
+                        <Star className="w-3 h-3 mr-1 fill-emerald-600" />{" "}
+                        Reviewed
+                      </Badge>
+                    )}
+                  </div>
 
-                  {showReviewButton && (
-                    <Button
-                      size="sm"
-                      onClick={() => setReviewBooking(booking)}
-                      className="bg-teal-600 hover:bg-teal-700"
-                    >
-                      <Star className="w-4 h-4 mr-1" /> Leave Review
-                    </Button>
-                  )}
-
-                  {reviewed && (
+                  {booking.guest_checkin_logged_at ? (
                     <Badge
                       variant="outline"
-                      className="text-emerald-600 border-emerald-200"
+                      className="text-emerald-600 border-emerald-200 w-full justify-center"
                     >
-                      <Star className="w-3 h-3 mr-1 fill-emerald-600" />{" "}
-                      Reviewed
+                      ✓ Check-in logged{' '}
+                      {format(
+                        parseISO(booking.guest_checkin_logged_at),
+                        'MMM d, h:mm a'
+                      )}
+                    </Badge>
+                  ) : showCheckInLog ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setCheckInBooking(booking)}
+                      className="w-full"
+                    >
+                      <Clock className="w-4 h-4 mr-1" /> Log my check-in time
+                    </Button>
+                  ) : null}
+
+                  {showComplaintButton && !booking.rental_frozen && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setComplaintBooking(booking)}
+                      className="text-red-600 border-red-200 hover:bg-red-50 w-full"
+                    >
+                      <AlertCircle className="w-4 h-4 mr-1" /> Raise a Complaint
+                    </Button>
+                  )}
+
+                  {booking.rental_frozen && (
+                    <Badge
+                      variant="outline"
+                      className="text-amber-600 border-amber-200 w-full justify-center"
+                    >
+                      Complaint submitted — under review
                     </Badge>
                   )}
                 </div>
@@ -535,6 +609,28 @@ export default function MyTrips() {
             open={!!cancelBooking}
             onOpenChange={(open) => !open && setCancelBooking(null)}
             user={user}
+          />
+        )}
+
+        {/* CHECK-IN LOG */}
+        {checkInBooking && (
+          <CheckInLogModal
+            isOpen={!!checkInBooking}
+            onClose={() => setCheckInBooking(null)}
+            booking={checkInBooking}
+            onSuccess={() => queryClient.invalidateQueries({ queryKey: ["guest-bookings"] })}
+          />
+        )}
+
+        {/* COMPLAINT */}
+        {complaintBooking && (
+          <ComplaintModal
+            isOpen={!!complaintBooking}
+            onClose={() => {
+              setComplaintBooking(null);
+              queryClient.invalidateQueries({ queryKey: ["guest-bookings"] });
+            }}
+            booking={complaintBooking}
           />
         )}
       </div>
