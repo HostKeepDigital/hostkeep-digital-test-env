@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -67,6 +67,7 @@ export default function PropertyDetails() {
   const propertyId = urlParams.get("id");
 
   const { user: currentUser } = useAuth();
+  const navigate = useNavigate();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showImageOverlay, setShowImageOverlay] = useState(false);
   const [checkIn, setCheckIn] = useState(() => urlParams.get("checkIn") || "");
@@ -394,9 +395,9 @@ export default function PropertyDetails() {
     mutationFn: async (data) => {
       return base44.entities.Booking.create(data);
     },
-    onSuccess: () => {
-      toast.success("Booking request sent! The host will respond shortly.");
+    onSuccess: (booking) => {
       setShowBookingDialog(false);
+      navigate(`/Pay?bookingId=${booking.id}`);
     },
   });
 
