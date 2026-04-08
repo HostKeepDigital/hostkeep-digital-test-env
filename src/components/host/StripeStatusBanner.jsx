@@ -11,7 +11,8 @@ export default function StripeStatusBanner({ user }) {
 
   useEffect(() => {
     if (!user?.id) return;
-    base44.functions.invoke('getStripeConnectStatus', {})
+    const session_token = localStorage.getItem("session_token");
+    base44.functions.invoke('getStripeConnectStatus', { session_token })
       .then(res => setStatus(res.data?.status || 'not_connected'))
       .catch(() => setStatus('not_connected'));
   }, [user?.id]);
@@ -19,7 +20,8 @@ export default function StripeStatusBanner({ user }) {
   const handleConnect = async () => {
     setConnecting(true);
     try {
-      const res = await base44.functions.invoke('createStripeConnectLink', {});
+      const session_token = localStorage.getItem("session_token");
+      const res = await base44.functions.invoke('createStripeConnectLink', { session_token });
       if (res.data?.url) {
         window.location.href = res.data.url;
       } else {

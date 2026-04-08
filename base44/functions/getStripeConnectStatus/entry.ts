@@ -6,40 +6,42 @@ Deno.serve(async (req) => {
     const serviceRole = base44.asServiceRole;
 
     const body = await req.json().catch(() => ({}));
-    const user_id = body.user_id;
+    const session_token = body.session_token || req.headers.get("x-session-token");
 
-    if (!user_id) {
-      return Response.json({
-        connected: false,
-        error: "missing_user_id",
-      });
+    if (!session_token) {
+      return Response.json({ status: "not_connected", error: "missing_session" });
     }
 
-    const credentials = await serviceRole.entities.UserCredentials.filter({
-      id: user_id,
-    });
+    // Validate session
+    const sessionCheck = await serviceRole.functions.invoke("checkSession", { session_token });
+    const session = sessionCheck?.data;
 
-    const user = credentials?.[0];
+    if (!session?.authenticated) {
+      return Response.json({ status: "not_connected", error: "unauthenticated" });
+    }
+
+    const user_id = session.user_id;
+    if (!user_id) {
+      return Response.json({ status: "not_connected", error: "no_user_id" });
+    }
+
+    const users = await serviceRole.entities.User.filter({ id: user_id });
+    const user = users?.[0];
 
     if (!user) {
-      return Response.json({
-        connected: false,
-        error: "user_not_found",
-      });
+      return Response.json({ status: "not_connected", error: "user_not_found" });
     }
 
-    const isConnected = !!user.stripe_account_id;
+    const stripeStatus = user.stripe_connect_status;
+    const hasAccount = !!user.stripe_connect_account_id;
 
-    return Response.json({
-      success: true,
-      connected: isConnected,
-      stripe_account_id: isConnected ? user.stripe_account_id : null,
-    });
+    let status = "not_connected";
+    if (stripeStatus === "verified") status = "verified";
+    else if (stripeStatus === "pending" && hasAccount) status = "pending_verification";
+
+    return Response.json({ success: true, status });
   } catch (err) {
     console.error("getStripeConnectStatus error:", err);
-    return Response.json(
-      { success: false, error: err.message },
-      { status: 500 },
-    );
+    return Response.json({ status: "not_connected", error: err.message }, { status: 500 });
   }
 });

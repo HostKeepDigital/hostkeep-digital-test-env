@@ -483,6 +483,20 @@ export default function EditProperty() {
       return;
     }
 
+    // Check Stripe connection before publishing
+    try {
+      const session_token = localStorage.getItem("session_token");
+      const stripeRes = await base44.functions.invoke("getStripeConnectStatus", { session_token });
+      const stripeStatus = stripeRes.data?.status;
+      if (stripeStatus !== "verified") {
+        toast.error("You need to connect and verify your bank account with Stripe before publishing.", { duration: 5000 });
+        return;
+      }
+    } catch {
+      toast.error("Could not verify your Stripe account. Please try again.");
+      return;
+    }
+
     try {
       await updateMutation.mutateAsync({ status: "published" });
       toast.success("Property published successfully!");
