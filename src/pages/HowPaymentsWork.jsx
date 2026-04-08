@@ -1,49 +1,149 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { ArrowLeft, CheckCircle, Clock, PoundSterling, Shield, ArrowRight } from "lucide-react";
+import { ArrowLeft, CheckCircle, Clock, PoundSterling, Shield, ArrowRight, User, Building2, CreditCard, FileText, Banknote, AlertCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function HowPaymentsWork() {
+  const location = useLocation();
+  const isCleaner = new URLSearchParams(location.search).get("role") === "cleaner";
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-3xl mx-auto px-4 py-8">
-        <Link to={createPageUrl("HostDashboard")} className="inline-flex items-center gap-2 text-teal-600 hover:text-teal-700 font-medium mb-8">
+        <Link
+          to={createPageUrl(isCleaner ? "CleanerDashboard" : "HostDashboard")}
+          className="inline-flex items-center gap-2 text-teal-600 hover:text-teal-700 font-medium mb-8"
+        >
           <ArrowLeft className="w-4 h-4" /> Back to Dashboard
         </Link>
 
         <h1 className="text-3xl font-bold text-gray-900 mb-2">How Payments Work</h1>
-        <p className="text-gray-500 mb-10">Everything you need to know about receiving payments from guests.</p>
+        <p className="text-gray-500 mb-10">
+          {isCleaner
+            ? "Everything you need to know about receiving payments for cleaning jobs."
+            : "Everything you need to know about receiving payments from guests."}
+        </p>
 
-        {/* Setting Up Stripe */}
+        {/* ── STRIPE SETUP GUIDE ── */}
         <section className="mb-10">
           <div className="flex items-center gap-3 mb-5">
             <div className="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center">
               <Shield className="w-5 h-5 text-teal-600" />
             </div>
-            <h2 className="text-xl font-bold text-gray-900">Setting Up Your Stripe Account</h2>
+            <h2 className="text-xl font-bold text-gray-900">How to Set Up Your Stripe Account</h2>
           </div>
-          <Card className="border-0 shadow-sm">
-            <CardContent className="p-6 space-y-4">
-              <p className="text-gray-600 leading-relaxed">
-                Before you can receive payments from guests, you need to connect your bank account through <strong>Stripe</strong> — the world's most trusted payment processor. This is a one-time setup that takes about 5 minutes.
+
+          <Card className="border-0 shadow-sm mb-4">
+            <CardContent className="p-6">
+              <p className="text-gray-600 leading-relaxed mb-6">
+                Before you can receive payments, you need to connect your bank account through <strong>Stripe</strong> — the world's most trusted payment processor. This is a one-time setup that takes around <strong>5–10 minutes</strong>. Here's exactly what you'll need to fill in:
               </p>
-              <div className="space-y-3 mt-4">
-                {[
-                  { step: "1", text: "Click Connect with Stripe in your dashboard" },
-                  { step: "2", text: "Enter your personal details and bank account details" },
-                  { step: "3", text: "Stripe verifies your identity — usually 1–2 business days" },
-                  { step: "4", text: "Once verified, your property is ready to accept bookings" },
-                ].map(({ step, text }) => (
-                  <div key={step} className="flex items-start gap-4">
-                    <div className="w-8 h-8 rounded-full bg-teal-600 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
-                      {step}
-                    </div>
-                    <p className="text-gray-700 pt-1">{text}</p>
+
+              {/* Step 1 */}
+              <div className="flex gap-4 mb-6">
+                <div className="w-9 h-9 rounded-full bg-teal-600 text-white flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">1</div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <User className="w-4 h-4 text-teal-600" />
+                    <h3 className="font-semibold text-gray-900">Personal Details</h3>
                   </div>
-                ))}
+                  <p className="text-sm text-gray-500 mb-3">Stripe uses this to verify your identity. Have these ready:</p>
+                  <ul className="space-y-1.5 text-sm text-gray-700">
+                    {["Full legal name (as on your bank account)", "Date of birth", "Home address", "Email address", "Mobile phone number"].map(f => (
+                      <li key={f} className="flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5 text-teal-500 flex-shrink-0" />{f}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              {/* Step 2 */}
+              <div className="flex gap-4 mb-6">
+                <div className="w-9 h-9 rounded-full bg-teal-600 text-white flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">2</div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <FileText className="w-4 h-4 text-teal-600" />
+                    <h3 className="font-semibold text-gray-900">Identity Verification</h3>
+                  </div>
+                  <p className="text-sm text-gray-500 mb-3">Stripe will ask you to verify your identity. You'll need one of:</p>
+                  <ul className="space-y-1.5 text-sm text-gray-700">
+                    {["UK Passport", "UK Driving Licence (photo card)", "National Identity Card"].map(f => (
+                      <li key={f} className="flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5 text-teal-500 flex-shrink-0" />{f}</li>
+                    ))}
+                  </ul>
+                  <p className="text-xs text-gray-400 mt-2">You may be asked to take a photo or upload a scan of the document.</p>
+                </div>
+              </div>
+
+              {/* Step 3 */}
+              <div className="flex gap-4 mb-6">
+                <div className="w-9 h-9 rounded-full bg-teal-600 text-white flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">3</div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Building2 className="w-4 h-4 text-teal-600" />
+                    <h3 className="font-semibold text-gray-900">Business / Account Type</h3>
+                  </div>
+                  <p className="text-sm text-gray-500 mb-3">Choose the option that best describes you:</p>
+                  <ul className="space-y-1.5 text-sm text-gray-700">
+                    {[
+                      "Individual — if you're renting as a private person",
+                      "Sole trader — if you run a small property or cleaning business",
+                      "Limited company — if registered at Companies House",
+                    ].map(f => (
+                      <li key={f} className="flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5 text-teal-500 flex-shrink-0" />{f}</li>
+                    ))}
+                  </ul>
+                  <div className="bg-amber-50 border border-amber-100 rounded-lg p-3 mt-3 flex gap-2">
+                    <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-amber-800">If registering as a sole trader or company, Stripe may ask for your UTR number or Companies House registration number.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 4 */}
+              <div className="flex gap-4 mb-6">
+                <div className="w-9 h-9 rounded-full bg-teal-600 text-white flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">4</div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Banknote className="w-4 h-4 text-teal-600" />
+                    <h3 className="font-semibold text-gray-900">Bank Account Details</h3>
+                  </div>
+                  <p className="text-sm text-gray-500 mb-3">This is where your earnings will be paid. You'll need:</p>
+                  <ul className="space-y-1.5 text-sm text-gray-700">
+                    {["UK bank account holder name", "Sort code (6 digits)", "Account number (8 digits)"].map(f => (
+                      <li key={f} className="flex items-center gap-2"><CheckCircle className="w-3.5 h-3.5 text-teal-500 flex-shrink-0" />{f}</li>
+                    ))}
+                  </ul>
+                  <p className="text-xs text-gray-400 mt-2">The account must be in your name (or your business name). Stripe does not support PayPal or prepaid cards.</p>
+                </div>
+              </div>
+
+              {/* Step 5 */}
+              <div className="flex gap-4">
+                <div className="w-9 h-9 rounded-full bg-teal-600 text-white flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">5</div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <CreditCard className="w-4 h-4 text-teal-600" />
+                    <h3 className="font-semibold text-gray-900">Review & Submit</h3>
+                  </div>
+                  <p className="text-sm text-gray-600">Once submitted, Stripe will verify your details — this usually takes <strong>1–2 business days</strong>. You'll get an email when you're approved. After that, you're ready to accept payments.</p>
+                </div>
               </div>
             </CardContent>
           </Card>
+
+          {/* CTA */}
+          <div className="bg-teal-600 rounded-2xl p-6 text-white flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
+            <div>
+              <p className="font-semibold text-lg">Ready to connect?</p>
+              <p className="text-teal-100 text-sm mt-1">Head to your dashboard to start the Stripe onboarding.</p>
+            </div>
+            <Link
+              to={createPageUrl(isCleaner ? "CleanerDashboard" : "HostDashboard")}
+              className="flex-shrink-0 bg-white text-teal-700 font-semibold text-sm px-5 py-2.5 rounded-xl hover:bg-teal-50 transition-colors"
+            >
+              Go to Dashboard →
+            </Link>
+          </div>
         </section>
 
         {/* How Guest Payments Work */}

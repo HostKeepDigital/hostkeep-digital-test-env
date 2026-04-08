@@ -105,9 +105,12 @@ export default function StripeConnectPanel({ user }) {
           </Button>
         )}
 
-        <div className="pt-2 border-t border-gray-100">
-          <Link to="/HowPaymentsWork" className="text-sm text-teal-600 hover:underline font-medium">
+        <div className="pt-2 border-t border-gray-100 space-y-1">
+          <Link to="/HowPaymentsWork" className="block text-sm text-teal-600 hover:underline font-medium">
             How do payments work? →
+          </Link>
+          <Link to="/HowPaymentsWork" className="block text-sm text-teal-600 hover:underline font-medium">
+            Step-by-step: How to set up your Stripe account →
           </Link>
         </div>
       </CardContent>
