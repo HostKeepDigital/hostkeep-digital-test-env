@@ -265,6 +265,7 @@ export default function EditProperty() {
 
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [showValidationDialog, setShowValidationDialog] = useState(false);
+  const [saveResult, setSaveResult] = useState(null); // { success: bool, message: string }
   const [validationErrors, setValidationErrors] = useState({});
   const [pendingAction, setPendingAction] = useState(null);
   const [showPolicyPicker, setShowPolicyPicker] = useState(false);
@@ -500,9 +501,13 @@ export default function EditProperty() {
     try {
       await updateMutation.mutateAsync(changedData);
       setFormData(currentFormData);
-      if (typeof proceed === "function") proceed();
+      if (typeof proceed === "function") {
+        proceed();
+      } else {
+        setSaveResult({ success: true, message: "Your changes have been saved successfully." });
+      }
     } catch {
-      toast.error("Failed to save changes");
+      setSaveResult({ success: false, message: "Something went wrong while saving. Please try again." });
     }
   };
 
@@ -547,6 +552,41 @@ export default function EditProperty() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
+      {/* Save Result Overlay */}
+      <Dialog open={!!saveResult} onOpenChange={() => setSaveResult(null)}>
+        <DialogContent className="max-w-sm text-center">
+          <div className="flex flex-col items-center gap-4 py-4">
+            {saveResult?.success ? (
+              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+                <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
+                <svg className="w-8 h-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </div>
+            )}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                {saveResult?.success ? "Changes Saved" : "Save Failed"}
+              </h3>
+              <p className="text-sm text-gray-500 mt-1">{saveResult?.message}</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              className={saveResult?.success ? "bg-teal-600 hover:bg-teal-700 w-full" : "bg-red-600 hover:bg-red-700 w-full"}
+              onClick={() => setSaveResult(null)}
+            >
+              {saveResult?.success ? "Great!" : "Close"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Validation Dialog */}
       <Dialog
         open={showValidationDialog}
