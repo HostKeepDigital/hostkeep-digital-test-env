@@ -142,34 +142,35 @@ export default function PricingManager({ formData, onUpdate, onPromptSave }) {
                   {formData.deposit_type === "fixed" ? "Deposit Amount (£)" : "Deposit Percentage (%)"}
                 </Label>
                 <Input
-                  type="text"
+                  type="number"
+                  min="1"
                   value={formData.deposit_value || ""}
                   onChange={(e) => {
-                    const cleanValue = e.target.value.replace(/,/g, '');
-                    const value = parseFloat(cleanValue);
-                    
+                    const value = parseFloat(e.target.value);
                     setDepositError("");
-                    
-                    if (value < 0 || isNaN(value)) {
-                      onUpdate("deposit_value", 0);
+                    if (isNaN(value) || value < 0) {
+                      onUpdate("deposit_value", 1);
                       return;
                     }
-                    
                     if (formData.deposit_type === "percentage") {
                       const cappedValue = Math.min(value, 100);
-                      const roundedValue = Math.round(cappedValue * 100) / 100;
-                      onUpdate("deposit_value", roundedValue);
+                      onUpdate("deposit_value", Math.round(cappedValue * 100) / 100);
                     } else {
-                      const roundedValue = Math.round(value * 100) / 100;
-                      if (roundedValue > 100) {
+                      if (value > 100) {
                         setDepositError("For deposits above £100, please use Percentage of Total Booking instead.");
                       } else {
-                        onUpdate("deposit_value", roundedValue);
+                        onUpdate("deposit_value", Math.round(value * 100) / 100);
                       }
                     }
                   }}
                   onBlur={() => {
-                    if (formData.deposit_type === "fixed" && formData.deposit_value > 100) {
+                    const val = formData.deposit_value;
+                    if (!val || val < 1) {
+                      setDepositError("A minimum booking deposit of £1 is required to process guest payments securely");
+                      onUpdate("deposit_value", 1);
+                      return;
+                    }
+                    if (formData.deposit_type === "fixed" && val > 100) {
                       setDepositError("For deposits above £100, please use Percentage of Total Booking instead.");
                       onUpdate("deposit_value", 100);
                     }
@@ -177,12 +178,11 @@ export default function PricingManager({ formData, onUpdate, onPromptSave }) {
                   placeholder={formData.deposit_type === "percentage" ? "e.g., 25" : "e.g., 50"}
                   className={`mt-1 ${depositError ? 'border-red-500' : ''}`}
                 />
-                {formData.deposit_type === "percentage" && (
-                  <p className="text-xs text-gray-500 mt-1">Maximum 100%</p>
-                )}
-                {formData.deposit_type === "fixed" && !depositError && (
-                  <p className="text-xs text-gray-500 mt-1">Maximum £100</p>
-                )}
+                <p className="text-xs text-gray-500 mt-1">
+                  This is the amount guests pay upfront to secure their booking. Minimum {formData.deposit_type === "fixed" ? "£1" : "1%"} required.
+                  {formData.deposit_type === "percentage" && " Maximum 100%."}
+                  {formData.deposit_type === "fixed" && " Maximum £100."}
+                </p>
                 {depositError && (
                   <p className="text-xs text-red-500 mt-1">{depositError}</p>
                 )}

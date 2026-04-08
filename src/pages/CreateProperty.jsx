@@ -418,6 +418,10 @@ export default function CreateProperty() {
   };
 
   const handleSubmit = async () => {
+    if (formData.deposit_enabled && (!formData.deposit_value || formData.deposit_value < 1)) {
+      toast.error("A minimum booking deposit of £1 is required to process guest payments securely");
+      return;
+    }
     createMutation.mutate({
       ...formData,
       ...locationData,
