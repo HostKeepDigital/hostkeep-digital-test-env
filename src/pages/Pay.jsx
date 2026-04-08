@@ -157,7 +157,7 @@ function PaymentForm({ booking, rentalSecret, depositSecret }) {
 // ── Main page component ──────────────────────────────────────────────────────
 export default function Pay() {
   const urlParams = new URLSearchParams(window.location.search);
-  const bookingId = urlParams.get("booking_id");
+  const bookingId = urlParams.get("bookingId") || urlParams.get("booking_id");
 
   const [booking, setBooking] = useState(null);
   const [rentalSecret, setRentalSecret] = useState(null);
