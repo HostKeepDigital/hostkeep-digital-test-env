@@ -516,12 +516,12 @@ export default function PropertyDetails() {
   const securityDeposit = property?.security_deposit || 0;
   const total = subtotal + cleaningFee + securityDeposit;
 
-  const isWithin14Days = checkIn
-    ? differenceInDays(parseISO(checkIn), startOfDay(new Date())) <= 14
+  const isWithin56Days = checkIn
+    ? differenceInDays(parseISO(checkIn), startOfDay(new Date())) <= 56
     : false;
 
   const depositAmount = (() => {
-    if (isWithin14Days) return total;
+    if (isWithin56Days) return total;
     if (!property?.deposit_enabled || !property?.deposit_value) return 0;
     if (property.deposit_type === "percentage") {
       return Number(((total * property.deposit_value) / 100).toFixed(2));
@@ -599,9 +599,9 @@ export default function PropertyDetails() {
       total_amount: total,
       deposit_amount: depositAmount,
       remaining_balance: total - depositAmount,
-      full_payment_due_date: isWithin14Days
+      full_payment_due_date: isWithin56Days
         ? new Date().toISOString()
-        : addDays(parseISO(checkIn), -14).toISOString(),
+        : addDays(parseISO(checkIn), -56).toISOString(),
       booking_status: "awaiting_decision",
       booking_type: "request",
       request_timestamp: new Date().toISOString(),
@@ -649,7 +649,7 @@ export default function PropertyDetails() {
     if (!checkIn || numNights === 0) return null;
     const remainingBalance = total - depositAmount;
     const balanceDueDate = format(
-      addDays(parseISO(checkIn), -14),
+      addDays(parseISO(checkIn), -56),
       "MMM d, yyyy"
     );
 
@@ -679,14 +679,14 @@ export default function PropertyDetails() {
           <span>Total</span>
           <span>£{total.toFixed(2)}</span>
         </div>
-        {isWithin14Days ? (
+        {isWithin56Days ? (
           <>
             <div className="flex justify-between text-sm font-semibold text-teal-700 pt-2 border-t border-gray-100 mt-2">
               <span>Full Payment Due Now</span>
               <span>£{total.toFixed(2)}</span>
             </div>
             <p className="text-xs text-gray-500 mt-2">
-              As your arrival date is within 14 days, full payment is required to
+              As your arrival date is within 56 days, full payment is required to
               secure this booking.
             </p>
           </>
@@ -701,7 +701,7 @@ export default function PropertyDetails() {
               <span>£{remainingBalance.toFixed(2)}</span>
             </div>
             <div className="text-xs text-gray-500 mt-1">
-              Balance due by {balanceDueDate} (14 days before check-in)
+              Balance due by {balanceDueDate} (56 days before check-in)
             </div>
             <p className="text-xs text-gray-500 mt-2">
               Your remaining balance will automatically be due 14 days before
