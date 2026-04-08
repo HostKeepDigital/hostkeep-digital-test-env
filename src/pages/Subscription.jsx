@@ -143,6 +143,8 @@ const CLEANER_PLANS = [
 export default function Subscription() {
   const urlParams = new URLSearchParams(window.location.search);
   const tabParam = urlParams.get("tab");
+  const reasonParam = urlParams.get("reason");
+  const upgradeParam = urlParams.get("upgrade");
   const [activeTab, setActiveTab] = useState(
     tabParam === "cleaner" ? "cleaner" : "host",
   );
@@ -406,6 +408,35 @@ export default function Subscription() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12">
       <div className="max-w-5xl mx-auto px-4">
+        {(reasonParam === 'new_property' || upgradeParam) && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`rounded-2xl p-5 mb-8 text-center border-2 ${
+              upgradeParam === 'portfolio'
+                ? 'bg-amber-50 border-amber-300'
+                : upgradeParam === 'multi'
+                ? 'bg-violet-50 border-violet-300'
+                : 'bg-teal-50 border-teal-300'
+            }`}
+          >
+            <p className="text-lg font-bold text-gray-900 mb-1">
+              {upgradeParam === 'portfolio'
+                ? '🚀 Time to upgrade to Portfolio Host'
+                : upgradeParam === 'multi'
+                ? '🏘️ Time to upgrade to Multi Property Host'
+                : '🎉 Your property has been created!'}
+            </p>
+            <p className="text-sm text-gray-600">
+              {upgradeParam === 'portfolio'
+                ? 'You have 6 or more properties. Please upgrade to Portfolio Host to continue.'
+                : upgradeParam === 'multi'
+                ? 'You have more than 1 property. Please upgrade to Multi Property Host to continue.'
+                : 'To keep your property live, please choose a subscription plan below. Even during beta, choosing your plan now locks in your founding pricing.'}
+            </p>
+          </motion.div>
+        )}
+
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}

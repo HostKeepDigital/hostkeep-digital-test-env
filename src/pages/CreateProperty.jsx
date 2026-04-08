@@ -85,6 +85,54 @@ export default function CreateProperty() {
     }
   }, [isAuthenticated]);
 
+  // Pre-entry subscription/capacity gate
+  useEffect(() => {
+    if (!isAuthenticated || !user?.id) return;
+
+    const BETA_PLANS = ['beta_host_access', 'beta_cleaner_access'];
+    const FOUNDING_CAPACITY = {
+      founding_host_solo: 1,
+      founding_host_multi: 5,
+      founding_host_portfolio: 999,
+    };
+
+    (async () => {
+      const [subs, existingProps] = await Promise.all([
+        base44.entities.Subscription.filter({ user_id: user.id }),
+        base44.entities.Property.filter({ owner_id: user.id }),
+      ]);
+
+      const sub = subs[0];
+      const propCount = existingProps.length;
+      const isBeta = sub && BETA_PLANS.includes(sub.plan) && sub.status === 'active';
+
+      // No subscription: allow through, will be prompted after
+      if (!sub || sub.status !== 'active') return;
+
+      // Beta user: no next_subscription chosen yet — allow through, will be prompted after
+      if (isBeta && !sub.next_subscription) return;
+
+      // Beta user: check founding plan capacity before allowing new property
+      if (isBeta && sub.next_subscription) {
+        const maxProps = FOUNDING_CAPACITY[sub.next_subscription] ?? 999;
+        if (propCount >= maxProps) {
+          const upgrade = maxProps === 1 ? 'multi' : 'portfolio';
+          window.location.href = `/Subscription?tab=host&upgrade=${upgrade}`;
+        }
+        return;
+      }
+
+      // Active non-beta: check capacity
+      if (sub.plan === 'host_starter_monthly' && propCount >= 1) {
+        window.location.href = '/Subscription?tab=host&upgrade=multi';
+        return;
+      }
+      if (sub.plan === 'host_growth_monthly' && propCount >= 5) {
+        window.location.href = '/Subscription?tab=host&upgrade=portfolio';
+      }
+    })();
+  }, [isAuthenticated, user?.id]);
+
   const [currentStep, setCurrentStep] = useState(1);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -209,12 +257,67 @@ export default function CreateProperty() {
 
       return property;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries(["properties"]);
       toast.success("Property created!");
-      setTimeout(() => {
+
+      try {
+        const BETA_PLANS = ['beta_host_access', 'beta_cleaner_access'];
+        const FOUNDING_CAPACITY = {
+          founding_host_solo: 1,
+          founding_host_multi: 5,
+          founding_host_portfolio: 999,
+        };
+
+        const [subs, allProps] = await Promise.all([
+          base44.entities.Subscription.filter({ user_id: user?.id }),
+          base44.entities.Property.filter({ owner_id: user?.id }),
+        ]);
+
+        const sub = subs[0];
+        const propCount = allProps.length;
+        const isBeta = sub && BETA_PLANS.includes(sub.plan) && sub.status === 'active';
+        const hasActiveSub = sub && sub.status === 'active' && !isBeta;
+
+        // No subscription at all
+        if (!sub || sub.status !== 'active') {
+          window.location.href = '/Subscription?tab=host&reason=new_property';
+          return;
+        }
+
+        // Beta user: must have chosen a next_subscription
+        if (isBeta && !sub.next_subscription) {
+          window.location.href = '/Subscription?tab=host&reason=new_property';
+          return;
+        }
+
+        // Beta user: check their chosen founding plan capacity
+        if (isBeta && sub.next_subscription) {
+          const maxProps = FOUNDING_CAPACITY[sub.next_subscription] ?? 999;
+          if (propCount > maxProps) {
+            const upgrade = maxProps === 1 ? 'multi' : 'portfolio';
+            window.location.href = `/Subscription?tab=host&upgrade=${upgrade}`;
+            return;
+          }
+        }
+
+        // Active non-beta subscription capacity checks
+        if (hasActiveSub) {
+          if (sub.plan === 'host_starter_monthly' && propCount >= 2) {
+            window.location.href = '/Subscription?tab=host&upgrade=multi';
+            return;
+          }
+          if (sub.plan === 'host_growth_monthly' && propCount >= 6) {
+            window.location.href = '/Subscription?tab=host&upgrade=portfolio';
+            return;
+          }
+        }
+
+        // All good
         window.location.href = createPageUrl("HostProperties");
-      }, 800);
+      } catch {
+        window.location.href = createPageUrl("HostProperties");
+      }
     },
   });
 
