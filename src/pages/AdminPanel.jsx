@@ -1469,7 +1469,7 @@ const handleApproveGuestAsHost = async (member) => {
         </div>
 
         {/* Tabs */}
-        <div className="max-w-7xl mx-auto px-6 flex border-t border-gray-100">
+        <div className="max-w-7xl mx-auto px-6 flex border-t border-gray-100 overflow-x-auto scrollbar-none">
           {[
             { id:"onboarding", label:"Onboarding",   Icon:Users     },
             { id:"complaints", label:"Complaints",    Icon:AlertTriangle },
