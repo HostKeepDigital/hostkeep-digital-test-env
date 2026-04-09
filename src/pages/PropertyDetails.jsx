@@ -999,7 +999,7 @@ export default function PropertyDetails() {
               {property.description && (
               <div className="space-y-3">
                 <h2 className="text-xl font-semibold text-gray-900">About this property</h2>
-                <p className="text-gray-700 leading-relaxed">{property.description}</p>
+                <p className="text-gray-700 leading-relaxed whitespace-pre-line">{property.description}</p>
               </div>
             )}
 
