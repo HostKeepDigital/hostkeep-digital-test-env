@@ -241,7 +241,7 @@ export default function SectorsTab({ sectorData, members }) {
           <div className="px-6 py-4 border-b border-gray-100">
             <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Sector Status</h2>
           </div>
-          <div className="overflow-y-auto" style={{ maxHeight: 500 }}>
+          <div className="overflow-y-auto" style={{ maxHeight: 780 }}>
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50">
