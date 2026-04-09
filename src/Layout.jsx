@@ -13,6 +13,7 @@ import {
   Users,
   Shield,
   ArrowLeft,
+  ShieldCheck,
 } from "lucide-react";
 import { useState, useEffect, createContext } from "react";
 
@@ -48,6 +49,7 @@ const HOST_PAGES = [
   "HostProperties",
   "HostMessages",
   "HostCancellationPolicies",
+  "HostCompliance",
   "CreateProperty",
   "EditProperty",
 ];
@@ -105,6 +107,7 @@ export default function Layout({ children, currentPageName }) {
       { name: "Properties", icon: Building2, page: "HostProperties" },
       { name: "Bookings", icon: Calendar, page: "HostBookings" },
       { name: "Messages", icon: MessageSquare, page: "HostMessages" },
+      { name: "Compliance", icon: ShieldCheck, page: "HostCompliance" },
     ];
 
     return (

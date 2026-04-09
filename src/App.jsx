@@ -13,6 +13,7 @@ import { queryClientInstance } from "@/lib/query-client";
 import { AnimatePresence, motion } from "framer-motion";
 import ThemeProvider from "@/components/ThemeProvider";
 import AdminPanel from "./pages/AdminPanel";
+import HostCompliance from "./pages/HostCompliance";
 import Pending from "./pages/Pending";
 import Founding from "./pages/Founding";
 import FoundingThankYou from "./pages/FoundingThankYou";
@@ -336,6 +337,16 @@ const AuthenticatedApp = () => {
               <LayoutWrapper currentPageName="HowPaymentsWork">
                 <Slide><HowPaymentsWork /></Slide>
               </LayoutWrapper>
+            }
+          />
+          <Route
+            path="/HostCompliance"
+            element={
+              <RequireAuth>
+                <LayoutWrapper currentPageName="HostCompliance">
+                  <Slide><HostCompliance /></Slide>
+                </LayoutWrapper>
+              </RequireAuth>
             }
           />
           <Route

@@ -1,0 +1,69 @@
+{
+  "name": "PropertyCompliance",
+  "type": "object",
+  "properties": {
+    "property_id": {
+      "type": "string",
+      "description": "Reference to the property"
+    },
+    "host_id": {
+      "type": "string",
+      "description": "Property owner user ID"
+    },
+    "registration_number": {
+      "type": "string",
+      "description": "UK STR registration number issued by local authority"
+    },
+    "registration_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "registered",
+        "expired",
+        "exempt"
+      ],
+      "default": "pending",
+      "description": "Status of the STR registration"
+    },
+    "registration_expiry": {
+      "type": "string",
+      "format": "date",
+      "description": "When the registration expires"
+    },
+    "gas_safety_cert_expiry": {
+      "type": "string",
+      "format": "date",
+      "description": "Gas Safety Certificate expiry date (annual)"
+    },
+    "gas_safety_cert_url": {
+      "type": "string",
+      "description": "Uploaded Gas Safety Certificate file URL"
+    },
+    "eicr_expiry": {
+      "type": "string",
+      "format": "date",
+      "description": "EICR expiry date (5-year cycle)"
+    },
+    "eicr_url": {
+      "type": "string",
+      "description": "Uploaded EICR document file URL"
+    },
+    "fire_risk_assessment_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of last Fire Risk Assessment"
+    },
+    "fire_risk_assessment_url": {
+      "type": "string",
+      "description": "Uploaded Fire Risk Assessment file URL"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Internal compliance notes"
+    }
+  },
+  "required": [
+    "property_id",
+    "host_id"
+  ]
+}
