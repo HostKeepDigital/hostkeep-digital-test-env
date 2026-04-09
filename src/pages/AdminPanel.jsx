@@ -1484,23 +1484,191 @@ const handleApproveGuestAsHost = async (member) => {
           </div>
       </div>
 
-      {/* ── COMPLAINTS ────────────────────────────────────────────────────────── */}
-       {activeTab === "complaints" && (
-         <div className="max-w-7xl mx-auto px-6 py-8">
-           <ComplaintsTab />
-         </div>
-       )}
+      {/* ── COMPLAINTS ───────────────────────────────────────────────────── */}
+      {activeTab === "complaints" && (
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <ComplaintsTab />
+        </div>
+      )}
 
-      {/* ── ONBOARDING ─────────────────────────────────────────────────────── */}
-       {activeTab === "onboarding" && (
+      {/* ── ONBOARDING ────────────────────────────────────────────────────── */}
+      {activeTab === "onboarding" && (
+        <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="w-6 h-6 border-2 border-gray-200 border-t-teal-600 rounded-full animate-spin" />
+            </div>
+          ) : (
+            <>
+              {/* Summary metrics */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <MetricCard icon={Users}        label="Pending Applications" value={pendingMembers.length}  color="navy" />
+                <MetricCard icon={CheckCircle}  label="Approved Members"     value={approvedMembers.length} color="green" />
+                <MetricCard icon={Clock}        label="Active Onboarding"    value={activeHosts + activeCleaners} color="teal" />
+                <MetricCard icon={Ban}          label="Rejected / Banned"     value={rejectedMembers.length + bannedEmailMembers.length + bannedDocMembers.length + bannedFraudMembers.length + bannedManualMembers.length} color="red" />
+              </div>
+
+              <Section title="Pending Applications" count={pendingMembers.length} accent="amber">
+                <MemberTable members={pendingMembers} showActions />
+              </Section>
+
+              <Section title="Interest (Not Yet Applied)" count={interestMembers.length} accent="gray">
+                <MemberTable members={interestMembers} />
+              </Section>
+
+              <Section title="Invited" count={invitedMembers.length} accent="blue">
+                <MemberTable members={invitedMembers} />
+              </Section>
+
+              <Section title="Password Protected" count={passwordProtectedMembers.length} accent="indigo">
+                <MemberTable members={passwordProtectedMembers} />
+              </Section>
+
+              <Section title="Awaiting Document Verification" count={awaitingDocMembers.length} accent="purple">
+                <MemberTable members={awaitingDocMembers} />
+              </Section>
+
+              <Section title="Document Failed — Attempt 1" count={docFail1Members.length} accent="orange">
+                <MemberTable members={docFail1Members} />
+              </Section>
+
+              <Section title="Document Failed — Attempt 2" count={docFail2Members.length} accent="red">
+                <MemberTable members={docFail2Members} />
+              </Section>
+
+              <Section title="Approved" count={approvedMembers.length} accent="green">
+                <MemberTable members={approvedMembers} />
+              </Section>
+
+              <Section title="Waitlist" count={waitlistMembers.length} accent="orange">
+                <MemberTable members={waitlistMembers} />
+              </Section>
+
+              <Section title="Rejected — Second Chance" count={rejectedPendingMembers.length} accent="yellow">
+                <MemberTable members={rejectedPendingMembers} />
+              </Section>
+
+              <Section title="Rejected" count={rejectedMembers.length} accent="red">
+                <MemberTable members={rejectedMembers} />
+              </Section>
+
+              <Section title="Out of Area" count={outOfAreaMembers.length} accent="gray">
+                <MemberTable members={outOfAreaMembers} />
+              </Section>
+
+              <Section title="Banned" count={bannedEmailMembers.length + bannedDocMembers.length + bannedFraudMembers.length + bannedManualMembers.length} accent="red">
+                <MemberTable members={[...bannedEmailMembers, ...bannedDocMembers, ...bannedFraudMembers, ...bannedManualMembers]} />
+              </Section>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ── CRM & REVENUE ─────────────────────────────────────────────────── */}
+      {activeTab === "crm" && (
+        <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+          {crmLoading ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="w-6 h-6 border-2 border-gray-200 border-t-teal-600 rounded-full animate-spin" />
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <MetricCard icon={PoundSterling} label="Monthly Recurring Revenue" value={`£${mrr.toFixed(0)}`} color="green" />
+                <MetricCard icon={TrendingUp}    label="Active Subscriptions"      value={activeSubs.length}       color="teal" />
+                <MetricCard icon={XCircle}       label="Cancelled Subscriptions"   value={cancelledSubs.length}    color="red" />
+                <MetricCard icon={PoundSterling} label="Lost Revenue (cancelled)"  value={`£${lostRevenue.toFixed(0)}`} color="red" />
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <MetricCard icon={Star}         label="Host MRR"    value={`£${hostMrr.toFixed(0)}`}    color="navy" />
+                <MetricCard icon={Users}        label="Cleaner MRR" value={`£${cleanerMrr.toFixed(0)}`} color="purple" />
+              </div>
+              <div className="bg-white rounded-xl border border-gray-100 p-6">
+                <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Plan Breakdown</h2>
+                {Object.keys(planBreakdown).length === 0 ? (
+                  <p className="text-sm text-gray-400">No active subscriptions</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-100">
+                          {["Plan","Subscribers","Monthly Revenue"].map(h => <th key={h} className="px-4 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">{h}</th>)}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {Object.entries(planBreakdown).map(([plan, { count, revenue }]) => (
+                          <tr key={plan}>
+                            <td className="px-4 py-3 font-medium text-gray-900">{PLAN_LABELS[plan] || plan}</td>
+                            <td className="px-4 py-3 text-gray-600">{count}</td>
+                            <td className="px-4 py-3 text-green-700 font-medium">£{revenue.toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+              <div className="bg-white rounded-xl border border-gray-100 p-6">
+                <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Site Analytics</h2>
+                <SiteVisitorWidget pageViews={pageViews} loading={viewsLoading} />
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ── UK SECTORS ────────────────────────────────────────────────────── */}
+      {activeTab === "sectors" && (
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* Map */}
+            <div className="bg-[#1E3A5F] rounded-2xl p-6" style={{ minHeight: 500 }}>
+              <h2 className="text-white font-semibold mb-4">UK Sector Map</h2>
+              <div style={{ height: 420 }}>
+                <UKMap sectorData={sectorData} />
+              </div>
+            </div>
+            {/* Sector table */}
+            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100">
+                <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Sector Status</h2>
+              </div>
+              <div className="overflow-y-auto" style={{ maxHeight: 460 }}>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-100 bg-gray-50">
+                      {["Sector","Postcodes","Hosts","Cleaners","Status"].map(h => <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">{h}</th>)}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {sectorData.map(s => (
+                      <tr key={s.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3 font-medium text-gray-900 text-xs">{s.name}</td>
+                        <td className="px-4 py-3 text-gray-400 text-xs">{s.postcodes.slice(0,3).join(", ")}{s.postcodes.length > 3 ? "…" : ""}</td>
+                        <td className="px-4 py-3">
+                          <span className={`text-xs font-semibold ${s.hosts >= s.maxH ? "text-green-600" : s.hosts > 0 ? "text-amber-600" : "text-gray-300"}`}>{s.hosts}/{s.maxH}</span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`text-xs font-semibold ${s.cleaners >= s.maxC ? "text-green-600" : s.cleaners > 0 ? "text-amber-600" : "text-gray-300"}`}>{s.cleaners}/{s.maxC}</span>
+                        </td>
+                        <td className="px-4 py-3"><SectorBadge status={s.computedStatus} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── DEV TOOLS ────────────────────────────────────────────────────── */}
+      {activeTab === "devtools" && (
         <div className="max-w-3xl mx-auto px-6 py-8 space-y-6">
-
-          {/* Warning banner */}
           <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-3">
             <p className="text-sm text-amber-700 font-medium">⚠️ Dev Tools — Admin only. Test data is written to the live database. Always use Clean Up after each test run.</p>
           </div>
 
-          {/* Demo Integration Tests */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-[#0d9488] flex-shrink-0" />
@@ -1512,7 +1680,6 @@ const handleApproveGuestAsHost = async (member) => {
             <CalendarRenderTester members={members} />
           </div>
 
-          {/* Account Management Tests */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-[#1E3A5F] flex-shrink-0" />
@@ -1522,7 +1689,6 @@ const handleApproveGuestAsHost = async (member) => {
             <DeleteSafeguardTester members={members} />
           </div>
 
-          {/* Beta Exit Planner */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-purple-400 flex-shrink-0" />
@@ -1531,7 +1697,6 @@ const handleApproveGuestAsHost = async (member) => {
             <BetaExitPlanner />
           </div>
 
-          {/* Balance Payment Tests */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-orange-400 flex-shrink-0" />
@@ -1540,7 +1705,6 @@ const handleApproveGuestAsHost = async (member) => {
             <BalancePaymentTester />
           </div>
 
-          {/* Subscription Tests */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" />
@@ -1549,7 +1713,6 @@ const handleApproveGuestAsHost = async (member) => {
             <SubscriptionTester />
           </div>
 
-          {/* Channel Manager Tests */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0" />
@@ -1558,11 +1721,9 @@ const handleApproveGuestAsHost = async (member) => {
             <ChannelManagerIntegrationTester hostId={user?.id} />
           </div>
 
-          {/* Placeholder for cleaner system tests */}
           <div className="bg-gray-50 border border-dashed border-gray-200 rounded-xl px-5 py-6 text-center">
             <p className="text-xs text-gray-400">Cleaner System Tests will appear here — Job Timeline, Calendar Display, iCal Auto-Job, Strike System.</p>
           </div>
-
         </div>
       )}
     </div>
