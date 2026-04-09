@@ -11,6 +11,16 @@ import { toast } from "sonner";
 export default function StripeConnectPanel({ user }) {
   const [status, setStatus] = useState(null); // null=loading
   const [connecting, setConnecting] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    const session_token = localStorage.getItem('session_token');
+    base44.functions.invoke('getStripeConnectStatus', { session_token })
+      .then(res => setStatus(res.data?.status || 'not_connected'))
+      .catch(() => setStatus('not_connected'));
+  }, [user]);
+
+  const handleConnect = async () => {
     setConnecting(true);
     try {
       const res = await base44.functions.invoke('createStripeConnectLink', {});

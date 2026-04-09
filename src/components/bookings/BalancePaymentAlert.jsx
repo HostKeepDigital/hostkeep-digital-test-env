@@ -6,15 +6,7 @@ import { toast } from "sonner";
 import { loadStripe } from "@stripe/stripe-js";
 import { CardElement, Elements, useStripe, useElements } from "@stripe/react-stripe-js";
 
-const [stripePromise, setStripePromise] = useState(null);
 
-useEffect(() => {
-  base44.functions.invoke('getStripePublishableKey', {})
-    .then(res => {
-      const key = res.data?.publishable_key;
-      if (key) setStripePromise(loadStripe(key));
-    });
-}, []);
 
 export default function BalancePaymentAlert({
   booking,
@@ -146,6 +138,16 @@ function BalancePaymentModal({
   onClose,
   onSuccess,
 }) {
+  const [stripePromise, setStripePromise] = useState(null);
+
+  useEffect(() => {
+    base44.functions.invoke('getStripePublishableKey', {})
+      .then(res => {
+        const key = res.data?.publishable_key;
+        if (key) setStripePromise(loadStripe(key));
+      });
+  }, []);
+
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center overflow-y-auto p-4">
       <div className="bg-white rounded-lg max-w-md w-full shadow-xl">
@@ -155,13 +157,14 @@ function BalancePaymentModal({
           balanceOwed={balanceOwed}
           onClose={onClose}
           onSuccess={onSuccess}
+          stripePromise={stripePromise}
         />
       </div>
     </div>
   );
 }
 
-function ModalContent({ booking, property, balanceOwed, onClose, onSuccess }) {
+function ModalContent({ booking, property, balanceOwed, onClose, onSuccess, stripePromise }) {
   const [cardError, setCardError] = useState("");
   const [loading, setLoading] = useState(false);
   const [paymentSucceeded, setPaymentSucceeded] = useState(false);
@@ -261,74 +264,32 @@ function ModalContent({ booking, property, balanceOwed, onClose, onSuccess }) {
   return (
     <Elements stripe={stripePromise}>
       <form onSubmit={handleSubmit} className="p-6 space-y-4">
-        {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-[#1E3A5F]">
-            Pay remaining balance
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded"
-          >
+          <h2 className="text-lg font-semibold text-[#1E3A5F]">Pay remaining balance</h2>
+          <button type="button" onClick={onClose} className="p-1 hover:bg-gray-100 rounded">
             <X className="w-5 h-5 text-gray-400" />
           </button>
         </div>
-
-        {/* Booking Summary */}
         <div className="bg-gray-50 rounded-lg p-3 space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-gray-600">{property?.title}</span>
-            <span className="font-medium text-gray-900">
-              {booking.check_in} – {booking.check_out}
-            </span>
+            <span className="font-medium text-gray-900">{booking.check_in} – {booking.check_out}</span>
           </div>
           <div className="border-t border-gray-200 pt-2 flex justify-between">
             <span className="text-gray-600">Amount owed</span>
-            <span className="font-semibold text-[#0d9488]">
-              £{balanceOwed.toFixed(2)}
-            </span>
+            <span className="font-semibold text-[#0d9488]">£{balanceOwed.toFixed(2)}</span>
           </div>
         </div>
-
-        {/* Card Input */}
         <div className="border border-gray-300 rounded-lg p-3 bg-white">
-          <CardElement
-            options={{
-              style: {
-                base: {
-                  fontSize: "14px",
-                  color: "#1E3A5F",
-                  "::placeholder": {
-                    color: "#999",
-                  },
-                },
-                invalid: {
-                  color: "#ef4444",
-                },
-              },
-            }}
-          />
+          <CardElement options={{ style: { base: { fontSize: "14px", color: "#1E3A5F", "::placeholder": { color: "#999" } }, invalid: { color: "#ef4444" } } }} />
         </div>
-
-        {/* Note */}
-        <p className="text-xs text-gray-500">
-          Your saved card will be used if you do not enter a new one.
-        </p>
-
-        {/* Error */}
+        <p className="text-xs text-gray-500">Your saved card will be used if you do not enter a new one.</p>
         {cardError && (
           <div className="bg-red-50 border border-red-200 rounded p-3">
             <p className="text-xs text-red-600">{cardError}</p>
           </div>
         )}
-
-        {/* Button */}
-        <Button
-          type="submit"
-          disabled={loading || !stripe}
-          className="w-full bg-[#0d9488] hover:bg-[#0f766e] text-white font-medium"
-        >
+        <Button type="submit" disabled={loading || !stripe} className="w-full bg-[#0d9488] hover:bg-[#0f766e] text-white font-medium">
           {loading ? "Processing..." : `Pay £${balanceOwed.toFixed(2)}`}
         </Button>
       </form>
