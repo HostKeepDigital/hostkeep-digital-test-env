@@ -46,9 +46,10 @@ Deno.serve(async (req) => {
       if (phone !== undefined) guestUpdates.phone = phone.trim();
       await serviceRole.entities.Guest.update(guests[0].id, guestUpdates);
 
-      // phone and location also go to User if user_id exists
+      // full_name, phone and location also go to User if user_id exists
       if (session.user_id) {
         const userUpdates = {};
+        if (full_name !== undefined) userUpdates.full_name = full_name.trim();
         if (phone !== undefined) userUpdates.phone = phone.trim();
         if (location !== undefined) userUpdates.location = location.trim();
         if (Object.keys(userUpdates).length > 0) {
