@@ -1635,39 +1635,39 @@ const handleApproveGuestAsHost = async (member) => {
           {/* STEP 1 */}
           <div className="space-y-3">
             <div className="flex items-start gap-3">
-              <span className="w-6 h-6 rounded-full bg-[#1E3A5F] text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
-              <div>
-                <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Subscription & Founding Member Tests</h2>
-                <p className="text-xs text-gray-400 mt-0.5">Run first. Creates beta subscriptions for founding members and verifies pricing locks are correctly applied before any other data depends on subscription status.</p>
-              </div>
-            </div>
-            <SubscriptionTester />
-          </div>
-
-          {/* STEP 2 */}
-          <div className="space-y-3">
-            <div className="flex items-start gap-3">
-              <span className="w-6 h-6 rounded-full bg-purple-500 text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
-              <div>
-                <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Beta Management</h2>
-                <p className="text-xs text-gray-400 mt-0.5">Migrate all founding members to baseline subscriptions and schedule the beta exit emails. Run after subscriptions are confirmed correct.</p>
-              </div>
-            </div>
-            <BetaExitPlanner />
-          </div>
-
-          {/* STEP 3 */}
-          <div className="space-y-3">
-            <div className="flex items-start gap-3">
-              <span className="w-6 h-6 rounded-full bg-[#0d9488] text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
+              <span className="w-6 h-6 rounded-full bg-[#0d9488] text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
               <div>
                 <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Demo Integration Tests</h2>
-                <p className="text-xs text-gray-400 mt-0.5">Creates a full founding member flow, test property with photos and pricing, and validates calendar rendering. Run before filming demos or onboarding walkthroughs.</p>
+                <p className="text-xs text-gray-400 mt-0.5">Run first. Creates test founding members, a test property with photos and pricing, and validates calendar rendering. All other steps depend on this data existing.</p>
               </div>
             </div>
             <FoundingFlowTester />
             <PropertyCreationTester members={members} />
             <CalendarRenderTester members={members} />
+          </div>
+
+          {/* STEP 2 */}
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <span className="w-6 h-6 rounded-full bg-[#1E3A5F] text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
+              <div>
+                <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Subscription & Founding Member Tests</h2>
+                <p className="text-xs text-gray-400 mt-0.5">Run after founding members are created (Step 1). Creates beta subscriptions and verifies pricing locks are correctly applied.</p>
+              </div>
+            </div>
+            <SubscriptionTester />
+          </div>
+
+          {/* STEP 3 */}
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <span className="w-6 h-6 rounded-full bg-purple-500 text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
+              <div>
+                <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Beta Management</h2>
+                <p className="text-xs text-gray-400 mt-0.5">Migrate all founding members to baseline subscriptions and schedule the beta exit emails. Run after subscriptions are confirmed correct (Step 2).</p>
+              </div>
+            </div>
+            <BetaExitPlanner />
           </div>
 
           {/* STEP 4 */}
