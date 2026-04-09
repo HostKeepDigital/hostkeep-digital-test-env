@@ -15,12 +15,11 @@ export default function BalancePaymentTester() {
   const createTestBooking = async () => {
     setLoading(true);
     try {
-      const user = await base44.auth.me();
-      if (!user?.id) {
-        toast.error("User not authenticated");
-        setLoading(false);
-        return;
-      }
+      const sessionToken = localStorage.getItem("session_token") || sessionStorage.getItem("session_token");
+        const sessionRes = await base44.functions.invoke("checkSession", { session_token: sessionToken });
+        const user = sessionRes?.data;
+          if (!user?.authenticated || !user?.user_id) {
+            toast.error("User not authenticated");
 
       // Get or create a test property
       const properties = await base44.entities.Property.filter(
