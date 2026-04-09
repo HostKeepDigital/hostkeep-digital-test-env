@@ -47,6 +47,7 @@ export const AuthProvider = ({ children }) => {
         role: data.role,
         founding_member_id: data.founding_member_id,
         signup_postcode: data.signup_postcode || null,
+        full_name: data.full_name || null,
       });
 
       // Build roles array in the shape App.jsx expects

@@ -57,6 +57,20 @@ Deno.serve(async (req) => {
       // silent fail — postcode is optional
     }
 
+    // ⭐ Fetch full_name from FoundingMember
+    let full_name = null;
+    try {
+      if (session.founding_member_id) {
+        const members = await serviceRole.entities.FoundingMember.filter({ id: session.founding_member_id });
+        if (members?.[0]?.full_name) full_name = members[0].full_name;
+      }
+      if (!full_name) {
+        const normEmail = session.email.toLowerCase().trim();
+        const members = await serviceRole.entities.FoundingMember.filter({ email: normEmail });
+        if (members?.[0]?.full_name) full_name = members[0].full_name;
+      }
+    } catch (_) {}
+
     // ⭐ Session is valid — return full session info
     return Response.json({
       authenticated: true,
@@ -64,7 +78,8 @@ Deno.serve(async (req) => {
       role: session.role,
       founding_member_id: session.founding_member_id || null,
       user_id: session.user_id || null,
-      signup_postcode, // <-- added
+      signup_postcode,
+      full_name,
     });
   } catch (err) {
     console.error("checkSession error:", err);
