@@ -31,28 +31,28 @@ Deno.serve(async (req) => {
       return Response.json({ success: true });
     }
 
-    // If founding member — update FoundingMember entity
+    // Founding member path — unchanged
     if (session.founding_member_id) {
       await serviceRole.entities.FoundingMember.update(session.founding_member_id, updates);
       return Response.json({ success: true });
     }
 
-    // Otherwise update User entity — only fields that exist on User
-    if (session.user_id) {
-      const userUpdates = {};
-      if (phone !== undefined) userUpdates.phone = phone.trim();
-      if (location !== undefined) userUpdates.location = location.trim();
+    // Regular guest path — update Guest entity by email
+    const normalisedEmail = session.email.toLowerCase().trim();
+    const guests = await serviceRole.entities.Guest.filter({ email: normalisedEmail });
+    if (guests?.[0]) {
+      const guestUpdates = {};
+      if (full_name !== undefined) guestUpdates.full_name = full_name.trim();
+      if (phone !== undefined) guestUpdates.phone = phone.trim();
+      await serviceRole.entities.Guest.update(guests[0].id, guestUpdates);
 
-      if (Object.keys(userUpdates).length > 0) {
-        await serviceRole.entities.User.update(session.user_id, userUpdates);
-      }
-
-      // full_name goes to UserCredentials via email match
-      if (full_name !== undefined) {
-        const normalisedEmail = session.email.toLowerCase().trim();
-        const creds = await serviceRole.entities.UserCredentials.filter({ email: normalisedEmail });
-        if (creds?.[0]) {
-          await serviceRole.entities.UserCredentials.update(creds[0].id, { full_name: full_name.trim() });
+      // phone and location also go to User if user_id exists
+      if (session.user_id) {
+        const userUpdates = {};
+        if (phone !== undefined) userUpdates.phone = phone.trim();
+        if (location !== undefined) userUpdates.location = location.trim();
+        if (Object.keys(userUpdates).length > 0) {
+          await serviceRole.entities.User.update(session.user_id, userUpdates);
         }
       }
 
