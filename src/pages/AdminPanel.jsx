@@ -1627,60 +1627,84 @@ const handleApproveGuestAsHost = async (member) => {
       {/* ── DEV TOOLS ────────────────────────────────────────────────────── */}
       {activeTab === "devtools" && (
         <div className="max-w-3xl mx-auto px-6 py-8 space-y-6">
-          <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-3">
-            <p className="text-sm text-amber-700 font-medium">⚠️ Dev Tools — Admin only. Test data is written to the live database. Always use Clean Up after each test run.</p>
+          <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4">
+            <p className="text-sm text-amber-700 font-semibold mb-1">⚠️ Dev Tools — Admin only</p>
+            <p className="text-xs text-amber-600">Run these in order when setting up a fresh environment. Test data is written to the live database — always use Clean Up after each test run.</p>
           </div>
 
+          {/* STEP 1 */}
           <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#0d9488] flex-shrink-0" />
-              <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Demo Integration Tests</h2>
-              <span className="text-xs text-gray-400 bg-gray-100 rounded-full px-2 py-0.5">Run before filming</span>
+            <div className="flex items-start gap-3">
+              <span className="w-6 h-6 rounded-full bg-[#1E3A5F] text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
+              <div>
+                <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Subscription & Founding Member Tests</h2>
+                <p className="text-xs text-gray-400 mt-0.5">Run first. Creates beta subscriptions for founding members and verifies pricing locks are correctly applied before any other data depends on subscription status.</p>
+              </div>
+            </div>
+            <SubscriptionTester />
+          </div>
+
+          {/* STEP 2 */}
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <span className="w-6 h-6 rounded-full bg-purple-500 text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
+              <div>
+                <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Beta Management</h2>
+                <p className="text-xs text-gray-400 mt-0.5">Migrate all founding members to baseline subscriptions and schedule the beta exit emails. Run after subscriptions are confirmed correct.</p>
+              </div>
+            </div>
+            <BetaExitPlanner />
+          </div>
+
+          {/* STEP 3 */}
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <span className="w-6 h-6 rounded-full bg-[#0d9488] text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
+              <div>
+                <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Demo Integration Tests</h2>
+                <p className="text-xs text-gray-400 mt-0.5">Creates a full founding member flow, test property with photos and pricing, and validates calendar rendering. Run before filming demos or onboarding walkthroughs.</p>
+              </div>
             </div>
             <FoundingFlowTester />
             <PropertyCreationTester members={members} />
             <CalendarRenderTester members={members} />
           </div>
 
+          {/* STEP 4 */}
           <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#1E3A5F] flex-shrink-0" />
-              <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Account Management Tests</h2>
-            </div>
-            <DeleteAccountTester />
-            <DeleteSafeguardTester members={members} />
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-purple-400 flex-shrink-0" />
-              <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Beta Management</h2>
-            </div>
-            <BetaExitPlanner />
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-orange-400 flex-shrink-0" />
-              <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Balance Payment & Failed Payment Tests</h2>
+            <div className="flex items-start gap-3">
+              <span className="w-6 h-6 rounded-full bg-orange-400 text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">4</span>
+              <div>
+                <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Balance Payment & Failed Payment Tests</h2>
+                <p className="text-xs text-gray-400 mt-0.5">Simulates the 56-day balance charge cycle, failed payment retries, and overdue states. Requires a test property and booking to exist first (Step 3).</p>
+              </div>
             </div>
             <BalancePaymentTester />
           </div>
 
+          {/* STEP 5 */}
           <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" />
-              <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Subscription & Founding Member Tests</h2>
-            </div>
-            <SubscriptionTester />
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0" />
-              <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Channel Manager Tests</h2>
+            <div className="flex items-start gap-3">
+              <span className="w-6 h-6 rounded-full bg-blue-400 text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">5</span>
+              <div>
+                <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Channel Manager Tests</h2>
+                <p className="text-xs text-gray-400 mt-0.5">Validates iCal import/export, listing sync, conflict detection, and resolution flows. Requires a test property to exist (Step 3).</p>
+              </div>
             </div>
             <ChannelManagerIntegrationTester hostId={user?.id} />
+          </div>
+
+          {/* STEP 6 */}
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <span className="w-6 h-6 rounded-full bg-red-400 text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">6</span>
+              <div>
+                <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Account Management Tests</h2>
+                <p className="text-xs text-gray-400 mt-0.5">Run last. Tests account deletion safeguards — confirms accounts with active bookings or jobs cannot be deleted. Cleans up all test data from previous steps.</p>
+              </div>
+            </div>
+            <DeleteAccountTester />
+            <DeleteSafeguardTester members={members} />
           </div>
 
           <div className="bg-gray-50 border border-dashed border-gray-200 rounded-xl px-5 py-6 text-center">
