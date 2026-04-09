@@ -6,9 +6,15 @@ import { toast } from "sonner";
 import { loadStripe } from "@stripe/stripe-js";
 import { CardElement, Elements, useStripe, useElements } from "@stripe/react-stripe-js";
 
-const stripePromise = loadStripe(
-  import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || ""
-);
+const [stripePromise, setStripePromise] = useState(null);
+
+useEffect(() => {
+  base44.functions.invoke('getStripePublishableKey', {})
+    .then(res => {
+      const key = res.data?.publishable_key;
+      if (key) setStripePromise(loadStripe(key));
+    });
+}, []);
 
 export default function BalancePaymentAlert({
   booking,
