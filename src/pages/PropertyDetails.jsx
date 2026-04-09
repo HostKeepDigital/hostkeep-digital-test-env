@@ -1064,12 +1064,14 @@ export default function PropertyDetails() {
                 Safety & Compliance
               </h2>
               <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
-                {propertyCompliance?.registration_number && (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600 font-medium">STR Registration No.</span>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600 font-medium">STR Registration No.</span>
+                  {propertyCompliance?.registration_number ? (
                     <span className="font-mono text-gray-900 text-xs bg-white border border-gray-200 px-2 py-1 rounded">{propertyCompliance.registration_number}</span>
-                  </div>
-                )}
+                  ) : (
+                    <span className="text-xs text-gray-400 italic">Not registered</span>
+                  )}
+                </div>
                 <SafetyDocRow
                   icon={Flame}
                   label="Gas Safety Certificate"
