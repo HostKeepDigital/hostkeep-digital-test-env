@@ -62,10 +62,12 @@ function UKMapWithPins({ sectorData, memberPins }) {
       .style("position", "absolute")
       .style("top", 0).style("left", 0);
 
+    // Calibrated to match the UK map background image
+    // Image spans roughly: lng -8.2 to 2.0, lat 49.8 to 60.9
     const proj = d3.geoMercator()
-      .center([-3.5, 55.5])
-      .scale(W * 2.6)
-      .translate([W * 0.535, H * 0.520]);
+      .center([-3.1, 54.8])
+      .scale(W * 3.05)
+      .translate([W * 0.52, H * 0.50]);
 
     const path = d3.geoPath().projection(proj);
 
@@ -226,7 +228,7 @@ export default function SectorsTab({ sectorData, members }) {
     <div className="max-w-7xl mx-auto px-6 py-8">
       <div className="grid lg:grid-cols-2 gap-8">
         {/* Map */}
-        <div className="bg-[#1E3A5F] rounded-2xl p-6 flex flex-col" style={{ minHeight: 560 }}>
+        <div className="bg-[#1E3A5F] rounded-2xl p-6 flex flex-col" style={{ minHeight: 680 }}>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-white font-semibold">UK Sector Map</h2>
             <div className="flex items-center gap-2">
@@ -234,7 +236,7 @@ export default function SectorsTab({ sectorData, members }) {
               <span className="text-xs text-white/50">{memberPins.length} member pin{memberPins.length !== 1 ? "s" : ""}</span>
             </div>
           </div>
-          <div className="flex-1">
+          <div style={{ flex: 1, minHeight: 560 }}>
             <UKMapWithPins sectorData={sectorData} memberPins={memberPins} />
           </div>
         </div>
