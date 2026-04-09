@@ -1469,7 +1469,7 @@ const handleApproveGuestAsHost = async (member) => {
         </div>
 
         {/* Tabs */}
-        <div className="max-w-7xl mx-auto px-6 flex border-t border-gray-100 overflow-x-auto scrollbar-none">
+        <div className="flex border-t border-gray-100 overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
           {[
             { id:"onboarding", label:"Onboarding",   Icon:Users     },
             { id:"complaints", label:"Complaints",    Icon:AlertTriangle },
@@ -1478,7 +1478,7 @@ const handleApproveGuestAsHost = async (member) => {
             { id:"devtools",   label:"Dev Tools",     Icon:Settings  },
           ].map(({ id, label, Icon }) => (
             <button key={id} onClick={() => setActiveTab(id)}
-              className={`flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab===id ? "border-[#0d9488] text-[#0d9488]" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
+              className={`flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap flex-shrink-0 ${activeTab===id ? "border-[#0d9488] text-[#0d9488]" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
               <Icon className="w-4 h-4" />
               {label}
             </button>
