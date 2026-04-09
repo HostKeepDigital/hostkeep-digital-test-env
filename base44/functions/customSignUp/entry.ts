@@ -1,8 +1,18 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
+async function hashPassword(password, salt) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password + salt);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const serviceRole = base44.asServiceRole;
+
     const { email, password, full_name } = await req.json();
 
     if (!email || !password || !full_name) {
@@ -12,37 +22,42 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check if user already exists
-    const existingUsers = await base44.asServiceRole.entities.User.filter({ email });
-    if (existingUsers && existingUsers.length > 0) {
+    const normalisedEmail = email.toLowerCase().trim();
+
+    // Check if credentials already exist
+    const existing = await serviceRole.entities.UserCredentials.filter({ email: normalisedEmail });
+    if (existing && existing.length > 0) {
       return Response.json(
         { success: false, message: 'Email already registered' },
         { status: 400 }
       );
     }
 
-    // Create user via base44 auth (handles hashing, etc.)
-    const result = await base44.asServiceRole.auth.createUser({
-      email,
-      password,
+    // Hash password using same pattern as customSignIn
+    const salt = Deno.env.get('HASH_SALT') || '';
+    const password_hash = await hashPassword(password, salt);
+
+    // Create User record
+    const user = await serviceRole.entities.User.create({
+      email: normalisedEmail,
       full_name,
     });
 
-    if (!result) {
-      return Response.json(
-        { success: false, message: 'Failed to create user' },
-        { status: 500 }
-      );
-    }
+    // Create UserCredentials record
+    await serviceRole.entities.UserCredentials.create({
+      email: normalisedEmail,
+      password_hash,
+    });
 
-    // Create guest role record
-    await base44.asServiceRole.entities.UserRole.create({
-      user_id: result.id,
+    // Create guest UserRole
+    await serviceRole.entities.UserRole.create({
+      user_id: user.id,
       role: 'guest',
       approval_status: 'approved',
     });
 
     return Response.json({ success: true, message: 'Account created successfully' });
+
   } catch (error) {
     console.error('Sign-up error:', error);
     return Response.json(
