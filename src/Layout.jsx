@@ -52,6 +52,13 @@ const HOST_PAGES = [
   "EditProperty",
 ];
 
+function getInitials(name) {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+}
+
 export default function Layout({ children, currentPageName }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -127,7 +134,7 @@ export default function Layout({ children, currentPageName }) {
                       <Avatar className="w-8 h-8">
                         <AvatarImage src={user?.profile_photo} />
                         <AvatarFallback className="bg-teal-100 text-teal-600">
-                          {user?.full_name?.charAt(0)?.toUpperCase() || "U"}
+                          {getInitials(user?.full_name)}
                         </AvatarFallback>
                       </Avatar>
                       <span className="hidden sm:inline">{user?.full_name?.split(" ")[0] || "Account"}</span>
