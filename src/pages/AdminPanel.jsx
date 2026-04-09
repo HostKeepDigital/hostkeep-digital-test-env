@@ -17,6 +17,7 @@ import SubscriptionTester from "@/components/devtools/SubscriptionTester";
 import BetaExitPlanner from "@/components/devtools/BetaExitPlanner";
 import { useAuth } from "@/lib/AuthContext";
 import ComplaintsTab from "@/components/admin/ComplaintsTab";
+import SectorsTab from "@/components/admin/SectorsTab";
 import BalancePaymentTester from "@/components/devtools/BalancePaymentTester";
 
 // ── STATUS MAPS ──────────────────────────────────────────────────────────────
@@ -1619,47 +1620,7 @@ const handleApproveGuestAsHost = async (member) => {
 
       {/* ── UK SECTORS ────────────────────────────────────────────────────── */}
       {activeTab === "sectors" && (
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="grid lg:grid-cols-2 gap-8">
-            {/* Map */}
-            <div className="bg-[#1E3A5F] rounded-2xl p-6" style={{ minHeight: 500 }}>
-              <h2 className="text-white font-semibold mb-4">UK Sector Map</h2>
-              <div style={{ height: 420 }}>
-                <UKMap sectorData={sectorData} />
-              </div>
-            </div>
-            {/* Sector table */}
-            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-100">
-                <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Sector Status</h2>
-              </div>
-              <div className="overflow-y-auto" style={{ maxHeight: 460 }}>
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-100 bg-gray-50">
-                      {["Sector","Postcodes","Hosts","Cleaners","Status"].map(h => <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">{h}</th>)}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {sectorData.map(s => (
-                      <tr key={s.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-3 font-medium text-gray-900 text-xs">{s.name}</td>
-                        <td className="px-4 py-3 text-gray-400 text-xs">{s.postcodes.slice(0,3).join(", ")}{s.postcodes.length > 3 ? "…" : ""}</td>
-                        <td className="px-4 py-3">
-                          <span className={`text-xs font-semibold ${s.hosts >= s.maxH ? "text-green-600" : s.hosts > 0 ? "text-amber-600" : "text-gray-300"}`}>{s.hosts}/{s.maxH}</span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={`text-xs font-semibold ${s.cleaners >= s.maxC ? "text-green-600" : s.cleaners > 0 ? "text-amber-600" : "text-gray-300"}`}>{s.cleaners}/{s.maxC}</span>
-                        </td>
-                        <td className="px-4 py-3"><SectorBadge status={s.computedStatus} /></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
+        <SectorsTab sectorData={sectorData} members={members} />
       )}
 
       {/* ── DEV TOOLS ────────────────────────────────────────────────────── */}
