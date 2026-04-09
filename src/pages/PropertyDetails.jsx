@@ -41,6 +41,9 @@ import {
   ChevronRight,
   MessageSquare,
   Loader2,
+  Shield,
+  Zap,
+  FileText,
 } from "lucide-react";
 import { format, parseISO, differenceInDays, addDays, isBefore, startOfDay } from "date-fns";
 import { toast } from "sonner";
@@ -719,6 +722,15 @@ export default function PropertyDetails() {
     );
   };
 
+  const { data: propertyCompliance } = useQuery({
+    queryKey: ["property-compliance", propertyId],
+    queryFn: async () => {
+      const results = await base44.entities.PropertyCompliance.filter({ property_id: propertyId });
+      return results[0] || null;
+    },
+    enabled: !!propertyId,
+  });
+
   const { data: cancellationPolicy, isLoading: policyLoading } = useQuery({
     queryKey: ["cancellation-policy", property?.cancellation_policy_id],
     queryFn: () => {
@@ -1044,6 +1056,38 @@ export default function PropertyDetails() {
                 <ReviewList reviews={reviews} />
               </div>
             )}
+
+            {/* Safety & Compliance */}
+            <div className="space-y-3">
+              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                <Shield className="w-5 h-5 text-teal-600" />
+                Safety & Compliance
+              </h2>
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
+                {propertyCompliance?.registration_number && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600 font-medium">STR Registration No.</span>
+                    <span className="font-mono text-gray-900 text-xs bg-white border border-gray-200 px-2 py-1 rounded">{propertyCompliance.registration_number}</span>
+                  </div>
+                )}
+                <SafetyDocRow
+                  icon={Flame}
+                  label="Gas Safety Certificate"
+                  expiryDate={propertyCompliance?.gas_safety_cert_expiry}
+                />
+                <SafetyDocRow
+                  icon={Zap}
+                  label="EICR"
+                  expiryDate={propertyCompliance?.eicr_expiry}
+                />
+                <SafetyDocRow
+                  icon={FileText}
+                  label="Fire Risk Assessment"
+                  expiryDate={propertyCompliance?.fire_risk_assessment_date}
+                  isDate
+                />
+              </div>
+            </div>
           </div>
 
           {/* Right Column: Booking Card */}
@@ -1298,6 +1342,49 @@ export default function PropertyDetails() {
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+function SafetyDocRow({ icon: Icon, label, expiryDate, isDate }) {
+  const { differenceInDays: diff, parseISO: parse, isValid, format: fmt } = { differenceInDays, parseISO, isValid, format };
+  let statusText = "Not provided";
+  let statusColor = "text-gray-400";
+  let dotColor = "bg-gray-300";
+
+  if (expiryDate) {
+    const d = parseISO(expiryDate);
+    if (isValid(d)) {
+      const days = differenceInDays(d, new Date());
+      const formatted = format(d, "d MMM yyyy");
+      if (isDate) {
+        statusText = formatted;
+        statusColor = "text-emerald-600";
+        dotColor = "bg-emerald-400";
+      } else if (days < 0) {
+        statusText = `Expired ${format(d, "d MMM yyyy")}`;
+        statusColor = "text-red-500";
+        dotColor = "bg-red-400";
+      } else if (days <= 30) {
+        statusText = `Expires ${format(d, "d MMM yyyy")} (${days}d)`;
+        statusColor = "text-amber-600";
+        dotColor = "bg-amber-400";
+      } else {
+        statusText = `Valid until ${format(d, "d MMM yyyy")}`;
+        statusColor = "text-emerald-600";
+        dotColor = "bg-emerald-400";
+      }
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-3 text-sm">
+      <Icon className="w-4 h-4 text-gray-400 flex-shrink-0" />
+      <span className="text-gray-700 flex-1">{label}</span>
+      <div className="flex items-center gap-1.5">
+        <div className={`w-2 h-2 rounded-full ${dotColor}`} />
+        <span className={`text-xs font-medium ${statusColor}`}>{statusText}</span>
+      </div>
     </div>
   );
 }
