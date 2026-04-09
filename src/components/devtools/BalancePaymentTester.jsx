@@ -16,14 +16,17 @@ export default function BalancePaymentTester() {
     setLoading(true);
     try {
       const sessionToken = localStorage.getItem("session_token") || sessionStorage.getItem("session_token");
-        const sessionRes = await base44.functions.invoke("checkSession", { session_token: sessionToken });
-        const user = sessionRes?.data;
-          if (!user?.authenticated || !user?.user_id) {
-            toast.error("User not authenticated");
+      const sessionRes = await base44.functions.invoke("checkSession", { session_token: sessionToken });
+      const user = sessionRes?.data;
+      if (!user?.authenticated || !user?.user_id) {
+        toast.error("User not authenticated");
+        setLoading(false);
+        return;
+      }
 
       // Get or create a test property
       const properties = await base44.entities.Property.filter(
-        { owner_id: user.id },
+        { owner_id: user.user_id },
         "-created_date",
         1
       );
@@ -39,17 +42,13 @@ export default function BalancePaymentTester() {
       // Create booking with failed balance payment
       const booking = await base44.entities.Booking.create({
         property_id: property.id,
-        host_id: user.id,
-        guest_id: user.id,
+        host_id: user.user_id,
+        guest_id: user.user_id,
         guest_name: "Test Guest",
         guest_email: "test@example.com",
         guest_phone: "01234567890",
-        check_in: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split("T")[0],
-        check_out: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split("T")[0],
+        check_in: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+        check_out: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
         nights: 7,
         nightly_rate: 100,
         subtotal: 700,
@@ -71,9 +70,7 @@ export default function BalancePaymentTester() {
       setSelectedBooking(booking);
       addTestResult(
         "✓ Test booking created",
-        `ID: ${booking.id}, Balance owed: £${(
-          booking.total_amount - (booking.amount_paid || 0)
-        ).toFixed(2)}`
+        `ID: ${booking.id}, Balance owed: £${(booking.total_amount - (booking.amount_paid || 0)).toFixed(2)}`
       );
       toast.success("Test booking created");
     } catch (e) {
