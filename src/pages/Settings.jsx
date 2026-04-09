@@ -110,7 +110,17 @@ export default function Settings() {
             location: data.user?.location || "",
           });
         })
-        .catch(() => {});
+        .catch(() => {
+          // Fallback: use whatever is already seeded from user.full_name
+          const parts = splitFullName(user.full_name || "");
+          setProfile({
+            forename: parts.forename,
+            middle_name: parts.middle_name,
+            surname: parts.surname,
+            phone: user.phone || "",
+            location: user.location || "",
+          });
+        });
     }
 
     if (user.id) {
