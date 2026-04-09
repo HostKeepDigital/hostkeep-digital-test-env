@@ -62,20 +62,15 @@ function UKMapWithPins({ sectorData, memberPins }) {
       .style("position", "absolute")
       .style("top", 0).style("left", 0);
 
-    // Calibrated to match the UK map background image
-    // Image spans roughly: lng -8.2 to 2.0, lat 49.8 to 60.9
-    const proj = d3.geoMercator()
-      .center([-3.1, 54.8])
-      .scale(W * 3.05)
-      .translate([W * 0.52, H * 0.50]);
-
-    const path = d3.geoPath().projection(proj);
-
     d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json")
       .then(world => {
         const features = topo.feature(world, world.objects.countries).features;
         const uk      = features.find(f => f.id === 826);
         const ireland = features.find(f => f.id === 372);
+
+        // Auto-fit projection to UK bounds with a small inset so Cornwall isn't clipped
+        const proj = d3.geoMercator().fitExtent([[W * 0.04, H * 0.04], [W * 0.96, H * 0.96]], uk);
+        const path = d3.geoPath().projection(proj);
 
         if (ireland) svg.append("path").datum(ireland)
           .attr("d", path)
@@ -156,8 +151,8 @@ function UKMapWithPins({ sectorData, memberPins }) {
   );
 
   return (
-    <div className="h-full flex flex-col">
-      <div ref={ref} className="flex-1 w-full min-h-0 relative overflow-hidden rounded-lg">
+    <div className="flex flex-col" style={{ height: '100%' }}>
+      <div ref={ref} className="relative overflow-hidden rounded-lg" style={{ flex: 1, minHeight: 640 }}>
         <img src={UK_MAP_IMG} alt="UK Map" className="absolute inset-0 w-full h-full object-cover" draggable="false" />
         <div className="absolute inset-0 bg-[#1E3A5F]/10 pointer-events-none" />
       </div>
@@ -228,7 +223,7 @@ export default function SectorsTab({ sectorData, members }) {
     <div className="max-w-7xl mx-auto px-6 py-8">
       <div className="grid lg:grid-cols-2 gap-8">
         {/* Map */}
-        <div className="bg-[#1E3A5F] rounded-2xl p-6 flex flex-col" style={{ minHeight: 680 }}>
+        <div className="bg-[#1E3A5F] rounded-2xl p-6 flex flex-col" style={{ minHeight: 840 }}>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-white font-semibold">UK Sector Map</h2>
             <div className="flex items-center gap-2">
@@ -236,7 +231,7 @@ export default function SectorsTab({ sectorData, members }) {
               <span className="text-xs text-white/50">{memberPins.length} member pin{memberPins.length !== 1 ? "s" : ""}</span>
             </div>
           </div>
-          <div style={{ flex: 1, minHeight: 560 }}>
+          <div style={{ flex: 1, minHeight: 700 }}>
             <UKMapWithPins sectorData={sectorData} memberPins={memberPins} />
           </div>
         </div>
