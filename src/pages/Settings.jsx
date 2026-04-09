@@ -81,37 +81,37 @@ export default function Settings() {
   useEffect(() => {
     if (!user) return;
 
-    const sessionToken = localStorage.getItem("session_token");
-    if (!sessionToken) return;
+    // Seed immediately from AuthContext so fields are never blank
+    const nameParts = splitFullName(user.full_name || "");
+    setProfile((prev) => ({
+      ...prev,
+      forename: nameParts.forename || prev.forename,
+      middle_name: nameParts.middle_name || prev.middle_name,
+      surname: nameParts.surname || prev.surname,
+    }));
 
-    fetch("/functions/getUserFromSession", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ session_token: sessionToken }),
-    })
-      .then((r) => r.json())
-      .then((data) => {
-        if (!data.success) return;
-        const fullName = data.user?.full_name || "";
-        const nameParts = splitFullName(fullName);
-        setProfile({
-          forename: nameParts.forename,
-          middle_name: nameParts.middle_name,
-          surname: nameParts.surname,
-          phone: data.user?.phone || "",
-          location: data.user?.location || "",
-        });
+    const sessionToken = localStorage.getItem("session_token");
+    if (sessionToken) {
+      fetch("/functions/getUserFromSession", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ session_token: sessionToken }),
       })
-      .catch(() => {
-        const nameParts = splitFullName(user.full_name || "");
-        setProfile({
-          forename: nameParts.forename,
-          middle_name: nameParts.middle_name,
-          surname: nameParts.surname,
-          phone: user.phone || "",
-          location: user.location || "",
-        });
-      });
+        .then((r) => r.json())
+        .then((data) => {
+          if (!data.success) return;
+          const fullName = data.user?.full_name || user.full_name || "";
+          const parts = splitFullName(fullName);
+          setProfile({
+            forename: parts.forename,
+            middle_name: parts.middle_name,
+            surname: parts.surname,
+            phone: data.user?.phone || "",
+            location: data.user?.location || "",
+          });
+        })
+        .catch(() => {});
+    }
 
     if (user.id) {
       base44.entities.UserRole.filter({ user_id: user.id }).then(setUserRoles).catch(() => {});
