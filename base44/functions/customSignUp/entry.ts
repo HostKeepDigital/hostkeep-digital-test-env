@@ -56,6 +56,12 @@ Deno.serve(async (req) => {
       approval_status: 'approved',
     });
 
+    // Create Guest record for profile storage
+    await serviceRole.entities.Guest.create({
+      full_name,
+      email: normalisedEmail,
+    });
+
     return Response.json({ success: true, message: 'Account created successfully' });
 
   } catch (error) {
