@@ -45,7 +45,7 @@ import {
   Zap,
   FileText,
 } from "lucide-react";
-import { format, parseISO, differenceInDays, addDays, isBefore, startOfDay } from "date-fns";
+import { format, parseISO, differenceInDays, addDays, isBefore, startOfDay, isValid } from "date-fns";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import ReviewList from "@/components/reviews/ReviewList";
@@ -1347,7 +1347,6 @@ export default function PropertyDetails() {
 }
 
 function SafetyDocRow({ icon: Icon, label, expiryDate, isDate }) {
-  const { differenceInDays: diff, parseISO: parse, isValid, format: fmt } = { differenceInDays, parseISO, isValid, format };
   let statusText = "Not provided";
   let statusColor = "text-gray-400";
   let dotColor = "bg-gray-300";
