@@ -135,8 +135,11 @@ Deno.serve(async (req) => {
       user: {
         ...user,
         full_name: fmProfile?.full_name || user?.full_name || "",
-        phone: fmProfile?.phone || "",
-        location: fmProfile?.location || "",
+        forename: user?.forename || "",
+        middle_name: user?.middle_name || "",
+        surname: user?.surname || "",
+        phone: fmProfile?.phone || user?.phone || "",
+        location: fmProfile?.location || user?.location || "",
       },
     });
   } catch (err) {

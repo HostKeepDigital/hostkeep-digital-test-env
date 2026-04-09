@@ -5,7 +5,14 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const serviceRole = base44.asServiceRole;
 
-    const { session_token, full_name, phone, location } = await req.json();
+    const { session_token, full_name, forename, middle_name, surname, phone, location } = await req.json();
+
+    // Assemble full_name from parts if not provided directly
+    const resolvedFullName = full_name !== undefined
+      ? full_name
+      : (forename !== undefined || surname !== undefined)
+        ? [forename || "", middle_name || "", surname || ""].map(s => s.trim()).filter(Boolean).join(" ")
+        : undefined;
 
     if (!session_token) {
       return Response.json({ success: false, error: "missing_session_token" }, { status: 401 });
@@ -23,7 +30,10 @@ Deno.serve(async (req) => {
     }
 
     const updates = {};
-    if (full_name !== undefined) updates.full_name = full_name.trim();
+    if (resolvedFullName !== undefined) updates.full_name = resolvedFullName.trim();
+    if (forename !== undefined) updates.forename = forename.trim();
+    if (middle_name !== undefined) updates.middle_name = middle_name.trim();
+    if (surname !== undefined) updates.surname = surname.trim();
     if (phone !== undefined) updates.phone = phone.trim();
     if (location !== undefined) updates.location = location.trim();
 
@@ -31,9 +41,13 @@ Deno.serve(async (req) => {
       return Response.json({ success: true });
     }
 
-    // Founding member path — unchanged
+    // Founding member path
     if (session.founding_member_id) {
-      await serviceRole.entities.FoundingMember.update(session.founding_member_id, updates);
+      const fmUpdates = {};
+      if (resolvedFullName !== undefined) fmUpdates.full_name = resolvedFullName.trim();
+      if (phone !== undefined) fmUpdates.phone = phone.trim();
+      if (location !== undefined) fmUpdates.location = location.trim();
+      await serviceRole.entities.FoundingMember.update(session.founding_member_id, fmUpdates);
       return Response.json({ success: true });
     }
 
@@ -42,14 +56,17 @@ Deno.serve(async (req) => {
     const guests = await serviceRole.entities.Guest.filter({ email: normalisedEmail });
     if (guests?.[0]) {
       const guestUpdates = {};
-      if (full_name !== undefined) guestUpdates.full_name = full_name.trim();
+      if (resolvedFullName !== undefined) guestUpdates.full_name = resolvedFullName.trim();
+      if (forename !== undefined) guestUpdates.forename = forename.trim();
+      if (middle_name !== undefined) guestUpdates.middle_name = middle_name.trim();
+      if (surname !== undefined) guestUpdates.surname = surname.trim();
       if (phone !== undefined) guestUpdates.phone = phone.trim();
       await serviceRole.entities.Guest.update(guests[0].id, guestUpdates);
 
       // full_name, phone and location also go to User if user_id exists
       if (session.user_id) {
         const userUpdates = {};
-        if (full_name !== undefined) userUpdates.full_name = full_name.trim();
+        if (resolvedFullName !== undefined) userUpdates.full_name = resolvedFullName.trim();
         if (phone !== undefined) userUpdates.phone = phone.trim();
         if (location !== undefined) userUpdates.location = location.trim();
         if (Object.keys(userUpdates).length > 0) {

@@ -100,12 +100,23 @@ export default function Settings() {
         .then((r) => r.json())
         .then((data) => {
           if (!data.success) return;
-          const fullName = data.user?.full_name || user.full_name || "";
-          const parts = splitFullName(fullName);
+          // Use stored split fields if available, fall back to splitting full_name
+          const hasStoredParts = data.user?.forename || data.user?.surname;
+          let forename, middle_name, surname;
+          if (hasStoredParts) {
+            forename = data.user.forename || "";
+            middle_name = data.user.middle_name || "";
+            surname = data.user.surname || "";
+          } else {
+            const parts = splitFullName(data.user?.full_name || user.full_name || "");
+            forename = parts.forename;
+            middle_name = parts.middle_name;
+            surname = parts.surname;
+          }
           setProfile({
-            forename: parts.forename,
-            middle_name: parts.middle_name,
-            surname: parts.surname,
+            forename,
+            middle_name,
+            surname,
             phone: data.user?.phone || "",
             location: data.user?.location || "",
           });
@@ -190,7 +201,6 @@ export default function Settings() {
     setSaving(true);
 
     try {
-      const fullName = assembleFullName(profile);
       const sessionToken = localStorage.getItem("session_token");
 
       const res = await fetch("/functions/updateProfile", {
@@ -198,7 +208,9 @@ export default function Settings() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           session_token: sessionToken,
-          full_name: fullName,
+          forename: profile.forename,
+          middle_name: profile.middle_name,
+          surname: profile.surname,
           phone: profile.phone,
           location: profile.location,
         }),

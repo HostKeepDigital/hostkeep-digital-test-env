@@ -4,7 +4,19 @@
   "properties": {
     "full_name": {
       "type": "string",
-      "description": "Guest's full name"
+      "description": "Guest's full name (assembled)"
+    },
+    "forename": {
+      "type": "string",
+      "description": "Guest's first name"
+    },
+    "middle_name": {
+      "type": "string",
+      "description": "Guest's middle name (optional)"
+    },
+    "surname": {
+      "type": "string",
+      "description": "Guest's surname"
     },
     "email": {
       "type": "string",
