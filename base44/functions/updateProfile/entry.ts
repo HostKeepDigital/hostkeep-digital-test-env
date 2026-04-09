@@ -37,17 +37,25 @@ Deno.serve(async (req) => {
       return Response.json({ success: true });
     }
 
-    // Otherwise update User entity directly
+    // Otherwise update User entity — only fields that exist on User
     if (session.user_id) {
-      await serviceRole.entities.User.update(session.user_id, updates);
-      return Response.json({ success: true });
-    }
+      const userUpdates = {};
+      if (phone !== undefined) userUpdates.phone = phone.trim();
+      if (location !== undefined) userUpdates.location = location.trim();
 
-    // Fallback — find user by email
-    const normalisedEmail = session.email.toLowerCase().trim();
-    const users = await serviceRole.entities.User.filter({ email: normalisedEmail });
-    if (users?.[0]) {
-      await serviceRole.entities.User.update(users[0].id, updates);
+      if (Object.keys(userUpdates).length > 0) {
+        await serviceRole.entities.User.update(session.user_id, userUpdates);
+      }
+
+      // full_name goes to UserCredentials via email match
+      if (full_name !== undefined) {
+        const normalisedEmail = session.email.toLowerCase().trim();
+        const creds = await serviceRole.entities.UserCredentials.filter({ email: normalisedEmail });
+        if (creds?.[0]) {
+          await serviceRole.entities.UserCredentials.update(creds[0].id, { full_name: full_name.trim() });
+        }
+      }
+
       return Response.json({ success: true });
     }
 
