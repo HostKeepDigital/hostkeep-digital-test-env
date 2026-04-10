@@ -256,15 +256,14 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
               <strong>Cornwall and Devon</strong> only (postcode areas TR, PL, EX).
             </p>
             <p className="text-sm text-amber-700">
-              We're expanding across the UK throughout 2026 and 2027. If you'd like to be notified
-              when we reach your area, contact us at{" "}
+              We're expanding across the UK throughout 2026 and 2027.{" "}
               <a
-                href="mailto:hello@hostkeepdigital.co.uk"
+                href="/foundinghost"
                 className="underline font-medium hover:text-amber-900"
               >
-                hello@hostkeepdigital.co.uk
+                Apply as a Founding Host
               </a>
-              .
+              {" "}to help shape the future of HostKeep and get early access.
             </p>
           </div>
         )}
