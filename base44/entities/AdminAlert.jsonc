@@ -1,0 +1,69 @@
+{
+  "name": "AdminAlert",
+  "type": "object",
+  "properties": {
+    "alert_type": {
+      "type": "string",
+      "enum": [
+        "failed_payment",
+        "payment_overdue",
+        "high_risk_user",
+        "new_complaint",
+        "new_high_risk_registration",
+        "document_failed"
+      ],
+      "description": "Type of alert"
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "critical",
+        "warning",
+        "info"
+      ],
+      "default": "warning",
+      "description": "Alert severity level"
+    },
+    "title": {
+      "type": "string",
+      "description": "Short alert title"
+    },
+    "message": {
+      "type": "string",
+      "description": "Full alert message/detail"
+    },
+    "entity_id": {
+      "type": "string",
+      "description": "ID of the related entity (booking, user, complaint etc)"
+    },
+    "entity_type": {
+      "type": "string",
+      "description": "Type of related entity e.g. Booking, RiskScores, Complaint"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "unread",
+        "read",
+        "dismissed"
+      ],
+      "default": "unread",
+      "description": "Admin review status"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When alert was marked read/dismissed"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional context data (e.g. booking amount, user email)"
+    }
+  },
+  "required": [
+    "alert_type",
+    "severity",
+    "title",
+    "message"
+  ]
+}
