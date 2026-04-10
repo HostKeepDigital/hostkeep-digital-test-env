@@ -278,7 +278,7 @@ export default function Subscription() {
       const subs = await base44.entities.Subscription.filter({
         user_id: user?.id,
       });
-      return subs[0];
+      return subs[0] || null;
     },
     enabled: !!user?.id,
   });
