@@ -4,14 +4,22 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Sparkles } from "l
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-// UK School Holidays & Half-term Breaks with date ranges
+// UK School Holidays & Half-term Breaks with ±3 day buffer (2026)
 const UK_SCHOOL_HOLIDAYS = [
-  { label: "Easter", start: new Date(2026, 3, 6), end: new Date(2026, 3, 20), boost: 1.25 },
-  { label: "Summer", start: new Date(2026, 6, 15), end: new Date(2026, 8, 1), boost: 1.35 },
-  { label: "Half-term (Feb)", start: new Date(2026, 1, 16), end: new Date(2026, 1, 20), boost: 1.15 },
-  { label: "Half-term (May)", start: new Date(2026, 4, 25), end: new Date(2026, 4, 29), boost: 1.20 },
-  { label: "Half-term (Oct)", start: new Date(2026, 9, 19), end: new Date(2026, 9, 23), boost: 1.20 },
-  { label: "Christmas", start: new Date(2025, 11, 15), end: new Date(2026, 0, 5), boost: 1.30 },
+  // Christmas 2025/2026
+  { label: "Christmas", start: new Date(2025, 11, 12), end: new Date(2026, 0, 8), boost: 1.30 },
+  // Half-term February
+  { label: "Half-term (Feb)", start: new Date(2026, 1, 13), end: new Date(2026, 1, 23), boost: 1.15 },
+  // Easter
+  { label: "Easter", start: new Date(2026, 3, 3), end: new Date(2026, 3, 23), boost: 1.25 },
+  // Half-term May
+  { label: "Half-term (May)", start: new Date(2026, 4, 22), end: new Date(2026, 5, 1), boost: 1.20 },
+  // Summer holidays
+  { label: "Summer", start: new Date(2026, 6, 12), end: new Date(2026, 8, 4), boost: 1.35 },
+  // Half-term October
+  { label: "Half-term (Oct)", start: new Date(2026, 9, 16), end: new Date(2026, 9, 26), boost: 1.20 },
+  // Halloween
+  { label: "Halloween", start: new Date(2026, 9, 28), end: new Date(2026, 10, 3), boost: 1.15 },
 ];
 
 export default function PricingCalendar({ pricingSettings, onDateClick, selectedDates = [], onApplyHolidayPricing = null }) {
