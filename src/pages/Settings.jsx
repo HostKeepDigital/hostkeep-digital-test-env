@@ -478,13 +478,58 @@ const handleDeleteAccount = async () => {
                 <CardDescription>Choose what you'd like to be notified about — changes save instantly</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {[
-                  { field: "bookings", label: "Booking Notifications", desc: "New booking requests, confirmations, cancellations, and check-ins" },
-                  { field: "messages", label: "Message Notifications", desc: "New messages from guests, hosts, or cleaners" },
-                  { field: "jobs", label: "Cleaning Job Updates", desc: "Job assignments, acceptances, declines, and completions" },
-                  { field: "payments", label: "Payment Alerts", desc: "Payment confirmations and upcoming balance due reminders" },
-                  { field: "marketing", label: "Marketing Emails", desc: "Tips, news, and special offers from HostKeep" },
-                ].map(({ field, label, desc }) => (
+                {((() => {
+                  const approvedRoles = userRoles
+                    .filter((r) => (r.approval_status || "").toLowerCase() === "approved")
+                    .map((r) => (r.role || "").toLowerCase());
+                  const isHost = approvedRoles.includes("host");
+                  const isCleaner = approvedRoles.includes("cleaner");
+
+                  const allOptions = [
+                    {
+                      field: "bookings",
+                      label: "Booking Notifications",
+                      desc: isHost
+                        ? "New booking requests, confirmations, cancellations, and guest check-ins"
+                        : "Your booking confirmations, cancellations, and upcoming trip reminders",
+                      show: true,
+                    },
+                    {
+                      field: "messages",
+                      label: "Message Notifications",
+                      desc: isHost
+                        ? "New messages from guests or cleaners"
+                        : isCleaner
+                        ? "New messages from hosts"
+                        : "New messages from your hosts",
+                      show: true,
+                    },
+                    {
+                      field: "jobs",
+                      label: "Cleaning Job Updates",
+                      desc: isHost
+                        ? "Cleaner acceptances, declines, and job completion updates"
+                        : "New job assignments, schedule changes, and completion confirmations",
+                      show: isHost || isCleaner,
+                    },
+                    {
+                      field: "payments",
+                      label: "Payment Alerts",
+                      desc: isHost
+                        ? "Payout confirmations, balance releases, and upcoming payment reminders"
+                        : "Payment confirmations and upcoming balance due reminders",
+                      show: true,
+                    },
+                    {
+                      field: "marketing",
+                      label: "Marketing Emails",
+                      desc: "Tips, news, and special offers from HostKeep",
+                      show: true,
+                    },
+                  ];
+
+                  return allOptions.filter((o) => o.show);
+                })()).map(({ field, label, desc }) => (
                   <div key={field} className="flex items-center justify-between py-1">
                     <div>
                       <p className="font-medium text-gray-900">{label}</p>
