@@ -140,17 +140,9 @@ export default function SignIn() {
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300 tracking-wide uppercase">
-                  Password
-                </label>
-                <Link
-                  to="/ResetPassword"
-                  className="text-xs text-[#0d9488] hover:text-[#0f766e] transition-colors"
-                >
-                  Forgot password?
-                </Link>
-              </div>
+              <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1.5 tracking-wide uppercase">
+                Password
+              </label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -170,6 +162,14 @@ export default function SignIn() {
                 >
                   {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                 </button>
+              </div>
+              <div className="flex justify-end mt-1.5">
+                <Link
+                  to="/ResetPassword"
+                  className="text-xs text-[#0d9488] hover:text-[#0f766e] transition-colors"
+                >
+                  Forgot password?
+                </Link>
               </div>
             </div>
 
