@@ -3,6 +3,7 @@ import ReviewSystemTester from "@/components/devtools/ReviewSystemTester";
 import PricingSnapshotTester from "@/components/devtools/PricingSnapshotTester";
 import SmartPricingRulesTester from "@/components/devtools/SmartPricingRulesTester";
 import PostcodePinTester from "@/components/admin/PostcodePinTester";
+import NotificationSystemTester from "@/components/devtools/NotificationSystemTester";
 
 const TABS = [
   {
@@ -32,6 +33,13 @@ const TABS = [
     color: "bg-emerald-600",
     description: "Generates random UK postcodes and verifies they resolve to the correct UK sector. Run a full coverage check to identify any unmapped postcode areas.",
     Component: PostcodePinTester,
+  },
+  {
+    id: "notifications",
+    label: "Notification System",
+    color: "bg-rose-500",
+    description: "Tests all notification types end-to-end: DB record creation, email dispatch via Resend, preference gating, force_email flag, and field validation.",
+    Component: NotificationSystemTester,
   },
 ];
 
