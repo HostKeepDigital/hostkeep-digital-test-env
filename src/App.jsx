@@ -13,6 +13,7 @@ import { queryClientInstance } from "@/lib/query-client";
 import { AnimatePresence, motion } from "framer-motion";
 import ThemeProvider from "@/components/ThemeProvider";
 import AdminPanel from "./pages/AdminPanel";
+import HostPayoutHistory from "./pages/HostPayoutHistory";
 import HostCompliance from "./pages/HostCompliance";
 import Pending from "./pages/Pending";
 import Founding from "./pages/Founding";
@@ -357,6 +358,16 @@ const AuthenticatedApp = () => {
                   <Slide><AdminPanel /></Slide>
                 </LayoutWrapper>
               </RequireAdmin>
+            }
+          />
+          <Route
+            path="/HostPayoutHistory"
+            element={
+              <RequireAuth>
+                <LayoutWrapper currentPageName="HostPayoutHistory">
+                  <Slide><HostPayoutHistory /></Slide>
+                </LayoutWrapper>
+              </RequireAuth>
             }
           />
           <Route path="*" element={<PageNotFound />} />
