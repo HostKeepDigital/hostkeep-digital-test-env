@@ -1116,6 +1116,7 @@ export default function EditProperty() {
         <PricingManager
           formData={formData}
           onUpdate={(field, value) => handleChange(field, value)}
+          property={property}
         />
       </TabsContent>
 

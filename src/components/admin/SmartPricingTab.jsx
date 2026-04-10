@@ -5,6 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { TrendingUp, TrendingDown, Minus, Save, RefreshCw, Info } from "lucide-react";
+import MarketSuggestionsPanel from "@/components/admin/MarketSuggestionsPanel";
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const DAYS   = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
@@ -299,16 +300,24 @@ export default function SmartPricingTab() {
 
       {view === "rules" && <div className="space-y-6">
 
-        {snapshotCount === 0 && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4">
-            <p className="text-sm text-amber-700 font-semibold mb-1">No pricing data yet</p>
-            <p className="text-xs text-amber-600">
-              PricingSnapshots are captured automatically each time a booking is confirmed.
-              As bookings come in, the charts below will populate with real market rate data.
-              You can still configure adjustments in advance — they'll be stored and ready to use.
-            </p>
-          </div>
-        )}
+        <MarketSuggestionsPanel onApply={(suggested) => {
+        setRules(prev => ({
+          seasonality: { ...prev.seasonality, ...Object.fromEntries(Object.entries(suggested.seasonality).map(([k,v]) => [k, v])) },
+          day_of_week: { ...prev.day_of_week, ...Object.fromEntries(Object.entries(suggested.day_of_week).map(([k,v]) => [k, v])) },
+          lead_time: prev.lead_time,
+        }));
+      }} />
+
+      {snapshotCount === 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4">
+          <p className="text-sm text-amber-700 font-semibold mb-1">No pricing data yet</p>
+          <p className="text-xs text-amber-600">
+            PricingSnapshots are captured automatically each time a booking is confirmed.
+            As bookings come in, the charts below will populate with real market rate data.
+            You can still configure adjustments in advance — they'll be stored and ready to use.
+          </p>
+        </div>
+      )}
 
       {/* Seasonality */}
       <RuleSection

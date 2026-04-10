@@ -12,8 +12,9 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
+import MarketPositionWidget from "./MarketPositionWidget";
 
-export default function PricingManager({ formData, onUpdate, onPromptSave }) {
+export default function PricingManager({ formData, onUpdate, onPromptSave, property }) {
   const [selectedDate, setSelectedDate] = useState(null);
   const [depositError, setDepositError] = useState("");
   const [activeSection, setActiveSection] = useState("base"); // base, seasons, overrides
@@ -31,6 +32,12 @@ export default function PricingManager({ formData, onUpdate, onPromptSave }) {
 
   return (
     <div className="space-y-6">
+      <MarketPositionWidget
+        nightlyRate={formData.nightly_rate || formData.pricing_settings?.base_rate}
+        postcodeArea={property?.postcode_area || formData.postcode_area}
+        propertyType={property?.property_type || formData.property_type}
+      />
+
       {/* Basic Fees */}
       <Card>
         <CardHeader>
