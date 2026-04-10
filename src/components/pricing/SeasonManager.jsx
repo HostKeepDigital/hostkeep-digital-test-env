@@ -74,9 +74,14 @@ export default function SeasonManager({ seasons = [], onUpdate }) {
   };
 
   const handleAutofillHolidays = () => {
-    // Add all holidays as new seasons (user can edit dates if needed)
+    // Filter holidays from today onwards (up to 1 year from now)
+    const today = new Date();
+    const oneYearFromNow = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate());
+    
     const baseRate = seasons.length > 0 ? seasons[0].nightly_rate : 100;
-    const newSeasons = UK_SCHOOL_HOLIDAYS.map(holiday => ({
+    const futureHolidays = UK_SCHOOL_HOLIDAYS.filter(h => h.end >= today);
+    
+    const newSeasons = futureHolidays.map(holiday => ({
       id: `holiday-${holiday.label}-${Date.now()}`,
       name: holiday.label,
       start_date: formatDate(holiday.start),
