@@ -461,13 +461,13 @@ export default function Layout({ children, currentPageName }) {
                 ) : (
                   <>
                     <Link to="/founding" className="hidden sm:inline-flex">
-                      <Button className="bg-[#1E3A5F] hover:bg-[#162d4a] text-white">Become a Host</Button>
+                      <Button className="bg-[#0d9488] hover:bg-[#0f766e] text-white">Become a Host</Button>
                     </Link>
                     <Link to="/founding" className="hidden sm:inline-flex">
-                      <Button variant="ghost">Become a Cleaner</Button>
+                      <Button className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white">Become a Cleaner</Button>
                     </Link>
                     <Link to="/GuestSignUp">
-                      <Button variant="outline">Sign Up</Button>
+                      <Button className="bg-orange-500 hover:bg-orange-600 text-white">Sign Up</Button>
                     </Link>
                     <Link to="/SignIn">
                       <Button className="bg-teal-600 hover:bg-teal-700">
