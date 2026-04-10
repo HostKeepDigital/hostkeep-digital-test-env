@@ -118,6 +118,7 @@
 
 html, body {
   overflow-x: clip; /* blocks horizontal overflow without breaking vertical scroll */
+  overscroll-behavior-y: none; /* prevent iOS rubber-banding / bounce */
   width: 100%;
   min-height: 100dvh;
   overscroll-behavior-x: none; /* no horizontal rubber-banding */

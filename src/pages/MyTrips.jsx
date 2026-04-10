@@ -127,6 +127,19 @@ export default function MyTrips() {
   const removeFromWishlistMutation = useMutation({
     mutationFn: (wishlistItemId) =>
       base44.entities.WishlistProperty.delete(wishlistItemId),
+    onMutate: async (wishlistItemId) => {
+      await queryClient.cancelQueries({ queryKey: ["wishlist-properties", user?.id] });
+      const previous = queryClient.getQueryData(["wishlist-properties", user?.id]);
+      queryClient.setQueryData(["wishlist-properties", user?.id], (old = []) =>
+        old.filter((w) => w.id !== wishlistItemId)
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["wishlist-properties", user?.id], context.previous);
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wishlist-properties"] });
       queryClient.invalidateQueries({ queryKey: ["wishlist-status"] });
