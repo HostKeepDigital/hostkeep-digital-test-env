@@ -53,6 +53,7 @@ const HOST_PAGES = [
   "HostMessages",
   "HostCancellationPolicies",
   "HostCompliance",
+  "HostPayoutHistory",
   "CreateProperty",
   "EditProperty",
 ];
