@@ -38,24 +38,14 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ⭐ NEW: derive signup_postcode from FoundingMember
+    // Load signup_postcode from User entity
     let signup_postcode = null;
-
     try {
-      const normalisedEmail = session.email.toLowerCase().trim();
-
-      const members = await serviceRole.entities.FoundingMember.filter({
-        email: normalisedEmail,
-      });
-
-      if (members?.[0]?.postcode) {
-        signup_postcode = (members[0].postcode || "")
-          .trim()
-          .toUpperCase();
+      if (session.user_id) {
+        const u = await serviceRole.entities.User.get(session.user_id);
+        if (u?.signup_postcode) signup_postcode = u.signup_postcode;
       }
-    } catch (_) {
-      // silent fail — postcode is optional
-    }
+    } catch (_) {}
 
     // Load User record for profile fields
     let full_name = null;

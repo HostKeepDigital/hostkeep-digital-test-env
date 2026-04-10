@@ -59,10 +59,13 @@ if (!hasRole) {
       });
 
     await base44.asServiceRole.entities.FoundingMember
-      .update(member.id, { 
-        user_id: user_id 
-      });
+      .update(member.id, { user_id: user_id });
   }
+
+  // Always copy postcode + founding flag to User entity
+  const userUpdates = { is_founding_member: true };
+  if (member.postcode) userUpdates.signup_postcode = member.postcode.trim().toUpperCase();
+  await base44.asServiceRole.entities.User.update(user_id, userUpdates);
 
   return Response.json({ 
     matched: true, 

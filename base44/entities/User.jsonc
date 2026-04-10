@@ -37,6 +37,10 @@
     "notification_preferences": {
       "type": "object"
     },
+    "signup_postcode": {
+      "type": "string",
+      "description": "Postcode provided at signup (copied from FoundingMember onboarding record)"
+    },
     "is_founding_member": {
       "type": "boolean",
       "default": false,

@@ -30,14 +30,8 @@ Deno.serve(async (req) => {
       userRecord = await serviceRole.entities.User.get(session.user_id);
     }
 
-    // Postcode is still sourced from FoundingMember (onboarding record)
-    let signup_postcode = null;
-    if (session.founding_member_id) {
-      try {
-        const fm = await serviceRole.entities.FoundingMember.get(session.founding_member_id);
-        signup_postcode = (fm?.postcode || "").trim().toUpperCase() || null;
-      } catch (_) {}
-    }
+    // Postcode is now stored on User entity
+    const signup_postcode = userRecord?.signup_postcode || null;
 
     return Response.json({
       success: true,
