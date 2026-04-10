@@ -1166,9 +1166,12 @@ export default function AdminPanel() {
   const [loading,       setLoading      ] = useState(true);
   const [actionLoading, setActionLoading] = useState({});
   const [subscriptions, setSubscriptions] = useState([]);
-const [crmLoading,    setCrmLoading   ] = useState(true);
+  const [crmLoading,    setCrmLoading   ] = useState(true);
   const [pageViews,     setPageViews    ] = useState([]);
   const [viewsLoading,  setViewsLoading ] = useState(true);
+  const [guests,        setGuests       ] = useState([]);
+  const [bookings,      setBookings     ] = useState([]);
+  const [guestsLoading, setGuestsLoading] = useState(true);
 
   const fetchMembers = async () => {
     setLoading(true);
@@ -1195,7 +1198,20 @@ const [crmLoading,    setCrmLoading   ] = useState(true);
     setViewsLoading(false);
   };
 
-  useEffect(() => { fetchMembers(); fetchSubscriptions(); fetchPageViews(); }, []);
+  const fetchGuests = async () => {
+    setGuestsLoading(true);
+    try {
+      const [g, b] = await Promise.all([
+        base44.entities.Guest.list("-created_date", 1000),
+        base44.entities.Booking.list("-created_date", 2000),
+      ]);
+      setGuests(g || []);
+      setBookings(b || []);
+    } catch { setGuests([]); setBookings([]); }
+    setGuestsLoading(false);
+  };
+
+  useEffect(() => { fetchMembers(); fetchSubscriptions(); fetchPageViews(); fetchGuests(); }, []);
 
   const setML = (id, val) => setActionLoading(p => ({ ...p, [id]: val }));
 
@@ -1471,11 +1487,12 @@ const handleApproveGuestAsHost = async (member) => {
         {/* Tabs */}
         <div className="flex border-t border-gray-100 overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
           {[
-            { id:"onboarding", label:"Onboarding",   Icon:Users     },
-            { id:"complaints", label:"Complaints",    Icon:AlertTriangle },
-            { id:"crm",        label:"CRM & Revenue", Icon:BarChart2 },
-            { id:"sectors",    label:"UK Sectors",    Icon:Globe     },
-            { id:"devtools",   label:"Dev Tools",     Icon:Settings  },
+            { id:"onboarding", label:"Onboarding",      Icon:Users     },
+            { id:"complaints", label:"Complaints",     Icon:AlertTriangle },
+            { id:"guests",     label:"Guests & Bookings", Icon:BarChart2 },
+            { id:"crm",        label:"CRM & Revenue",  Icon:TrendingUp },
+            { id:"sectors",    label:"UK Sectors",     Icon:Globe     },
+            { id:"devtools",   label:"Dev Tools",      Icon:Settings  },
           ].map(({ id, label, Icon }) => (
             <button key={id} onClick={() => setActiveTab(id)}
               className={`flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap flex-shrink-0 ${activeTab===id ? "border-[#0d9488] text-[#0d9488]" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
@@ -1485,6 +1502,92 @@ const handleApproveGuestAsHost = async (member) => {
           ))}
           </div>
       </div>
+
+      {/* ── GUESTS & BOOKINGS ──────────────────────────────────────────── */}
+      {activeTab === "guests" && (
+        <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+          {guestsLoading ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="w-6 h-6 border-2 border-gray-200 border-t-teal-600 rounded-full animate-spin" />
+            </div>
+          ) : (() => {
+            // Build per-guest booking summary
+            const bookingsByGuest = bookings.reduce((acc, b) => {
+              const key = b.guest_email || b.guest_id || "unknown";
+              if (!acc[key]) acc[key] = { name: b.guest_name, email: b.guest_email, count: 0, totalSpend: 0, lastBooking: null, statuses: {} };
+              acc[key].count++;
+              acc[key].totalSpend += b.total_amount || 0;
+              if (!acc[key].lastBooking || b.check_in > acc[key].lastBooking) acc[key].lastBooking = b.check_in;
+              const s = b.booking_status || "unknown";
+              acc[key].statuses[s] = (acc[key].statuses[s] || 0) + 1;
+              return acc;
+            }, {});
+
+            const guestRows = Object.values(bookingsByGuest).sort((a, b) => b.count - a.count);
+            const totalBookings = bookings.length;
+            const confirmedBookings = bookings.filter(b => ["confirmed","checked_in","completed"].includes(b.booking_status)).length;
+            const totalRevenue = bookings.filter(b => b.booking_status !== "cancelled" && b.booking_status !== "declined").reduce((s, b) => s + (b.total_amount || 0), 0);
+            const repeatGuests = guestRows.filter(g => g.count > 1).length;
+
+            return (
+              <>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <MetricCard icon={Users}        label="Total Guests"       value={guests.length || guestRows.length} color="navy" />
+                  <MetricCard icon={BarChart2}    label="Total Bookings"     value={totalBookings}      color="teal" />
+                  <MetricCard icon={CheckCircle}  label="Confirmed / Active" value={confirmedBookings}  color="green" />
+                  <MetricCard icon={Star}         label="Repeat Guests"      value={repeatGuests}       color="purple" />
+                </div>
+
+                <div className="bg-white rounded-xl border border-gray-100 p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Guest Booking Activity</h2>
+                    <span className="text-xs text-gray-400">{guestRows.length} unique guests · £{totalRevenue.toLocaleString("en-GB", { maximumFractionDigits: 0 })} total revenue</span>
+                  </div>
+                  <div className="max-h-[480px] overflow-y-auto">
+                    <table className="w-full text-sm">
+                      <thead className="sticky top-0 bg-white">
+                        <tr className="border-b border-gray-100">
+                          {["Guest","Email","Bookings","Total Spend","Last Stay","Status Breakdown"].map(h => (
+                            <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {guestRows.map((g, i) => (
+                          <tr key={i} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 font-medium text-gray-900 flex items-center gap-2">
+                              {g.count > 1 && <span className="w-1.5 h-1.5 rounded-full bg-teal-500 flex-shrink-0" title="Repeat guest" />}
+                              {g.name || "—"}
+                            </td>
+                            <td className="px-4 py-3 text-gray-500 text-xs">{g.email || "—"}</td>
+                            <td className="px-4 py-3">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${g.count > 2 ? "bg-teal-100 text-teal-700" : g.count > 1 ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-600"}`}>
+                                {g.count}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-gray-700 font-medium">£{g.totalSpend.toLocaleString("en-GB", { maximumFractionDigits: 0 })}</td>
+                            <td className="px-4 py-3 text-gray-400 text-xs">{g.lastBooking || "—"}</td>
+                            <td className="px-4 py-3">
+                              <div className="flex flex-wrap gap-1">
+                                {Object.entries(g.statuses).map(([s, n]) => (
+                                  <span key={s} className="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">{s} ×{n}</span>
+                                ))}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                        {guestRows.length === 0 && (
+                          <tr><td colSpan={6} className="px-4 py-10 text-center text-gray-300 text-sm">No bookings found</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </>
+            );
+          })()}
+        </div>
+      )}
 
       {/* ── COMPLAINTS ───────────────────────────────────────────────────── */}
       {activeTab === "complaints" && (

@@ -1,0 +1,106 @@
+{
+  "name": "PricingSnapshot",
+  "type": "object",
+  "properties": {
+    "booking_id": {
+      "type": "string",
+      "description": "Source booking ID"
+    },
+    "property_id": {
+      "type": "string"
+    },
+    "postcode": {
+      "type": "string",
+      "description": "Full postcode"
+    },
+    "postcode_area": {
+      "type": "string",
+      "description": "Postcode area e.g. TR, PL, EX"
+    },
+    "postcode_district": {
+      "type": "string",
+      "description": "Postcode district e.g. TR1, PL4"
+    },
+    "town": {
+      "type": "string"
+    },
+    "county": {
+      "type": "string"
+    },
+    "country": {
+      "type": "string"
+    },
+    "property_type": {
+      "type": "string",
+      "description": "e.g. cottage, apartment, lodge"
+    },
+    "bedrooms": {
+      "type": "number"
+    },
+    "bathrooms": {
+      "type": "number"
+    },
+    "guest_capacity": {
+      "type": "number"
+    },
+    "nightly_rate": {
+      "type": "number",
+      "description": "Nightly rate at time of booking"
+    },
+    "cleaning_fee": {
+      "type": "number"
+    },
+    "total_amount": {
+      "type": "number"
+    },
+    "nights": {
+      "type": "number"
+    },
+    "check_in": {
+      "type": "string",
+      "format": "date"
+    },
+    "check_out": {
+      "type": "string",
+      "format": "date"
+    },
+    "check_in_month": {
+      "type": "number",
+      "description": "1\u201312, for seasonal analysis"
+    },
+    "check_in_day_of_week": {
+      "type": "number",
+      "description": "0=Sun, 6=Sat"
+    },
+    "is_weekend_checkin": {
+      "type": "boolean"
+    },
+    "booking_lead_days": {
+      "type": "number",
+      "description": "Days between booking creation and check-in"
+    },
+    "guests_count": {
+      "type": "number"
+    },
+    "amenities_count": {
+      "type": "number",
+      "description": "Number of amenities listed"
+    },
+    "pets_allowed": {
+      "type": "boolean"
+    },
+    "has_pool": {
+      "type": "boolean"
+    },
+    "average_rating": {
+      "type": "number",
+      "description": "Property avg rating at time of snapshot"
+    }
+  },
+  "required": [
+    "booking_id",
+    "nightly_rate",
+    "check_in",
+    "check_out"
+  ]
+}
