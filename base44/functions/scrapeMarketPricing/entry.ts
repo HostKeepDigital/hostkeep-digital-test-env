@@ -10,10 +10,6 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.23";
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (user?.role !== "admin") {
-      return Response.json({ error: "Admin only" }, { status: 403 });
-    }
 
     const { postcode_area, town, county, property_type, bedrooms } = await req.json();
 
@@ -49,7 +45,7 @@ Be realistic and accurate for the UK market. Use current 2025/2026 pricing data.
 If specific data is scarce, use reasonable estimates based on comparable UK coastal/rural markets and state this in key_insights.
 `;
 
-    const result = await base44.integrations.Core.InvokeLLM({
+    const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt,
       add_context_from_internet: true,
       model: "gemini_3_flash",
