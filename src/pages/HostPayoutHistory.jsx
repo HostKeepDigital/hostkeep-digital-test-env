@@ -64,6 +64,12 @@ export default function HostPayoutHistory() {
   const [financialYearEnd, setFinancialYearEnd] = useState(new Date(currentYear + 1, 3, 5));
   const [exporting, setExporting] = useState(false);
 
+  // Reset month to full year when year changes
+  const handleYearChange = (newYear) => {
+    setSelectedYear(newYear);
+    setSelectedMonth(null);
+  };
+
   // Fetch bookings
   const { data: bookings = [] } = useQuery({
     queryKey: ["host-bookings-payout", user?.id],
@@ -256,42 +262,43 @@ export default function HostPayoutHistory() {
           </Card>
         </motion.div>
 
-        {/* Browse by Calendar Year & Month */}
+        {/* Year Selector */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg mb-4">Browse by Calendar Year & Month</CardTitle>
-              <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1 mb-4">
-              </div>
+              <CardTitle className="text-lg">Browse by Calendar Year</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <p className="text-sm font-medium text-gray-700 mb-3">Select a month or view full year</p>
-                {selectedMonth && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSelectedMonth(null)}
-                    className="w-full mb-3 text-xs"
-                  >
-                    ← View Full Year {selectedYear}
-                  </Button>
-                )}
-                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-                  {MONTHS.map((month) => (
-                    <button
-                      key={month.num}
-                      onClick={() => setSelectedMonth(month.num)}
-                      className={`py-2 px-3 rounded-lg text-sm font-medium transition-all ${
-                        selectedMonth === month.num
-                          ? "bg-teal-600 text-white shadow-lg"
-                          : "bg-gray-100 text-gray-700 hover:bg-teal-100 hover:text-teal-700"
-                      }`}
-                    >
-                      {month.name.slice(0, 3)}
-                    </button>
+            <CardContent>
+              <div className="flex items-center justify-center gap-2 bg-gray-100 rounded-lg p-2 w-fit mx-auto">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleYearChange(Math.max(selectedYear - 1, yearRange[0]))}
+                  disabled={selectedYear <= yearRange[0]}
+                  className="h-8 w-8"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <select
+                  value={selectedYear}
+                  onChange={(e) => handleYearChange(Number(e.target.value))}
+                  className="bg-transparent px-4 py-2 font-semibold text-lg border-0 focus:outline-none cursor-pointer"
+                >
+                  {availableYears.map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
                   ))}
-                </div>
+                </select>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleYearChange(Math.min(selectedYear + 1, currentYear))}
+                  disabled={selectedYear >= currentYear}
+                  className="h-8 w-8"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
               </div>
             </CardContent>
           </Card>
