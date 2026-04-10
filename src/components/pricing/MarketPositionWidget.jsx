@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { TrendingUp, TrendingDown, Minus, BarChart2 } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, BarChart2, Calendar } from "lucide-react";
 
 export default function MarketPositionWidget({ nightlyRate, postcodeArea, propertyType }) {
   const [market, setMarket] = useState(null);
@@ -23,6 +23,19 @@ export default function MarketPositionWidget({ nightlyRate, postcodeArea, proper
 
   const median = market.median_nightly_rate || market.avg_nightly_rate;
   if (!median) return null;
+
+  // UK school holidays & half-term breaks
+  const seasonalPeaks = [
+    { label: "Easter", months: [3, 4], boost: 1.25 },
+    { label: "Summer", months: [7, 8], boost: 1.35 },
+    { label: "Half-term (Feb)", months: [2], boost: 1.15 },
+    { label: "Half-term (Oct)", months: [10], boost: 1.20 },
+    { label: "Christmas", months: [12, 1], boost: 1.30 },
+  ];
+
+  const currentMonth = new Date().getMonth() + 1;
+  const currentSeasonalPeak = seasonalPeaks.find(peak => peak.months.includes(currentMonth));
+  const recommendedRate = currentSeasonalPeak ? Math.round(median * currentSeasonalPeak.boost) : null;
 
   const diff = ((nightlyRate - median) / median) * 100;
   const absDiff = Math.abs(diff).toFixed(0);
@@ -60,6 +73,16 @@ export default function MarketPositionWidget({ nightlyRate, postcodeArea, proper
           <span className="font-medium text-gray-700">£{median}/night</span>
           {" "}· Range: £{market.min_nightly_rate}–£{market.max_nightly_rate}
         </p>
+        {recommendedRate && (
+          <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-xs font-medium text-blue-900 flex items-center gap-1">
+              <Calendar className="w-3 h-3" /> {currentSeasonalPeak.label} pricing
+            </p>
+            <p className="text-xs text-blue-700 mt-0.5">
+              Suggested rate: <span className="font-semibold">£{recommendedRate}/night</span> (+{Math.round((currentSeasonalPeak.boost - 1) * 100)}% uplift)
+            </p>
+          </div>
+        )}
         {market.peak_months?.length > 0 && (
           <p className="text-xs text-gray-400 mt-1">
             Peak months: {market.peak_months.join(", ")}
