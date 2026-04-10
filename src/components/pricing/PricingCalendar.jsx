@@ -4,22 +4,24 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Sparkles } from "l
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-// UK School Holidays & Half-term Breaks with ±3 day buffer (2026)
+// UK School Holidays & Half-term Breaks with ±3 day buffer (2026-2027)
 const UK_SCHOOL_HOLIDAYS = [
   // Christmas 2025/2026
-  { label: "Christmas", start: new Date(2025, 11, 12), end: new Date(2026, 0, 8), boost: 1.30 },
-  // Half-term February
+  { label: "Christmas 2025", start: new Date(2025, 11, 12), end: new Date(2026, 0, 8), boost: 1.30 },
+  // Half-term February 2026
   { label: "Half-term (Feb)", start: new Date(2026, 1, 13), end: new Date(2026, 1, 23), boost: 1.15 },
-  // Easter
+  // Easter 2026
   { label: "Easter", start: new Date(2026, 3, 3), end: new Date(2026, 3, 23), boost: 1.25 },
-  // Half-term May
+  // Half-term May 2026
   { label: "Half-term (May)", start: new Date(2026, 4, 22), end: new Date(2026, 5, 1), boost: 1.20 },
-  // Summer holidays
+  // Summer 2026
   { label: "Summer", start: new Date(2026, 6, 12), end: new Date(2026, 8, 4), boost: 1.35 },
-  // Half-term October
+  // Half-term October 2026
   { label: "Half-term (Oct)", start: new Date(2026, 9, 16), end: new Date(2026, 9, 26), boost: 1.20 },
-  // Halloween
+  // Halloween 2026
   { label: "Halloween", start: new Date(2026, 9, 28), end: new Date(2026, 10, 3), boost: 1.15 },
+  // Christmas 2026/2027
+  { label: "Christmas 2026", start: new Date(2026, 11, 12), end: new Date(2027, 0, 8), boost: 1.30 },
 ];
 
 export default function PricingCalendar({ pricingSettings, onDateClick, selectedDates = [], onApplyHolidayPricing = null }) {
