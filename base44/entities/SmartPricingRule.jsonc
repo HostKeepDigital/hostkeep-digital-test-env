@@ -1,0 +1,39 @@
+{
+  "name": "SmartPricingRule",
+  "type": "object",
+  "properties": {
+    "rule_type": {
+      "type": "string",
+      "enum": [
+        "seasonality",
+        "day_of_week",
+        "lead_time"
+      ],
+      "description": "Which dimension this rule applies to"
+    },
+    "key": {
+      "type": "string",
+      "description": "Month number (1-12), day-of-week (0-6), or lead-time bucket label e.g. '0-7'"
+    },
+    "label": {
+      "type": "string",
+      "description": "Human-readable label e.g. 'January', 'Monday', 'Last Minute (0-7 days)'"
+    },
+    "multiplier": {
+      "type": "number",
+      "description": "Rate multiplier e.g. 1.2 = +20%, 0.85 = -15%"
+    },
+    "enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "rule_type",
+    "key",
+    "multiplier"
+  ]
+}

@@ -18,6 +18,7 @@ import BetaExitPlanner from "@/components/devtools/BetaExitPlanner";
 import { useAuth } from "@/lib/AuthContext";
 import ComplaintsTab from "@/components/admin/ComplaintsTab";
 import SectorsTab from "@/components/admin/SectorsTab";
+import SmartPricingTab from "@/components/admin/SmartPricingTab";
 import BalancePaymentTester from "@/components/devtools/BalancePaymentTester";
 
 // ── STATUS MAPS ──────────────────────────────────────────────────────────────
@@ -1487,12 +1488,13 @@ const handleApproveGuestAsHost = async (member) => {
         {/* Tabs */}
         <div className="flex border-t border-gray-100 overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
           {[
-            { id:"onboarding", label:"Onboarding",      Icon:Users     },
-            { id:"complaints", label:"Complaints",     Icon:AlertTriangle },
-            { id:"guests",     label:"Guests & Bookings", Icon:BarChart2 },
-            { id:"crm",        label:"CRM & Revenue",  Icon:TrendingUp },
-            { id:"sectors",    label:"UK Sectors",     Icon:Globe     },
-            { id:"devtools",   label:"Dev Tools",      Icon:Settings  },
+            { id:"onboarding",    label:"Onboarding",      Icon:Users          },
+            { id:"complaints",   label:"Complaints",     Icon:AlertTriangle  },
+            { id:"guests",       label:"Guests & Bookings", Icon:BarChart2   },
+            { id:"crm",          label:"CRM & Revenue",  Icon:TrendingUp    },
+            { id:"smartpricing", label:"Smart Pricing",  Icon:TrendingUp    },
+            { id:"sectors",      label:"UK Sectors",     Icon:Globe         },
+            { id:"devtools",     label:"Dev Tools",      Icon:Settings      },
           ].map(({ id, label, Icon }) => (
             <button key={id} onClick={() => setActiveTab(id)}
               className={`flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap flex-shrink-0 ${activeTab===id ? "border-[#0d9488] text-[#0d9488]" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
@@ -1721,6 +1723,9 @@ const handleApproveGuestAsHost = async (member) => {
           )}
         </div>
       )}
+
+      {/* ── SMART PRICING ──────────────────────────────────────────────────── */}
+      {activeTab === "smartpricing" && <SmartPricingTab />}
 
       {/* ── UK SECTORS ────────────────────────────────────────────────────── */}
       {activeTab === "sectors" && (
