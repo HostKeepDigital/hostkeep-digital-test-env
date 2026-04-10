@@ -22,14 +22,26 @@ Deno.serve(async (req) => {
     }
 
     // Fetch recent bookings to analyze trends
-    const bookings = await base44.asServiceRole.entities.Booking.filter({
-      property_id: propertyId,
-      booking_status: { $in: ['completed', 'checked_in', 'confirmed'] }
-    }, '-completed_at', 50);
+    let bookings = [];
+    try {
+      const allBookings = await base44.asServiceRole.entities.Booking.filter(
+        { property_id: propertyId },
+        '-completed_at',
+        50
+      );
+      bookings = allBookings.filter(b => ['completed', 'checked_in', 'confirmed'].includes(b.booking_status));
+    } catch (err) {
+      console.log('Error fetching bookings:', err);
+    }
 
     // Fetch market pricing data for the area
-    const marketData = await base44.asServiceRole.entities.MarketPricing.list();
-    const areaMarket = marketData.find(m => m.postcode_area === property.postcode_area);
+    let areaMarket = null;
+    try {
+      const marketData = await base44.asServiceRole.entities.MarketPricing.list();
+      areaMarket = marketData?.find(m => m.postcode_area === property.postcode_area);
+    } catch (err) {
+      console.log('Market data unavailable:', err);
+    }
 
     // Build analysis context for AI
     const analysisContext = {
@@ -51,11 +63,11 @@ Deno.serve(async (req) => {
         }))
       },
       market: {
-        medianRate: areaMarket?.median_price || 0,
-        percentile: areaMarket?.percentile || 0,
+        medianRate: areaMarket?.median_price || currentSettings?.base_rate || property.nightly_rate || 100,
+        percentile: areaMarket?.percentile || 50,
         priceRange: {
-          min: areaMarket?.price_min || 0,
-          max: areaMarket?.price_max || 0
+          min: areaMarket?.price_min || (currentSettings?.base_rate || property.nightly_rate || 100) * 0.7,
+          max: areaMarket?.price_max || (currentSettings?.base_rate || property.nightly_rate || 100) * 1.3
         }
       }
     };
@@ -71,8 +83,8 @@ Property Details:
 - Bedrooms: ${analysisContext.property.bedrooms}, Bathrooms: ${analysisContext.property.bathrooms}
 - Current Base Rate: £${analysisContext.property.currentRate}/night
 
-Booking History (recent ${analysisContext.bookings.recent.length} bookings):
-${analysisContext.bookings.recent.map(b => `- ${b.date}: ${b.nights} nights @ £${b.rate}/night (${b.status})`).join('\n')}
+Booking History (recent ${Math.min(analysisContext.bookings.recent.length, 5)} bookings):
+${analysisContext.bookings.recent.slice(0, 5).map(b => `- ${b.date}: ${b.nights} nights @ £${b.rate}/night`).join('\n') || 'No recent bookings available'}
 
 Market Data for ${analysisContext.property.location}:
 - Median Rate: £${analysisContext.market.medianRate}/night
