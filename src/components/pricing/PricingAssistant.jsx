@@ -25,7 +25,8 @@ export default function PricingAssistant({ propertyId, currentSettings, onApplyR
         setError(response.data.error || 'Failed to get recommendations');
       }
     } catch (err) {
-      setError(err.message || 'Error analyzing pricing');
+      console.error('Pricing recommendations error:', err);
+      setError(err.message || 'Unable to fetch recommendations. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -79,8 +80,8 @@ export default function PricingAssistant({ propertyId, currentSettings, onApplyR
             {loading ? 'Analyzing...' : 'Get Recommendations'}
           </Button>
           {error && (
-            <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-              {error}
+            <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 rounded-lg text-sm text-red-700 dark:text-red-400">
+              <strong>Error:</strong> {error}
             </div>
           )}
         </CardContent>
