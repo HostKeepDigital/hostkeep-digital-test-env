@@ -24,6 +24,25 @@
       ],
       "description": "Subscription plan"
     },
+    "provider": {
+      "type": "string",
+      "enum": [
+        "stripe",
+        "paddle",
+        "paypal",
+        "custom"
+      ],
+      "default": "stripe",
+      "description": "Subscription provider"
+    },
+    "stripe_customer_id": {
+      "type": "string",
+      "description": "Stripe Customer ID"
+    },
+    "stripe_subscription_id": {
+      "type": "string",
+      "description": "Stripe Subscription ID"
+    },
     "status": {
       "type": "string",
       "enum": [
@@ -52,9 +71,6 @@
     "trial_ends": {
       "type": "string",
       "format": "date"
-    },
-    "stripe_subscription_id": {
-      "type": "string"
     },
     "is_founding_member": {
       "type": "boolean",
