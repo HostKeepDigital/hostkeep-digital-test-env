@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import MarketPositionWidget from "./MarketPositionWidget";
+import PricingAssistant from "./PricingAssistant";
 
 export default function PricingManager({ formData, onUpdate, onPromptSave, property }) {
   const [selectedDate, setSelectedDate] = useState(null);
@@ -50,8 +51,42 @@ export default function PricingManager({ formData, onUpdate, onPromptSave, prope
     if (onPromptSave) onPromptSave();
   };
 
+  const handleApplyAssistantRecommendation = (type, value) => {
+    if (type === 'baseRate') {
+      handlePricingUpdate('base_rate', value);
+    } else if (type === 'peakSeason') {
+      handlePricingUpdate('seasons', [...(formData.pricing_settings?.seasons || []), {
+        id: `peak-${Date.now()}`,
+        name: 'Peak Season',
+        start_date: value.dates.split(' to ')[0],
+        end_date: value.dates.split(' to ')[1],
+        nightly_rate: value.rate
+      }]);
+    } else if (type === 'shoulderSeason') {
+      handlePricingUpdate('seasons', [...(formData.pricing_settings?.seasons || []), {
+        id: `shoulder-${Date.now()}`,
+        name: 'Shoulder Season',
+        start_date: value.dates.split(' to ')[0],
+        end_date: value.dates.split(' to ')[1],
+        nightly_rate: value.rate
+      }]);
+    } else if (type === 'weekendPremium') {
+      const baseRate = formData.pricing_settings?.base_rate || formData.nightly_rate || 100;
+      handlePricingUpdate('weekend_rate', Math.round(baseRate * (1 + value / 100)));
+    } else if (type === 'date_overrides') {
+      handlePricingUpdate('date_overrides', value);
+    }
+    if (onPromptSave) onPromptSave();
+  };
+
   return (
     <div className="space-y-6">
+      <PricingAssistant
+        propertyId={property?.id}
+        currentSettings={formData.pricing_settings}
+        onApplyRecommendations={handleApplyAssistantRecommendation}
+      />
+
       <MarketPositionWidget
         nightlyRate={formData.nightly_rate || formData.pricing_settings?.base_rate}
         postcodeArea={property?.postcode_area || formData.postcode_area}
