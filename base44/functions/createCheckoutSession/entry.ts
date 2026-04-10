@@ -19,44 +19,18 @@ const PLAN_LOOKUP_KEYS = {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const serviceRole = base44.asServiceRole;
 
-    // Extract session token
+    // Get authenticated user
+    const user = await base44.auth.me();
+    if (!user) {
+      return Response.json(
+        { error: "Unauthorized" },
+        { status: 401 },
+      );
+    }
+
+    const user_id = user.id;
     const body = await req.json().catch(() => ({}));
-    const session_token =
-      body.session_token || req.headers.get("x-session-token");
-
-    if (!session_token) {
-      return Response.json(
-        { error: "Missing session token", authenticated: false },
-        { status: 401 },
-      );
-    }
-
-    // Validate session using your new auth model
-    const sessionCheck = await serviceRole.functions.invoke(
-      "checkSession",
-      { session_token },
-    );
-
-    const session = sessionCheck?.data;
-
-    if (!session?.authenticated) {
-      return Response.json(
-        { error: "Invalid or expired session", authenticated: false },
-        { status: 401 },
-      );
-    }
-
-    // Extract user_id from your new session model
-    const user_id = session.user_id;
-    if (!user_id) {
-      return Response.json(
-        { error: "Session missing user_id" },
-        { status: 400 },
-      );
-    }
-
     const { plan } = body;
     if (!PLAN_LOOKUP_KEYS[plan]) {
       return Response.json({ error: "Invalid plan" }, { status: 400 });
