@@ -58,9 +58,10 @@ export default function HostPayoutHistory() {
   const { user } = useAuth();
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
-  const [selectedMonth, setSelectedMonth] = useState(String(new Date().getMonth() + 1).padStart(2, "0"));
+  const [selectedMonth, setSelectedMonth] = useState(null);
   const [yearRange, setYearRange] = useState([currentYear - 2, currentYear]);
-  const [financialYearStart, setFinancialYearStart] = useState(new Date(currentYear, 3, 6)); // UK tax year default
+  const [hostStartDate, setHostStartDate] = useState(null);
+  const [financialYearStart, setFinancialYearStart] = useState(new Date(currentYear, 3, 6));
   const [financialYearEnd, setFinancialYearEnd] = useState(new Date(currentYear + 1, 3, 5));
   const [exporting, setExporting] = useState(false);
 
@@ -89,6 +90,18 @@ export default function HostPayoutHistory() {
     },
     enabled: !!user?.id,
   });
+
+  // Calculate host start date from first booking
+  useEffect(() => {
+    if (bookings.length > 0) {
+      const sortedBookings = [...bookings].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+      const startDate = new Date(sortedBookings[0].created_date);
+      setHostStartDate(startDate);
+      const startYear = startDate.getFullYear();
+      setYearRange([startYear, currentYear]);
+      setSelectedYear(currentYear);
+    }
+  }, [bookings, currentYear]);
 
   // Filter bookings for selected year
   const yearBookings = bookings.filter((b) => {
@@ -165,6 +178,18 @@ export default function HostPayoutHistory() {
     { length: currentYear - yearRange[0] + 1 },
     (_, i) => yearRange[0] + i
   );
+
+  // Filter months available for selected year
+  const getAvailableMonths = () => {
+    const months = MONTHS;
+    if (!hostStartDate || selectedYear < hostStartDate.getFullYear()) return months;
+    if (selectedYear === hostStartDate.getFullYear()) {
+      return months.filter((m) => parseInt(m.num) >= hostStartDate.getMonth() + 1);
+    }
+    return months;
+  };
+
+  const availableMonths = getAvailableMonths();
 
   // Filter bookings and jobs by financial year
   const filteredBookingsForExport = bookings.filter((b) => {
@@ -287,7 +312,6 @@ export default function HostPayoutHistory() {
                       onChange={(e) => handleYearChange(Number(e.target.value))}
                       className="bg-transparent px-2 py-2 font-semibold text-lg border-0 focus:outline-none cursor-pointer"
                     >
-                      <option value="">Year</option>
                       {availableYears.map((year) => (
                         <option key={year} value={year}>
                           {year}
@@ -313,8 +337,8 @@ export default function HostPayoutHistory() {
                       onChange={(e) => setSelectedMonth(e.target.value || null)}
                       className="bg-transparent px-3 py-2 font-semibold text-lg border-0 focus:outline-none cursor-pointer"
                     >
-                      <option value="">All Months</option>
-                      {MONTHS.map((month) => (
+                      <option value="">All</option>
+                      {availableMonths.map((month) => (
                         <option key={month.num} value={month.num}>
                           {month.name}
                         </option>
