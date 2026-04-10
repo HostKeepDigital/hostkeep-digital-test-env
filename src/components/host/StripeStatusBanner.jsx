@@ -20,14 +20,13 @@ export default function StripeStatusBanner({ user }) {
   const handleConnect = async () => {
     setConnecting(true);
     try {
-      const session_token = localStorage.getItem("session_token");
-      const res = await base44.functions.invoke('createStripeConnectLink', { session_token });
+      const res = await base44.functions.invoke('createStripeConnectLink', {});
       if (res.data?.url) {
         window.location.href = res.data.url;
       } else {
         toast.error(res.data?.error || 'Failed to start Stripe onboarding');
       }
-    } catch {
+    } catch (err) {
       toast.error('Failed to connect to Stripe.');
     } finally {
       setConnecting(false);

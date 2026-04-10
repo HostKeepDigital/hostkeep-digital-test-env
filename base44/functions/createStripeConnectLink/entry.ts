@@ -8,43 +8,17 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const serviceRole = base44.asServiceRole;
 
-    // Extract session token
-    const body = await req.json().catch(() => ({}));
-    const session_token =
-      body.session_token || req.headers.get("x-session-token");
-
-    if (!session_token) {
+    // Get authenticated user
+    const authUser = await base44.auth.me();
+    if (!authUser) {
       return Response.json(
-        { error: "Missing session token", authenticated: false },
+        { error: "Unauthorized" },
         { status: 401 },
       );
     }
 
-    // Validate session using your new auth model
-    const sessionCheck = await serviceRole.functions.invoke(
-      "checkSession",
-      { session_token },
-    );
-
-    const session = sessionCheck?.data;
-
-    if (!session?.authenticated) {
-      return Response.json(
-        { error: "Invalid or expired session", authenticated: false },
-        { status: 401 },
-      );
-    }
-
-    // Extract user_id + email from your new session model
-    const user_id = session.user_id;
-    const email = session.email;
-
-    if (!user_id) {
-      return Response.json(
-        { error: "Session missing user_id" },
-        { status: 400 },
-      );
-    }
+    const user_id = authUser.id;
+    const email = authUser.email;
 
     // Fetch user record (needed for stripe_connect_account_id)
     const users = await serviceRole.entities.User.filter({ id: user_id });
