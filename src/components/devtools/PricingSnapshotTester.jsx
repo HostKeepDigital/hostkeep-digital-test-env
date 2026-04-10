@@ -93,11 +93,22 @@ export default function PricingSnapshotTester() {
     try {
       if (!created.bookingId) { setStatus({ type: "err", message: "❌ Run Step 1 first." }); setLoading(false); return; }
 
-      // Allow a moment for the automation to fire
-      await new Promise(r => setTimeout(r, 2000));
+      // Retry up to 10 times (20s total) waiting for automation to fire
+      let snaps = [];
+      for (let attempt = 1; attempt <= 10; attempt++) {
+        setStatus({ type: "ok", message: `⏳ Waiting for automation… attempt ${attempt}/10` });
+        await new Promise(r => setTimeout(r, 2000));
+        snaps = await base44.entities.PricingSnapshot.filter({ booking_id: created.bookingId });
+        if (snaps.length > 0) break;
+      }
 
-      const snaps = await base44.entities.PricingSnapshot.filter({ booking_id: created.bookingId });
-      const snap  = snaps[0] || null;
+      if (snaps.length === 0) {
+        setStatus({ type: "err", message: "❌ No snapshot found after 20s. The automation may not have fired — check that the 'Record Pricing Snapshot on Booking Confirmed' automation is active in the automations panel." });
+        setLoading(false);
+        return;
+      }
+
+      const snap = snaps[0];
       if (snap) setCreated(p => ({ ...p, snapshotId: snap.id }));
 
       const checks = [
