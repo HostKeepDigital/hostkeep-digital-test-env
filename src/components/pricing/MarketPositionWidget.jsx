@@ -73,16 +73,6 @@ export default function MarketPositionWidget({ nightlyRate, postcodeArea, proper
           <span className="font-medium text-gray-700">£{median}/night</span>
           {" "}· Range: £{market.min_nightly_rate}–£{market.max_nightly_rate}
         </p>
-        {recommendedRate && (
-          <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-xs font-medium text-blue-900 flex items-center gap-1">
-              <Calendar className="w-3 h-3" /> {currentSeasonalPeak.label} pricing
-            </p>
-            <p className="text-xs text-blue-700 mt-0.5">
-              Suggested rate: <span className="font-semibold">£{recommendedRate}/night</span> (+{Math.round((currentSeasonalPeak.boost - 1) * 100)}% uplift)
-            </p>
-          </div>
-        )}
         {market.peak_months?.length > 0 && (
           <p className="text-xs text-gray-400 mt-1">
             Peak months: {market.peak_months.join(", ")}
