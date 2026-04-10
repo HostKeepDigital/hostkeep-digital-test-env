@@ -273,7 +273,7 @@ export default function HostPayoutHistory() {
 
               {selectedYear && (
                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="space-y-6">
-                  <div className="pt-6 space-y-6">
+                  <div className="pt-6 grid grid-cols-2 gap-6">
                     <div>
                       <p className="text-sm font-medium text-gray-700 mb-3">Select calendar year</p>
                       <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-2 w-fit">
