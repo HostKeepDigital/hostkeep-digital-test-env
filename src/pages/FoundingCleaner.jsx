@@ -351,6 +351,13 @@ export default function FoundingCleaner() {
           <p className="text-center text-xs text-gray-400">No payment required to apply · Reviewed within 48 hours</p>
         </form>
       </section>
+      <section className="max-w-7xl mx-auto px-4 pb-8">
+        <div className="text-center">
+          <Link to="/" className="inline-flex items-center gap-2 bg-[#1E3A5F] hover:bg-[#162d4a] text-white font-semibold px-6 py-3 rounded-xl transition-colors">
+            ← Back to Home
+          </Link>
+        </div>
+      </section>
       <FoundingFooter />
     </div>
   );

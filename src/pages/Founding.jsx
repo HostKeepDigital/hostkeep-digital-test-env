@@ -46,40 +46,46 @@ export default function Founding() {
             </p>
             <p className="text-white/40 text-xs mb-8 max-w-xl">*Stripe payment processing fees apply</p>
 
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Link
-                to="/foundinghost"
-                className="group flex items-center justify-between gap-4 bg-[#0d9488] hover:bg-[#0f766e] text-white px-6 py-4 rounded-xl transition-all font-semibold"
-              >
-                <div className="flex items-center gap-2">
-                  <Home className="w-5 h-5" />
-                  <div>
-                    <div className="text-sm font-bold">I'm a Host</div>
-                    <div className="text-xs text-white/60 font-normal">Apply for a founding host spot</div>
-                  </div>
-                </div>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
+            <div className="flex flex-col sm:flex-row gap-3 mb-4">
+             <Link
+               to="/foundinghost"
+               className="group flex items-center justify-between gap-4 bg-[#0d9488] hover:bg-[#0f766e] text-white px-6 py-4 rounded-xl transition-all font-semibold"
+             >
+               <div className="flex items-center gap-2">
+                 <Home className="w-5 h-5" />
+                 <div>
+                   <div className="text-sm font-bold">I'm a Host</div>
+                   <div className="text-xs text-white/60 font-normal">Apply for a founding host spot</div>
+                 </div>
+               </div>
+               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+             </Link>
 
-              <Link
-                to="/foundingcleaner"
-                className="group flex items-center justify-between gap-4 bg-white/10 hover:bg-white/15 border border-white/25 text-white px-6 py-4 rounded-xl transition-all font-semibold"
-              >
-                <div className="flex items-center gap-2">
-                  <Users className="w-5 h-5" />
-                  <div>
-                    <div className="text-sm font-bold">I'm a Cleaner</div>
-                    <div className="text-xs text-white/50 font-normal">Apply for a founding cleaner spot</div>
-                  </div>
-                </div>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
+             <Link
+               to="/foundingcleaner"
+               className="group flex items-center justify-between gap-4 bg-white/10 hover:bg-white/15 border border-white/25 text-white px-6 py-4 rounded-xl transition-all font-semibold"
+             >
+               <div className="flex items-center gap-2">
+                 <Users className="w-5 h-5" />
+                 <div>
+                   <div className="text-sm font-bold">I'm a Cleaner</div>
+                   <div className="text-xs text-white/50 font-normal">Apply for a founding cleaner spot</div>
+                 </div>
+               </div>
+               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+             </Link>
             </div>
-          </div>
-        </div>
-      </section>
+            <Link
+             to="/"
+             className="inline-flex items-center gap-2 bg-[#1E3A5F] hover:bg-[#162d4a] text-white font-semibold px-6 py-3 rounded-xl transition-colors"
+            >
+             ← Back to Home
+            </Link>
+            </div>
+            </div>
+            </section>
 
-      {/* THE NUMBER */}
+            {/* THE NUMBER */}
       <section className="bg-[#0d9488] py-8">
         <div className="max-w-5xl mx-auto px-4 flex flex-wrap items-center justify-center gap-8 md:gap-16 text-center">
           {[
