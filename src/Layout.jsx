@@ -461,7 +461,7 @@ export default function Layout({ children, currentPageName }) {
                 ) : (
                   <>
                     <Link to="/founding" className="hidden sm:inline-flex">
-                      <Button variant="outline">Become a Host</Button>
+                      <Button className="bg-[#1E3A5F] hover:bg-[#162d4a] text-white">Become a Host</Button>
                     </Link>
                     <Link to="/founding" className="hidden sm:inline-flex">
                       <Button variant="ghost">Become a Cleaner</Button>
