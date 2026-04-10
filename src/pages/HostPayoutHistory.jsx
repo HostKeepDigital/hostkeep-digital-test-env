@@ -268,7 +268,7 @@ export default function HostPayoutHistory() {
             <CardHeader>
               <CardTitle className="text-lg">Browse by Calendar Year</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent>
               <div className="flex items-center justify-center gap-2 bg-gray-100 rounded-lg p-2 w-fit mx-auto">
                 <Button
                   variant="ghost"
@@ -300,11 +300,22 @@ export default function HostPayoutHistory() {
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
-              <div className="flex items-center justify-center">
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Month Selector */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Browse by Calendar Month</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-center bg-gray-100 rounded-lg p-2 w-fit mx-auto">
                 <select
                   value={selectedMonth || ""}
                   onChange={(e) => setSelectedMonth(e.target.value || null)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                  className="bg-transparent px-4 py-2 font-semibold text-lg border-0 focus:outline-none cursor-pointer"
                 >
                   <option value="">All Months</option>
                   {MONTHS.map((month) => (
