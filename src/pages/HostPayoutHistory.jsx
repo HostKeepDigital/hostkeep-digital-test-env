@@ -323,22 +323,26 @@ export default function HostPayoutHistory() {
                   </div>
 
                   <div className="border-t pt-6 space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-teal-50 p-3 rounded-lg">
-                        <p className="text-xs text-teal-600 font-medium">Revenue from Renting</p>
-                        <p className="text-lg font-bold text-teal-700">£{displayedPayouts.gross.toFixed(2)}</p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-3">
+                        <div className="bg-teal-50 p-3 rounded-lg">
+                          <p className="text-xs text-teal-600 font-medium">Revenue from Renting</p>
+                          <p className="text-lg font-bold text-teal-700">£{displayedPayouts.gross.toFixed(2)}</p>
+                        </div>
+                        <div className="bg-purple-50 p-3 rounded-lg">
+                          <p className="text-xs text-purple-600 font-medium">Cleaner Expense</p>
+                          <p className="text-lg font-bold text-purple-700">-£{displayedCleanerStats.totalPaid.toFixed(2)}</p>
+                        </div>
                       </div>
-                      <div className="bg-red-50 p-3 rounded-lg">
-                        <p className="text-xs text-red-600 font-medium">Stripe Expense</p>
-                        <p className="text-lg font-bold text-red-700">-£{displayedPayouts.stripeFees.toFixed(2)}</p>
-                      </div>
-                      <div className="bg-purple-50 p-3 rounded-lg">
-                        <p className="text-xs text-purple-600 font-medium">Cleaner Expense</p>
-                        <p className="text-lg font-bold text-purple-700">-£{displayedCleanerStats.totalPaid.toFixed(2)}</p>
-                      </div>
-                      <div className="bg-green-50 p-3 rounded-lg">
-                        <p className="text-xs text-green-600 font-medium">Total Net Profit</p>
-                        <p className="text-lg font-bold text-green-700">£{(displayedPayouts.net - displayedCleanerStats.totalPaid).toFixed(2)}</p>
+                      <div className="space-y-3">
+                        <div className="bg-red-50 p-3 rounded-lg">
+                          <p className="text-xs text-red-600 font-medium">Stripe Expense</p>
+                          <p className="text-lg font-bold text-red-700">-£{displayedPayouts.stripeFees.toFixed(2)}</p>
+                        </div>
+                        <div className="bg-green-50 p-3 rounded-lg">
+                          <p className="text-xs text-green-600 font-medium">Total Net Profit</p>
+                          <p className="text-lg font-bold text-green-700">£{(displayedPayouts.net - displayedCleanerStats.totalPaid).toFixed(2)}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
