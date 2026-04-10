@@ -262,13 +262,13 @@ export default function HostPayoutHistory() {
           </Card>
         </motion.div>
 
-        {/* Year Selector */}
+        {/* Year & Month Selector */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Browse by Calendar Year</CardTitle>
+              <CardTitle className="text-lg">Browse by Calendar Year & Month</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <div className="flex items-center justify-center gap-2 bg-gray-100 rounded-lg p-2 w-fit mx-auto">
                 <Button
                   variant="ghost"
@@ -300,17 +300,6 @@ export default function HostPayoutHistory() {
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Month Selector */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Browse by Calendar Month</CardTitle>
-            </CardHeader>
-            <CardContent>
               <div className="flex items-center justify-center bg-gray-100 rounded-lg p-2 w-fit mx-auto">
                 <select
                   value={selectedMonth || ""}
@@ -325,53 +314,6 @@ export default function HostPayoutHistory() {
                   ))}
                 </select>
               </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Summary Cards */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="grid md:grid-cols-4 gap-4 mb-8"
-        >
-          <Card className="bg-gradient-to-br from-teal-50 to-emerald-50 border-teal-200">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm text-teal-900">Guest Revenue</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-teal-700">£{displayedPayouts.gross.toFixed(2)}</div>
-              <p className="text-xs text-teal-600 mt-1">{displayedPayouts.count} bookings</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-red-50 to-rose-50 border-red-200">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm text-red-900">Payment Fees</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-700">-£{displayedPayouts.stripeFees.toFixed(2)}</div>
-              <p className="text-xs text-red-600 mt-1">Deducted</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm text-green-900">Net Earnings</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-700">£{displayedPayouts.net.toFixed(2)}</div>
-              <p className="text-xs text-green-600 mt-1">Your take-home</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm text-purple-900">Cleaner Cost</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-purple-700">-£{displayedCleanerStats.totalPaid.toFixed(2)}</div>
-              <p className="text-xs text-purple-600 mt-1">{displayedCleanerStats.jobCount} jobs</p>
             </CardContent>
           </Card>
         </motion.div>
