@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Search, TrendingUp, TrendingDown, Minus, RefreshCw, AlertCircle, CheckCircle } from "lucide-react";
 
-const PROPERTY_TYPES = ["cottage", "apartment", "lodge", "chalet", "cabin", "house", "bungalow", "caravan"];
+const PROPERTY_TYPES = ["all", "cottage", "apartment", "lodge", "chalet", "cabin", "house", "bungalow", "caravan"];
 const POSTCODE_AREAS = ["TR","PL","EX","DT","BH","TA","BA","BS","SO","PO","BN","TN","GL","OX","NR","IP","SA","CF","LL","CA","LA","EH","IV"];
 
 function InsightBadge({ text }) {
@@ -133,7 +133,7 @@ export default function MarketInsightsPanel() {
   const [records, setRecords]           = useState([]);
   const [loading, setLoading]           = useState(true);
   const [scraping, setScraping]         = useState(false);
-  const [form, setForm]                 = useState({ postcode_area: "TR", town: "", county: "", property_type: "cottage", bedrooms: "" });
+  const [form, setForm]                 = useState({ postcode_area: "TR", town: "", county: "", property_type: "all", bedrooms: "" });
 
   const load = async () => {
     setLoading(true);
@@ -153,7 +153,7 @@ export default function MarketInsightsPanel() {
         postcode_area: form.postcode_area,
         town: form.town || undefined,
         county: form.county || undefined,
-        property_type: form.property_type,
+        property_type: form.property_type === "all" ? "holiday let" : form.property_type,
         bedrooms: form.bedrooms ? Number(form.bedrooms) : undefined,
       });
       if (res.data?.ok) {
@@ -196,7 +196,7 @@ export default function MarketInsightsPanel() {
     setScraping(false);
   };
 
-  const activeRecords = records.filter(r => !r.is_stale);
+  const activeRecords = records;
 
   return (
     <div className="space-y-6">
@@ -228,7 +228,7 @@ export default function MarketInsightsPanel() {
             <label className="text-xs text-gray-500 mb-1 block">Property Type *</label>
             <select value={form.property_type} onChange={e => setForm(p => ({ ...p, property_type: e.target.value }))}
               className="w-full border border-gray-200 rounded-lg p-2 text-sm">
-              {PROPERTY_TYPES.map(t => <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
+              {PROPERTY_TYPES.map(t => <option key={t} value={t}>{t === "all" ? "All Types" : t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
             </select>
           </div>
           <div>
