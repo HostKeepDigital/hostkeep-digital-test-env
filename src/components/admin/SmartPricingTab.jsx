@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Cell } from "recharts";
+import MarketInsightsPanel from "@/components/admin/MarketInsightsPanel";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -275,29 +276,31 @@ export default function SmartPricingTab() {
     </div>
   );
 
+  const [view, setView] = useState("rules");
+
   return (
     <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
 
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-lg font-bold text-gray-900">Smart Pricing Configuration</h2>
-          <p className="text-sm text-gray-400 mt-1">
-            Based on <span className="font-semibold text-teal-600">{snapshotCount}</span> historical booking{snapshotCount !== 1 ? "s" : ""}.
-            {snapshotCount < 10 && " More data will improve accuracy — snapshots are captured automatically on every confirmed booking."}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={load} disabled={loading} className="gap-1.5 text-xs">
-            <RefreshCw className="w-3.5 h-3.5" /> Refresh Data
-          </Button>
-          <Button size="sm" onClick={handleSave} disabled={saving} className="gap-1.5 text-xs bg-teal-600 hover:bg-teal-700 text-white">
-            <Save className="w-3.5 h-3.5" /> {saving ? "Saving…" : "Save Rules"}
-          </Button>
-        </div>
+      {/* View toggle */}
+      <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1 w-fit">
+        {[
+          { id: "rules",   label: "Pricing Rules" },
+          { id: "market",  label: "Market Insights" },
+        ].map(v => (
+          <button key={v.id} onClick={() => setView(v.id)}
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+              view === v.id ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
+            }`}>
+            {v.label}
+          </button>
+        ))}
       </div>
 
-      {snapshotCount === 0 && (
+      {view === "market" && <MarketInsightsPanel />}
+
+      {view === "rules" && <div className="space-y-6">
+
+      {/* Header */}
         <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4">
           <p className="text-sm text-amber-700 font-semibold mb-1">No pricing data yet</p>
           <p className="text-xs text-amber-600">
@@ -366,6 +369,8 @@ export default function SmartPricingTab() {
           </div>
         </div>
       )}
+
+      </div>}
     </div>
   );
 }

@@ -1,0 +1,94 @@
+{
+  "name": "MarketPricing",
+  "type": "object",
+  "properties": {
+    "postcode_area": {
+      "type": "string",
+      "description": "e.g. TR, PL, EX"
+    },
+    "town": {
+      "type": "string"
+    },
+    "county": {
+      "type": "string"
+    },
+    "property_type": {
+      "type": "string",
+      "description": "e.g. cottage, apartment, lodge"
+    },
+    "bedrooms": {
+      "type": "number"
+    },
+    "avg_nightly_rate": {
+      "type": "number",
+      "description": "Average competitor nightly rate \u00a3"
+    },
+    "min_nightly_rate": {
+      "type": "number"
+    },
+    "max_nightly_rate": {
+      "type": "number"
+    },
+    "median_nightly_rate": {
+      "type": "number"
+    },
+    "sample_size": {
+      "type": "number",
+      "description": "Number of listings analysed"
+    },
+    "avg_occupancy_rate": {
+      "type": "number",
+      "description": "Estimated % occupancy"
+    },
+    "peak_months": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Months with highest demand"
+    },
+    "low_months": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Months with lowest demand"
+    },
+    "weekend_premium_pct": {
+      "type": "number",
+      "description": "Typical % premium for weekend stays"
+    },
+    "key_insights": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Actionable bullet points"
+    },
+    "positioning_advice": {
+      "type": "string",
+      "description": "Narrative pricing strategy recommendation"
+    },
+    "data_sources": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Sources used (Airbnb, Booking.com, etc.)"
+    },
+    "scraped_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "is_stale": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if data is older than 30 days"
+    }
+  },
+  "required": [
+    "postcode_area",
+    "property_type",
+    "avg_nightly_rate"
+  ]
+}
