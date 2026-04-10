@@ -2,6 +2,7 @@ import { useState } from "react";
 import ReviewSystemTester from "@/components/devtools/ReviewSystemTester";
 import PricingSnapshotTester from "@/components/devtools/PricingSnapshotTester";
 import SmartPricingRulesTester from "@/components/devtools/SmartPricingRulesTester";
+import PostcodePinTester from "@/components/admin/PostcodePinTester";
 
 const TABS = [
   {
@@ -24,6 +25,13 @@ const TABS = [
     color: "bg-[#1E3A5F]",
     description: "Creates, verifies, and updates SmartPricingRules for all three dimensions. Simulates a composed rate calculation.",
     Component: SmartPricingRulesTester,
+  },
+  {
+    id: "postcodepins",
+    label: "Postcode Pin Tester",
+    color: "bg-emerald-600",
+    description: "Generates random UK postcodes and verifies they resolve to the correct UK sector. Run a full coverage check to identify any unmapped postcode areas.",
+    Component: PostcodePinTester,
   },
 ];
 

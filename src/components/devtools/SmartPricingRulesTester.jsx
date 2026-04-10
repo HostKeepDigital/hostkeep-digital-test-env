@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 
 function Result({ status }) {
@@ -20,13 +20,15 @@ function Result({ status }) {
   );
 }
 
+const INT_TEST_TAG = "INT-TEST";
+
 const TEST_RULES = [
-  { rule_type: "seasonality", key: "7",    label: "July",                  multiplier: 1.3,  enabled: true },
-  { rule_type: "seasonality", key: "1",    label: "January",               multiplier: 0.85, enabled: true },
-  { rule_type: "day_of_week", key: "5",    label: "Friday",                multiplier: 1.2,  enabled: true },
-  { rule_type: "day_of_week", key: "1",    label: "Monday",                multiplier: 0.9,  enabled: true },
-  { rule_type: "lead_time",   key: "0-7",  label: "Last Minute (0-7 days)",multiplier: 1.15, enabled: true },
-  { rule_type: "lead_time",   key: "121+", label: "Early Bird (121+ days)",multiplier: 0.95, enabled: true },
+  { rule_type: "seasonality", key: "7",    label: "July",                   multiplier: 1.3,  enabled: true },
+  { rule_type: "seasonality", key: "1",    label: "January",                multiplier: 0.85, enabled: true },
+  { rule_type: "day_of_week", key: "5",    label: "Friday",                 multiplier: 1.2,  enabled: true },
+  { rule_type: "day_of_week", key: "1",    label: "Monday",                 multiplier: 0.9,  enabled: true },
+  { rule_type: "lead_time",   key: "0-7",  label: "Last Minute (0-7 days)", multiplier: 1.15, enabled: true },
+  { rule_type: "lead_time",   key: "121+", label: "Early Bird (121+ days)", multiplier: 0.95, enabled: true },
 ];
 
 export default function SmartPricingRulesTester() {
@@ -34,12 +36,19 @@ export default function SmartPricingRulesTester() {
   const [status, setStatus]   = useState(null);
   const [createdIds, setCreatedIds] = useState([]);
 
+  // Restore persisted test data on mount
+  useEffect(() => {
+    base44.entities.SmartPricingRule.filter({ notes: INT_TEST_TAG })
+      .then(rows => { if (rows.length) setCreatedIds(rows.map(r => r.id)); })
+      .catch(() => {});
+  }, []);
+
   const step1_CreateRules = async () => {
     setLoading(true); setStatus(null);
     try {
       const ids = [];
       for (const rule of TEST_RULES) {
-        const r = await base44.entities.SmartPricingRule.create(rule);
+        const r = await base44.entities.SmartPricingRule.create({ ...rule, notes: INT_TEST_TAG });
         ids.push(r.id);
       }
       setCreatedIds(ids);
@@ -57,23 +66,23 @@ export default function SmartPricingRulesTester() {
 
       const fetched = await Promise.all(createdIds.map(id => base44.entities.SmartPricingRule.get(id)));
 
-      const julyRule  = fetched.find(r => r.rule_type === "seasonality" && r.key === "7");
-      const janRule   = fetched.find(r => r.rule_type === "seasonality" && r.key === "1");
-      const friRule   = fetched.find(r => r.rule_type === "day_of_week" && r.key === "5");
-      const monRule   = fetched.find(r => r.rule_type === "day_of_week" && r.key === "1");
-      const lmRule    = fetched.find(r => r.rule_type === "lead_time"   && r.key === "0-7");
-      const ebRule    = fetched.find(r => r.rule_type === "lead_time"   && r.key === "121+");
+      const julyRule = fetched.find(r => r.rule_type === "seasonality" && r.key === "7");
+      const janRule  = fetched.find(r => r.rule_type === "seasonality" && r.key === "1");
+      const friRule  = fetched.find(r => r.rule_type === "day_of_week" && r.key === "5");
+      const monRule  = fetched.find(r => r.rule_type === "day_of_week" && r.key === "1");
+      const lmRule   = fetched.find(r => r.rule_type === "lead_time"   && r.key === "0-7");
+      const ebRule   = fetched.find(r => r.rule_type === "lead_time"   && r.key === "121+");
 
       const checks = [
-        { label: `All ${TEST_RULES.length} rules retrievable`,          pass: fetched.length === TEST_RULES.length },
-        { label: "July seasonality multiplier = 1.3 (+30%)",           pass: julyRule?.multiplier === 1.3 },
-        { label: "January seasonality multiplier = 0.85 (-15%)",       pass: janRule?.multiplier === 0.85 },
-        { label: "Friday day_of_week multiplier = 1.2 (+20%)",         pass: friRule?.multiplier === 1.2 },
-        { label: "Monday day_of_week multiplier = 0.9 (-10%)",         pass: monRule?.multiplier === 0.9 },
-        { label: "Last Minute lead_time multiplier = 1.15 (+15%)",     pass: lmRule?.multiplier === 1.15 },
-        { label: "Early Bird lead_time multiplier = 0.95 (-5%)",       pass: ebRule?.multiplier === 0.95 },
-        { label: "All rules have enabled=true",                        pass: fetched.every(r => r.enabled === true) },
-        { label: "Labels stored correctly on all rules",               pass: fetched.every(r => !!r.label) },
+        { label: `All ${TEST_RULES.length} rules retrievable`,        pass: fetched.length === TEST_RULES.length },
+        { label: "July seasonality multiplier = 1.3 (+30%)",         pass: julyRule?.multiplier === 1.3 },
+        { label: "January seasonality multiplier = 0.85 (-15%)",     pass: janRule?.multiplier === 0.85 },
+        { label: "Friday day_of_week multiplier = 1.2 (+20%)",       pass: friRule?.multiplier === 1.2 },
+        { label: "Monday day_of_week multiplier = 0.9 (-10%)",       pass: monRule?.multiplier === 0.9 },
+        { label: "Last Minute lead_time multiplier = 1.15 (+15%)",   pass: lmRule?.multiplier === 1.15 },
+        { label: "Early Bird lead_time multiplier = 0.95 (-5%)",     pass: ebRule?.multiplier === 0.95 },
+        { label: "All rules have enabled=true",                      pass: fetched.every(r => r.enabled === true) },
+        { label: "Labels stored correctly on all rules",             pass: fetched.every(r => !!r.label) },
       ];
       setStatus({ type: "checks", checks, allPass: checks.every(c => c.pass) });
     } catch (e) {
@@ -90,9 +99,9 @@ export default function SmartPricingRulesTester() {
       await base44.entities.SmartPricingRule.update(idToUpdate, { multiplier: 1.5, notes: "Updated by integration test" });
       const updated = await base44.entities.SmartPricingRule.get(idToUpdate);
       const checks = [
-        { label: "Multiplier updated to 1.5",          pass: updated.multiplier === 1.5 },
-        { label: "Notes field stored",                 pass: updated.notes === "Updated by integration test" },
-        { label: "rule_type unchanged after update",   pass: updated.rule_type === "seasonality" },
+        { label: "Multiplier updated to 1.5",         pass: updated.multiplier === 1.5 },
+        { label: "Notes field stored",                pass: updated.notes === "Updated by integration test" },
+        { label: "rule_type unchanged after update",  pass: updated.rule_type === "seasonality" },
       ];
       setStatus({ type: "checks", checks, allPass: checks.every(c => c.pass) });
     } catch (e) {
@@ -105,22 +114,20 @@ export default function SmartPricingRulesTester() {
     setLoading(true); setStatus(null);
     try {
       const rules = await base44.entities.SmartPricingRule.list("-created_date", 500);
-      // Simulate: base rate £100, July check-in on a Friday, booked 3 days in advance
       const baseRate = 100;
-      const july  = rules.find(r => r.rule_type === "seasonality" && r.key === "7");
-      const fri   = rules.find(r => r.rule_type === "day_of_week" && r.key === "5");
-      const lm    = rules.find(r => r.rule_type === "lead_time"   && r.key === "0-7");
+      const july = rules.find(r => r.rule_type === "seasonality" && r.key === "7");
+      const fri  = rules.find(r => r.rule_type === "day_of_week" && r.key === "5");
+      const lm   = rules.find(r => r.rule_type === "lead_time"   && r.key === "0-7");
 
       const seasonMult = july?.multiplier ?? 1;
       const dowMult    = fri?.multiplier  ?? 1;
       const leadMult   = lm?.multiplier   ?? 1;
-
-      const adjusted = baseRate * seasonMult * dowMult * leadMult;
+      const adjusted   = baseRate * seasonMult * dowMult * leadMult;
 
       const checks = [
-        { label: "July multiplier found",            pass: !!july && july.multiplier > 1 },
-        { label: "Friday multiplier found",          pass: !!fri && fri.multiplier > 1 },
-        { label: "Last-Minute multiplier found",     pass: !!lm && lm.multiplier > 1 },
+        { label: "July multiplier found",               pass: !!july && july.multiplier > 1 },
+        { label: "Friday multiplier found",             pass: !!fri && fri.multiplier > 1 },
+        { label: "Last-Minute multiplier found",        pass: !!lm && lm.multiplier > 1 },
         { label: `Adjusted rate > base (£${baseRate})`, pass: adjusted > baseRate },
         { label: `Computed rate = £${adjusted.toFixed(2)} (£100 × ${seasonMult} × ${dowMult} × ${leadMult})`, pass: adjusted > 0 },
       ];
@@ -133,12 +140,13 @@ export default function SmartPricingRulesTester() {
 
   const cleanUp = async () => {
     setLoading(true);
+    const count = createdIds.length;
     try {
       for (const id of createdIds) {
         try { await base44.entities.SmartPricingRule.delete(id); } catch (_) {}
       }
       setCreatedIds([]);
-      setStatus({ type: "ok", message: `🧹 ${createdIds.length} test rules deleted.` });
+      setStatus({ type: "ok", message: `🧹 ${count} test rules deleted.` });
     } catch (e) {
       setStatus({ type: "err", message: `❌ Clean-up failed: ${e.message}` });
     }

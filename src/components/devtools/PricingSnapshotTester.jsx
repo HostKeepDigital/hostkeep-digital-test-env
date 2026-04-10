@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 
 function Result({ status }) {
@@ -33,6 +33,26 @@ export default function PricingSnapshotTester() {
   const [loading, setLoading]   = useState(false);
   const [status, setStatus]     = useState(null);
   const [created, setCreated]   = useState({ propertyId: null, bookingId: null, snapshotId: null });
+
+  // Restore persisted test data on mount
+  useEffect(() => {
+    Promise.all([
+      base44.entities.Property.filter({ owner_id: "int-test-snapshot-host" }),
+      base44.entities.Booking.filter({ guest_email: "int-snapshot@hostkeep-test.com" }),
+    ]).then(([props, bookings]) => {
+      const prop    = props[0];
+      const booking = bookings[0];
+      if (!prop && !booking) return;
+      const updates = { propertyId: prop?.id || null, bookingId: booking?.id || null };
+      if (booking?.id) {
+        base44.entities.PricingSnapshot.filter({ booking_id: booking.id })
+          .then(snaps => setCreated({ ...updates, snapshotId: snaps[0]?.id || null }))
+          .catch(() => setCreated(updates));
+      } else {
+        setCreated(updates);
+      }
+    }).catch(() => {});
+  }, []);
 
   const step1_CreateBookingAndConfirm = async () => {
     setLoading(true); setStatus(null);

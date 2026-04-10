@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 
 const TEST_BOOKING_ID = "int-test-booking-001";
@@ -28,6 +28,17 @@ export default function ReviewSystemTester() {
   const [loading, setLoading] = useState(false);
   const [status, setStatus]   = useState(null);
   const [created, setCreated] = useState({ guestReview: null, hostReview: null });
+
+  // Restore persisted test data on mount
+  useEffect(() => {
+    base44.entities.Review.filter({ booking_id: TEST_BOOKING_ID })
+      .then(rows => {
+        const guest = rows.find(r => r.review_type === "guest_to_host");
+        const host  = rows.find(r => r.review_type === "host_to_guest");
+        if (guest || host) setCreated({ guestReview: guest?.id || null, hostReview: host?.id || null });
+      })
+      .catch(() => {});
+  }, []);
 
   const cleanUp = async () => {
     const ids = [created.guestReview, created.hostReview].filter(Boolean);
