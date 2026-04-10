@@ -292,6 +292,16 @@ export default function HostPayoutHistory() {
           </Card>
         </motion.div>
 
+        {/* Info Notice - Show if no bookings yet */}
+        {displayedBookings.length === 0 && displayedCleanerJobs.length === 0 && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-700">
+              <p className="font-medium mb-1">📊 Data will populate here</p>
+              <p>Your financial data will appear once you've made your first booking payment or subscription payment. This dashboard shows your earnings, cleaner payments, and financial summaries.</p>
+            </div>
+          </motion.div>
+        )}
+
         {/* Browse by Calendar Year */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <Card>
