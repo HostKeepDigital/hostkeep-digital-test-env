@@ -135,9 +135,9 @@ Deno.serve(async (req) => {
       user: {
         ...user,
         full_name: fmProfile?.full_name || user?.full_name || "",
-        forename: user?.forename || "",
-        middle_name: user?.middle_name || "",
-        surname: user?.surname || "",
+        forename: fmProfile?.forename || user?.forename || "",
+        middle_name: fmProfile?.middle_name || user?.middle_name || "",
+        surname: fmProfile?.surname || user?.surname || "",
         phone: fmProfile?.phone || user?.phone || "",
         location: fmProfile?.location || user?.location || "",
       },

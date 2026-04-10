@@ -45,6 +45,9 @@ Deno.serve(async (req) => {
     if (session.founding_member_id) {
       const fmUpdates = {};
       if (resolvedFullName !== undefined) fmUpdates.full_name = resolvedFullName.trim();
+      if (forename !== undefined) fmUpdates.forename = forename.trim();
+      if (middle_name !== undefined) fmUpdates.middle_name = middle_name.trim();
+      if (surname !== undefined) fmUpdates.surname = surname.trim();
       if (phone !== undefined) fmUpdates.phone = phone.trim();
       if (location !== undefined) fmUpdates.location = location.trim();
       await serviceRole.entities.FoundingMember.update(session.founding_member_id, fmUpdates);

@@ -6,6 +6,18 @@
       "type": "string",
       "description": "Full name of the founding member"
     },
+    "forename": {
+      "type": "string",
+      "description": "First name"
+    },
+    "middle_name": {
+      "type": "string",
+      "description": "Middle name (optional)"
+    },
+    "surname": {
+      "type": "string",
+      "description": "Surname"
+    },
     "email": {
       "type": "string",
       "description": "Email address"
@@ -52,6 +64,14 @@
       ],
       "default": "pending",
       "description": "Admin approval + onboarding status"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Phone number"
+    },
+    "location": {
+      "type": "string",
+      "description": "Location / town"
     }
   },
   "required": [
