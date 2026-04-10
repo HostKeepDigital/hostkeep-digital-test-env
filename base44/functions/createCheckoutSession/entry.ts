@@ -32,6 +32,7 @@ Deno.serve(async (req) => {
     const user_id = user.id;
     const body = await req.json().catch(() => ({}));
     const { plan } = body;
+
     if (!PLAN_LOOKUP_KEYS[plan]) {
       return Response.json({ error: "Invalid plan" }, { status: 400 });
     }
