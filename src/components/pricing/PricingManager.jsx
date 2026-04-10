@@ -32,22 +32,27 @@ export default function PricingManager({ formData, onUpdate, onPromptSave, prope
   };
 
   const handleApplyHolidayPricing = (holidays, settings) => {
-    const dateOverrides = { ...settings.date_overrides } || {};
-    const baseRate = settings.base_rate || 100;
+    // Add holidays as editable seasons with ±3 day buffers
+    const newSeasons = (settings.seasons || []).map(s => ({ ...s }));
 
     holidays.forEach(holiday => {
-      let currentDate = new Date(holiday.start);
-      const endDate = new Date(holiday.end);
+      const startWithBuffer = new Date(holiday.start);
+      startWithBuffer.setDate(startWithBuffer.getDate() - 3);
+      
+      const endWithBuffer = new Date(holiday.end);
+      endWithBuffer.setDate(endWithBuffer.getDate() + 3);
 
-      while (currentDate <= endDate) {
-        const dateStr = currentDate.toISOString().split('T')[0];
-        const recommendedRate = Math.round(baseRate * holiday.boost);
-        dateOverrides[dateStr] = { rate: recommendedRate };
-        currentDate.setDate(currentDate.getDate() + 1);
-      }
+      newSeasons.push({
+        id: `holiday-${holiday.label}-${Date.now()}`,
+        name: holiday.label,
+        start_date: startWithBuffer.toISOString().split('T')[0],
+        end_date: endWithBuffer.toISOString().split('T')[0],
+        nightly_rate: Math.round((settings.base_rate || 100) * holiday.boost),
+        min_nights: 1
+      });
     });
 
-    handlePricingUpdate('date_overrides', dateOverrides);
+    handlePricingUpdate('seasons', newSeasons);
     if (onPromptSave) onPromptSave();
   };
 
