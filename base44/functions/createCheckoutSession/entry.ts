@@ -19,19 +19,15 @@ const PLAN_LOOKUP_KEYS = {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const body = await req.json().catch(() => ({}));
+    const { plan, user_id } = body;
 
-    // Get authenticated user
-    const user = await base44.auth.me();
-    if (!user) {
+    if (!user_id) {
       return Response.json(
-        { error: "Unauthorized" },
-        { status: 401 },
+        { error: "Missing user_id" },
+        { status: 400 },
       );
     }
-
-    const user_id = user.id;
-    const body = await req.json().catch(() => ({}));
-    const { plan } = body;
 
     if (!PLAN_LOOKUP_KEYS[plan]) {
       return Response.json({ error: "Invalid plan" }, { status: 400 });

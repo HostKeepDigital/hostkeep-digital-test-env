@@ -377,17 +377,17 @@ export default function Subscription() {
     setCheckoutLoading(planId);
     try {
       const response = await base44.functions.invoke(
-        "createCheckoutSession",
-        { plan: planId },
+       "createCheckoutSession",
+       { plan: planId, user_id: user.id },
       );
       if (response.data?.url) {
-        window.location.href = response.data.url;
+       window.location.href = response.data.url;
       } else {
-        toast.error(
-          response.data?.error || "Failed to create checkout session",
-        );
+       toast.error(
+         response.data?.error || "Failed to create checkout session",
+       );
       }
-    } catch (error) {
+      } catch (error) {
       toast.error("Failed to start checkout. Please try again.");
     } finally {
       setCheckoutLoading(null);
