@@ -280,8 +280,8 @@ export default function CreatePassword() {
               </Link>
             </div>
             <div className="text-center">
-              <Link to="/" className="text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
-                Back to Home
+              <Link to="/" className="inline-block text-sm font-semibold text-white bg-[#0d9488] hover:bg-[#0f766e] rounded-xl px-5 py-2.5 transition-colors">
+                ← Back to Home
               </Link>
             </div>
           </div>
