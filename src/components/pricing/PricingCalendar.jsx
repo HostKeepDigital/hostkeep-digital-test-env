@@ -171,9 +171,13 @@ export default function PricingCalendar({ pricingSettings, onDateClick, selected
                 `}
               >
                 <div className="font-semibold">{format(day, 'd')}</div>
-                  <div className="font-bold">£{price}</div>
-                  {holiday && <div className="text-xs mt-0.5 truncate">{holiday.label}</div>}
-                </button>
+                <div className="font-bold">£{price}</div>
+                {holiday && (
+                  <div className="text-xs font-semibold mt-0.5 truncate leading-tight">
+                    {holiday.label}
+                  </div>
+                )}
+              </button>
             );
           })}
         </div>
