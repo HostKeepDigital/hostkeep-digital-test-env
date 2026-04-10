@@ -273,10 +273,10 @@ export default function HostPayoutHistory() {
 
               {selectedYear && (
                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="space-y-6">
-                  <div className="pt-6 grid grid-cols-2 gap-6">
+                  <div className="pt-6 space-y-6">
                     <div>
                       <p className="text-sm font-medium text-gray-700 mb-3">Select calendar year</p>
-                      <div className="flex items-center justify-center gap-2 bg-gray-100 rounded-lg p-2 w-fit mx-auto">
+                      <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-2 w-fit">
                         <Button
                           variant="ghost"
                           size="icon"
@@ -289,9 +289,9 @@ export default function HostPayoutHistory() {
                         <select
                           value={selectedYear}
                           onChange={(e) => handleYearChange(Number(e.target.value))}
-                          className="bg-transparent px-4 py-2 font-semibold text-lg border-0 focus:outline-none cursor-pointer"
+                          className="bg-transparent px-2 py-2 font-semibold text-lg border-0 focus:outline-none cursor-pointer"
                         >
-                          <option value="">Select calendar year</option>
+                          <option value="">Year</option>
                           {availableYears.map((year) => (
                             <option key={year} value={year}>
                               {year}
@@ -311,11 +311,11 @@ export default function HostPayoutHistory() {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-gray-700 mb-3">Browse by Calendar Month</p>
-                      <div className="flex items-center justify-center bg-gray-100 rounded-lg p-2 w-fit mx-auto">
+                      <div className="bg-gray-100 rounded-lg p-2 w-fit">
                         <select
                           value={selectedMonth || ""}
                           onChange={(e) => setSelectedMonth(e.target.value || null)}
-                          className="bg-transparent px-4 py-2 font-semibold text-lg border-0 focus:outline-none cursor-pointer"
+                          className="bg-transparent px-3 py-2 font-semibold text-lg border-0 focus:outline-none cursor-pointer"
                         >
                           <option value="">All Months</option>
                           {MONTHS.map((month) => (
