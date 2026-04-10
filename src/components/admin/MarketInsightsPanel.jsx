@@ -5,7 +5,52 @@ import { toast } from "sonner";
 import { Search, TrendingUp, TrendingDown, Minus, RefreshCw, AlertCircle, CheckCircle } from "lucide-react";
 
 const PROPERTY_TYPES = ["all", "cottage", "apartment", "lodge", "chalet", "cabin", "house", "bungalow", "caravan"];
-const POSTCODE_AREAS = ["TR","PL","EX","DT","BH","TA","BA","BS","SO","PO","BN","TN","GL","OX","NR","IP","SA","CF","LL","CA","LA","EH","IV"];
+
+const UK_SECTORS = [
+  { id: "cornwall",         label: "Cornwall & Isles of Scilly",          postcode_area: "TR", county: "Cornwall" },
+  { id: "devon",            label: "Devon",                               postcode_area: "EX", county: "Devon" },
+  { id: "dorset",           label: "Dorset",                              postcode_area: "DT", county: "Dorset" },
+  { id: "somerset",         label: "Somerset",                            postcode_area: "TA", county: "Somerset" },
+  { id: "bristol",          label: "Bristol & Bath",                      postcode_area: "BS", county: "Bristol" },
+  { id: "wiltshire",        label: "Wiltshire & Gloucestershire",         postcode_area: "SN", county: "Wiltshire" },
+  { id: "hampshire",        label: "Hampshire & Isle of Wight",           postcode_area: "SO", county: "Hampshire" },
+  { id: "sussex",           label: "Sussex",                              postcode_area: "BN", county: "Sussex" },
+  { id: "kent",             label: "Kent",                                postcode_area: "CT", county: "Kent" },
+  { id: "surrey",           label: "Surrey & Berkshire",                  postcode_area: "GU", county: "Surrey" },
+  { id: "london",           label: "Greater London",                      postcode_area: "SW", county: "London" },
+  { id: "essex",            label: "Essex & Hertfordshire",               postcode_area: "CM", county: "Essex" },
+  { id: "oxfordshire",      label: "Oxfordshire & Buckinghamshire",       postcode_area: "OX", county: "Oxfordshire" },
+  { id: "norfolk",          label: "Norfolk",                             postcode_area: "NR", county: "Norfolk" },
+  { id: "suffolk",          label: "Suffolk & Cambridgeshire",            postcode_area: "IP", county: "Suffolk" },
+  { id: "lincolnshire",     label: "Lincolnshire",                        postcode_area: "LN", county: "Lincolnshire" },
+  { id: "east-midlands",    label: "East Midlands",                       postcode_area: "LE", county: "Leicestershire" },
+  { id: "west-midlands",    label: "West Midlands & Warwickshire",        postcode_area: "B",  county: "West Midlands" },
+  { id: "northamptonshire", label: "Northamptonshire",                    postcode_area: "NN", county: "Northamptonshire" },
+  { id: "cheshire",         label: "Cheshire & North Shropshire",         postcode_area: "CH", county: "Cheshire" },
+  { id: "manchester",       label: "Greater Manchester",                  postcode_area: "M",  county: "Greater Manchester" },
+  { id: "lancashire",       label: "Lancashire & Blackpool",              postcode_area: "PR", county: "Lancashire" },
+  { id: "cumbria",          label: "Cumbria & Lake District",             postcode_area: "CA", county: "Cumbria" },
+  { id: "yorkshire-east",   label: "East Yorkshire & Coast",              postcode_area: "HU", county: "East Yorkshire" },
+  { id: "yorkshire",        label: "Yorkshire (Leeds / York / Harrogate)",postcode_area: "LS", county: "Yorkshire" },
+  { id: "north-yorkshire",  label: "North Yorkshire & Moors",             postcode_area: "YO", county: "North Yorkshire" },
+  { id: "peak-district",    label: "Peak District & Derbyshire",          postcode_area: "DE", county: "Derbyshire" },
+  { id: "north-east",       label: "North East England & Northumberland", postcode_area: "NE", county: "Northumberland" },
+  { id: "durham",           label: "County Durham & Teesside",            postcode_area: "DH", county: "County Durham" },
+  { id: "north-wales",      label: "North Wales & Snowdonia",             postcode_area: "LL", county: "Gwynedd" },
+  { id: "mid-wales",        label: "Mid Wales & Pembrokeshire",           postcode_area: "SA", county: "Pembrokeshire" },
+  { id: "south-wales",      label: "South Wales & Cardiff",               postcode_area: "CF", county: "South Wales" },
+  { id: "scottish-borders", label: "Scottish Borders",                    postcode_area: "TD", county: "Scottish Borders" },
+  { id: "edinburgh",        label: "Edinburgh & Lothians",                postcode_area: "EH", county: "Edinburgh" },
+  { id: "glasgow",          label: "Glasgow & Clyde Valley",              postcode_area: "G",  county: "Glasgow" },
+  { id: "argyll",           label: "Argyll, Loch Lomond & Trossachs",     postcode_area: "PA", county: "Argyll" },
+  { id: "tayside",          label: "Tayside, Perthshire & Dundee",        postcode_area: "PH", county: "Perthshire" },
+  { id: "aberdeen",         label: "Aberdeen & Aberdeenshire",            postcode_area: "AB", county: "Aberdeenshire" },
+  { id: "highlands",        label: "Highlands & Inverness",               postcode_area: "IV", county: "Highlands" },
+  { id: "far-north",        label: "Far North Scotland & Caithness",      postcode_area: "KW", county: "Caithness" },
+  { id: "western-isles",    label: "Western Isles & Hebrides",            postcode_area: "HS", county: "Western Isles" },
+  { id: "orkney-shetland",  label: "Orkney & Shetland",                   postcode_area: "ZE", county: "Shetland" },
+  { id: "northern-ireland", label: "Northern Ireland",                    postcode_area: "BT", county: "Northern Ireland" },
+];
 
 function InsightBadge({ text }) {
   const isPositive = /increas|premium|high demand|strong|popular|above/i.test(text);
@@ -133,7 +178,15 @@ export default function MarketInsightsPanel() {
   const [records, setRecords]           = useState([]);
   const [loading, setLoading]           = useState(true);
   const [scraping, setScraping]         = useState(false);
-  const [form, setForm]                 = useState({ postcode_area: "TR", town: "", county: "", property_type: "all", bedrooms: "" });
+  const [selectedSector, setSelectedSector] = useState(UK_SECTORS[0].id);
+  const [form, setForm]                 = useState({ postcode_area: UK_SECTORS[0].postcode_area, town: "", county: UK_SECTORS[0].county, property_type: "all", bedrooms: "" });
+
+  const handleSectorChange = (sectorId) => {
+    const sector = UK_SECTORS.find(s => s.id === sectorId);
+    if (!sector) return;
+    setSelectedSector(sectorId);
+    setForm(p => ({ ...p, postcode_area: sector.postcode_area, county: sector.county, town: "" }));
+  };
 
   const load = async () => {
     setLoading(true);
@@ -206,23 +259,18 @@ export default function MarketInsightsPanel() {
           <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide">Analyse Competitor Market</h3>
           <p className="text-xs text-gray-400 mt-0.5">Searches Airbnb, Booking.com and comparable platforms for live competitor pricing in a specific area. Uses AI + web search — takes ~15s.</p>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <div>
-            <label className="text-xs text-gray-500 mb-1 block">Postcode Area *</label>
-            <select value={form.postcode_area} onChange={e => setForm(p => ({ ...p, postcode_area: e.target.value }))}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="col-span-2 md:col-span-2">
+            <label className="text-xs text-gray-500 mb-1 block">UK Sector *</label>
+            <select value={selectedSector} onChange={e => handleSectorChange(e.target.value)}
               className="w-full border border-gray-200 rounded-lg p-2 text-sm">
-              {POSTCODE_AREAS.map(a => <option key={a} value={a}>{a}</option>)}
+              {UK_SECTORS.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
             </select>
           </div>
           <div>
-            <label className="text-xs text-gray-500 mb-1 block">Town</label>
+            <label className="text-xs text-gray-500 mb-1 block">Town <span className="text-gray-400">(optional)</span></label>
             <input value={form.town} onChange={e => setForm(p => ({ ...p, town: e.target.value }))}
               placeholder="e.g. Padstow" className="w-full border border-gray-200 rounded-lg p-2 text-sm" />
-          </div>
-          <div>
-            <label className="text-xs text-gray-500 mb-1 block">County</label>
-            <input value={form.county} onChange={e => setForm(p => ({ ...p, county: e.target.value }))}
-              placeholder="e.g. Cornwall" className="w-full border border-gray-200 rounded-lg p-2 text-sm" />
           </div>
           <div>
             <label className="text-xs text-gray-500 mb-1 block">Property Type *</label>
