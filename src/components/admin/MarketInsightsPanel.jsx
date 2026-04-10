@@ -174,10 +174,13 @@ function MarketCard({ record, onRefresh }) {
   );
 }
 
-export default function MarketInsightsPanel() {
+const RESULT_TYPES = ["all","cottage","apartment","lodge","chalet","cabin","house","bungalow","caravan"];
+
+export default function MarketInsightsPanel({ onRecordsChange }) {
   const [records, setRecords]           = useState([]);
   const [loading, setLoading]           = useState(true);
   const [scraping, setScraping]         = useState(false);
+  const [filterType, setFilterType]     = useState("all");
   const [selectedSector, setSelectedSector] = useState(UK_SECTORS[0].id);
   const [form, setForm]                 = useState({ postcode_area: UK_SECTORS[0].postcode_area, town: "", county: UK_SECTORS[0].county, property_type: "all", bedrooms: "" });
 
@@ -193,6 +196,7 @@ export default function MarketInsightsPanel() {
     try {
       const data = await base44.entities.MarketPricing.list("-created_date", 100);
       setRecords(data || []);
+      onRecordsChange?.(data || []);
     } catch (_) { setRecords([]); }
     setLoading(false);
   };
@@ -249,7 +253,9 @@ export default function MarketInsightsPanel() {
     setScraping(false);
   };
 
-  const activeRecords = records;
+  const activeRecords = filterType === "all"
+    ? records
+    : records.filter(r => r.property_type?.toLowerCase().includes(filterType));
 
   return (
     <div className="space-y-6">
@@ -309,15 +315,34 @@ export default function MarketInsightsPanel() {
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-3">
             <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-              {activeRecords.length} Market{activeRecords.length !== 1 ? "s" : ""} Analysed
+              {records.length} Market{records.length !== 1 ? "s" : ""} Analysed
             </h3>
             <button onClick={load} className="text-xs text-gray-400 hover:text-teal-600 flex items-center gap-1">
               <RefreshCw className="w-3 h-3" /> Reload
             </button>
           </div>
-          {activeRecords.map(r => <MarketCard key={r.id} record={r} onRefresh={handleRefresh} />)}
+          {/* Property type filter tabs */}
+          <div className="flex flex-wrap gap-1.5">
+            {RESULT_TYPES.map(t => {
+              const count = t === "all" ? records.length : records.filter(r => r.property_type?.toLowerCase().includes(t)).length;
+              if (t !== "all" && count === 0) return null;
+              return (
+                <button key={t} onClick={() => setFilterType(t)}
+                  className={`px-3 py-1 text-xs rounded-full border font-medium capitalize transition-all ${
+                    filterType === t ? "bg-teal-600 text-white border-teal-600" : "bg-white text-gray-600 border-gray-200 hover:border-teal-300"
+                  }`}>
+                  {t === "all" ? "All" : t} <span className="opacity-60">({count})</span>
+                </button>
+              );
+            })}
+          </div>
+          {activeRecords.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-6">No results for this property type yet.</p>
+          ) : (
+            activeRecords.map(r => <MarketCard key={r.id} record={r} onRefresh={handleRefresh} />)
+          )}
         </div>
       )}
     </div>

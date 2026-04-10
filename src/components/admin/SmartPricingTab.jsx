@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { TrendingUp, TrendingDown, Minus, Save, RefreshCw, Info } from "lucide-react";
 import MarketSuggestionsPanel from "@/components/admin/MarketSuggestionsPanel";
+import PricingSimulatorPanel from "@/components/admin/PricingSimulatorPanel";
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const DAYS   = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
@@ -148,6 +149,7 @@ export default function SmartPricingTab() {
   const [saving, setSaving] = useState(false);
   const [snapshotCount, setSnapshotCount] = useState(0);
   const [view, setView] = useState("rules");
+  const [marketRecords, setMarketRecords] = useState([]);
 
   const load = async () => {
     setLoading(true);
@@ -286,6 +288,7 @@ export default function SmartPricingTab() {
         {[
           { id: "rules",   label: "Pricing Rules" },
           { id: "market",  label: "Market Insights" },
+          { id: "simulate",label: "Price Simulator" },
         ].map(v => (
           <button key={v.id} onClick={() => setView(v.id)}
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
@@ -296,7 +299,11 @@ export default function SmartPricingTab() {
         ))}
       </div>
 
-      {view === "market" && <MarketInsightsPanel />}
+      {view === "market" && <MarketInsightsPanel onRecordsChange={setMarketRecords} />}
+
+      {view === "simulate" && (
+        <PricingSimulatorPanel rules={rules} marketRecords={marketRecords} />
+      )}
 
       {view === "rules" && <div className="space-y-6">
 
