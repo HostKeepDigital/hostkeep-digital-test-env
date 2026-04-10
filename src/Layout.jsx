@@ -459,22 +459,9 @@ export default function Layout({ children, currentPageName }) {
                     </DropdownMenu>
                   </>
                 ) : (
-                  <>
                     <Link to="/founding" className="hidden sm:inline-flex">
-                      <Button className="bg-[#0d9488] hover:bg-[#0f766e] text-white">Become a Host</Button>
+                      <Button className="bg-[#0d9488] hover:bg-[#0f766e] text-white">Become a Founding Member</Button>
                     </Link>
-                    <Link to="/founding" className="hidden sm:inline-flex">
-                      <Button className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white">Become a Cleaner</Button>
-                    </Link>
-                    <Link to="/GuestSignUp">
-                      <Button className="bg-orange-500 hover:bg-orange-600 text-white">Sign Up</Button>
-                    </Link>
-                    <Link to="/SignIn">
-                      <Button className="bg-[#1E3A5F] hover:bg-[#162d4a] text-white">
-                        Sign In
-                      </Button>
-                    </Link>
-                  </>
                 )}
               </div>
             </div>
