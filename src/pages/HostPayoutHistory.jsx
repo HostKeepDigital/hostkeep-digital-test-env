@@ -44,6 +44,9 @@ export default function HostPayoutHistory() {
   const navigate = useNavigate();
   const [stripeStatus, setStripeStatus] = useState(null);
   const [upcomingPayouts, setUpcomingPayouts] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
+  const itemsPerPage = 10;
 
   // Fetch Stripe Connect status
   const { data: stripeData, isLoading: stripeLoading } = useQuery({
@@ -125,8 +128,13 @@ export default function HostPayoutHistory() {
 
   const totalPayout = totalEarnings - totalStripeFees;
 
-  const completedPayments = bookings
+  // Filter by selected month
+  const filteredPayments = bookings
     .filter((b) => b.booking_status === "completed" && b.payment_status === "paid")
+    .filter((b) => {
+      const paymentDate = b.completed_at?.slice(0, 7); // YYYY-MM
+      return paymentDate === selectedMonth;
+    })
     .map((b) => {
       const subtotal = b.subtotal || b.total_amount;
       const stripeFee = subtotal * (STRIPE_FEE_PERCENTAGE / 100) + STRIPE_FIXED_FEE;
@@ -140,6 +148,20 @@ export default function HostPayoutHistory() {
       };
     })
     .sort((a, b) => new Date(b.completed_at) - new Date(a.completed_at));
+
+  const totalPages = Math.ceil(filteredPayments.length / itemsPerPage);
+  const paginatedPayments = filteredPayments.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const handleMonthChange = (e) => {
+    setSelectedMonth(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handlePrevPage = () => setCurrentPage((p) => Math.max(p - 1, 1));
+  const handleNextPage = () => setCurrentPage((p) => Math.min(p + 1, totalPages));
 
   return (
     <div className="min-h-screen bg-gray-50 py-6 md:py-8 px-4">
@@ -355,64 +377,101 @@ export default function HostPayoutHistory() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {completedPayments.length === 0 ? (
+              <div className="mb-4 flex items-center gap-3">
+                <label className="text-sm font-medium text-gray-700">Filter by month:</label>
+                <input
+                  type="month"
+                  value={selectedMonth}
+                  onChange={handleMonthChange}
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+              </div>
+
+              {filteredPayments.length === 0 ? (
                 <div className="text-center py-12">
                   <CreditCard className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-                  <p className="text-gray-500">No completed payments yet</p>
+                  <p className="text-gray-500">No payments in {selectedMonth}</p>
                 </div>
               ) : (
-                <div className="space-y-2 max-h-[600px] overflow-y-auto">
-                  {completedPayments.map((payment) => (
-                    <div
-                      key={payment.id}
-                      className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-                        <div>
-                          <p className="text-sm text-gray-500">Guest</p>
-                          <p className="font-semibold text-gray-900">
-                            {payment.guest_name}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">Date</p>
-                          <p className="font-medium text-gray-900">
-                            {format(parseISO(payment.completed_at), "MMM d, yyyy")}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="bg-gray-50 rounded-lg p-3 space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Gross Amount</span>
-                          <span className="font-medium">£{payment.subtotal.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between pt-2 border-t border-gray-200">
-                          <div className="flex items-center gap-1">
-                            <span className="text-gray-600">Payment Security Fee</span>
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <HelpCircle className="w-3.5 h-3.5 text-gray-400 cursor-help" />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Stripe's fee for secure payment processing</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
+                <>
+                  <div className="space-y-2">
+                    {paginatedPayments.map((payment) => (
+                      <div
+                        key={payment.id}
+                        className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                          <div>
+                            <p className="text-sm text-gray-500">Guest</p>
+                            <p className="font-semibold text-gray-900">
+                              {payment.guest_name}
+                            </p>
                           </div>
-                          <span className="font-medium text-red-600">
-                            -£{payment.stripe_fee.toFixed(2)}
-                          </span>
+                          <div>
+                            <p className="text-sm text-gray-500">Date</p>
+                            <p className="font-medium text-gray-900">
+                              {format(parseISO(payment.completed_at), "MMM d, yyyy")}
+                            </p>
+                          </div>
                         </div>
-                        <div className="flex justify-between text-base font-bold text-green-700 border-t border-gray-200 pt-2">
-                          <span>You Receive</span>
-                          <span>£{payment.net_payout.toFixed(2)}</span>
+
+                        <div className="bg-gray-50 rounded-lg p-3 space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Gross Amount</span>
+                            <span className="font-medium">£{payment.subtotal.toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between pt-2 border-t border-gray-200">
+                            <div className="flex items-center gap-1">
+                              <span className="text-gray-600">Payment Security Fee</span>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <HelpCircle className="w-3.5 h-3.5 text-gray-400 cursor-help" />
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Stripe's fee for secure payment processing</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
+                            <span className="font-medium text-red-600">
+                              -£{payment.stripe_fee.toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-base font-bold text-green-700 border-t border-gray-200 pt-2">
+                            <span>You Receive</span>
+                            <span>£{payment.net_payout.toFixed(2)}</span>
+                          </div>
                         </div>
                       </div>
+                    ))}
+                  </div>
+
+                  {/* Pagination Controls */}
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+                    <p className="text-sm text-gray-600">
+                      Page {currentPage} of {totalPages || 1} ({filteredPayments.length} total)
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handlePrevPage}
+                        disabled={currentPage === 1}
+                      >
+                        Previous
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleNextPage}
+                        disabled={currentPage >= totalPages}
+                      >
+                        Next
+                      </Button>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>
