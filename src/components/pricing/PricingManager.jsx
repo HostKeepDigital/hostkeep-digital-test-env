@@ -30,6 +30,26 @@ export default function PricingManager({ formData, onUpdate, onPromptSave, prope
     setSelectedDate(date);
   };
 
+  const handleApplyHolidayPricing = (holidays, settings) => {
+    const dateOverrides = { ...settings.date_overrides } || {};
+    const baseRate = settings.base_rate || 100;
+
+    holidays.forEach(holiday => {
+      let currentDate = new Date(holiday.start);
+      const endDate = new Date(holiday.end);
+
+      while (currentDate <= endDate) {
+        const dateStr = currentDate.toISOString().split('T')[0];
+        const recommendedRate = Math.round(baseRate * holiday.boost);
+        dateOverrides[dateStr] = { rate: recommendedRate };
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+    });
+
+    handlePricingUpdate('date_overrides', dateOverrides);
+    if (onPromptSave) onPromptSave();
+  };
+
   return (
     <div className="space-y-6">
       <MarketPositionWidget
@@ -210,6 +230,7 @@ export default function PricingManager({ formData, onUpdate, onPromptSave, prope
             pricingSettings={formData.pricing_settings}
             onDateClick={handleDateClick}
             selectedDates={selectedDate ? [selectedDate] : []}
+            onApplyHolidayPricing={handleApplyHolidayPricing}
           />
 
           <Tabs defaultValue="base" className="w-full">

@@ -1,10 +1,20 @@
 import { useState } from "react";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, addMonths, subMonths, startOfWeek, endOfWeek, isSameDay, parseISO } from "date-fns";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, addMonths, subMonths, startOfWeek, endOfWeek, isSameDay, parseISO, isWithinInterval } from "date-fns";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function PricingCalendar({ pricingSettings, onDateClick, selectedDates = [] }) {
+// UK School Holidays & Half-term Breaks with date ranges
+const UK_SCHOOL_HOLIDAYS = [
+  { label: "Easter", start: new Date(2026, 3, 6), end: new Date(2026, 3, 20), boost: 1.25 },
+  { label: "Summer", start: new Date(2026, 6, 15), end: new Date(2026, 8, 1), boost: 1.35 },
+  { label: "Half-term (Feb)", start: new Date(2026, 1, 16), end: new Date(2026, 1, 20), boost: 1.15 },
+  { label: "Half-term (May)", start: new Date(2026, 4, 25), end: new Date(2026, 4, 29), boost: 1.20 },
+  { label: "Half-term (Oct)", start: new Date(2026, 9, 19), end: new Date(2026, 9, 23), boost: 1.20 },
+  { label: "Christmas", start: new Date(2025, 11, 15), end: new Date(2026, 0, 5), boost: 1.30 },
+];
+
+export default function PricingCalendar({ pricingSettings, onDateClick, selectedDates = [], onApplyHolidayPricing = null }) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   const calculatePrice = (date) => {
@@ -51,11 +61,20 @@ export default function PricingCalendar({ pricingSettings, onDateClick, selected
     return Math.round(price / rounding) * rounding;
   };
 
+  const getHolidayOverride = (date) => {
+    return UK_SCHOOL_HOLIDAYS.find(holiday => isWithinInterval(date, { start: holiday.start, end: holiday.end }));
+  };
+
   const getPriceColor = (date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
+    const holiday = getHolidayOverride(date);
     
     if (pricingSettings?.date_overrides?.[dateStr]) {
       return "bg-purple-100 text-purple-700 border-purple-300";
+    }
+
+    if (holiday) {
+      return "bg-orange-100 text-orange-700 border-orange-300";
     }
 
     if (pricingSettings?.seasons) {
@@ -93,6 +112,17 @@ export default function PricingCalendar({ pricingSettings, onDateClick, selected
             Pricing Calendar
           </CardTitle>
           <div className="flex items-center gap-2">
+            {onApplyHolidayPricing && (
+              <Button
+                onClick={() => onApplyHolidayPricing(UK_SCHOOL_HOLIDAYS, pricingSettings)}
+                variant="outline"
+                size="sm"
+                className="gap-1"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                Auto-fill Holidays
+              </Button>
+            )}
             <Button variant="outline" size="icon" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
               <ChevronLeft className="w-4 h-4" />
             </Button>
@@ -117,6 +147,7 @@ export default function PricingCalendar({ pricingSettings, onDateClick, selected
           {days.map(day => {
             const price = calculatePrice(day);
             const isSelected = selectedDates.some(d => isSameDay(parseISO(d), day));
+            const holiday = getHolidayOverride(day);
             const colorClass = getPriceColor(day);
             
             return (
@@ -132,8 +163,9 @@ export default function PricingCalendar({ pricingSettings, onDateClick, selected
                 `}
               >
                 <div className="font-semibold">{format(day, 'd')}</div>
-                <div className="font-bold">£{price}</div>
-              </button>
+                  <div className="font-bold">£{price}</div>
+                  {holiday && <div className="text-xs mt-0.5 truncate">{holiday.label}</div>}
+                </button>
             );
           })}
         </div>
@@ -157,7 +189,11 @@ export default function PricingCalendar({ pricingSettings, onDateClick, selected
               <div className="w-5 h-5 rounded bg-gray-50 border-2 border-gray-200"></div>
               <span>Base Rate</span>
             </div>
-          </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-5 h-5 rounded bg-orange-100 border-2 border-orange-300"></div>
+              <span>School Holiday</span>
+            </div>
+            </div>
           <div className="pt-2 border-t border-gray-200">
             <p className="font-semibold text-xs mb-1">Pricing Hierarchy:</p>
             <ol className="list-decimal list-inside space-y-0.5 text-xs text-gray-600">
