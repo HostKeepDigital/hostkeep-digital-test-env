@@ -133,6 +133,28 @@ export default function HostPayoutHistory() {
   const yearPayouts = calculatePaymentBreakdown(yearBookings);
   const monthPayouts = calculatePaymentBreakdown(monthBookings);
 
+  // Show year or month data depending on selection
+  const displayedBookings = selectedMonth
+    ? yearBookings.filter((b) => {
+        const month = String(new Date(b.completed_at).getMonth() + 1).padStart(2, "0");
+        return month === selectedMonth;
+      })
+    : yearBookings;
+
+  const displayedCleanerJobs = selectedMonth
+    ? yearCleanerJobs.filter((j) => {
+        const month = String(new Date(j.scheduled_date).getMonth() + 1).padStart(2, "0");
+        return month === selectedMonth;
+      })
+    : yearCleanerJobs;
+
+  const displayedPayouts = calculatePaymentBreakdown(displayedBookings);
+  const displayedCleanerStats = {
+    totalPaid: displayedCleanerJobs.reduce((sum, j) => sum + (j.cleaner_price || 0), 0),
+    totalCollected: displayedCleanerJobs.reduce((sum, j) => sum + (j.host_cleaning_fee || 0), 0),
+    jobCount: displayedCleanerJobs.length,
+  };
+
   const availableYears = Array.from(
     { length: currentYear - yearRange[0] + 1 },
     (_, i) => yearRange[0] + i
@@ -234,139 +256,48 @@ export default function HostPayoutHistory() {
           </Card>
         </motion.div>
 
-        {/* Year Selector */}
+        {/* Browse by Calendar Year & Month */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Browse by Calendar Year</CardTitle>
+              <CardTitle className="text-lg mb-4">Browse by Calendar Year & Month</CardTitle>
+              <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1 mb-4">
+              </div>
             </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-4 flex-wrap">
-                <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+            <CardContent className="space-y-4">
+              <div>
+                <p className="text-sm font-medium text-gray-700 mb-3">Select a month or view full year</p>
+                {selectedMonth && (
                   <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setSelectedYear((y) => Math.max(y - 1, yearRange[0]))}
-                    disabled={selectedYear <= yearRange[0]}
-                    className="h-8 w-8"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedMonth(null)}
+                    className="w-full mb-3 text-xs"
                   >
-                    <ChevronLeft className="w-4 h-4" />
+                    ← View Full Year {selectedYear}
                   </Button>
-                  <select
-                    value={selectedYear}
-                    onChange={(e) => setSelectedYear(Number(e.target.value))}
-                    className="bg-transparent px-4 py-2 font-semibold text-lg border-0 focus:outline-none cursor-pointer"
-                  >
-                    {availableYears.map((year) => (
-                      <option key={year} value={year}>
-                        {year}
-                      </option>
-                    ))}
-                  </select>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setSelectedYear((y) => Math.min(y + 1, currentYear))}
-                    disabled={selectedYear >= currentYear}
-                    className="h-8 w-8"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
+                )}
+                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                  {MONTHS.map((month) => (
+                    <button
+                      key={month.num}
+                      onClick={() => setSelectedMonth(month.num)}
+                      className={`py-2 px-3 rounded-lg text-sm font-medium transition-all ${
+                        selectedMonth === month.num
+                          ? "bg-teal-600 text-white shadow-lg"
+                          : "bg-gray-100 text-gray-700 hover:bg-teal-100 hover:text-teal-700"
+                      }`}
+                    >
+                      {month.name.slice(0, 3)}
+                    </button>
+                  ))}
                 </div>
               </div>
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Year Summary Cards */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="grid md:grid-cols-4 gap-4 mb-8"
-        >
-          <Card className="bg-gradient-to-br from-teal-50 to-emerald-50 border-teal-200">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm text-teal-900">Guest Revenue (Bookings)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-teal-700">£{yearPayouts.gross.toFixed(2)}</div>
-              <p className="text-xs text-teal-600 mt-1">{yearPayouts.count} bookings</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-red-50 to-rose-50 border-red-200">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm text-red-900">Payment Fees</CardTitle>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Shield className="w-4 h-4 text-red-600 cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-xs">
-                      <p>Stripe fee for secure payment processing (1.5% + £0.20)</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-700">-£{yearPayouts.stripeFees.toFixed(2)}</div>
-              <p className="text-xs text-red-600 mt-1">Security & processing</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm text-green-900">Net Earnings</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-700">£{yearPayouts.net.toFixed(2)}</div>
-              <p className="text-xs text-green-600 mt-1">After fees</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm text-purple-900">Cleaner Payments</CardTitle>
-                <Users className="w-4 h-4 text-purple-600" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-purple-700">-£{yearCleanerStats.totalPaid.toFixed(2)}</div>
-              <p className="text-xs text-purple-600 mt-1">{yearCleanerStats.jobCount} jobs</p>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Month Selector Tabs */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Select Month</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-                {MONTHS.map((month) => (
-                  <button
-                    key={month.num}
-                    onClick={() => setSelectedMonth(month.num)}
-                    className={`py-2 px-3 rounded-lg text-sm font-medium transition-all ${
-                      selectedMonth === month.num
-                        ? "bg-teal-600 text-white shadow-lg"
-                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                    }`}
-                  >
-                    {month.name.slice(0, 3)}
-                  </button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Month Summary Cards */}
+        {/* Summary Cards */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -377,8 +308,8 @@ export default function HostPayoutHistory() {
               <CardTitle className="text-sm text-teal-900">Guest Revenue</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-teal-700">£{monthPayouts.gross.toFixed(2)}</div>
-              <p className="text-xs text-teal-600 mt-1">{monthPayouts.count} bookings</p>
+              <div className="text-2xl font-bold text-teal-700">£{displayedPayouts.gross.toFixed(2)}</div>
+              <p className="text-xs text-teal-600 mt-1">{displayedPayouts.count} bookings</p>
             </CardContent>
           </Card>
 
@@ -387,7 +318,7 @@ export default function HostPayoutHistory() {
               <CardTitle className="text-sm text-red-900">Payment Fees</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-700">-£{monthPayouts.stripeFees.toFixed(2)}</div>
+              <div className="text-2xl font-bold text-red-700">-£{displayedPayouts.stripeFees.toFixed(2)}</div>
               <p className="text-xs text-red-600 mt-1">Deducted</p>
             </CardContent>
           </Card>
@@ -397,7 +328,7 @@ export default function HostPayoutHistory() {
               <CardTitle className="text-sm text-green-900">Net Earnings</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-700">£{monthPayouts.net.toFixed(2)}</div>
+              <div className="text-2xl font-bold text-green-700">£{displayedPayouts.net.toFixed(2)}</div>
               <p className="text-xs text-green-600 mt-1">Your take-home</p>
             </CardContent>
           </Card>
@@ -407,14 +338,14 @@ export default function HostPayoutHistory() {
               <CardTitle className="text-sm text-purple-900">Cleaner Cost</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-purple-700">-£{monthCleanerStats.totalPaid.toFixed(2)}</div>
-              <p className="text-xs text-purple-600 mt-1">{monthCleanerJobs.length} jobs</p>
+              <div className="text-2xl font-bold text-purple-700">-£{displayedCleanerStats.totalPaid.toFixed(2)}</div>
+              <p className="text-xs text-purple-600 mt-1">{displayedCleanerStats.jobCount} jobs</p>
             </CardContent>
           </Card>
         </motion.div>
 
         {/* Booking Details */}
-        {monthBookings.length > 0 && (
+        {displayedBookings.length > 0 && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
             <Card>
               <CardHeader>
@@ -425,7 +356,7 @@ export default function HostPayoutHistory() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 max-h-[500px] overflow-y-auto">
-                  {monthBookings.map((booking) => {
+                  {displayedBookings.map((booking) => {
                     const subtotal = booking.subtotal || booking.total_amount;
                     const stripeFee = subtotal * (STRIPE_FEE_PERCENTAGE / 100) + STRIPE_FIXED_FEE;
                     const net = subtotal - stripeFee;
@@ -464,7 +395,7 @@ export default function HostPayoutHistory() {
         )}
 
         {/* Cleaner Payment Details */}
-        {monthCleanerJobs.length > 0 && (
+        {displayedCleanerJobs.length > 0 && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
             <Card>
               <CardHeader>
@@ -476,7 +407,7 @@ export default function HostPayoutHistory() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 max-h-[500px] overflow-y-auto">
-                  {monthCleanerJobs.map((job) => (
+                  {displayedCleanerJobs.map((job) => (
                     <div key={job.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
                       <div className="flex justify-between items-start mb-3">
                         <div>
@@ -512,12 +443,14 @@ export default function HostPayoutHistory() {
         )}
 
         {/* Empty State */}
-        {monthBookings.length === 0 && monthCleanerJobs.length === 0 && (
+        {displayedBookings.length === 0 && displayedCleanerJobs.length === 0 && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <Card>
               <CardContent className="text-center py-12">
                 <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500 font-medium">No activity in {MONTHS.find(m => m.num === selectedMonth)?.name} {selectedYear}</p>
+                <p className="text-gray-500 font-medium">
+                  No activity {selectedMonth ? `in ${MONTHS.find(m => m.num === selectedMonth)?.name} ${selectedYear}` : `in ${selectedYear}`}
+                </p>
               </CardContent>
             </Card>
           </motion.div>
