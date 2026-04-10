@@ -262,13 +262,13 @@ export default function HostPayoutHistory() {
           </Card>
         </motion.div>
 
-        {/* Year & Month Selector */}
+        {/* Browse by Calendar Year */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Browse by Calendar Year & Month</CardTitle>
+              <CardTitle className="text-lg">Browse by Calendar Year</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div className="flex items-center justify-center gap-2 bg-gray-100 rounded-lg p-2 w-fit mx-auto">
                 <Button
                   variant="ghost"
@@ -284,6 +284,7 @@ export default function HostPayoutHistory() {
                   onChange={(e) => handleYearChange(Number(e.target.value))}
                   className="bg-transparent px-4 py-2 font-semibold text-lg border-0 focus:outline-none cursor-pointer"
                 >
+                  <option value="">Select calendar year</option>
                   {availableYears.map((year) => (
                     <option key={year} value={year}>
                       {year}
@@ -300,20 +301,49 @@ export default function HostPayoutHistory() {
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
-              <div className="flex items-center justify-center bg-gray-100 rounded-lg p-2 w-fit mx-auto">
-                <select
-                  value={selectedMonth || ""}
-                  onChange={(e) => setSelectedMonth(e.target.value || null)}
-                  className="bg-transparent px-4 py-2 font-semibold text-lg border-0 focus:outline-none cursor-pointer"
-                >
-                  <option value="">All Months</option>
-                  {MONTHS.map((month) => (
-                    <option key={month.num} value={month.num}>
-                      {month.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+
+              {selectedYear && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="space-y-6">
+                  <div className="border-t pt-6">
+                    <p className="text-sm font-medium text-gray-700 mb-3">Browse by Calendar Month</p>
+                    <div className="flex items-center justify-center bg-gray-100 rounded-lg p-2 w-fit mx-auto">
+                      <select
+                        value={selectedMonth || ""}
+                        onChange={(e) => setSelectedMonth(e.target.value || null)}
+                        className="bg-transparent px-4 py-2 font-semibold text-lg border-0 focus:outline-none cursor-pointer"
+                      >
+                        <option value="">All Months</option>
+                        {MONTHS.map((month) => (
+                          <option key={month.num} value={month.num}>
+                            {month.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="border-t pt-6 space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-teal-50 p-3 rounded-lg">
+                        <p className="text-xs text-teal-600 font-medium">Revenue from Renting</p>
+                        <p className="text-lg font-bold text-teal-700">£{displayedPayouts.gross.toFixed(2)}</p>
+                      </div>
+                      <div className="bg-red-50 p-3 rounded-lg">
+                        <p className="text-xs text-red-600 font-medium">Stripe Expense</p>
+                        <p className="text-lg font-bold text-red-700">-£{displayedPayouts.stripeFees.toFixed(2)}</p>
+                      </div>
+                      <div className="bg-purple-50 p-3 rounded-lg">
+                        <p className="text-xs text-purple-600 font-medium">Cleaner Expense</p>
+                        <p className="text-lg font-bold text-purple-700">-£{displayedCleanerStats.totalPaid.toFixed(2)}</p>
+                      </div>
+                      <div className="bg-green-50 p-3 rounded-lg">
+                        <p className="text-xs text-green-600 font-medium">Total Net Profit</p>
+                        <p className="text-lg font-bold text-green-700">£{(displayedPayouts.net - displayedCleanerStats.totalPaid).toFixed(2)}</p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
             </CardContent>
           </Card>
         </motion.div>
