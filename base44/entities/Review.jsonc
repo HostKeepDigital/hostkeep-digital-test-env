@@ -2,9 +2,22 @@
   "name": "Review",
   "type": "object",
   "properties": {
+    "review_category": {
+      "type": "string",
+      "enum": [
+        "booking",
+        "cleaning_job"
+      ],
+      "default": "booking",
+      "description": "Whether this review is for a booking or a cleaning job"
+    },
     "booking_id": {
       "type": "string",
-      "description": "Verified booking reference"
+      "description": "Related booking (if booking review)"
+    },
+    "job_id": {
+      "type": "string",
+      "description": "Related cleaning job (if job review)"
     },
     "property_id": {
       "type": "string"
@@ -17,46 +30,113 @@
     },
     "reviewee_id": {
       "type": "string",
-      "description": "Who is being reviewed (host or guest)"
+      "description": "User being reviewed"
     },
     "review_type": {
       "type": "string",
       "enum": [
         "guest_to_host",
-        "host_to_guest"
+        "host_to_guest",
+        "host_to_cleaner",
+        "cleaner_to_host"
       ],
-      "description": "Type of review"
+      "description": "Direction of review"
     },
     "rating": {
       "type": "number",
-      "description": "1-5 star rating"
+      "description": "Overall 1\u20135 star rating"
     },
     "cleanliness_rating": {
-      "type": "number"
+      "type": "number",
+      "description": "Cleanliness (guest\u2192host)"
     },
     "communication_rating": {
-      "type": "number"
+      "type": "number",
+      "description": "Communication"
     },
     "location_rating": {
-      "type": "number"
+      "type": "number",
+      "description": "Location (guest\u2192host)"
     },
     "value_rating": {
-      "type": "number"
+      "type": "number",
+      "description": "Value for money (guest\u2192host)"
+    },
+    "punctuality_rating": {
+      "type": "number",
+      "description": "Punctuality/on-time (host\u2192cleaner)"
+    },
+    "quality_rating": {
+      "type": "number",
+      "description": "Cleaning quality (host\u2192cleaner)"
+    },
+    "reliability_rating": {
+      "type": "number",
+      "description": "Reliability (host\u2192cleaner)"
+    },
+    "payment_promptness_rating": {
+      "type": "number",
+      "description": "Payment on time (cleaner\u2192host)"
+    },
+    "professionalism_rating": {
+      "type": "number",
+      "description": "Host professionalism (cleaner\u2192host)"
+    },
+    "was_late": {
+      "type": "boolean",
+      "description": "Whether cleaner arrived late (host\u2192cleaner)"
+    },
+    "notice_given": {
+      "type": "boolean",
+      "description": "Whether adequate notice was given for changes (cleaner\u2192host)"
     },
     "comment": {
       "type": "string"
     },
     "host_response": {
-      "type": "string"
+      "type": "string",
+      "description": "Response from the reviewee"
+    },
+    "blind_until": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Reviews are hidden from each other until this date (7 days after booking/job end)"
+    },
+    "both_reviewed": {
+      "type": "boolean",
+      "default": false,
+      "description": "True when both parties have submitted a review \u2014 reveals early"
     },
     "visible": {
       "type": "boolean",
-      "default": true
+      "default": true,
+      "description": "Whether this review is visible to its recipient"
+    },
+    "public_visible": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this review is shown publicly (set by processReview)"
+    },
+    "review_window_expired": {
+      "type": "boolean",
+      "default": false,
+      "description": "Set to true after 7 days if the counterpart never reviewed \u2014 they lose the option"
+    },
+    "performance_flag": {
+      "type": "boolean",
+      "default": false,
+      "description": "Admin flag: poor review on first-time reviewee"
+    },
+    "reminder_3day_sent": {
+      "type": "boolean",
+      "default": false
+    },
+    "reminder_7day_sent": {
+      "type": "boolean",
+      "default": false
     }
   },
   "required": [
-    "booking_id",
-    "property_id",
     "reviewer_id",
     "review_type",
     "rating"
