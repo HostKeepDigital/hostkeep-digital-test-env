@@ -79,8 +79,8 @@ export default function SeasonManager({ seasons = [], onUpdate }) {
     const newSeasons = UK_SCHOOL_HOLIDAYS.map(holiday => ({
       id: `holiday-${holiday.label}-${Date.now()}`,
       name: holiday.label,
-      start_date: formatDate(new Date(holiday.start.getTime() - 3 * 24 * 60 * 60 * 1000)),
-      end_date: formatDate(new Date(holiday.end.getTime() + 3 * 24 * 60 * 60 * 1000)),
+      start_date: formatDate(holiday.start),
+      end_date: formatDate(holiday.end),
       nightly_rate: Math.round(baseRate * holiday.rate),
       weekend_modifier: 0,
       min_nights: 1
