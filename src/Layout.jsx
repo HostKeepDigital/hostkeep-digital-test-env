@@ -470,7 +470,7 @@ export default function Layout({ children, currentPageName }) {
                       <Button className="bg-orange-500 hover:bg-orange-600 text-white">Sign Up</Button>
                     </Link>
                     <Link to="/SignIn">
-                      <Button className="bg-teal-600 hover:bg-teal-700">
+                      <Button className="bg-[#1E3A5F] hover:bg-[#162d4a] text-white">
                         Sign In
                       </Button>
                     </Link>
