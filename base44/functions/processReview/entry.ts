@@ -14,15 +14,30 @@ const COUNTERPART = {
   cleaner_to_host: "host_to_cleaner",
 };
 
+async function fetchWithRetry(sr, id, retries = 3, delayMs = 1000) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const r = await sr.entities.Review.get(id);
+      if (r) return r;
+    } catch (_) {}
+    if (i < retries - 1) await new Promise(res => setTimeout(res, delayMs));
+  }
+  throw new Error(`Entity Review with ID ${id} not found after ${retries} attempts`);
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const sr = base44.asServiceRole;
     const { data, event } = await req.json();
 
-    if (event?.type !== "create" || !data) return Response.json({ ok: true });
+    if (event?.type !== "create") return Response.json({ ok: true });
 
-    const review = data;
+    const entityId = event?.entity_id || data?.id;
+    if (!entityId) return Response.json({ ok: true });
+
+    // Re-fetch from DB to avoid race condition where entity isn't committed yet
+    const review = await fetchWithRetry(sr, entityId);
     const referenceId = review.review_category === "cleaning_job" ? review.job_id : review.booking_id;
     const counterpartType = COUNTERPART[review.review_type];
 
