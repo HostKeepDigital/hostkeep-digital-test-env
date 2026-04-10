@@ -3,8 +3,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, Edit } from "lucide-react";
+import { Plus, Trash2, Edit, Zap } from "lucide-react";
 import { format } from "date-fns";
+
+// UK School Holidays with ±3 day buffers
+const UK_SCHOOL_HOLIDAYS = [
+  { label: "Christmas 2025", start: new Date(2025, 11, 15), end: new Date(2026, 0, 5), rate: 1.30 },
+  { label: "Half-term (Feb)", start: new Date(2026, 1, 16), end: new Date(2026, 1, 20), rate: 1.15 },
+  { label: "Easter", start: new Date(2026, 3, 6), end: new Date(2026, 3, 20), rate: 1.25 },
+  { label: "Half-term (May)", start: new Date(2026, 4, 25), end: new Date(2026, 4, 29), rate: 1.20 },
+  { label: "Summer", start: new Date(2026, 6, 15), end: new Date(2026, 8, 1), rate: 1.35 },
+  { label: "Half-term (Oct)", start: new Date(2026, 9, 19), end: new Date(2026, 9, 23), rate: 1.20 },
+  { label: "Halloween", start: new Date(2026, 10, 1), end: new Date(2026, 10, 1), rate: 1.15 },
+  { label: "Christmas 2026", start: new Date(2026, 11, 15), end: new Date(2027, 0, 5), rate: 1.30 },
+];
+
+const formatDate = (date) => date.toISOString().split('T')[0];
 
 export default function SeasonManager({ seasons = [], onUpdate }) {
   const [editingSeason, setEditingSeason] = useState(null);
@@ -59,6 +73,21 @@ export default function SeasonManager({ seasons = [], onUpdate }) {
     setShowForm(false);
   };
 
+  const handleAutofillHolidays = () => {
+    // Add all holidays as new seasons (user can edit dates if needed)
+    const baseRate = seasons.length > 0 ? seasons[0].nightly_rate : 100;
+    const newSeasons = UK_SCHOOL_HOLIDAYS.map(holiday => ({
+      id: `holiday-${holiday.label}-${Date.now()}`,
+      name: holiday.label,
+      start_date: formatDate(new Date(holiday.start.getTime() - 3 * 24 * 60 * 60 * 1000)),
+      end_date: formatDate(new Date(holiday.end.getTime() + 3 * 24 * 60 * 60 * 1000)),
+      nightly_rate: Math.round(baseRate * holiday.rate),
+      weekend_modifier: 0,
+      min_nights: 1
+    }));
+    onUpdate([...seasons, ...newSeasons]);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -67,10 +96,16 @@ export default function SeasonManager({ seasons = [], onUpdate }) {
             <CardTitle>Seasonal Pricing</CardTitle>
             <CardDescription>Define pricing for peak seasons, holidays, and special periods</CardDescription>
           </div>
-          <Button onClick={() => setShowForm(!showForm)} size="sm">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Season
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button onClick={handleAutofillHolidays} variant="outline" size="sm">
+              <Zap className="w-4 h-4 mr-2" />
+              Autofill Holidays
+            </Button>
+            <Button onClick={() => setShowForm(!showForm)} size="sm">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Season
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
