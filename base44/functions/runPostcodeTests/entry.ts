@@ -225,60 +225,45 @@ function buildEmailBody({ ok, batches, summary }) {
   return lines.join("\n");
 }
 
+async function sendResendEmail({ to, subject, text }) {
+  const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+  await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${RESEND_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: "HostKeep System <noreply@hostkeepdigital.co.uk>",
+      to: [to],
+      subject,
+      text,
+    }),
+  });
+}
+
 Deno.serve(async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
-    const serviceRole = base44.asServiceRole;
-
-    // Extract session token
-    const body = await req.json().catch(() => ({}));
-    const session_token =
-      body.session_token || req.headers.get("x-session-token");
-
-    if (!session_token) {
-      return Response.json(
-        { error: "Missing session token", authenticated: false },
-        { status: 401 }
-      );
-    }
-
-    // Validate session using your new auth model
-    const sessionCheck = await serviceRole.functions.invoke(
-      "checkSession",
-      { session_token }
-    );
-
-    const session = sessionCheck?.data;
-
-    if (!session?.authenticated) {
-      return Response.json(
-        { error: "Invalid or expired session", authenticated: false },
-        { status: 401 }
-      );
-    }
-
-    // Run the test suite
+    // Run the test suite (no session required — called by scheduled automation)
     const result = await runSuite();
     const { ok, batches, summary, logs } = result;
 
-    // Send email via Base44 SendEmail integration
+    // Send result email via Resend (supports external addresses)
     const emailBody = buildEmailBody({ ok, batches, summary });
-    await base44.integrations.Core.SendEmail({
+    await sendResendEmail({
       to: "Admin@hostkeepdigital.co.uk",
       subject: `${ok ? "✅" : "❌"} Postcode Tests — ${new Date().toISOString()}`,
-      body: emailBody
+      text: emailBody,
     });
 
     return Response.json({ ok, batches, summary, logs });
   } catch (error) {
-    // Try to send error alert
+    // Try to send error alert via Resend
     try {
-      const base44 = createClientFromRequest(req);
-      await base44.integrations.Core.SendEmail({
+      await sendResendEmail({
         to: "Admin@hostkeepdigital.co.uk",
         subject: `❌ Postcode Test Endpoint Error — ${new Date().toISOString()}`,
-        body:
-          `The postcode test endpoint threw an unexpected error:\n\n${error.message}\n\n${error.stack || ""}`
+        text: `The postcode test endpoint threw an unexpected error:\n\n${error.message}\n\n${error.stack || ""}`,
       });
     } catch (_) {}
 
