@@ -17,11 +17,13 @@ Deno.serve(async (req) => {
       return Response.json({ error: "postcode_area and property_type are required" }, { status: 400 });
     }
 
+    // When "all" is selected, run a broad holiday-let search but still save as "holiday let"
+    const resolvedType = property_type === "all" ? "holiday let" : property_type;
     const location = [town, county, `(${postcode_area})`].filter(Boolean).join(", ");
     const bedroomStr = bedrooms ? `${bedrooms}-bedroom ` : "";
 
     const prompt = `
-You are a UK short-term rental market analyst. Research current competitor pricing for ${bedroomStr}${property_type} holiday lets in ${location}, UK.
+You are a UK short-term rental market analyst. Research current competitor pricing for ${bedroomStr}${resolvedType} holiday lets in ${location}, UK.
 
 Search Airbnb, Booking.com, VRBO, and other UK STR platforms for real listings in this area.
 
@@ -68,12 +70,14 @@ If specific data is scarce, use reasonable estimates based on comparable UK coas
       },
     });
 
-    // Delete any existing record for same area+type+bedrooms to avoid stale duplicates
-    const existing = await base44.asServiceRole.entities.MarketPricing.filter({
+    // Mark existing records for same area+type+(town)+bedrooms as stale
+    const filterQuery = {
       postcode_area,
-      property_type,
+      property_type: resolvedType,
+      ...(town ? { town } : {}),
       ...(bedrooms ? { bedrooms } : {}),
-    });
+    };
+    const existing = await base44.asServiceRole.entities.MarketPricing.filter(filterQuery);
     for (const r of existing) {
       await base44.asServiceRole.entities.MarketPricing.update(r.id, { is_stale: true });
     }
@@ -83,7 +87,7 @@ If specific data is scarce, use reasonable estimates based on comparable UK coas
       postcode_area,
       town: town || null,
       county: county || null,
-      property_type,
+      property_type: resolvedType,
       bedrooms: bedrooms || null,
       avg_nightly_rate:    result.avg_nightly_rate,
       min_nightly_rate:    result.min_nightly_rate,

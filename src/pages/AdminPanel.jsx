@@ -71,42 +71,74 @@ const ACTIVE_STATUSES = new Set([
   "rejected_pending_application",
 ]);
 
-// ── UK SECTORS ───────────────────────────────────────────────────────────────
+// ── UK SECTORS (full UK coverage) ───────────────────────────────────────────
 
 const SECTORS = [
-  // Coordinates verified against real UK geography
-  { id:"cornwall_devon",      name:"Cornwall & Devon",              postcodes:["TR","PL","EX"],                  maxH:20, maxC:10, lat:50.55, lng:-4.20, status:"live"    },
-  { id:"dorset_jurassic",     name:"Dorset & Jurassic Coast",       postcodes:["DT","BH"],                       maxH:20, maxC:10, lat:50.75, lng:-2.20, status:"waiting" },
-  { id:"somerset_exmoor",     name:"Somerset & Exmoor",             postcodes:["TA"],                            maxH:20, maxC:10, lat:51.10, lng:-3.10, status:"waiting" },
-  { id:"bath_bristol",        name:"Bath, Bristol & Wells",         postcodes:["BA","BS"],                       maxH:20, maxC:10, lat:51.45, lng:-2.60, status:"waiting" },
-  { id:"hampshire_iow",       name:"Hampshire & Isle of Wight",     postcodes:["SO","PO"],                       maxH:20, maxC:10, lat:50.90, lng:-1.40, status:"waiting" },
-  { id:"sussex_kent",         name:"Sussex, Kent & Brighton",       postcodes:["BN","TN","CT","ME"],             maxH:20, maxC:10, lat:51.10, lng: 0.55, status:"waiting" },
-  { id:"cotswolds",           name:"Cotswolds & Oxfordshire",       postcodes:["GL","OX","CV"],                  maxH:20, maxC:10, lat:51.85, lng:-1.65, status:"waiting" },
-  { id:"london",              name:"London & Greater London",       postcodes:["E","N","W","SE","SW","EC","WC"], maxH:20, maxC:10, lat:51.51, lng:-0.12, status:"phase3"  },
-  { id:"cambridge",           name:"Cambridge & Historic East",     postcodes:["CB","PE"],                       maxH:20, maxC:10, lat:52.20, lng: 0.12, status:"waiting" },
-  { id:"norfolk_suffolk",     name:"Norfolk & Suffolk Coast",       postcodes:["NR","IP"],                       maxH:20, maxC:10, lat:52.63, lng: 1.30, status:"waiting" },
-  { id:"south_wales",         name:"South Wales & Pembrokeshire",   postcodes:["SA","NP"],                       maxH:20, maxC:10, lat:51.85, lng:-4.00, status:"waiting" },
-  { id:"cardiff",             name:"Cardiff & Vale",                postcodes:["CF"],                            maxH:20, maxC:10, lat:51.48, lng:-3.18, status:"waiting" },
-  { id:"north_wales",         name:"North Wales & Snowdonia",       postcodes:["LL","SY","CH"],                  maxH:20, maxC:10, lat:53.07, lng:-3.90, status:"waiting" },
-  { id:"liverpool",           name:"Liverpool & Merseyside",        postcodes:["L","CH","PR"],                   maxH:20, maxC:10, lat:53.40, lng:-2.98, status:"waiting" },
-  { id:"manchester",          name:"Manchester & Salford",          postcodes:["M","BL","OL","SK"],              maxH:20, maxC:10, lat:53.48, lng:-2.24, status:"phase3"  },
-  { id:"york_harrogate",      name:"York & Harrogate",              postcodes:["YO1","HG"],                      maxH:20, maxC:10, lat:53.96, lng:-1.09, status:"waiting" },
-  { id:"yorkshire_coast",     name:"Yorkshire Coast & Moors",       postcodes:["YO","HU","HG"],                  maxH:20, maxC:10, lat:54.30, lng:-0.55, status:"waiting" },
-  { id:"lake_district",       name:"Lake District & Cumbria",       postcodes:["CA","LA"],                       maxH:20, maxC:10, lat:54.55, lng:-3.00, status:"waiting" },
-  { id:"northern_ireland",    name:"Northern Ireland & Causeway",   postcodes:["BT"],                            maxH:20, maxC:10, lat:54.78, lng:-6.50, status:"waiting" },
-  { id:"edinburgh",           name:"Edinburgh & Lothians",          postcodes:["EH","TD","KY"],                  maxH:20, maxC:10, lat:55.95, lng:-3.20, status:"waiting" },
-  { id:"scottish_highlands",  name:"Scottish Highlands & Islands",  postcodes:["IV","PH","KW","PA"],             maxH:20, maxC:10, lat:57.50, lng:-4.40, status:"waiting" },
+  // ── South West England ───────────────────────────────────────────────────
+  { id:"cornwall",        name:"Cornwall & Isles of Scilly",         postcodes:["TR"],                                      maxH:20, maxC:10, lat:50.26, lng:-5.05, status:"live"    },
+  { id:"devon",           name:"Devon & Torbay",                     postcodes:["PL","EX","TQ"],                           maxH:20, maxC:10, lat:50.73, lng:-3.85, status:"waiting" },
+  { id:"dorset",          name:"Dorset & Jurassic Coast",            postcodes:["DT","BH"],                                maxH:20, maxC:10, lat:50.75, lng:-2.20, status:"waiting" },
+  { id:"somerset",        name:"Somerset & Exmoor",                  postcodes:["TA"],                                     maxH:20, maxC:10, lat:51.10, lng:-3.10, status:"waiting" },
+  { id:"bristol",         name:"Bristol, Bath & Wiltshire",          postcodes:["BS","BA","SN","SP"],                      maxH:20, maxC:10, lat:51.45, lng:-2.60, status:"waiting" },
+  // ── South East England ───────────────────────────────────────────────────
+  { id:"hampshire",       name:"Hampshire & Isle of Wight",          postcodes:["SO","PO"],                                maxH:20, maxC:10, lat:50.90, lng:-1.40, status:"waiting" },
+  { id:"sussex_kent",     name:"Sussex, Kent & East Surrey",         postcodes:["BN","TN","CT","ME","DA","RH"],           maxH:20, maxC:10, lat:51.10, lng: 0.55, status:"waiting" },
+  { id:"surrey_berks",    name:"Surrey, Berkshire & Thames Valley",  postcodes:["GU","KT","RG","SL","TW","SM","CR","BR"], maxH:20, maxC:10, lat:51.38, lng:-0.75, status:"waiting" },
+  { id:"london",          name:"Greater London",                     postcodes:["EC","WC","WD","SE","SW","NW","E","N","W","HA","UB","IG","RM","EN"], maxH:30, maxC:15, lat:51.51, lng:-0.12, status:"phase3"  },
+  { id:"essex_herts",     name:"Essex & Hertfordshire",              postcodes:["CM","CO","SS","SG","AL","LU","HP"],       maxH:20, maxC:10, lat:51.76, lng: 0.22, status:"waiting" },
+  { id:"oxfordshire",     name:"Oxfordshire & Buckinghamshire",      postcodes:["OX","MK"],                               maxH:20, maxC:10, lat:51.82, lng:-1.20, status:"waiting" },
+  { id:"cotswolds",       name:"Cotswolds & Gloucestershire",        postcodes:["GL","HR","WR"],                          maxH:20, maxC:10, lat:51.85, lng:-1.90, status:"waiting" },
+  // ── East of England ─────────────────────────────────────────────────────
+  { id:"norfolk_suffolk", name:"Norfolk & Suffolk Coast",            postcodes:["NR","IP"],                               maxH:20, maxC:10, lat:52.63, lng: 1.30, status:"waiting" },
+  { id:"cambridge",       name:"Cambridge & The Fens",               postcodes:["CB","PE"],                               maxH:20, maxC:10, lat:52.20, lng: 0.12, status:"waiting" },
+  { id:"lincolnshire",    name:"Lincolnshire Coast & Wolds",         postcodes:["LN","DN"],                               maxH:20, maxC:10, lat:53.22, lng:-0.54, status:"waiting" },
+  // ── Midlands ────────────────────────────────────────────────────────────
+  { id:"east_midlands",   name:"East Midlands",                      postcodes:["LE","NN","NG","DE","CV"],                maxH:20, maxC:10, lat:52.64, lng:-1.13, status:"waiting" },
+  { id:"west_midlands",   name:"West Midlands & Black Country",      postcodes:["B","WV","WS","DY","ST","TF"],            maxH:20, maxC:10, lat:52.49, lng:-1.90, status:"phase3"  },
+  { id:"shropshire",      name:"Shropshire & Welsh Borders",         postcodes:["SY","WR"],                               maxH:20, maxC:10, lat:52.71, lng:-2.76, status:"waiting" },
+  // ── North West England ───────────────────────────────────────────────────
+  { id:"cheshire",        name:"Cheshire & Peak District",           postcodes:["CW","CH","SK","WA"],                     maxH:20, maxC:10, lat:53.19, lng:-2.50, status:"waiting" },
+  { id:"manchester",      name:"Greater Manchester & Merseyside",    postcodes:["M","BL","OL","WN","L"],                  maxH:20, maxC:10, lat:53.48, lng:-2.55, status:"phase3"  },
+  { id:"lancashire",      name:"Lancashire & Fylde Coast",           postcodes:["PR","FY","BB"],                          maxH:20, maxC:10, lat:53.83, lng:-2.60, status:"waiting" },
+  { id:"cumbria",         name:"Cumbria & Lake District",            postcodes:["CA","LA"],                               maxH:20, maxC:10, lat:54.55, lng:-3.00, status:"waiting" },
+  // ── Yorkshire & North East ───────────────────────────────────────────────
+  { id:"yorkshire",       name:"Yorkshire (Leeds, York & Dales)",    postcodes:["LS","BD","HX","WF","HG","HD","S","HU"], maxH:20, maxC:10, lat:53.80, lng:-1.55, status:"waiting" },
+  { id:"north_yorkshire", name:"North Yorkshire Moors & Coast",      postcodes:["YO","DL"],                               maxH:20, maxC:10, lat:54.30, lng:-0.55, status:"waiting" },
+  { id:"north_east",      name:"North East England",                 postcodes:["NE","DH","SR","TS"],                     maxH:20, maxC:10, lat:54.97, lng:-1.62, status:"waiting" },
+  // ── Wales ───────────────────────────────────────────────────────────────
+  { id:"north_wales",     name:"North Wales & Snowdonia",            postcodes:["LL"],                                    maxH:20, maxC:10, lat:53.10, lng:-3.85, status:"waiting" },
+  { id:"mid_wales",       name:"Mid Wales & Ceredigion",             postcodes:["LD"],                                    maxH:20, maxC:10, lat:52.36, lng:-3.62, status:"waiting" },
+  { id:"pembrokeshire",   name:"Pembrokeshire & West Wales",         postcodes:["SA"],                                    maxH:20, maxC:10, lat:51.85, lng:-4.70, status:"waiting" },
+  { id:"south_wales",     name:"South Wales, Cardiff & Newport",     postcodes:["CF","NP"],                               maxH:20, maxC:10, lat:51.50, lng:-3.18, status:"waiting" },
+  // ── Scotland ────────────────────────────────────────────────────────────
+  { id:"scottish_borders",name:"Scottish Borders & Dumfries",        postcodes:["TD","DG"],                               maxH:20, maxC:10, lat:55.25, lng:-2.85, status:"waiting" },
+  { id:"edinburgh",       name:"Edinburgh, Lothians & Fife",         postcodes:["EH","KY"],                               maxH:20, maxC:10, lat:55.95, lng:-3.20, status:"waiting" },
+  { id:"glasgow",         name:"Glasgow, Clyde Valley & Ayrshire",   postcodes:["G","ML","KA","FK"],                      maxH:20, maxC:10, lat:55.86, lng:-4.25, status:"waiting" },
+  { id:"argyll",          name:"Argyll, Loch Lomond & Trossachs",    postcodes:["PA"],                                    maxH:20, maxC:10, lat:56.28, lng:-4.90, status:"waiting" },
+  { id:"tayside",         name:"Tayside, Perthshire & Dundee",       postcodes:["DD","PH"],                               maxH:20, maxC:10, lat:56.60, lng:-3.50, status:"waiting" },
+  { id:"aberdeen",        name:"Aberdeen & Aberdeenshire",           postcodes:["AB"],                                    maxH:20, maxC:10, lat:57.15, lng:-2.11, status:"waiting" },
+  { id:"highlands",       name:"Highlands & Inverness",              postcodes:["IV"],                                    maxH:20, maxC:10, lat:57.50, lng:-4.40, status:"waiting" },
+  { id:"far_north",       name:"Far North Scotland & Caithness",     postcodes:["KW"],                                    maxH:20, maxC:10, lat:58.44, lng:-3.09, status:"waiting" },
+  { id:"western_isles",   name:"Western Isles & Outer Hebrides",     postcodes:["HS"],                                    maxH:20, maxC:10, lat:57.90, lng:-7.00, status:"waiting" },
+  { id:"orkney_shetland", name:"Orkney & Shetland",                  postcodes:["ZE"],                                    maxH:20, maxC:10, lat:60.20, lng:-1.15, status:"waiting" },
+  // ── Northern Ireland ─────────────────────────────────────────────────────
+  { id:"northern_ireland",name:"Northern Ireland",                   postcodes:["BT"],                                    maxH:20, maxC:10, lat:54.78, lng:-6.50, status:"waiting" },
 ];
 
+// Use longest-prefix match so e.g. "NE" beats "N", "SE" beats "S", "EC" beats "E"
 function getSectorId(postcode) {
   if (!postcode) return null;
   const clean = postcode.trim().toUpperCase();
+  let bestId = null, bestLen = 0;
   for (const s of SECTORS) {
     for (const p of s.postcodes) {
-      if (clean.startsWith(p)) return s.id;
+      if (clean.startsWith(p) && p.length > bestLen) {
+        bestId = s.id;
+        bestLen = p.length;
+      }
     }
   }
-  return null;
+  return bestId;
 }
 
 // ── PLAN CONSTANTS ───────────────────────────────────────────────────────────
