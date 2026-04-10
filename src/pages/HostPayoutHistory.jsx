@@ -63,7 +63,10 @@ export default function HostPayoutHistory() {
   // Fetch bookings to calculate payouts
   const { data: bookings = [], isLoading: bookingsLoading } = useQuery({
     queryKey: ["host-bookings-payout", user?.id],
-    queryFn: () => base44.entities.Booking.filter({ host_id: user?.id }),
+    queryFn: async () => {
+      const result = await base44.entities.Booking.filter({ host_id: user?.id });
+      return result || [];
+    },
     enabled: !!user?.id,
   });
 
