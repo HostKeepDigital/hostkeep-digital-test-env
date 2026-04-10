@@ -1,0 +1,53 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "Recipient user ID"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "booking_request",
+        "booking_confirmed",
+        "booking_declined",
+        "booking_cancelled",
+        "booking_checked_in",
+        "booking_completed",
+        "new_message",
+        "cleaning_job_assigned",
+        "cleaning_job_accepted",
+        "cleaning_job_declined",
+        "cleaning_job_completed",
+        "payment_received",
+        "payment_due",
+        "general"
+      ],
+      "description": "Notification type"
+    },
+    "title": {
+      "type": "string",
+      "description": "Short notification title"
+    },
+    "body": {
+      "type": "string",
+      "description": "Notification body text"
+    },
+    "link": {
+      "type": "string",
+      "description": "Optional deep link path (e.g. /HostBookings)"
+    },
+    "read": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the user has read this notification"
+    }
+  },
+  "required": [
+    "user_id",
+    "type",
+    "title",
+    "body"
+  ]
+}

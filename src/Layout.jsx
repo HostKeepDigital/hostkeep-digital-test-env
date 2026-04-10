@@ -30,6 +30,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Footer from "@/components/Footer";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import NotificationBell from "@/components/NotificationBell";
 import { hasRole } from "@/components/utils/roleHelpers";
 import RoleSwitcher from "@/components/RoleSwitcher";
 import AppLockWrapper from "@/components/AppLockWrapper";
@@ -130,6 +131,7 @@ export default function Layout({ children, currentPageName }) {
                 <Link to={createPageUrl("HostMessages")} className={`text-sm font-medium ${currentPageName === "HostMessages" ? "text-teal-600" : "text-gray-600 hover:text-gray-900"}`}>Messages</Link>
               </nav>
               <div className="flex items-center gap-3">
+                {isAuthenticated && <NotificationBell />}
                 <RoleSwitcher userRoles={userRoles} currentPageName={currentPageName} />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -332,6 +334,7 @@ export default function Layout({ children, currentPageName }) {
               </nav>
 
               <div className="flex items-center gap-3">
+                {isAuthenticated && <NotificationBell />}
                 {isAuthenticated ? (
                   <>
                     <RoleSwitcher userRoles={userRoles} currentPageName={currentPageName} />

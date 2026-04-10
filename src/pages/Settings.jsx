@@ -73,9 +73,11 @@ export default function Settings() {
   });
 
   const [notifications, setNotifications] = useState({
-    notifications_bookings: true,
-    notifications_messages: true,
-    notifications_marketing: false,
+    bookings: true,
+    messages: true,
+    jobs: true,
+    payments: true,
+    marketing: false,
   });
 
   useEffect(() => {
@@ -118,6 +120,14 @@ export default function Settings() {
           }));
         }
       });
+
+    // Load notification preferences
+    base44.entities.User.filter({ id: user.id }).then((records) => {
+      const prefs = records?.[0]?.notification_preferences;
+      if (prefs && typeof prefs === "object") {
+        setNotifications((prev) => ({ ...prev, ...prefs }));
+      }
+    }).catch(() => {});
 
     base44.entities.UserRole.filter({ user_id: user.id }).then(setUserRoles).catch(() => {});
   }, [user?.id]);
@@ -215,6 +225,10 @@ export default function Settings() {
   const handleNotificationToggle = async (field, value) => {
     const updated = { ...notifications, [field]: value };
     setNotifications(updated);
+    // Persist immediately
+    if (user?.id) {
+      base44.entities.User.update(user.id, { notification_preferences: updated }).catch(() => {});
+    }
   };
 
   const handleDeletePreCheck = async () => {
@@ -461,15 +475,17 @@ const handleDeleteAccount = async () => {
             <Card>
               <CardHeader>
                 <CardTitle>Notification Preferences</CardTitle>
-                <CardDescription>Choose what emails you'd like to receive</CardDescription>
+                <CardDescription>Choose what you'd like to be notified about — changes save instantly</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {[
-                  { field: "notifications_bookings", label: "Booking Notifications", desc: "New bookings, cancellations, and reminders" },
-                  { field: "notifications_messages", label: "Message Notifications", desc: "New messages from guests or hosts" },
-                  { field: "notifications_marketing", label: "Marketing Emails", desc: "Tips, news, and special offers" },
+                  { field: "bookings", label: "Booking Notifications", desc: "New booking requests, confirmations, cancellations, and check-ins" },
+                  { field: "messages", label: "Message Notifications", desc: "New messages from guests, hosts, or cleaners" },
+                  { field: "jobs", label: "Cleaning Job Updates", desc: "Job assignments, acceptances, declines, and completions" },
+                  { field: "payments", label: "Payment Alerts", desc: "Payment confirmations and upcoming balance due reminders" },
+                  { field: "marketing", label: "Marketing Emails", desc: "Tips, news, and special offers from HostKeep" },
                 ].map(({ field, label, desc }) => (
-                  <div key={field} className="flex items-center justify-between">
+                  <div key={field} className="flex items-center justify-between py-1">
                     <div>
                       <p className="font-medium text-gray-900">{label}</p>
                       <p className="text-sm text-gray-500">{desc}</p>
