@@ -146,6 +146,7 @@ export default function SmartPricingTab() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [snapshotCount, setSnapshotCount] = useState(0);
+  const [view, setView] = useState("rules");
 
   const load = async () => {
     setLoading(true);
@@ -276,8 +277,6 @@ export default function SmartPricingTab() {
     </div>
   );
 
-  const [view, setView] = useState("rules");
-
   return (
     <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
 
@@ -300,16 +299,16 @@ export default function SmartPricingTab() {
 
       {view === "rules" && <div className="space-y-6">
 
-      {/* Header */}
-        <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4">
-          <p className="text-sm text-amber-700 font-semibold mb-1">No pricing data yet</p>
-          <p className="text-xs text-amber-600">
-            PricingSnapshots are captured automatically each time a booking is confirmed.
-            As bookings come in, the charts below will populate with real market rate data.
-            You can still configure adjustments in advance — they'll be stored and ready to use.
-          </p>
-        </div>
-      )}
+        {snapshotCount === 0 && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4">
+            <p className="text-sm text-amber-700 font-semibold mb-1">No pricing data yet</p>
+            <p className="text-xs text-amber-600">
+              PricingSnapshots are captured automatically each time a booking is confirmed.
+              As bookings come in, the charts below will populate with real market rate data.
+              You can still configure adjustments in advance — they'll be stored and ready to use.
+            </p>
+          </div>
+        )}
 
       {/* Seasonality */}
       <RuleSection
