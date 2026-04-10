@@ -64,15 +64,42 @@ export default function ChatWindow({
       job_id: conversation.jobId,
       property_id: conversation.propertyId,
       sender_id: currentUserId,
-      sender_name: "Me", // Should be actual name from context
+      sender_name: "Me",
       receiver_id: conversation.otherPartyId,
       content,
       message_type: "text",
       read: false,
       created_date: new Date().toISOString()
     }),
-    onSuccess: () => {
+    onMutate: async (content) => {
       setNewMessage("");
+      await queryClient.cancelQueries({ queryKey: ['messages'] });
+      const previous = queryClient.getQueryData(['messages']);
+      const optimisticMsg = {
+        id: `optimistic-${Date.now()}`,
+        conversation_id: conversation.id,
+        sender_id: currentUserId,
+        receiver_id: conversation.otherPartyId,
+        content,
+        message_type: "text",
+        read: false,
+        created_date: new Date().toISOString(),
+      };
+      queryClient.setQueryData(['messages'], (old) => {
+        if (!old) return old;
+        if (Array.isArray(old)) return [...old, optimisticMsg];
+        return old;
+      });
+      return { previous };
+    },
+    onError: (_err, content, context) => {
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData(['messages'], context.previous);
+      }
+      setNewMessage(content);
+      toast.error("Failed to send message");
+    },
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['messages'] });
     },
   });

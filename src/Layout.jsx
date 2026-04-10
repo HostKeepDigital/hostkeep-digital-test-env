@@ -39,9 +39,11 @@ import { useAuth } from "@/lib/AuthContext";
 // Pages without layout (guest facing / public)
 const PUBLIC_PAGES = ["Pay"];
 
-// Root tab pages — no back button shown
-const HOST_ROOT_PAGES = new Set(["HostDashboard", "HostProperties", "HostBookings", "HostMessages", "HostCancellationPolicies"]);
-const GUEST_ROOT_PAGES = new Set(["Home", "Search", "MyTrips", "GuestMessages", "Settings"]);
+// Root tab paths — no back button shown on these pages (path-based, mirrors MobileBottomNav)
+const ROOT_PATHS = new Set([
+  "/", "/Home", "/Search", "/MyTrips", "/GuestMessages", "/Settings",
+  "/HostDashboard", "/HostProperties", "/HostBookings", "/HostMessages", "/HostCancellationPolicies",
+]);
 
 // Host dashboard pages
 const HOST_PAGES = [
@@ -76,6 +78,7 @@ export default function Layout({ children, currentPageName }) {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [navBlocker, setNavBlocker] = useState(null);
+  const isRootPath = ROOT_PATHS.has(location.pathname);
 
   const handleNavClick = (e, path) => {
     if (navBlocker) {
@@ -189,7 +192,7 @@ export default function Layout({ children, currentPageName }) {
           {/* Mobile Header */}
           <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
             <div className="flex items-center justify-between px-4 py-3">
-              {HOST_ROOT_PAGES.has(currentPageName) ? (
+              {isRootPath ? (
                 <Link
                   to={createPageUrl("Home")}
                   onClick={(e) => handleNavClick(e, createPageUrl("Home"))}
@@ -275,7 +278,7 @@ export default function Layout({ children, currentPageName }) {
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex items-center justify-between h-16">
               {/* Mobile: back button on child pages, logo on root pages */}
-              {!GUEST_ROOT_PAGES.has(currentPageName) ? (
+              {!isRootPath ? (
                 <button onClick={() => navigate(-1)} className="flex md:hidden items-center gap-2 text-gray-600 mr-3">
                   <ArrowLeft className="w-5 h-5" />
                 </button>
