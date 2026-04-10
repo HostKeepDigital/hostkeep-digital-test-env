@@ -16,9 +16,23 @@ Deno.serve(async (req) => {
     }
 
     // Fetch property details
-    const property = await base44.asServiceRole.entities.Property.get(propertyId);
-    if (!property || property.owner_id !== user.id) {
+    let property;
+    try {
+      property = await base44.asServiceRole.entities.Property.get(propertyId);
+    } catch (err) {
       return Response.json({ error: 'Property not found' }, { status: 404 });
+    }
+    if (!property || property.owner_id !== user.id) {
+      return Response.json({ error: 'Not authorized to access this property' }, { status: 403 });
+    }
+
+    // Validate minimum required information
+    const baseRate = currentSettings?.base_rate || property.nightly_rate;
+    if (!baseRate || !property.property_type || !property.postcode_area) {
+      return Response.json({
+        error: 'Insufficient property information. Please complete: property type, location, and base nightly rate.',
+        status: 'insufficient_data'
+      }, { status: 400 });
     }
 
     // Fetch recent bookings to analyze trends

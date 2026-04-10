@@ -10,23 +10,39 @@ export default function PricingAssistant({ propertyId, currentSettings, onApplyR
   const [error, setError] = useState(null);
   const [appliedChanges, setAppliedChanges] = useState({});
 
+  // Don't render if no property ID
+  if (!propertyId) {
+    return null;
+  }
+
   const fetchRecommendations = async () => {
+    if (!propertyId) {
+      setError('Property information is missing');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
       const response = await base44.functions.invoke('getPricingRecommendations', {
         propertyId,
-        currentSettings
+        currentSettings: currentSettings || {}
       });
 
       if (response.data.success) {
         setRecommendations(response.data.recommendations);
       } else {
-        setError(response.data.error || 'Failed to get recommendations');
+        const errorMsg = response.data.error || 'Failed to get recommendations';
+        if (response.data.status === 'insufficient_data') {
+          setError(errorMsg);
+        } else {
+          setError(errorMsg);
+        }
       }
     } catch (err) {
       console.error('Pricing recommendations error:', err);
-      setError(err.message || 'Unable to fetch recommendations. Please try again.');
+      const msg = err.response?.data?.error || err.message || 'Unable to fetch recommendations. Please ensure all property details are complete.';
+      setError(msg);
     } finally {
       setLoading(false);
     }
