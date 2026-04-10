@@ -10,6 +10,18 @@
       ],
       "default": "user"
     },
+    "forename": {
+      "type": "string",
+      "description": "First name"
+    },
+    "middle_name": {
+      "type": "string",
+      "description": "Middle name (optional)"
+    },
+    "surname": {
+      "type": "string",
+      "description": "Surname"
+    },
     "phone": {
       "type": "string"
     },
@@ -24,6 +36,11 @@
     },
     "notification_preferences": {
       "type": "object"
+    },
+    "is_founding_member": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if this user signed up as a founding member \u2014 unlocks founding badge and founding subscriptions"
     },
     "stripe_connect_account_id": {
       "type": "string",

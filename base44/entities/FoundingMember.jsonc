@@ -4,19 +4,7 @@
   "properties": {
     "full_name": {
       "type": "string",
-      "description": "Full name of the founding member"
-    },
-    "forename": {
-      "type": "string",
-      "description": "First name"
-    },
-    "middle_name": {
-      "type": "string",
-      "description": "Middle name (optional)"
-    },
-    "surname": {
-      "type": "string",
-      "description": "Surname"
+      "description": "Full name of the founding member (onboarding record only)"
     },
     "email": {
       "type": "string",
@@ -33,6 +21,14 @@
     "postcode": {
       "type": "string",
       "description": "Property/home postcode"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Phone number (onboarding record)"
+    },
+    "location": {
+      "type": "string",
+      "description": "Location / town (onboarding record)"
     },
     "signup_timestamp": {
       "type": "string",
@@ -64,14 +60,6 @@
       ],
       "default": "pending",
       "description": "Admin approval + onboarding status"
-    },
-    "phone": {
-      "type": "string",
-      "description": "Phone number"
-    },
-    "location": {
-      "type": "string",
-      "description": "Location / town"
     }
   },
   "required": [

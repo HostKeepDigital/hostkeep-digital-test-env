@@ -8,145 +8,58 @@ Deno.serve(async (req) => {
     const { session_token } = await req.json();
 
     if (!session_token) {
-      return Response.json(
-        { success: false, error: "missing_fields" },
-        { status: 400 }
-      );
+      return Response.json({ success: false, error: "missing_fields" }, { status: 400 });
     }
 
-    // Look up session
-    const sessions = await serviceRole.entities.UserSession.filter({
-      session_token,
-    });
+    const sessions = await serviceRole.entities.UserSession.filter({ session_token });
     const session = sessions?.[0];
 
     if (!session) {
-      return Response.json(
-        { success: false, error: "invalid_session" },
-        { status: 401 }
-      );
+      return Response.json({ success: false, error: "invalid_session" }, { status: 401 });
     }
 
-    // Check expiry
     if (new Date(session.expires_at) < new Date()) {
-      return Response.json(
-        { success: false, error: "session_expired" },
-        { status: 401 }
-      );
+      return Response.json({ success: false, error: "session_expired" }, { status: 401 });
     }
 
     const normalisedEmail = session.email.toLowerCase().trim();
 
-    // Start with session values
-    let role = session.role || null;
-    let founding_member_id = session.founding_member_id || null;
-    let user = null;
-
-    // ────────────────────────────────────────────────────────────────
-    // 1. FoundingMember lookup (always preferred for profile fields)
-    // ────────────────────────────────────────────────────────────────
-    const members = await serviceRole.entities.FoundingMember.filter({
-      email: normalisedEmail,
-    });
-
-    if (members?.[0]) {
-      user = members[0];
-
-      // Only override role if session.role is empty or guest
-      if (!role || role === "guest") {
-        role = members[0].role;
-      }
-
-      founding_member_id = founding_member_id || members[0].id;
+    // Always load from User entity — the single source of truth for profile data
+    let userRecord = null;
+    if (session.user_id) {
+      userRecord = await serviceRole.entities.User.get(session.user_id);
     }
 
-    // ────────────────────────────────────────────────────────────────
-    // 2. Legacy Host entity
-    // ────────────────────────────────────────────────────────────────
-    if (!user) {
-      const hosts = await serviceRole.entities.Host.filter({
-        email: normalisedEmail,
-      });
-
-      if (hosts?.[0]) {
-        user = hosts[0];
-
-        if (!role || role === "guest") {
-          role = "host";
-        }
-      }
+    // Postcode is still sourced from FoundingMember (onboarding record)
+    let signup_postcode = null;
+    if (session.founding_member_id) {
+      try {
+        const fm = await serviceRole.entities.FoundingMember.get(session.founding_member_id);
+        signup_postcode = (fm?.postcode || "").trim().toUpperCase() || null;
+      } catch (_) {}
     }
 
-    // ────────────────────────────────────────────────────────────────
-    // 3. Legacy Cleaner entity
-    // ────────────────────────────────────────────────────────────────
-    if (!user) {
-      const cleaners = await serviceRole.entities.Cleaner.filter({
-        email: normalisedEmail,
-      });
-
-      if (cleaners?.[0]) {
-        user = cleaners[0];
-
-        if (!role || role === "guest") {
-          role = "cleaner";
-        }
-      }
-    }
-
-    // ────────────────────────────────────────────────────────────────
-    // 4. Legacy Guest entity
-    // ────────────────────────────────────────────────────────────────
-    if (!user) {
-      const guests = await serviceRole.entities.Guest.filter({
-        email: normalisedEmail,
-      });
-
-      if (guests?.[0]) {
-        user = guests[0];
-
-        if (!role) {
-          role = "guest";
-        }
-      }
-    }
-
-    // ────────────────────────────────────────────────────────────────
-    // 5. Load FoundingMember profile for merged fields
-    // ────────────────────────────────────────────────────────────────
-    let fmProfile = null;
-
-    if (founding_member_id) {
-      fmProfile = await serviceRole.entities.FoundingMember.get(
-        founding_member_id
-      );
-    }
-
-    // ────────────────────────────────────────────────────────────────
-    // 6. Final response
-    // ────────────────────────────────────────────────────────────────
     return Response.json({
       success: true,
       email: normalisedEmail,
-      role,
-      founding_member_id,
+      role: session.role,
+      founding_member_id: session.founding_member_id || null,
+      user_id: session.user_id || null,
       expires_at: session.expires_at,
-
       user: {
-        ...user,
-        full_name: fmProfile?.full_name || user?.full_name || "",
-        forename: fmProfile?.forename || user?.forename || "",
-        middle_name: fmProfile?.middle_name || user?.middle_name || "",
-        surname: fmProfile?.surname || user?.surname || "",
-        phone: fmProfile?.phone || user?.phone || "",
-        location: fmProfile?.location || user?.location || "",
+        full_name: userRecord?.full_name || "",
+        forename: userRecord?.forename || "",
+        middle_name: userRecord?.middle_name || "",
+        surname: userRecord?.surname || "",
+        phone: userRecord?.phone || "",
+        location: userRecord?.location || "",
+        is_founding_member: userRecord?.is_founding_member || false,
+        signup_postcode,
       },
     });
+
   } catch (err) {
     console.error("getUserFromSession error:", err);
-    return Response.json(
-      { success: false, error: "server_error" },
-      { status: 500 }
-    );
+    return Response.json({ success: false, error: "server_error" }, { status: 500 });
   }
 });

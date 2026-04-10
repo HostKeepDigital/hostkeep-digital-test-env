@@ -57,21 +57,18 @@ Deno.serve(async (req) => {
       // silent fail — postcode is optional
     }
 
-    // ⭐ Fetch full_name from User entity (covers all signup paths)
+    // Load User record for profile fields
     let full_name = null;
+    let is_founding_member = false;
     try {
       if (session.user_id) {
         const userRecord = await serviceRole.entities.User.get(session.user_id);
         if (userRecord?.full_name) full_name = userRecord.full_name;
-      }
-      // Fallback to FoundingMember for legacy users without a User record
-      if (!full_name && session.founding_member_id) {
-        const members = await serviceRole.entities.FoundingMember.filter({ id: session.founding_member_id });
-        if (members?.[0]?.full_name) full_name = members[0].full_name;
+        is_founding_member = userRecord?.is_founding_member || false;
       }
     } catch (_) {}
 
-    // ⭐ Session is valid — return full session info
+    // Session is valid — return full session info
     return Response.json({
       authenticated: true,
       email: session.email,
@@ -80,6 +77,7 @@ Deno.serve(async (req) => {
       user_id: session.user_id || null,
       signup_postcode,
       full_name,
+      is_founding_member,
     });
   } catch (err) {
     console.error("checkSession error:", err);

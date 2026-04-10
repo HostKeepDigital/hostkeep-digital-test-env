@@ -79,65 +79,48 @@ export default function Settings() {
   });
 
   useEffect(() => {
-    if (!user) return;
+    if (!user?.id) return;
 
-    // Seed immediately from AuthContext so fields are never blank
-    const nameParts = splitFullName(user.full_name || "");
-    setProfile((prev) => ({
-      ...prev,
-      forename: nameParts.forename || prev.forename,
-      middle_name: nameParts.middle_name || prev.middle_name,
-      surname: nameParts.surname || prev.surname,
-    }));
-
-    const sessionToken = localStorage.getItem("session_token");
-    if (sessionToken) {
-      fetch("/functions/getUserFromSession", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ session_token: sessionToken }),
-      })
-        .then((r) => r.json())
-        .then((data) => {
-          if (!data.success) return;
-          // Use stored split fields if available, fall back to splitting full_name
-          const hasStoredParts = data.user?.forename || data.user?.surname;
-          let forename, middle_name, surname;
-          if (hasStoredParts) {
-            forename = data.user.forename || "";
-            middle_name = data.user.middle_name || "";
-            surname = data.user.surname || "";
-          } else {
-            const parts = splitFullName(data.user?.full_name || user.full_name || "");
-            forename = parts.forename;
-            middle_name = parts.middle_name;
-            surname = parts.surname;
-          }
+    // Load profile directly from User entity — unified for all roles
+    base44.entities.User.filter({ id: user.id })
+      .then((records) => {
+        const u = records?.[0];
+        if (!u) return;
+        const hasStoredParts = u.forename || u.surname;
+        if (hasStoredParts) {
           setProfile({
-            forename,
-            middle_name,
-            surname,
-            phone: data.user?.phone || "",
-            location: data.user?.location || "",
+            forename: u.forename || "",
+            middle_name: u.middle_name || "",
+            surname: u.surname || "",
+            phone: u.phone || "",
+            location: u.location || "",
           });
-        })
-        .catch(() => {
-          // Fallback: use whatever is already seeded from user.full_name
-          const parts = splitFullName(user.full_name || "");
+        } else if (u.full_name) {
+          const parts = splitFullName(u.full_name);
           setProfile({
             forename: parts.forename,
             middle_name: parts.middle_name,
             surname: parts.surname,
-            phone: user.phone || "",
-            location: user.location || "",
+            phone: u.phone || "",
+            location: u.location || "",
           });
-        });
-    }
+        }
+      })
+      .catch(() => {
+        // Fallback to AuthContext full_name
+        if (user.full_name) {
+          const parts = splitFullName(user.full_name);
+          setProfile((p) => ({
+            ...p,
+            forename: parts.forename,
+            middle_name: parts.middle_name,
+            surname: parts.surname,
+          }));
+        }
+      });
 
-    if (user.id) {
-      base44.entities.UserRole.filter({ user_id: user.id }).then(setUserRoles).catch(() => {});
-    }
-  }, [user]);
+    base44.entities.UserRole.filter({ user_id: user.id }).then(setUserRoles).catch(() => {});
+  }, [user?.id]);
 
   const hasPaymentsRole = userRoles.some(
     (r) =>
