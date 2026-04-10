@@ -60,6 +60,9 @@ export default function HostPayoutHistory() {
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [selectedMonth, setSelectedMonth] = useState(String(new Date().getMonth() + 1).padStart(2, "0"));
   const [yearRange, setYearRange] = useState([currentYear - 2, currentYear]);
+  const [financialYearStart, setFinancialYearStart] = useState(new Date(currentYear, 3, 6)); // UK tax year default
+  const [financialYearEnd, setFinancialYearEnd] = useState(new Date(currentYear + 1, 3, 5));
+  const [exporting, setExporting] = useState(false);
 
   // Fetch bookings
   const { data: bookings = [] } = useQuery({
@@ -135,6 +138,45 @@ export default function HostPayoutHistory() {
     (_, i) => yearRange[0] + i
   );
 
+  // Filter bookings and jobs by financial year
+  const filteredBookingsForExport = bookings.filter((b) => {
+    const completedDate = new Date(b.completed_at);
+    return (
+      completedDate >= financialYearStart &&
+      completedDate <= financialYearEnd &&
+      b.booking_status === "completed" &&
+      b.payment_status === "paid"
+    );
+  });
+
+  const filteredJobsForExport = cleaningJobs.filter((j) => {
+    const jobDate = new Date(j.scheduled_date);
+    return jobDate >= financialYearStart && jobDate <= financialYearEnd && j.status === "completed";
+  });
+
+  const handleExportPDF = async () => {
+    setExporting(true);
+    try {
+      const response = await base44.functions.invoke("generateFinancialReportPDF", {
+        hostName: user?.full_name,
+        financialYearStart: financialYearStart.toISOString(),
+        financialYearEnd: financialYearEnd.toISOString(),
+        bookings: filteredBookingsForExport,
+        cleaningJobs: filteredJobsForExport,
+      });
+      // Create blob from PDF buffer and download
+      const link = document.createElement("a");
+      link.href = `data:application/pdf;base64,${response.data.pdf}`;
+      link.download = `Financial_Report_${financialYearStart.getFullYear()}-${financialYearEnd.getFullYear()}.pdf`;
+      link.click();
+    } catch (err) {
+      console.error("Failed to export PDF:", err);
+      alert("Failed to generate PDF");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-6 md:py-8 px-4">
       <div className="max-w-5xl mx-auto">
@@ -147,11 +189,56 @@ export default function HostPayoutHistory() {
           <p className="text-gray-600">View your guest earnings and cleaner payments</p>
         </motion.div>
 
+        {/* Financial Year Selector & Export */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Financial Year Report</CardTitle>
+                <Button
+                  onClick={handleExportPDF}
+                  disabled={exporting || filteredBookingsForExport.length === 0}
+                  className="bg-teal-600 hover:bg-teal-700"
+                >
+                  {exporting ? "Generating PDF..." : "📄 Export to PDF"}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Financial Year Start</label>
+                  <input
+                    type="date"
+                    value={financialYearStart.toISOString().split("T")[0]}
+                    onChange={(e) => setFinancialYearStart(new Date(e.target.value))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Financial Year End</label>
+                  <input
+                    type="date"
+                    value={financialYearEnd.toISOString().split("T")[0]}
+                    onChange={(e) => setFinancialYearEnd(new Date(e.target.value))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                </div>
+              </div>
+              {filteredBookingsForExport.length > 0 && (
+                <div className="bg-teal-50 border border-teal-200 rounded-lg p-3 text-sm text-teal-700">
+                  ✓ {filteredBookingsForExport.length} bookings + {filteredJobsForExport.length} cleaning jobs ready for export
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
         {/* Year Selector */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Select Year</CardTitle>
+              <CardTitle className="text-lg">Browse by Calendar Year</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-4 flex-wrap">
