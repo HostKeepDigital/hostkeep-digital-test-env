@@ -1527,8 +1527,7 @@ const handleApproveGuestAsHost = async (member) => {
             { id:"crm",           label:"CRM & Revenue",     Icon:TrendingUp    },
             { id:"smartpricing",  label:"Smart Pricing",     Icon:TrendingUp    },
             { id:"sectors",       label:"UK Sectors",        Icon:Globe         },
-            { id:"integration",   label:"Integration Tests", Icon:CheckCircle   },
-            { id:"devtools",      label:"Dev Tools",         Icon:Settings      },
+            { id:"devtools",      label:"Dev Tools & Tests", Icon:Settings      },
           ].map(({ id, label, Icon }) => (
             <button key={id} onClick={() => setActiveTab(id)}
               className={`flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap flex-shrink-0 ${activeTab===id ? "border-[#0d9488] text-[#0d9488]" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
@@ -1766,12 +1765,13 @@ const handleApproveGuestAsHost = async (member) => {
         <SectorsTab sectorData={sectorData} members={members} />
       )}
 
-      {/* ── INTEGRATION TESTS ─────────────────────────────────────────────── */}
-      {activeTab === "integration" && <IntegrationTestsTab />}
+
 
       {/* ── DEV TOOLS ────────────────────────────────────────────────────── */}
       {activeTab === "devtools" && (
         <div className="max-w-3xl mx-auto px-6 py-8 space-y-6">
+          <IntegrationTestsTab />
+
           <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4">
             <p className="text-sm text-amber-700 font-semibold mb-1">⚠️ Dev Tools — Admin only</p>
             <p className="text-xs text-amber-600">Run these in order when setting up a fresh environment. Test data is written to the live database — always use Clean Up after each test run.</p>
