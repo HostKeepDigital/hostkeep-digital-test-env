@@ -174,10 +174,15 @@ export default function HostPayoutHistory() {
     jobCount: displayedCleanerJobs.length,
   };
 
+  // Only show years that have actual bookings or cleaning jobs
+  const yearsWithData = new Set();
+  bookings.forEach((b) => yearsWithData.add(new Date(b.created_date).getFullYear()));
+  cleaningJobs.forEach((j) => yearsWithData.add(new Date(j.scheduled_date).getFullYear()));
+  
   const availableYears = Array.from(
     { length: currentYear - yearRange[0] + 1 },
     (_, i) => yearRange[0] + i
-  );
+  ).filter((year) => yearsWithData.has(year));
 
   // Filter months available for selected year
   const getAvailableMonths = () => {
