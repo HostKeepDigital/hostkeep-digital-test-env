@@ -22,9 +22,15 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { plan, user_id } = body;
 
-    const user = await base44.auth.me();
-    if (!user) {
+    if (!user_id) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Fetch user via service role (app uses custom session auth, not built-in)
+    const users = await base44.asServiceRole.entities.User.filter({ id: user_id });
+    const user = users?.[0];
+    if (!user) {
+      return Response.json({ error: 'User not found' }, { status: 401 });
     }
 
     if (!plan || !PLAN_PRICES[plan]) {
