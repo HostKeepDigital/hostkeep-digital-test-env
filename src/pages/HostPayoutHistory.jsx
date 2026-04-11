@@ -307,10 +307,10 @@ export default function HostPayoutHistory() {
               <CardTitle className="text-lg">Browse by Calendar Year</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <p className="text-sm font-medium text-gray-700 mb-3">Select calendar year</p>
-                  <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-2 w-full">
+                  <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-2 w-full sm:w-fit">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -323,7 +323,7 @@ export default function HostPayoutHistory() {
                     <select
                       value={selectedYear}
                       onChange={(e) => handleYearChange(Number(e.target.value))}
-                      className="bg-transparent flex-1 px-2 py-2 font-semibold text-lg border-0 focus:outline-none cursor-pointer min-w-0"
+                      className="bg-transparent flex-1 sm:flex-none px-2 py-2 font-semibold text-lg border-0 focus:outline-none cursor-pointer min-w-0"
                     >
                       {availableYears.map((year) => (
                         <option key={year} value={year}>
@@ -344,11 +344,11 @@ export default function HostPayoutHistory() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-700 mb-3">Browse Calendar Month</p>
-                  <div className="bg-gray-100 rounded-lg p-2 w-full">
+                  <div className="bg-gray-100 rounded-lg p-2 w-full sm:w-fit">
                     <select
                       value={selectedMonth || ""}
                       onChange={(e) => setSelectedMonth(e.target.value || null)}
-                      className="bg-transparent w-full px-3 py-2 font-semibold text-lg border-0 focus:outline-none cursor-pointer"
+                      className="bg-transparent w-full sm:w-auto px-3 py-2 font-semibold text-lg border-0 focus:outline-none cursor-pointer"
                     >
                       <option value="">All</option>
                       {availableMonths.map((month) => (
