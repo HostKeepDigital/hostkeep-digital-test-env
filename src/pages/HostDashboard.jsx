@@ -466,7 +466,7 @@ export default function HostDashboard() {
                   <Settings className="w-4 h-4 text-teal-600" />
                   <span className="text-sm text-gray-700">Settings</span>
                 </Link>
-                <Link to="/HostPayoutHistory" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                <Link to="/HostPayoutHistory" className="lg:hidden flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
                   <PoundSterling className="w-4 h-4 text-teal-600" />
                   <span className="text-sm text-gray-700">Payout History</span>
                 </Link>
