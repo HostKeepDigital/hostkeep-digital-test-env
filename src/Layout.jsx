@@ -14,6 +14,7 @@ import {
   Shield,
   ArrowLeft,
   ShieldCheck,
+  PoundSterling,
 } from "lucide-react";
 import { useState, useEffect, createContext } from "react";
 
@@ -113,6 +114,7 @@ export default function Layout({ children, currentPageName }) {
       { name: "Bookings", icon: Calendar, page: "HostBookings" },
       { name: "Messages", icon: MessageSquare, page: "HostMessages" },
       { name: "Compliance", icon: ShieldCheck, page: "HostCompliance" },
+      { name: "Payouts", icon: PoundSterling, page: "HostPayoutHistory" },
     ];
 
     return (
