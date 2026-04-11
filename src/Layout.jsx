@@ -195,8 +195,7 @@ export default function Layout({ children, currentPageName }) {
           {/* Mobile Header */}
           <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
             <div className="flex items-center justify-between px-4 py-3">
-              {isRootPath ? (
-                <Link
+              <Link
                   to={createPageUrl("Home")}
                   onClick={(e) => handleNavClick(e, createPageUrl("Home"))}
                   className="flex items-center gap-3"
@@ -206,12 +205,6 @@ export default function Layout({ children, currentPageName }) {
                   </div>
                   <span className="text-lg font-bold text-gray-900">HostKeep</span>
                 </Link>
-              ) : (
-                <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-600">
-                  <ArrowLeft className="w-5 h-5" />
-                  <span className="text-sm font-medium">Back</span>
-                </button>
-              )}
               <div className="flex items-center gap-2">
                 <RoleSwitcher userRoles={userRoles} currentPageName={currentPageName} />
                 <Button
