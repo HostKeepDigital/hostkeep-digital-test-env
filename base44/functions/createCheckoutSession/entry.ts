@@ -3,14 +3,10 @@ import Stripe from 'npm:stripe@16.10.0';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
 
-const PLAN_PRICES = {
-  host_starter_monthly:  { name: 'HostKeep Host Starter',  amount: 2900 },
-  host_growth_monthly:   { name: 'HostKeep Host Growth',   amount: 5900 },
-  host_pro_monthly:      { name: 'HostKeep Host Pro',      amount: 9900 },
-  cleaner_solo_monthly:  { name: 'HostKeep Cleaner Solo',  amount: 999  },
-  cleaner_pro_monthly:   { name: 'HostKeep Cleaner Pro',   amount: 1999 },
-  cleaner_team_monthly:  { name: 'HostKeep Cleaner Team',  amount: 3999 },
-};
+const VALID_PLANS = new Set([
+  'host_starter_monthly', 'host_growth_monthly', 'host_pro_monthly',
+  'cleaner_solo_monthly', 'cleaner_pro_monthly', 'cleaner_team_monthly',
+]);
 
 Deno.serve(async (req) => {
   if (req.method !== 'POST') {
@@ -32,9 +28,16 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (!plan || !PLAN_PRICES[plan]) {
+    if (!plan || !VALID_PLANS.has(plan)) {
       return Response.json({ error: 'Invalid plan' }, { status: 400 });
     }
+
+    // Look up the price from Stripe using the lookup key (set on each price in Stripe dashboard)
+    const prices = await stripe.prices.list({ lookup_keys: [plan], expand: ['data.product'] });
+    if (!prices.data.length) {
+      return Response.json({ error: `No Stripe price found for plan "${plan}". Please set a lookup key matching "${plan}" on the price in your Stripe dashboard.` }, { status: 400 });
+    }
+    const stripePrice = prices.data[0];
 
     // Get or create Stripe customer
     let customer_id = null;
@@ -64,19 +67,13 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Create checkout session
-    const planInfo = PLAN_PRICES[plan];
+    // Create checkout session using the Stripe price
     const checkoutSession = await stripe.checkout.sessions.create({
       customer: customer_id,
       payment_method_types: ['card'],
       line_items: [
         {
-          price_data: {
-            currency: 'gbp',
-            product_data: { name: planInfo.name },
-            unit_amount: planInfo.amount,
-            recurring: { interval: 'month' },
-          },
+          price: stripePrice.id,
           quantity: 1,
         },
       ],
