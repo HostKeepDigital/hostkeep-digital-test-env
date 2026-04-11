@@ -2,6 +2,11 @@
   "name": "BetaSettings",
   "type": "object",
   "properties": {
+    "beta_open": {
+      "type": "boolean",
+      "default": true,
+      "description": "When true, all host/cleaner applications go through the founding member flow. Set to false post-beta to open standard onboarding."
+    },
     "beta_end_date": {
       "type": "string",
       "format": "date",

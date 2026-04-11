@@ -41,6 +41,7 @@ const STATUS_COLORS = {
   banned_documentation_failure:   "bg-red-900 text-red-100",
   banned_fraud:                   "bg-red-900 text-red-100",
   banned_manual_admin_action:     "bg-red-900 text-red-100",
+  banned:                         "bg-red-900 text-red-100",
 };
 
 const STATUS_LABELS = {
@@ -60,6 +61,7 @@ const STATUS_LABELS = {
   banned_documentation_failure:   "Banned — Docs",
   banned_fraud:                   "Banned — Fraud",
   banned_manual_admin_action:     "Banned — Manual",
+  banned:                         "Banned",
 };
 
 const ACTIVE_STATUSES = new Set([
@@ -1404,6 +1406,26 @@ const handleApproveGuestAsHost = async (member) => {
  fetchMembers();
 };
 
+const handleBan = async (member) => {
+  const reason = window.prompt(`Ban reason for ${member.full_name} (this will strip their founding member access and auto-promote the next waitlisted person in their area):`);
+  if (reason === null) return;
+  setML(member.id, "ban");
+  try {
+    const res = await base44.functions.invoke("banFoundingMember", { member_id: member.id, ban_reason: reason || "Admin action" });
+    const promoted = res.data?.promoted;
+    if (promoted) {
+      toast.success(`${member.full_name} banned. Waitlist member ${promoted.full_name} has been invited.`);
+    } else {
+      toast.success(`${member.full_name} banned. No eligible waitlist members found to promote.`);
+    }
+  } catch (e) {
+    toast.error("Ban failed");
+    console.error(e);
+  }
+  setML(member.id, null);
+  fetchMembers();
+};
+
   // ── VERIFICATION QUERIES ──────────────────────────────────────────────────
 
   const { data: pendingDocs   = [] } = useQuery({ queryKey:["pending-verifications"], queryFn: () => base44.entities.VerificationDocuments.filter({ verification_status:"pending" }, "-created_date") });
@@ -1447,6 +1469,7 @@ const handleApproveGuestAsHost = async (member) => {
   const bannedDocMembers         = byStatus("banned_documentation_failure");
   const bannedFraudMembers       = byStatus("banned_fraud");
   const bannedManualMembers      = byStatus("banned_manual_admin_action");
+  const bannedAdminMembers       = byStatus("banned");
 
   const activeHosts    = members.filter(m => m.role === "host"    && ACTIVE_STATUSES.has(m.approval_status)).length;
   const activeCleaners = members.filter(m => m.role === "cleaner" && ACTIVE_STATUSES.has(m.approval_status)).length;
@@ -1483,12 +1506,12 @@ const handleApproveGuestAsHost = async (member) => {
 
   // ── UI HELPERS ────────────────────────────────────────────────────────────
 
-  const MemberTable = ({ members: rows, showActions = false }) => (
+  const MemberTable = ({ members: rows, showActions = false, showBanAction = false }) => (
     <div className="max-h-[220px] overflow-y-auto rounded-xl border border-gray-200 bg-white">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-gray-100 bg-gray-50">
-            {["Full Name","Email","Role","Postcode","Status","Signed Up", showActions ? "Actions" : null]
+            {["Full Name","Email","Role","Postcode","Status","Signed Up", (showActions || showBanAction) ? "Actions" : null]
               .filter(Boolean).map(h => <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">{h}</th>)}
           </tr>
         </thead>
@@ -1511,21 +1534,28 @@ const handleApproveGuestAsHost = async (member) => {
               <td className="px-4 py-3 text-gray-400 text-xs">
                 {m.signup_timestamp ? new Date(m.signup_timestamp).toLocaleDateString("en-GB") : "—"}
               </td>
-              {showActions && (
+              {(showActions || showBanAction) && (
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <Button size="sm" className="h-7 px-3 text-xs bg-green-600 hover:bg-green-700 text-white" disabled={!!actionLoading[m.id]} onClick={() => handleApprove(m)}>
-                      {actionLoading[m.id]==="approve" ? "..." : <><Check className="w-3 h-3 mr-1"/>Approve</>}
-                    </Button>
-                    <Button size="sm" variant="outline" className="h-7 px-3 text-xs border-amber-300 text-amber-700 hover:bg-amber-50" disabled={!!actionLoading[m.id]} onClick={() => handleWaitlist(m)}>
-                      {actionLoading[m.id]==="waitlist" ? "..." : "Waitlist"}
-                    </Button>
-                    <Button size="sm" variant="outline" className="h-7 px-3 text-xs border-red-300 text-red-600 hover:bg-red-50" disabled={!!actionLoading[m.id]} onClick={() => handleReject(m)}>
-                      {actionLoading[m.id]==="reject" ? "..." : <><X className="w-3 h-3 mr-1"/>Reject</>}
-                    </Button>
-                    <Button size="sm" variant="outline" className="h-7 px-3 text-xs border-gray-200 text-gray-400 hover:bg-gray-50" disabled={!!actionLoading[m.id]} onClick={() => handleDelete(m)}>
-                      {actionLoading[m.id]==="delete" ? "..." : "Delete"}
-                    </Button>
+                    {showActions && <>
+                      <Button size="sm" className="h-7 px-3 text-xs bg-green-600 hover:bg-green-700 text-white" disabled={!!actionLoading[m.id]} onClick={() => handleApprove(m)}>
+                        {actionLoading[m.id]==="approve" ? "..." : <><Check className="w-3 h-3 mr-1"/>Approve</>}
+                      </Button>
+                      <Button size="sm" variant="outline" className="h-7 px-3 text-xs border-amber-300 text-amber-700 hover:bg-amber-50" disabled={!!actionLoading[m.id]} onClick={() => handleWaitlist(m)}>
+                        {actionLoading[m.id]==="waitlist" ? "..." : "Waitlist"}
+                      </Button>
+                      <Button size="sm" variant="outline" className="h-7 px-3 text-xs border-red-300 text-red-600 hover:bg-red-50" disabled={!!actionLoading[m.id]} onClick={() => handleReject(m)}>
+                        {actionLoading[m.id]==="reject" ? "..." : <><X className="w-3 h-3 mr-1"/>Reject</>}
+                      </Button>
+                      <Button size="sm" variant="outline" className="h-7 px-3 text-xs border-gray-200 text-gray-400 hover:bg-gray-50" disabled={!!actionLoading[m.id]} onClick={() => handleDelete(m)}>
+                        {actionLoading[m.id]==="delete" ? "..." : "Delete"}
+                      </Button>
+                    </>}
+                    {showBanAction && (
+                      <Button size="sm" variant="outline" className="h-7 px-3 text-xs border-red-800 text-red-800 hover:bg-red-50" disabled={!!actionLoading[m.id]} onClick={() => handleBan(m)}>
+                        {actionLoading[m.id]==="ban" ? "..." : <><Ban className="w-3 h-3 mr-1"/>Ban</>}
+                      </Button>
+                    )}
                   </div>
                 </td>
               )}
@@ -1724,7 +1754,7 @@ const handleApproveGuestAsHost = async (member) => {
                 <MetricCard icon={Users}        label="Pending Applications" value={pendingMembers.length}  color="navy" />
                 <MetricCard icon={CheckCircle}  label="Approved Members"     value={approvedMembers.length} color="green" />
                 <MetricCard icon={Clock}        label="Active Onboarding"    value={activeHosts + activeCleaners} color="teal" />
-                <MetricCard icon={Ban}          label="Rejected / Banned"     value={rejectedMembers.length + bannedEmailMembers.length + bannedDocMembers.length + bannedFraudMembers.length + bannedManualMembers.length} color="red" />
+                <MetricCard icon={Ban}          label="Rejected / Banned"     value={rejectedMembers.length + bannedEmailMembers.length + bannedDocMembers.length + bannedFraudMembers.length + bannedManualMembers.length + bannedAdminMembers.length} color="red" />
               </div>
 
               <Section title="Pending Applications" count={pendingMembers.length} accent="amber">
@@ -1736,15 +1766,15 @@ const handleApproveGuestAsHost = async (member) => {
               </Section>
 
               <Section title="Invited" count={invitedMembers.length} accent="blue">
-                <MemberTable members={invitedMembers} />
+                <MemberTable members={invitedMembers} showBanAction />
               </Section>
 
               <Section title="Password Protected" count={passwordProtectedMembers.length} accent="indigo">
-                <MemberTable members={passwordProtectedMembers} />
+                <MemberTable members={passwordProtectedMembers} showBanAction />
               </Section>
 
               <Section title="Awaiting Document Verification" count={awaitingDocMembers.length} accent="purple">
-                <MemberTable members={awaitingDocMembers} />
+                <MemberTable members={awaitingDocMembers} showBanAction />
               </Section>
 
               <Section title="Document Failed — Attempt 1" count={docFail1Members.length} accent="orange">
@@ -1756,7 +1786,7 @@ const handleApproveGuestAsHost = async (member) => {
               </Section>
 
               <Section title="Approved" count={approvedMembers.length} accent="green">
-                <MemberTable members={approvedMembers} />
+                <MemberTable members={approvedMembers} showBanAction />
               </Section>
 
               <Section title="Waitlist" count={waitlistMembers.length} accent="orange">
@@ -1775,8 +1805,8 @@ const handleApproveGuestAsHost = async (member) => {
                 <MemberTable members={outOfAreaMembers} />
               </Section>
 
-              <Section title="Banned" count={bannedEmailMembers.length + bannedDocMembers.length + bannedFraudMembers.length + bannedManualMembers.length} accent="red">
-                <MemberTable members={[...bannedEmailMembers, ...bannedDocMembers, ...bannedFraudMembers, ...bannedManualMembers]} />
+              <Section title="Banned" count={bannedEmailMembers.length + bannedDocMembers.length + bannedFraudMembers.length + bannedManualMembers.length + bannedAdminMembers.length} accent="red">
+                <MemberTable members={[...bannedEmailMembers, ...bannedDocMembers, ...bannedFraudMembers, ...bannedManualMembers, ...bannedAdminMembers]} />
               </Section>
             </>
           )}

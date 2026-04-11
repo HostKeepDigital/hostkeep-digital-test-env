@@ -56,10 +56,15 @@
         "rejected",
         "out_of_area",
         "invited",
-        "password_protected"
+        "password_protected",
+        "banned"
       ],
       "default": "pending",
-      "description": "Admin approval + onboarding status"
+      "description": "Admin approval + onboarding status. 'banned' strips founding member access and auto-promotes next eligible waitlist member."
+    },
+    "ban_reason": {
+      "type": "string",
+      "description": "Reason recorded when a member is banned"
     }
   },
   "required": [
