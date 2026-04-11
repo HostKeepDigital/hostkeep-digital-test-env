@@ -213,15 +213,14 @@ export default function Layout({ children, currentPageName }) {
               <div className="flex items-center gap-2">
                 <RoleSwitcher userRoles={userRoles} currentPageName={currentPageName} />
                 <Button
-                  variant="ghost"
-                  size="icon"
+                  variant="outline"
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="relative p-4 -m-2"
+                  className="flex items-center gap-1.5 px-3 h-9 border-gray-200 text-gray-700"
                 >
                   {mobileMenuOpen ? (
-                    <X className="w-5 h-5" />
+                    <><X className="w-4 h-4" /><span className="text-sm font-medium">Close</span></>
                   ) : (
-                    <Menu className="w-5 h-5" />
+                    <><Menu className="w-4 h-4" /><span className="text-sm font-medium">Menu</span></>
                   )}
                 </Button>
               </div>

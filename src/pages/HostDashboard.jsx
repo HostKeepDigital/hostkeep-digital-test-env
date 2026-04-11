@@ -435,43 +435,6 @@ export default function HostDashboard() {
 
           {/* Sidebar */}
           <div className="space-y-4">
-            {/* Quick Actions */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="lg:hidden bg-white rounded-xl shadow-sm border border-gray-100 p-4"
-            >
-              <h3 className="font-semibold text-gray-900 mb-3 text-sm">Quick Actions</h3>
-              <div className="space-y-1">
-                <Link to={createPageUrl("HostBookings")} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                  <Calendar className="w-4 h-4 text-teal-600" />
-                  <span className="text-sm text-gray-700">Bookings</span>
-                  {pendingBookings.length > 0 && <Badge className="ml-auto bg-amber-100 text-amber-700 text-xs">{pendingBookings.length}</Badge>}
-                </Link>
-                <div className="flex items-center gap-1">
-                  <Link to={createPageUrl("HostMessages")} className="flex-1 flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                    <MessageSquare className="w-4 h-4 text-teal-600" />
-                    <span className="text-sm text-gray-700">Messages</span>
-                    {messages.length > 0 && <Badge className="ml-auto bg-teal-100 text-teal-700 text-xs">{messages.length}</Badge>}
-                  </Link>
-                  <Button variant="ghost" size="icon" onClick={() => setShowMessageModal(true)} className="rounded-lg hover:bg-teal-50 h-9 w-9">
-                    <Plus className="w-4 h-4 text-teal-600" />
-                  </Button>
-                </div>
-                <Link to={createPageUrl("HostProperties")} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                  <Home className="w-4 h-4 text-teal-600" />
-                  <span className="text-sm text-gray-700">Properties</span>
-                </Link>
-                <Link to={createPageUrl("Settings")} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                  <Settings className="w-4 h-4 text-teal-600" />
-                  <span className="text-sm text-gray-700">Settings</span>
-                </Link>
-                <Link to="/HostPayoutHistory" className="lg:hidden flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                  <PoundSterling className="w-4 h-4 text-teal-600" />
-                  <span className="text-sm text-gray-700">Payout History</span>
-                </Link>
-              </div>
-            </motion.div>
 
             {/* Cancellation Policies */}
             {properties.length > 0 && (() => {
