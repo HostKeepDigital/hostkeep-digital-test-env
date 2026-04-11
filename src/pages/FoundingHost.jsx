@@ -283,8 +283,10 @@ export default function FoundingHost() {
 
           <div>
             <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Email address *</label>
-            <input type="email" inputMode="email" autoComplete="email" value={form.email} onChange={e => field("email", e.target.value)} placeholder="jane@example.com"
-              className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 transition-colors ${errors.email ? "border-red-300" : "border-gray-200"}`} />
+            <input type="email" inputMode="email" autoComplete="email" value={form.email} onChange={e => !isGuest && field("email", e.target.value)} placeholder="jane@example.com"
+              readOnly={isGuest}
+              className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 transition-colors ${isGuest ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''} ${errors.email ? 'border-red-300' : 'border-gray-200'}`} />
+            {isGuest && <p className="text-xs text-gray-400 mt-1">Email cannot be changed — linked to your account</p>}
             {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
             {duplicateInfo?.type === "resend" && (
               <div className="mt-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">

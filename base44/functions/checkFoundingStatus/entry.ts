@@ -14,7 +14,7 @@ Deno.serve(async (req) => {
     });
 
   const member = members?.find(m => 
-    ['invited', 'doc_review', 'approved']
+    ['invited', 'doc_review', 'approved', 'password_protected']
       .includes(m.approval_status)
   );
 

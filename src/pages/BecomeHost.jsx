@@ -38,7 +38,8 @@ export default function BecomeHost() {
   }, [isAuthenticated, roles, navigate]);
 
   const handleUpgrade = () => {
-    navigate(createPageUrl("CreateProperty"));
+    // Guests must go through the founding member application flow
+    navigate("/foundinghost");
   };
 
   const benefits = [
@@ -114,10 +115,10 @@ export default function BecomeHost() {
               size="lg"
               className="bg-teal-600 hover:bg-teal-700"
             >
-              Become a Host Now
+              Apply as a Founding Host
             </Button>
             <p className="text-sm text-gray-500 mt-4">
-              Free to join • No setup fees • Start earning immediately
+              All hosts go through our founding member application · Reviewed within 48 hours
             </p>
           </CardContent>
         </Card>
