@@ -15,6 +15,7 @@ import { hasRole } from "@/components/utils/roleHelpers";
 const HOST_PAGES = new Set([
   "HostDashboard", "HostBookings", "HostProperties", "HostMessages",
   "HostCancellationPolicies", "CreateProperty", "EditProperty",
+  "HostCompliance", "HostPayoutHistory",
 ]);
 
 const CLEANER_PAGES = new Set([
