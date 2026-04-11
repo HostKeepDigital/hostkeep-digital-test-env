@@ -59,7 +59,7 @@ export default function HostPayoutHistory() {
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [selectedMonth, setSelectedMonth] = useState(null);
-  const [yearRange, setYearRange] = useState([currentYear - 2, currentYear]);
+  const [yearRange, setYearRange] = useState([currentYear, currentYear]);
   const [hostStartDate, setHostStartDate] = useState(null);
   const [financialYearStart, setFinancialYearStart] = useState(new Date(currentYear, 3, 6));
   const [financialYearEnd, setFinancialYearEnd] = useState(new Date(currentYear + 1, 3, 5));
