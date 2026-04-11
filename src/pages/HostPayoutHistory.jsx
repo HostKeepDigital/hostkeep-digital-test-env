@@ -180,7 +180,7 @@ export default function HostPayoutHistory() {
   const availableYears = Array.from(
     { length: currentYear - yearRange[0] + 1 },
     (_, i) => yearRange[0] + i
-  ).filter((year) => yearsWithData.has(year));
+  );
 
   // Filter months available for selected year
   const getAvailableMonths = () => {
