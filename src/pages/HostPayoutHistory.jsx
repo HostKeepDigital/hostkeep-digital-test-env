@@ -91,17 +91,15 @@ export default function HostPayoutHistory() {
     enabled: !!user?.id,
   });
 
-  // Calculate host start date from first booking
+  // Set year range based on host signup date
   useEffect(() => {
-    if (bookings.length > 0) {
-      const sortedBookings = [...bookings].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
-      const startDate = new Date(sortedBookings[0].created_date);
+    if (user?.created_date) {
+      const startDate = new Date(user.created_date);
       setHostStartDate(startDate);
-      const startYear = startDate.getFullYear();
-      setYearRange([startYear, currentYear]);
+      setYearRange([startDate.getFullYear(), currentYear]);
       setSelectedYear(currentYear);
     }
-  }, [bookings, currentYear]);
+  }, [user?.created_date, currentYear]);
 
   // Filter bookings for selected year
   const yearBookings = bookings.filter((b) => {
