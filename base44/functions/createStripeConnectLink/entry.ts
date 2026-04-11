@@ -8,32 +8,31 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const serviceRole = base44.asServiceRole;
 
-    // Get authenticated user
-    const authUser = await base44.auth.me();
-    if (!authUser) {
-      return Response.json(
-        { error: "Unauthorized" },
-        { status: 401 },
-      );
+    const body = await req.json();
+    const { session_token, return_url: customReturnUrl, refresh_url: customRefreshUrl } = body;
+
+    // Validate session
+    if (!session_token) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const userSessions = await serviceRole.entities.UserSession.filter({ session_token });
+    const userSession = userSessions?.[0];
+    if (!userSession || new Date(userSession.expires_at) < new Date()) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const user_id = authUser.id;
-    const email = authUser.email;
+    const user_id = userSession.user_id;
+    const email = userSession.email;
 
     // Fetch user record (needed for stripe_connect_account_id)
     const users = await serviceRole.entities.User.filter({ id: user_id });
     const user = users[0];
 
     if (!user) {
-      return Response.json(
-        { error: "User not found" },
-        { status: 404 },
-      );
+      return Response.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const origin = req.headers.get("origin") || "https://hostkeepdigital.co.uk";
-    const customReturnUrl = body.return_url;
-    const customRefreshUrl = body.refresh_url;
+    const origin = req.headers.get('origin') || 'https://hostkeepdigital.co.uk';
 
     // Reuse existing account or create new one
     let accountId = user.stripe_connect_account_id;

@@ -371,7 +371,9 @@ export default function Subscription() {
   const handleStripeConnect = async () => {
     setStripeConnecting(true);
     try {
+      const session_token = localStorage.getItem('session_token');
       const res = await base44.functions.invoke('createStripeConnectLink', {
+        session_token,
         return_url: `${window.location.origin}/Subscription?stripe_connect_return=success`,
         refresh_url: `${window.location.origin}/Subscription?stripe_connect_return=refresh`,
       });
