@@ -12,11 +12,11 @@ Deno.serve(async (req) => {
       return Response.json({ status: "not_connected", error: "missing_session" });
     }
 
-    // Validate session
-    const sessionCheck = await serviceRole.functions.invoke("checkSession", { session_token });
-    const session = sessionCheck?.data;
+    // Validate session directly without invoking another function
+    const sessions = await serviceRole.entities.UserSession.filter({ session_token });
+    const session = sessions?.[0];
 
-    if (!session?.authenticated) {
+    if (!session || new Date(session.expires_at) < new Date()) {
       return Response.json({ status: "not_connected", error: "unauthenticated" });
     }
 
