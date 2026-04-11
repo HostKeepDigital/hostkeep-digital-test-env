@@ -283,10 +283,25 @@ export default function Subscription() {
     enabled: !!user?.id,
   });
 
+  // Also check FoundingMember table by email to catch users without a subscription record yet
+  const { data: foundingMemberRecord } = useQuery({
+    queryKey: ["foundingMember", user?.email],
+    queryFn: async () => {
+      const records = await base44.entities.FoundingMember.filter({ email: user?.email });
+      return records[0] || null;
+    },
+    enabled: !!user?.email,
+  });
+
+  // A user is a founding/beta member if:
+  // 1. Their subscription has is_founding_member=true or is a beta plan
+  // 2. OR they exist in the FoundingMember table with an approved/invited status
   const isBetaUser =
-    subscription &&
-    BETA_PLANS.includes(subscription.plan) &&
-    subscription.status === "active";
+    (subscription && (
+      (BETA_PLANS.includes(subscription.plan) && subscription.status === "active") ||
+      subscription.is_founding_member === true
+    )) ||
+    (foundingMemberRecord && ['approved', 'invited', 'password_protected'].includes(foundingMemberRecord.approval_status));
 
   const isPending =
     userRoles &&
