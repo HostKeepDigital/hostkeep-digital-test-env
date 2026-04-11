@@ -32,26 +32,19 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Fetch user via service role
-    const users = await base44.asServiceRole.entities.User.filter({ email: userSession.email });
-    const user = users?.[0];
-    if (!user) {
-      return Response.json({ error: 'User not found' }, { status: 401 });
-    }
-
     if (!plan || !PLAN_PRICES[plan]) {
       return Response.json({ error: 'Invalid plan' }, { status: 400 });
     }
 
     // Get or create Stripe customer
     let customer_id = null;
-    const subs = await base44.asServiceRole.entities.Subscription.filter({ user_id: user.id });
+    const subs = await base44.asServiceRole.entities.Subscription.filter({ user_id });
     if (subs.length > 0 && subs[0].stripe_customer_id) {
       customer_id = subs[0].stripe_customer_id;
     } else {
       const customer = await stripe.customers.create({
-        email: user.email,
-        metadata: { user_id: user.id },
+        email: userSession.email,
+        metadata: { user_id },
       });
       customer_id = customer.id;
       
@@ -62,7 +55,7 @@ Deno.serve(async (req) => {
         });
       } else {
         await base44.asServiceRole.entities.Subscription.create({
-          user_id: user.id,
+          user_id,
           plan,
           provider: 'stripe',
           stripe_customer_id: customer_id,
@@ -85,7 +78,7 @@ Deno.serve(async (req) => {
       success_url: `${req.headers.get('origin')}/Subscription?success=true`,
       cancel_url: `${req.headers.get('origin')}/Subscription?cancelled=true`,
       metadata: {
-        user_id: user.id,
+        user_id,
         plan,
       },
     });
