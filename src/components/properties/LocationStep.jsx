@@ -50,7 +50,7 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
     return null;
   };
 
-  const [postcodeInput, setPostcodeInput] = useState(formData.postcode || "");
+  const [postcodeInput, setPostcodeInput] = useState(formData.postcode || signupPostcode || "");
   const [postcodeLoading, setPostcodeLoading] = useState(false);
   const [postcodeError, setPostcodeError] = useState("");
   const [postcodeData, setPostcodeData] = useState(() => buildPostcodeData(formData));
