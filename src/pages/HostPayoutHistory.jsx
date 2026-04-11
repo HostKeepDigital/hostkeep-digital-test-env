@@ -374,7 +374,7 @@ export default function HostPayoutHistory() {
                         <p className="text-lg font-bold text-purple-700">-£{displayedCleanerStats.totalPaid.toFixed(2)}</p>
                       </div>
                       <div className="bg-red-50 p-3 rounded-lg">
-                        <p className="text-xs text-red-600 font-medium">Stripe Expense</p>
+                        <p className="text-xs text-red-600 font-medium">Other Expenses</p>
                         <p className="text-lg font-bold text-red-700">-£{displayedPayouts.stripeFees.toFixed(2)}</p>
                       </div>
                       <div className="bg-green-50 p-3 rounded-lg">
@@ -422,7 +422,7 @@ export default function HostPayoutHistory() {
                             <span className="font-medium">£{subtotal.toFixed(2)}</span>
                           </div>
                           <div className="flex justify-between text-red-600">
-                            <span>Stripe Fee</span>
+                             <span>Other Expenses</span>
                             <span>-£{stripeFee.toFixed(2)}</span>
                           </div>
                           <div className="flex justify-between font-bold text-green-700 border-t border-gray-200 pt-1 mt-1">
