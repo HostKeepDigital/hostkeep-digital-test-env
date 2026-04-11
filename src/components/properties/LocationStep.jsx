@@ -31,7 +31,7 @@ function getAreaLabel(postcodeArea) {
   return map[postcodeArea] || null;
 }
 
-export default function LocationStep({ formData, onFormChange, onLocationChange, signupPostcode }) {
+export default function LocationStep({ formData, onFormChange, onLocationChange, signupPostcode, isBeta }) {
   const [isReady, setIsReady] = useState(false); // block until postcode lookup attempt completes
   const buildPostcodeData = (fd) => {
     if (fd.postcode) {
@@ -202,7 +202,13 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
         {/* POSTCODE LOOKUP */}
         <div className="space-y-2">
           <Label>UK Postcode <span className="text-red-500">*</span></Label>
-          {signupPostcode && !formData.postcode && (
+          {signupPostcode && isBeta && (
+            <div className="flex items-center gap-1.5 text-xs text-teal-600 font-medium bg-teal-50 border border-teal-200 rounded px-2 py-1.5">
+              <Lock className="w-3 h-3 flex-shrink-0" />
+              Postcode locked to your founding member registration area during beta.
+            </div>
+          )}
+          {signupPostcode && !isBeta && !formData.postcode && (
             <p className="text-xs text-teal-600 font-medium">
               Pre-filled from your founding member registration — verifying automatically.
             </p>
@@ -220,13 +226,13 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
               onKeyDown={(e) => e.key === "Enter" && handlePostcodeLookup()}
               placeholder="e.g. PL13 2JE"
               className={`flex-1 ${postcodeError ? "border-red-500" : ""} ${postcodeData ? "bg-gray-50 text-gray-500 cursor-not-allowed" : ""}`}
-              disabled={postcodeLoading || !!postcodeData}
+              disabled={postcodeLoading || !!postcodeData || (isBeta && !!signupPostcode)}
               maxLength={8}
               autoComplete="off"
             />
             <Button
               onClick={handlePostcodeLookup}
-              disabled={postcodeLoading || !postcodeInput.trim()}
+              disabled={postcodeLoading || !postcodeInput.trim() || (isBeta && !!signupPostcode)}
               className="bg-teal-600 hover:bg-teal-700"
             >
               {postcodeLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify"}
