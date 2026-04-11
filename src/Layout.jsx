@@ -210,18 +210,21 @@ export default function Layout({ children, currentPageName }) {
                   <span className="text-sm font-medium">Back</span>
                 </button>
               )}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="relative p-4 -m-2"
-              >
-                {mobileMenuOpen ? (
-                  <X className="w-5 h-5" />
-                ) : (
-                  <Menu className="w-5 h-5" />
-                )}
-              </Button>
+              <div className="flex items-center gap-2">
+                <RoleSwitcher userRoles={userRoles} currentPageName={currentPageName} />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  className="relative p-4 -m-2"
+                >
+                  {mobileMenuOpen ? (
+                    <X className="w-5 h-5" />
+                  ) : (
+                    <Menu className="w-5 h-5" />
+                  )}
+                </Button>
+              </div>
             </div>
 
             {mobileMenuOpen && (
