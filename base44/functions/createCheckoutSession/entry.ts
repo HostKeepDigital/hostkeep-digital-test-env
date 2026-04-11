@@ -20,14 +20,20 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
-    const { plan, user_id } = body;
+    const { plan, user_id, session_token } = body;
 
-    if (!user_id) {
+    // Validate session token (custom auth system)
+    if (!session_token) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const userSessions = await base44.asServiceRole.entities.UserSession.filter({ session_token });
+    const userSession = userSessions?.[0];
+    if (!userSession || new Date(userSession.expires_at) < new Date()) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Fetch user via service role (app uses custom session auth, not built-in)
-    const users = await base44.asServiceRole.entities.User.filter({ id: user_id });
+    // Fetch user via service role
+    const users = await base44.asServiceRole.entities.User.filter({ email: userSession.email });
     const user = users?.[0];
     if (!user) {
       return Response.json({ error: 'User not found' }, { status: 401 });
@@ -39,7 +45,7 @@ Deno.serve(async (req) => {
 
     // Get or create Stripe customer
     let customer_id = null;
-    const subs = await base44.entities.Subscription.filter({ user_id });
+    const subs = await base44.asServiceRole.entities.Subscription.filter({ user_id: user.id });
     if (subs.length > 0 && subs[0].stripe_customer_id) {
       customer_id = subs[0].stripe_customer_id;
     } else {
@@ -51,11 +57,11 @@ Deno.serve(async (req) => {
       
       // Update or create subscription record
       if (subs.length > 0) {
-        await base44.entities.Subscription.update(subs[0].id, {
+        await base44.asServiceRole.entities.Subscription.update(subs[0].id, {
           stripe_customer_id: customer_id,
         });
       } else {
-        await base44.entities.Subscription.create({
+        await base44.asServiceRole.entities.Subscription.create({
           user_id: user.id,
           plan,
           provider: 'stripe',
@@ -66,7 +72,7 @@ Deno.serve(async (req) => {
     }
 
     // Create checkout session
-    const session = await stripe.checkout.sessions.create({
+    const checkoutSession = await stripe.checkout.sessions.create({
       customer: customer_id,
       payment_method_types: ['card'],
       line_items: [
@@ -79,12 +85,12 @@ Deno.serve(async (req) => {
       success_url: `${req.headers.get('origin')}/Subscription?success=true`,
       cancel_url: `${req.headers.get('origin')}/Subscription?cancelled=true`,
       metadata: {
-        user_id,
+        user_id: user.id,
         plan,
       },
     });
 
-    return Response.json({ url: session.url });
+    return Response.json({ url: checkoutSession.url });
   } catch (error) {
     console.error('Checkout error:', error);
     return Response.json(
