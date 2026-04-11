@@ -1,6 +1,74 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 import Stripe from 'npm:stripe@14';
 
+const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+const ADMIN_EMAIL = 'hello@hostkeepdigital.co.uk';
+
+function buildEmail({ heading, body, buttonText, buttonUrl }) {
+  const buttonBlock = buttonText && buttonUrl ? `
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;">
+        <tr>
+          <td align="center">
+            <a href="${buttonUrl}" style="display:inline-block;background-color:#0d9488;color:#ffffff;font-size:15px;font-weight:bold;text-decoration:none;padding:14px 32px;border-radius:8px;">
+              ${buttonText}
+            </a>
+          </td>
+        </tr>
+      </table>` : '';
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HostKeep</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f4f5;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f5;padding:40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:12px;overflow:hidden;max-width:600px;width:100%;">
+          <tr>
+            <td style="background-color:#1E3A5F;padding:32px 40px;text-align:center;">
+              <img src="https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/HostKeep_Digital_Navy_Background.png" alt="HostKeep Digital" width="200" style="display:block;margin:0 auto;max-width:200px;height:auto;" />
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:40px 40px 32px 40px;">
+              <h1 style="margin:0 0 16px 0;font-size:22px;font-weight:bold;color:#111827;">${heading}</h1>
+              <div style="font-size:15px;line-height:1.7;color:#374151;">${body}</div>
+              ${buttonBlock}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 40px;">
+              <hr style="border:none;border-top:1px solid #e5e7eb;margin:0;">
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:28px 40px;text-align:center;">
+              <p style="margin:0 0 8px 0;font-size:13px;color:#6b7280;">© 2026 HostKeep Digital Ltd</p>
+              <p style="margin:0 0 16px 0;font-size:13px;color:#6b7280;">
+                <a href="mailto:hello@hostkeepdigital.co.uk" style="color:#0d9488;text-decoration:none;">hello@hostkeepdigital.co.uk</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+async function sendEmail({ to, subject, html }) {
+  await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from: 'HostKeep Digital <hello@hostkeepdigital.co.uk>', to, subject, html }),
+  });
+}
+
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
 const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
 
@@ -83,6 +151,104 @@ Deno.serve(async (req) => {
           await base44.asServiceRole.entities.UserRole.create({ user_id, role: requiredRole, approval_status: 'approved' });
         }
       }
+
+      // Send subscription confirmation email to host
+      const hostEmail = session.customer_details?.email;
+      const hostName = session.customer_details?.name || 'there';
+      const invoiceDate = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+      const nextBillingDate = endDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+      if (hostEmail) {
+        const hostHtml = buildEmail({
+          heading: `You're subscribed to HostKeep Digital! 🎉`,
+          body: `
+            <p>Hi ${hostName.split(' ')[0]},</p>
+            <p>Thank you for subscribing to <strong>HostKeep Digital</strong>. Your subscription is now active and you have full access to your plan.</p>
+
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;">
+              <tr style="background-color:#f9fafb;">
+                <td colspan="2" style="padding:14px 20px;font-size:13px;font-weight:bold;color:#374151;text-transform:uppercase;letter-spacing:0.05em;">Subscription Invoice</td>
+              </tr>
+              <tr>
+                <td style="padding:12px 20px;font-size:14px;color:#6b7280;border-top:1px solid #e5e7eb;">Invoice Date</td>
+                <td style="padding:12px 20px;font-size:14px;color:#111827;font-weight:600;border-top:1px solid #e5e7eb;text-align:right;">${invoiceDate}</td>
+              </tr>
+              <tr style="background-color:#f9fafb;">
+                <td style="padding:12px 20px;font-size:14px;color:#6b7280;">Plan</td>
+                <td style="padding:12px 20px;font-size:14px;color:#111827;font-weight:600;text-align:right;">${planDetails.name}</td>
+              </tr>
+              <tr>
+                <td style="padding:12px 20px;font-size:14px;color:#6b7280;border-top:1px solid #e5e7eb;">Billing Period</td>
+                <td style="padding:12px 20px;font-size:14px;color:#111827;font-weight:600;border-top:1px solid #e5e7eb;text-align:right;">${startDateStr} – ${endDateStr}</td>
+              </tr>
+              <tr style="background-color:#f9fafb;">
+                <td style="padding:12px 20px;font-size:14px;color:#6b7280;">Next Billing Date</td>
+                <td style="padding:12px 20px;font-size:14px;color:#111827;font-weight:600;text-align:right;">${nextBillingDate}</td>
+              </tr>
+              <tr style="background-color:#0d9488;">
+                <td style="padding:14px 20px;font-size:15px;font-weight:bold;color:#ffffff;">Amount Charged</td>
+                <td style="padding:14px 20px;font-size:15px;font-weight:bold;color:#ffffff;text-align:right;">£${planDetails.price.toFixed(2)} / month</td>
+              </tr>
+            </table>
+
+            <p>You can manage your subscription at any time from the <strong>Subscription</strong> page in your dashboard.</p>
+            <p>If you have any questions, our team is always happy to help.</p>
+            <p style="margin-top:24px;">Warm regards,<br/><strong>The HostKeep Digital Team</strong></p>
+          `,
+          buttonText: 'Go to Your Dashboard',
+          buttonUrl: 'https://hostkeepdigital.co.uk/HostDashboard',
+        });
+
+        await sendEmail({
+          to: hostEmail,
+          subject: `Subscription Confirmed — ${planDetails.name} Plan`,
+          html: hostHtml,
+        });
+      }
+
+      // Send admin notification email
+      const adminHtml = buildEmail({
+        heading: `New Subscriber — ${planDetails.name}`,
+        body: `
+          <p>A new subscriber has joined HostKeep Digital.</p>
+
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;">
+            <tr style="background-color:#f9fafb;">
+              <td colspan="2" style="padding:14px 20px;font-size:13px;font-weight:bold;color:#374151;text-transform:uppercase;letter-spacing:0.05em;">Subscriber Details</td>
+            </tr>
+            <tr>
+              <td style="padding:12px 20px;font-size:14px;color:#6b7280;border-top:1px solid #e5e7eb;">Name</td>
+              <td style="padding:12px 20px;font-size:14px;color:#111827;font-weight:600;border-top:1px solid #e5e7eb;text-align:right;">${session.customer_details?.name || 'N/A'}</td>
+            </tr>
+            <tr style="background-color:#f9fafb;">
+              <td style="padding:12px 20px;font-size:14px;color:#6b7280;">Email</td>
+              <td style="padding:12px 20px;font-size:14px;color:#111827;font-weight:600;text-align:right;">${hostEmail || 'N/A'}</td>
+            </tr>
+            <tr>
+              <td style="padding:12px 20px;font-size:14px;color:#6b7280;border-top:1px solid #e5e7eb;">Plan</td>
+              <td style="padding:12px 20px;font-size:14px;color:#111827;font-weight:600;border-top:1px solid #e5e7eb;text-align:right;">${planDetails.name}</td>
+            </tr>
+            <tr style="background-color:#f9fafb;">
+              <td style="padding:12px 20px;font-size:14px;color:#6b7280;">Monthly Value</td>
+              <td style="padding:12px 20px;font-size:14px;color:#111827;font-weight:600;text-align:right;">£${planDetails.price.toFixed(2)}</td>
+            </tr>
+            <tr style="background-color:#0d9488;">
+              <td style="padding:14px 20px;font-size:15px;font-weight:bold;color:#ffffff;">Date</td>
+              <td style="padding:14px 20px;font-size:15px;font-weight:bold;color:#ffffff;text-align:right;">${invoiceDate}</td>
+            </tr>
+          </table>
+
+          <p>View and manage this subscriber from the Admin Panel.</p>
+        `,
+        buttonText: 'Open Admin Panel',
+        buttonUrl: 'https://hostkeepdigital.co.uk/admin',
+      });
+
+      await sendEmail({
+        to: ADMIN_EMAIL,
+        subject: `🎉 New Subscriber: ${planDetails.name} — ${session.customer_details?.name || hostEmail}`,
+        html: adminHtml,
+      });
 
       return Response.json({ received: true });
     } catch (err) {
