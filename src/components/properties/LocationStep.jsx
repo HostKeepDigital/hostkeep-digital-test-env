@@ -32,7 +32,7 @@ function getAreaLabel(postcodeArea) {
 }
 
 export default function LocationStep({ formData, onFormChange, onLocationChange, signupPostcode }) {
-  const [isReady, setIsReady] = useState(!signupPostcode); // false if founding member postcode needs verification
+  const [isReady, setIsReady] = useState(false); // block until postcode lookup attempt completes
   const buildPostcodeData = (fd) => {
     if (fd.postcode) {
       return {
@@ -91,24 +91,24 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
     }
   }, [postcodeInput]);
 
-  // Mark as ready once postcode verification completes (or after 2s fallback)
+  // Mark as ready once postcode lookup attempt completes (success or error) or after 8s fallback
   useEffect(() => {
-    if (!signupPostcode) return; // only needed for founding members
-    if (postcodeData) {
+    if (!postcodeLoading) {
+      // Lookup complete (or never started for non-founding members)
       setIsReady(true);
       if (readyTimeoutRef.current) clearTimeout(readyTimeoutRef.current);
       return;
     }
-    // Fuzzy timeout: allow render after 2s even if lookup incomplete
-    if (!readyTimeoutRef.current && postcodeInput) {
+    // Safety fallback: unblock after 8 seconds even if lookup still pending
+    if (!readyTimeoutRef.current) {
       readyTimeoutRef.current = setTimeout(() => {
         setIsReady(true);
-      }, 2000);
+      }, 8000);
     }
     return () => {
       if (readyTimeoutRef.current) clearTimeout(readyTimeoutRef.current);
     };
-  }, [postcodeData, postcodeInput, signupPostcode]);
+  }, [postcodeLoading]);
 
   const handlePostcodeLookup = async () => {
     const raw = postcodeInput.trim();
