@@ -209,17 +209,20 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
           )}
           <div className="flex gap-2">
             <Input
+              key="postcode-input"
               value={postcodeInput}
               onChange={(e) => {
-                setPostcodeInput(e.target.value.toUpperCase());
+                const val = e.target.value.toUpperCase();
+                setPostcodeInput(val);
                 setPostcodeError("");
-                setPostcodeData(null);
+                if (postcodeData) setPostcodeData(null);
               }}
               onKeyDown={(e) => e.key === "Enter" && handlePostcodeLookup()}
               placeholder="e.g. PL13 2JE"
               className={`flex-1 ${postcodeError ? "border-red-500" : ""} ${postcodeData ? "bg-gray-50 text-gray-500 cursor-not-allowed" : ""}`}
               disabled={postcodeLoading || !!postcodeData}
               maxLength={8}
+              autoComplete="off"
             />
             <Button
               onClick={handlePostcodeLookup}
