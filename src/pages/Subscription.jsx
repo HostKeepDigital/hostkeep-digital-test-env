@@ -334,23 +334,30 @@ export default function Subscription() {
   const handleSetNextSubscription = async (planId) => {
     setNextSubscriptionLoading(true);
     try {
-      await base44.entities.Subscription.update(subscription.id, {
-        next_subscription: planId,
+      const session_token = localStorage.getItem("session_token");
+      // Create/update the Stripe customer and beta subscription record
+      const res = await base44.functions.invoke('setupFoundingSubscription', {
+        next_plan: planId,
+        session_token,
       });
+      if (res.data?.error) {
+        toast.error(res.data.error);
+        return;
+      }
       queryClient.invalidateQueries({ queryKey: ["subscription"] });
       setPendingPlan(null);
 
-      // Check stripe status — skip prompt if already connected
+      // Check stripe connect status — prompt if not yet connected
       try {
-        const res = await base44.functions.invoke('getStripeConnectStatus', {});
-        const st = res.data?.status || 'not_connected';
+        const connectRes = await base44.functions.invoke('getStripeConnectStatus', {});
+        const st = connectRes.data?.status || 'not_connected';
         setStripeStatus(st);
         if (st === 'not_connected') {
           setShowStripePrompt(true);
           return;
         }
       } catch (_) {
-        // If check fails, just skip the stripe prompt
+        // If check fails, skip the stripe connect prompt
       }
 
       navigate(createPageUrl("HostDashboard"));
