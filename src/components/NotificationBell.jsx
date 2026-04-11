@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Bell } from "lucide-react";
+import { Bell, X } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { Link } from "react-router-dom";
@@ -78,7 +78,7 @@ export default function NotificationBell() {
     <div className="relative" ref={ref}>
       <button
         onClick={handleOpen}
-        className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
+        className="relative p-3 rounded-lg hover:bg-gray-100 transition-colors"
         aria-label="Notifications"
       >
         <Bell className="w-5 h-5 text-gray-600" />
@@ -90,17 +90,26 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+        <div className="fixed right-2 top-16 w-[calc(100vw-16px)] sm:w-80 sm:absolute sm:right-0 sm:top-full sm:mt-2 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
             <h3 className="font-semibold text-gray-900 text-sm">Notifications</h3>
-            {unread > 0 && (
+            <div className="flex items-center gap-3">
+              {unread > 0 && (
+                <button
+                  onClick={markAllRead}
+                  className="text-xs text-teal-600 hover:text-teal-700 font-medium"
+                >
+                  Mark all read
+                </button>
+              )}
               <button
-                onClick={markAllRead}
-                className="text-xs text-teal-600 hover:text-teal-700 font-medium"
+                onClick={() => setOpen(false)}
+                className="p-1 rounded hover:bg-gray-100 transition-colors"
+                aria-label="Close"
               >
-                Mark all read
+                <X className="w-4 h-4 text-gray-500" />
               </button>
-            )}
+            </div>
           </div>
 
           <div className="max-h-96 overflow-y-auto">
