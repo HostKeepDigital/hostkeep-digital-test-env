@@ -552,11 +552,14 @@ export default function Subscription() {
             <h2 className="text-2xl font-bold text-gray-900 mb-3">
               You have free beta access
             </h2>
-            <p className="text-gray-600 text-base leading-relaxed mb-6">
-              Future date TBC → <strong>{subscription?.next_subscription ? PLAN_DISPLAY_NAMES[subscription.next_subscription] || subscription.next_subscription : "Select your founding subscription below"}</strong>
+            <p className="text-gray-600 text-base leading-relaxed mb-3">
+              All HostKeep features are <strong>completely free</strong> while we're in beta. No charges until beta closes.
             </p>
-            <p className="text-sm text-gray-500">
-              Choose which founding subscription tier you'll move to when beta ends. Your pricing will be locked in for life.
+            <p className="text-gray-600 text-base leading-relaxed mb-6">
+              Post-beta plan: <strong>{subscription?.next_subscription ? PLAN_DISPLAY_NAMES[subscription.next_subscription] || subscription.next_subscription : "Not yet selected — choose below"}</strong>
+            </p>
+            <p className="text-sm text-amber-700 font-medium">
+              👇 Select your preferred plan below to lock in your exclusive founding rate for life.
             </p>
           </motion.div>
         )}
@@ -602,6 +605,12 @@ export default function Subscription() {
           {/* Founding Pricing Cards with selection for beta users */}
           {activeTab === "host" && (
             <div className="mb-10">
+              {isBetaUser && (
+                <div className="text-center mb-6">
+                  <h2 className="text-xl font-bold text-gray-900 mb-1">🔒 Your Exclusive Founding Member Rates</h2>
+                  <p className="text-sm text-gray-500 max-w-lg mx-auto">These prices are locked in for life — only available to founding members. Choose the plan that fits your portfolio. You won't be charged until beta ends.</p>
+                </div>
+              )}
               <div className="grid md:grid-cols-3 gap-4">
                 {[
                   { id: 'founding_host_solo', name: 'Solo Host Founding', price: 19, standard: 29 },
@@ -640,6 +649,10 @@ export default function Subscription() {
           {/* Founding Pricing Cards (for cleaner plans) */}
           {activeTab === "cleaner" && isBetaUser && (
             <div className="mb-10">
+              <div className="text-center mb-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-1">🔒 Your Exclusive Founding Member Rate</h2>
+                <p className="text-sm text-gray-500 max-w-lg mx-auto">This price is locked in for life — only available to founding members. You won't be charged until beta ends.</p>
+              </div>
               <div className="rounded-2xl border-2 border-amber-200 bg-white p-5 text-center max-w-sm mx-auto">
                 <Badge className="bg-amber-500 text-white mb-2">Founding</Badge>
                 <p className="text-sm font-semibold text-gray-900 mb-1">Cleaner Solo Founding</p>
@@ -665,6 +678,11 @@ export default function Subscription() {
           )}
 
           {/* Plan cards */}
+          {isBetaUser && (
+            <div className="text-center mb-4">
+              <p className="text-sm text-gray-400 uppercase tracking-wide font-semibold">Standard pricing for reference — your founding rates are above</p>
+            </div>
+          )}
           <div className="grid md:grid-cols-3 gap-6">
             {(activeTab === "host" ? HOST_PLANS : CLEANER_PLANS).map(
               (plan, idx) => {
