@@ -81,23 +81,23 @@ export default function CreateProperty() {
   const [foundingPostcode, setFoundingPostcode] = useState("");
   const [isBeta, setIsBeta] = useState(true); // default true until fetched
 
+  // Fetch beta flag
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await base44.functions.invoke("getBetaSettings", {});
+        if (res?.data?.beta_open !== undefined) {
+          setIsBeta(res.data.beta_open);
+        }
+      } catch (_) {
+        // default to true (beta on) if fetch fails
+      }
+    })();
+  }, []);
+
   // Load founding member postcode if user is a founding member
   useEffect(() => {
     if (!isAuthenticated) return;
-
-    // Fetch beta flag
-    useEffect(() => {
-      (async () => {
-        try {
-          const res = await base44.functions.invoke("getBetaSettings", {});
-          if (res?.data?.beta_open !== undefined) {
-            setIsBeta(res.data.beta_open);
-          }
-        } catch (_) {
-          // default to true (beta on) if fetch fails
-        }
-      })();
-    }, []);
 
     // First try signup_postcode already on the user object from session
     if (user?.signup_postcode) {
