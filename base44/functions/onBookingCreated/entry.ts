@@ -55,6 +55,18 @@ Deno.serve(async (req) => {
           );
         }
 
+        // Notify host they confirmed a booking
+        if (status === "confirmed" && booking.host_id) {
+          await notify(
+            booking.host_id,
+            "booking_confirmed",
+            "Booking Confirmed ✅",
+            `You confirmed the booking for ${booking.guest_name || "a guest"} (${booking.check_in} to ${booking.check_out}). Total: £${booking.total_amount?.toFixed(2) || "0.00"}.`,
+            "/HostBookings",
+            null
+          );
+        }
+
         // Notify guest of decline
         if (status === "declined" && booking.guest_id) {
           await notify(

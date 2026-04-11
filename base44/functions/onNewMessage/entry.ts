@@ -22,12 +22,23 @@ Deno.serve(async (req) => {
     // Get sender name
     let senderName = message.sender_name || "Someone";
 
+    // Determine correct message inbox link based on receiver role
+    let messageLink = "/GuestMessages";
+    try {
+      const receiverUser = await serviceRole.entities.User.get(message.receiver_id);
+      const roles = await serviceRole.entities.UserRole.filter({ user_id: message.receiver_id, approval_status: "approved" });
+      const isHost = roles.some((r) => r.role === "host");
+      const isCleaner = roles.some((r) => r.role === "cleaner");
+      if (isCleaner) messageLink = "/CleanKeep";
+      else if (isHost) messageLink = "/HostMessages";
+    } catch (_) {}
+
     await serviceRole.functions.invoke("sendNotification", {
       user_id: message.receiver_id,
       type: "new_message",
       title: `New message from ${senderName}`,
       body: message.content?.slice(0, 200) || "You have a new message.",
-      link: "/GuestMessages",
+      link: messageLink,
     });
 
     return Response.json({ ok: true });
