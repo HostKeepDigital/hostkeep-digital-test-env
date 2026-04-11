@@ -4,12 +4,12 @@ import Stripe from 'npm:stripe@16.10.0';
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
 
 const PLAN_PRICES = {
-  host_starter_monthly: 'price_1QmLoxHF00x1qYbM2FyD4lPe',
-  host_growth_monthly: 'price_1QmLoyHF00x1qYbMJVATYNdv',
-  host_pro_monthly: 'price_1QmLozHF00x1qYbMvDSqQzWh',
-  cleaner_solo_monthly: 'price_1QmLp0HF00x1qYbMsCPvVGdj',
-  cleaner_pro_monthly: 'price_1QmLp1HF00x1qYbMDYg8fF6j',
-  cleaner_team_monthly: 'price_1QmLp2HF00x1qYbMRFuP9j9x',
+  host_starter_monthly:  { name: 'HostKeep Host Starter',  amount: 2900 },
+  host_growth_monthly:   { name: 'HostKeep Host Growth',   amount: 5900 },
+  host_pro_monthly:      { name: 'HostKeep Host Pro',      amount: 9900 },
+  cleaner_solo_monthly:  { name: 'HostKeep Cleaner Solo',  amount: 999  },
+  cleaner_pro_monthly:   { name: 'HostKeep Cleaner Pro',   amount: 1999 },
+  cleaner_team_monthly:  { name: 'HostKeep Cleaner Team',  amount: 3999 },
 };
 
 Deno.serve(async (req) => {
@@ -65,12 +65,18 @@ Deno.serve(async (req) => {
     }
 
     // Create checkout session
+    const planInfo = PLAN_PRICES[plan];
     const checkoutSession = await stripe.checkout.sessions.create({
       customer: customer_id,
       payment_method_types: ['card'],
       line_items: [
         {
-          price: PLAN_PRICES[plan],
+          price_data: {
+            currency: 'gbp',
+            product_data: { name: planInfo.name },
+            unit_amount: planInfo.amount,
+            recurring: { interval: 'month' },
+          },
           quantity: 1,
         },
       ],
