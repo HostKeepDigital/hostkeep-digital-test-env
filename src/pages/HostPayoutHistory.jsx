@@ -343,7 +343,7 @@ export default function HostPayoutHistory() {
                   </div>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-3">Browse by Calendar Month</p>
+                  <p className="text-sm font-medium text-gray-700 mb-3">Browse Calendar Month</p>
                   <div className="bg-gray-100 rounded-lg p-2 w-fit">
                     <select
                       value={selectedMonth || ""}
