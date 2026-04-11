@@ -32,6 +32,7 @@ function getAreaLabel(postcodeArea) {
 }
 
 export default function LocationStep({ formData, onFormChange, onLocationChange, signupPostcode }) {
+  const [isReady, setIsReady] = useState(!signupPostcode); // false if founding member postcode needs verification
   const buildPostcodeData = (fd) => {
     if (fd.postcode) {
       return {
@@ -55,6 +56,7 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
   const [postcodeData, setPostcodeData] = useState(() => buildPostcodeData(formData));
 
   const didAutoLookup = useRef(false);
+  const readyTimeoutRef = useRef(null);
 
   // Derive in-area state directly from postcodeData
   const inArea = postcodeData
@@ -88,6 +90,25 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
       handlePostcodeLookup();
     }
   }, [postcodeInput]);
+
+  // Mark as ready once postcode verification completes (or after 2s fallback)
+  useEffect(() => {
+    if (!signupPostcode) return; // only needed for founding members
+    if (postcodeData) {
+      setIsReady(true);
+      if (readyTimeoutRef.current) clearTimeout(readyTimeoutRef.current);
+      return;
+    }
+    // Fuzzy timeout: allow render after 2s even if lookup incomplete
+    if (!readyTimeoutRef.current && postcodeInput) {
+      readyTimeoutRef.current = setTimeout(() => {
+        setIsReady(true);
+      }, 2000);
+    }
+    return () => {
+      if (readyTimeoutRef.current) clearTimeout(readyTimeoutRef.current);
+    };
+  }, [postcodeData, postcodeInput, signupPostcode]);
 
   const handlePostcodeLookup = async () => {
     const raw = postcodeInput.trim();
@@ -152,6 +173,20 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
   const canSave = () => {
     return postcodeData && inArea && formData.location?.street;
   };
+
+  // Block page while founding member postcode is being verified
+  if (!isReady) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="w-8 h-8 border-4 border-teal-200 border-t-teal-600 rounded-full animate-spin mx-auto mb-3" />
+            <p className="text-sm text-gray-600">Verifying your postcode...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
