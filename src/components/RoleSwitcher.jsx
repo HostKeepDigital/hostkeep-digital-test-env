@@ -76,7 +76,7 @@ export default function RoleSwitcher({ userRoles, currentPageName }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="gap-2 px-2 lg:px-4">
+        <Button variant="outline" className="h-9 w-9 p-0 lg:h-9 lg:w-auto lg:px-4 lg:gap-2 flex items-center justify-center mr-1">
           <currentModeData.icon className={`w-4 h-4 ${currentModeData.color}`} />
           <span className="hidden lg:inline">{currentModeData.label}</span>
           <ChevronDown className="hidden lg:block w-4 h-4" />
