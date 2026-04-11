@@ -18,7 +18,7 @@ export default function StripeConnectPanel({ user }) {
     base44.functions.invoke('getStripeConnectStatus', { session_token })
       .then(res => setStatus(res.data?.status || 'not_connected'))
       .catch(() => setStatus('not_connected'));
-  }, [user]);
+  }, [user?.id]);
 
   const handleConnect = async () => {
     setConnecting(true);
