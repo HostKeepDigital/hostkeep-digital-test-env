@@ -78,6 +78,22 @@ export default function CreateProperty() {
   const { user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const formContentRef = useRef(null);
+  const [foundingPostcode, setFoundingPostcode] = useState("");
+
+  // Load founding member postcode if user is a founding member
+  useEffect(() => {
+    if (!isAuthenticated || !user?.email) return;
+    (async () => {
+      try {
+        const members = await base44.entities.FoundingMember.filter({ email: user.email });
+        if (members[0]?.postcode) {
+          setFoundingPostcode(members[0].postcode);
+        }
+      } catch (_) {
+        // not a founding member, continue without locked postcode
+      }
+    })();
+  }, [isAuthenticated, user?.email]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -146,6 +162,30 @@ export default function CreateProperty() {
   const [uploadedFileIdentifiers, setUploadedFileIdentifiers] = useState([]);
   const [smartLockPolicyWarning, setSmartLockPolicyWarning] = useState(null);
   const [showPolicyPicker, setShowPolicyPicker] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
+
+  // Ensure 4 standard policies exist on load
+  useEffect(() => {
+    const ensurePolicies = async () => {
+      try {
+        const existing = await base44.entities.CancellationPolicy.list();
+        if (existing.length < 4) {
+          const toCreate = [
+            { policy_name: "Flexible", description: "Full refund if cancelled 30+ days before check-in. 50% refund if cancelled 7-29 days before.", tier_1_deadline_days: 30, tier_1_refund_percentage: 100, tier_2_deadline_days: 7, tier_2_refund_percentage: 50, final_tier_refund_percentage: 0 },
+            { policy_name: "Moderate", description: "Full refund if cancelled 30+ days before check-in. 25% refund if cancelled 7-29 days before.", tier_1_deadline_days: 30, tier_1_refund_percentage: 100, tier_2_deadline_days: 7, tier_2_refund_percentage: 25, final_tier_refund_percentage: 0 },
+            { policy_name: "Strict", description: "Full refund if cancelled 30+ days before. No refund if cancelled within 7 days.", tier_1_deadline_days: 30, tier_1_refund_percentage: 100, tier_2_deadline_days: 7, tier_2_refund_percentage: 0, final_tier_refund_percentage: 0 },
+            { policy_name: "Super Strict", description: "Full refund only if cancelled 60+ days before. Non-refundable within 60 days.", tier_1_deadline_days: 60, tier_1_refund_percentage: 100, tier_2_deadline_days: 0, tier_2_refund_percentage: 0, final_tier_refund_percentage: 0 },
+          ].slice(existing.length);
+          await Promise.all(toCreate.map(p => base44.entities.CancellationPolicy.create(p)));
+        }
+      } catch (_) {
+        // policies may already exist or creation may fail; continue anyway
+      } finally {
+        setIsInitializing(false);
+      }
+    };
+    ensurePolicies();
+  }, []);
 
   const validateTitle = (value) => {
     const invalidChars = value.replace(/[a-zA-Z0-9\s\-&!.]/g, "");
@@ -705,7 +745,7 @@ export default function CreateProperty() {
                 setFormData((prev) => ({ ...prev, [field]: value }))
               }
               onLocationChange={setLocationData}
-              signupPostcode={user?.signup_postcode || ""}
+              signupPostcode={foundingPostcode}
             />
             )}
 
