@@ -439,7 +439,7 @@ export default function HostDashboard() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-xl shadow-sm border border-gray-100 p-4"
+              className="lg:hidden bg-white rounded-xl shadow-sm border border-gray-100 p-4"
             >
               <h3 className="font-semibold text-gray-900 mb-3 text-sm">Quick Actions</h3>
               <div className="space-y-1">
