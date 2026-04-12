@@ -286,8 +286,10 @@ export default function CreateProperty() {
     const policy = policies.find(p => p.id === formData.cancellation_policy_id);
     if (!policy) return;
 
-    const cancellationHoursBefore = (policy.tier_1_deadline_days ?? 0) * 24;
-    const maxAllowedHours = Math.max(cancellationHoursBefore - 12, 0);
+    const noRefundDays = (policy.final_tier_refund_percentage === 0 && (policy.tier_2_deadline_days ?? 0) > 0)
+      ? policy.tier_2_deadline_days
+      : (policy.tier_1_deadline_days ?? 0);
+    const maxAllowedHours = Math.max(noRefundDays * 24 - 12, 0);
 
     if (formData.smart_lock_send_hours && formData.smart_lock_send_hours > maxAllowedHours) {
       setFormData(prev => ({ ...prev, smart_lock_send_hours: null }));
@@ -1023,7 +1025,12 @@ export default function CreateProperty() {
                             <option value="">Select timing</option>
                             {[24, 48, 72, 96, 120, 144, 168].map((hours) => {
                               const policy = policies?.find(p => p.id === formData.cancellation_policy_id);
-                              const maxAllowed = policy ? Math.max((policy.tier_1_deadline_days ?? 0) * 24 - 12, 0) : 999;
+                              const noRefundDays = policy
+                                ? (policy.final_tier_refund_percentage === 0 && (policy.tier_2_deadline_days ?? 0) > 0
+                                    ? policy.tier_2_deadline_days
+                                    : policy.tier_1_deadline_days ?? 0)
+                                : 999;
+                              const maxAllowed = policy ? Math.max(noRefundDays * 24 - 12, 0) : 999;
                               const disabled = hours > maxAllowed;
                               return (
                                 <option key={hours} value={hours} disabled={disabled}>

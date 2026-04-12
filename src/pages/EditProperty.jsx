@@ -1250,7 +1250,12 @@ export default function EditProperty() {
                     <option value="">Select timing</option>
                     {[24, 48, 72, 96, 120, 144, 168].map((hours) => {
                       const policy = policies?.find(p => p.id === formData.cancellation_policy_id);
-                      const maxAllowed = policy ? Math.max((policy.tier_1_deadline_days ?? 0) * 24 - 12, 0) : 999;
+                      const noRefundDays = policy
+                        ? (policy.final_tier_refund_percentage === 0 && (policy.tier_2_deadline_days ?? 0) > 0
+                            ? policy.tier_2_deadline_days
+                            : policy.tier_1_deadline_days ?? 0)
+                        : 999;
+                      const maxAllowed = policy ? Math.max(noRefundDays * 24 - 12, 0) : 999;
                       const disabled = hours > maxAllowed;
                       return (
                         <option key={hours} value={hours} disabled={disabled}>
