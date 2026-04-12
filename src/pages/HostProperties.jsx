@@ -90,15 +90,16 @@ export default function HostProperties() {
   });
 
   const { data: foundingMemberData } = useQuery({
-    queryKey: ["founding-member", user?.email],
+    queryKey: ["founding-member", user?.id],
     queryFn: async () => {
-      const members = await base44.entities.FoundingMember.filter({ email: user.email });
+      const members = await base44.entities.FoundingMember.filter({ user_id: user?.id });
       return members?.[0] || null;
     },
-    enabled: !!user?.email
+    enabled: !!user?.id
   });
 
   const isFoundingMember = foundingMemberData?.is_founding_member === true;
+  const isBanned = foundingMemberData?.approval_status?.startsWith("banned_");
 
   const [stripeConnected, setStripeConnected] = useState(false);
 
@@ -158,6 +159,13 @@ export default function HostProperties() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-3 md:px-4 py-4 md:py-8">
+        {/* Ban Banner */}
+        {isBanned && (
+          <div className="mb-6 p-4 rounded-lg border-l-4 border-red-500 bg-red-50">
+            <p className="text-sm text-red-800"><strong>Your account has been suspended.</strong> You are unable to publish properties on HostKeep. Please contact <a href="mailto:hello@hostkeepdigital.co.uk" className="underline">hello@hostkeepdigital.co.uk</a> if you believe this is an error.</p>
+          </div>
+        )}
+
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
@@ -169,6 +177,7 @@ export default function HostProperties() {
           <Button
             onClick={handleAddPropertyClick}
             className="bg-teal-600 hover:bg-teal-700 gap-2"
+            disabled={isBanned}
           >
             <Plus className="w-4 h-4" />
             Add Property

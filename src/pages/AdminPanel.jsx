@@ -1480,6 +1480,42 @@ const handleDocFail = async (member, isAttempt2) => {
   fetchMembers();
  };
 
+const handleDocBan = async (member) => {
+  setML(member.id, "doc_ban");
+  try {
+    await base44.entities.FoundingMember.update(member.id, {
+      approval_status: "banned_documentation_failure",
+      ban_reason: "Property documentation not approved after 3 attempts."
+    });
+    
+    const props = await base44.entities.Property.filter({ owner_id: member.user_id });
+    for (const prop of props) {
+      await base44.entities.Property.update(prop.id, { status: "paused" });
+    }
+    
+    const docs = await base44.entities.VerificationDocuments.filter({ user_id: member.user_id });
+    if (docs.length > 0) {
+      const latestDoc = docs.sort((a, b) => new Date(b.created_date) - new Date(a.created_date))[0];
+      await base44.entities.VerificationDocuments.update(latestDoc.id, { verification_status: "rejected" });
+    }
+    
+    await base44.functions.invoke("sendEmail", {
+      to: member.email,
+      subject: "Your HostKeep account has been suspended — HostKeep",
+      html: buildEmail({
+        heading: "Account Suspended",
+        body: `We are writing to inform you that your HostKeep account has been suspended.<br><br>After three attempts, we were unable to approve your verification documentation. As a result, your account and any associated properties have been suspended and you will no longer be able to publish on HostKeep.<br><br>If you believe this is an error, please contact us at <a href="mailto:hello@hostkeepdigital.co.uk">hello@hostkeepdigital.co.uk</a>.`,
+      }),
+    });
+    toast.success(`${member.full_name} banned — documentation failure`);
+  } catch (e) {
+    toast.error("Ban action failed");
+    console.error(e);
+  }
+  setML(member.id, null);
+  fetchMembers();
+ };
+
   // ── VERIFICATION QUERIES ──────────────────────────────────────────────────
 
   const { data: pendingDocs   = [] } = useQuery({ queryKey:["pending-verifications"], queryFn: () => base44.entities.VerificationDocuments.filter({ verification_status:"pending" }, "-created_date") });
@@ -1837,7 +1873,7 @@ const handleDocFail = async (member, isAttempt2) => {
               </Section>
 
               <Section title="Document Failed — Attempt 2" count={docFail2Members.length} accent="red">
-                <DocMemberTable members={docFail2Members} properties={allProperties} verificationDocs={allVerificationDocs} />
+                <DocMemberTable members={docFail2Members} properties={allProperties} verificationDocs={allVerificationDocs} showApproveButton onApprove={handleDocApprove} showFailButton failIsAttempt2 onFail={handleDocBan} actionLoading={actionLoading} />
               </Section>
 
               <Section title="Approved" count={approvedMembers.length} accent="green">

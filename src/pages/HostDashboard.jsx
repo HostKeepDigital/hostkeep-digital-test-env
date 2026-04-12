@@ -107,6 +107,20 @@ export default function HostDashboard() {
     enabled: !!user?.id,
   });
 
+  // Load founding member for ban check
+  const { data: foundingMember } = useQuery({
+    queryKey: ["founding-member", user?.id],
+    queryFn: async () => {
+      const members = await base44.entities.FoundingMember.filter({
+        user_id: user?.id,
+      });
+      return members[0] || null;
+    },
+    enabled: !!user?.id,
+  });
+
+  const isBanned = foundingMember?.approval_status?.startsWith("banned_");
+
   // Load cancellation policies
   const { data: cancellationPolicies = [] } = useQuery({
     queryKey: ["cancellation-policies"],
@@ -231,6 +245,13 @@ export default function HostDashboard() {
       )}
 
       <div className="max-w-7xl mx-auto px-3 py-3 md:px-6 md:py-6">
+        {/* Ban Banner */}
+        {isBanned && (
+          <div className="mb-6 p-4 rounded-lg border-l-4 border-red-500 bg-red-50">
+            <p className="text-sm text-red-800"><strong>Your account has been suspended.</strong> You are unable to publish properties on HostKeep. Please contact <a href="mailto:hello@hostkeepdigital.co.uk" className="underline">hello@hostkeepdigital.co.uk</a> if you believe this is an error.</p>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-between gap-3 mb-4">
           <div>
@@ -246,7 +267,7 @@ export default function HostDashboard() {
                 {pendingBookings.length}
               </Badge>
             )}
-            <Button onClick={handleAddPropertyClick} className="bg-teal-600 hover:bg-teal-700 gap-1.5 text-sm h-9 px-3">
+            <Button onClick={handleAddPropertyClick} className="bg-teal-600 hover:bg-teal-700 gap-1.5 text-sm h-9 px-3" disabled={isBanned}>
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">Add Property</span>
               <span className="sm:hidden">Add</span>

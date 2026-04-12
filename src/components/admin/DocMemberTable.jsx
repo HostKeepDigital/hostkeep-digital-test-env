@@ -68,7 +68,7 @@ export default function DocMemberTable({ members, properties = [], verificationD
                         disabled={!!actionLoading[m.id]}
                         onClick={() => onFail && onFail(m, failIsAttempt2)}
                       >
-                        {actionLoading[m.id] === "doc_fail" ? "..." : "Failed"}
+                        {actionLoading[m.id] === "doc_fail" || actionLoading[m.id] === "doc_ban" ? "..." : "Failed"}
                       </Button>
                     )}
                     {!showApproveButton && !showFailButton && <span className="text-sm text-gray-400">—</span>}
