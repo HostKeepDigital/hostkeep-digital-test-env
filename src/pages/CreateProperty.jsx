@@ -272,9 +272,7 @@ export default function CreateProperty() {
   });
 
   useEffect(() => {
-    if (formContentRef.current) {
-      formContentRef.current.scrollIntoView({ behavior: "smooth" });
-    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentStep]);
 
   // Reset smart lock if cancellation policy makes current timing unsafe
