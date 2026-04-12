@@ -183,21 +183,14 @@ export default function SignIn() {
                     ? "Still having trouble? Your password may need resetting."
                     : error}
                 </p>
-                {failedAttempts >= 3 ? (
+                {failedAttempts >= 3 && (
                   <p className="text-xs text-red-600">
                     You've entered an incorrect password {failedAttempts} times.{" "}
                     <Link to="/ResetPassword" className="underline font-semibold hover:text-red-800">
                       Click here to reset your password
                     </Link>.
                   </p>
-                ) : failedAttempts > 0 ? (
-                  <p className="text-xs text-red-500">
-                    Double-check your password or{" "}
-                    <Link to="/ResetPassword" className="underline font-medium hover:text-red-700">
-                      reset it here
-                    </Link>.
-                  </p>
-                ) : null}
+                )}
               </div>
             )}
 
