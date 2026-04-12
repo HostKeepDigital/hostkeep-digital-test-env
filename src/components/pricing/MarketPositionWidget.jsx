@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { TrendingUp, TrendingDown, Minus, BarChart2, Calendar } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, BarChart2 } from "lucide-react";
 
 export default function MarketPositionWidget({ nightlyRate, postcodeArea, propertyType, month }) {
   const [market, setMarket] = useState(null);
@@ -11,7 +11,6 @@ export default function MarketPositionWidget({ nightlyRate, postcodeArea, proper
 
     base44.entities.MarketPricing.list("-created_date", 20)
       .then(records => {
-        // Find best match: same postcode_area, then fall back to any record
         const filtered = (records || []).filter(r => r.postcode_area === postcodeArea);
         const best = filtered.length > 0 ? filtered[0] : (records || [])[0];
         setMarket(best || null);
@@ -24,7 +23,6 @@ export default function MarketPositionWidget({ nightlyRate, postcodeArea, proper
   const median = market.median_nightly_rate || market.avg_nightly_rate;
   if (!median) return null;
 
-  // UK school holidays & half-term breaks
   const seasonalPeaks = [
     { label: "Easter", months: [3, 4], boost: 1.25 },
     { label: "Summer", months: [7, 8], boost: 1.35 },
@@ -35,11 +33,9 @@ export default function MarketPositionWidget({ nightlyRate, postcodeArea, proper
 
   const viewMonth = (month || new Date()).getMonth() + 1;
   const currentSeasonalPeak = seasonalPeaks.find(peak => peak.months.includes(viewMonth));
-  const recommendedRate = currentSeasonalPeak ? Math.round(median * currentSeasonalPeak.boost) : null;
 
   const diff = ((nightlyRate - median) / median) * 100;
   const absDiff = Math.abs(diff).toFixed(0);
-
   const isAbove = diff > 5;
   const isBelow = diff < -5;
   const isInline = !isAbove && !isBelow;
@@ -69,17 +65,17 @@ export default function MarketPositionWidget({ nightlyRate, postcodeArea, proper
           {isAbove && <TrendingUp className="w-3.5 h-3.5 text-teal-600" />}
           {isBelow && <TrendingDown className="w-3.5 h-3.5 text-amber-600" />}
           {isInline && <Minus className="w-3.5 h-3.5 text-gray-400" />}
+          {currentSeasonalPeak && (
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-orange-100 text-orange-700 border border-orange-200">
+              🔥 Peak — {currentSeasonalPeak.label}
+            </span>
+          )}
         </div>
         <p className="text-xs text-gray-500 mt-0.5">
-          {monthName} market median for {market.town || market.county || postcodeArea}:{" "}
+          {monthName} median for {market.town || market.county || postcodeArea}:{" "}
           <span className="font-medium text-gray-700">£{median}/night</span>
-          {" "}· Range: £{market.min_nightly_rate}–£{market.max_nightly_rate}
+          {" "}· £{market.min_nightly_rate}–£{market.max_nightly_rate}
         </p>
-        {market.peak_months?.length > 0 && (
-          <p className="text-xs text-gray-400 mt-1">
-            Peak months: {market.peak_months.join(", ")}
-          </p>
-        )}
       </div>
     </div>
   );

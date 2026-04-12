@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
-import MarketPositionWidget from "./MarketPositionWidget";
+
 
 export default function PricingManager({ formData, onUpdate, onPromptSave, property }) {
   const [selectedDate, setSelectedDate] = useState(null);
@@ -262,14 +262,9 @@ export default function PricingManager({ formData, onUpdate, onPromptSave, prope
             onApplyHolidayPricing={handleApplyHolidayPricing}
             currentMonth={calendarMonth}
             onMonthChange={setCalendarMonth}
-          />
-
-          {/* Market position — updates with the calendar month */}
-          <MarketPositionWidget
             nightlyRate={formData.nightly_rate || formData.pricing_settings?.base_rate}
             postcodeArea={property?.postcode_area || formData.postcode_area}
             propertyType={property?.property_type || formData.property_type}
-            month={calendarMonth}
           />
 
           <Tabs defaultValue="base" className="w-full">
