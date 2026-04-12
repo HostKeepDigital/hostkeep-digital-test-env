@@ -33,7 +33,22 @@ export default function MarketPositionWidget({ nightlyRate, postcodeArea, proper
       .finally(() => setLoading(false));
   }, [postcodeArea, propertyType, bedrooms]);
 
-  if (loading || !market || !nightlyRate) return null;
+  if (loading) return (
+    <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-xs text-gray-400 animate-pulse">
+      Loading market data…
+    </div>
+  );
+
+  if (!market) return (
+    <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 px-4 py-3 flex items-center gap-3">
+      <BarChart2 className="w-4 h-4 text-gray-400 flex-shrink-0" />
+      <p className="text-xs text-gray-500">
+        No market data yet for this area. Run a market scrape from the Admin panel to see competitor pricing here.
+      </p>
+    </div>
+  );
+
+  if (!nightlyRate) return null;
 
   const median = market.median_nightly_rate || market.avg_nightly_rate;
   if (!median) return null;
