@@ -324,6 +324,18 @@ export default function CreateProperty() {
       queryClient.invalidateQueries(["properties"]);
       toast.success("Property created!");
 
+      // Move founding member from password_protected → awaiting_document_verification
+      try {
+        const members = await base44.entities.FoundingMember.filter({ user_id: user?.id });
+        if (members?.[0]?.id && members[0].approval_status === "password_protected") {
+          await base44.entities.FoundingMember.update(members[0].id, {
+            approval_status: "awaiting_document_verification",
+          });
+        }
+      } catch (_) {
+        // non-blocking — continue regardless
+      }
+
       try {
         const BETA_PLANS = ['beta_host_access', 'beta_cleaner_access'];
         const FOUNDING_CAPACITY = {
