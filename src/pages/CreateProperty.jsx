@@ -1072,17 +1072,26 @@ export default function CreateProperty() {
                       Accepted: utility bill, council tax bill, mortgage statement, or similar (PDF or image).
                     </p>
                     {!formData.verification_document && (
-                      <input
-                        type="file"
-                        accept="image/*,application/pdf"
-                        onChange={async (e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
-                          const { file_url } = await base44.integrations.Core.UploadFile({ file });
-                          handleChange("verification_document", file_url);
-                        }}
-                        className="mt-1"
-                      />
+                      isUploading ? (
+                        <div className="flex items-center gap-3 mt-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                          <Loader2 className="w-4 h-4 animate-spin text-teal-600 flex-shrink-0" />
+                          <span className="text-sm text-gray-600">Uploading document...</span>
+                        </div>
+                      ) : (
+                        <input
+                          type="file"
+                          accept="image/*,application/pdf"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            setIsUploading(true);
+                            const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                            handleChange("verification_document", file_url);
+                            setIsUploading(false);
+                          }}
+                          className="mt-1"
+                        />
+                      )
                     )}
                     {formData.verification_document && (
                       <div className="flex items-center gap-2 mt-2 p-3 bg-teal-50 border border-teal-200 rounded-lg">
