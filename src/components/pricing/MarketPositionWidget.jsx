@@ -14,24 +14,19 @@ export default function MarketPositionWidget({ nightlyRate, postcodeArea, proper
       .then(records => {
         const active = (records || []).filter(r => !r.is_stale);
 
-        // Priority: exact (area + type + bedrooms), then type match, then area only
-        const exact = active.find(r =>
-          r.postcode_area === postcodeArea &&
-          r.property_type === propertyType &&
-          r.bedrooms === bedrooms
-        );
+        // Priority: type match (area + type), then area only
         const typeMatch = active.find(r =>
           r.postcode_area === postcodeArea &&
           r.property_type === propertyType
         );
         const areaMatch = active.find(r => r.postcode_area === postcodeArea);
 
-        const best = exact || typeMatch || areaMatch || null;
+        const best = typeMatch || areaMatch || null;
         setMarket(best);
-        setMatchQuality(exact ? "exact" : typeMatch ? "type" : areaMatch ? "area" : "none");
+        setMatchQuality(typeMatch ? "type" : areaMatch ? "area" : "none");
       })
       .finally(() => setLoading(false));
-  }, [postcodeArea, propertyType, bedrooms]);
+  }, [postcodeArea, propertyType]);
 
   if (loading) return (
     <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-xs text-gray-400 animate-pulse">
@@ -76,10 +71,8 @@ export default function MarketPositionWidget({ nightlyRate, postcodeArea, proper
   const isBelow = diff < -5;
   const isInline = !isAbove && !isBelow;
 
-  const matchLabel = matchQuality === "exact"
-    ? `${market.bedrooms}-bed ${market.property_type}`
-    : matchQuality === "type"
-    ? `${market.property_type} (all sizes)`
+  const matchLabel = matchQuality === "type"
+    ? `${market.property_type} in ${postcodeArea}`
     : `${postcodeArea} area average`;
 
   return (
