@@ -19,6 +19,7 @@ import { useAuth } from "@/lib/AuthContext";
 import ComplaintsTab from "@/components/admin/ComplaintsTab";
 import SectorsTab from "@/components/admin/SectorsTab";
 import SmartPricingTab from "@/components/admin/SmartPricingTab";
+import DocMemberTable from "@/components/admin/DocMemberTable";
 import IntegrationTestsTab from "@/components/admin/IntegrationTestsTab";
 import BalancePaymentTester from "@/components/devtools/BalancePaymentTester";
 
@@ -1430,6 +1431,7 @@ const handleBan = async (member) => {
 
   const { data: pendingDocs   = [] } = useQuery({ queryKey:["pending-verifications"], queryFn: () => base44.entities.VerificationDocuments.filter({ verification_status:"pending" }, "-created_date") });
   const { data: allVerificationDocs = [] } = useQuery({ queryKey:["all-verification-docs"], queryFn: () => base44.entities.VerificationDocuments.list("-created_date", 1000) });
+  const { data: allProperties = [] } = useQuery({ queryKey:["admin-all-properties"], queryFn: () => base44.entities.Property.list("-created_date", 5000) });
   const { data: pendingRoles  = [] } = useQuery({ queryKey:["pending-roles"],         queryFn: () => base44.entities.UserRole.filter({ approval_status:"pending" }, "-created_date") });
   const { data: highRiskUsers = [] } = useQuery({ queryKey:["high-risk-users"],       queryFn: () => base44.entities.RiskScores.filter({ risk_level:"high" }, "-score") });
 
@@ -1757,12 +1759,12 @@ const handleBan = async (member) => {
                 <MetricCard icon={Ban}          label="Rejected / Banned"     value={rejectedMembers.length + bannedEmailMembers.length + bannedDocMembers.length + bannedFraudMembers.length + bannedManualMembers.length + bannedAdminMembers.length} color="red" />
               </div>
 
-              <Section title="Pending Applications" count={pendingMembers.length} accent="amber">
-                <MemberTable members={pendingMembers} showActions />
+              <Section title="Interest (Not Yet Applied)" count={interestMembers.length} accent="gray">
+               <MemberTable members={interestMembers} />
               </Section>
 
-              <Section title="Interest (Not Yet Applied)" count={interestMembers.length} accent="gray">
-                <MemberTable members={interestMembers} />
+              <Section title="Pending Applications" count={pendingMembers.length} accent="amber">
+               <MemberTable members={pendingMembers} showActions />
               </Section>
 
               <Section title="Invited" count={invitedMembers.length} accent="blue">
@@ -1774,15 +1776,15 @@ const handleBan = async (member) => {
               </Section>
 
               <Section title="Awaiting Document Verification" count={awaitingDocMembers.length} accent="purple">
-                <MemberTable members={awaitingDocMembers} showBanAction />
+                <DocMemberTable members={awaitingDocMembers} properties={allProperties} verificationDocs={allVerificationDocs} />
               </Section>
 
               <Section title="Document Failed — Attempt 1" count={docFail1Members.length} accent="orange">
-                <MemberTable members={docFail1Members} />
+                <DocMemberTable members={docFail1Members} properties={allProperties} verificationDocs={allVerificationDocs} />
               </Section>
 
               <Section title="Document Failed — Attempt 2" count={docFail2Members.length} accent="red">
-                <MemberTable members={docFail2Members} />
+                <DocMemberTable members={docFail2Members} properties={allProperties} verificationDocs={allVerificationDocs} />
               </Section>
 
               <Section title="Approved" count={approvedMembers.length} accent="green">
