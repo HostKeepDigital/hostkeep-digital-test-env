@@ -1010,7 +1010,7 @@ export default function CreateProperty() {
                             )}
                           </p>
                           <p className="text-xs text-gray-500 mt-0.5">
-                            Automatically send your smart lock code to guests before check‑in. The system will never send the code while the guest can still cancel.
+                            Automatically send your smart lock code to guests before check‑in. The system will never send the code while the guest is still eligible for any refund.
                           </p>
                         </div>
                       </label>
