@@ -1065,7 +1065,7 @@ export default function CreateProperty() {
                 <CardHeader>
                   <CardTitle>Verification</CardTitle>
                   <CardDescription>
-                    Please upload a utility bill or equivalent document (e.g. council tax bill, mortgage statement) to verify your property address and ownership.
+                     Please upload a utility bill or equivalent document to verify your property address and ownership.
                   </CardDescription>
                 </CardHeader>
 
