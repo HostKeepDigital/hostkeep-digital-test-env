@@ -7,62 +7,45 @@ import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle2, AlertCircle, MapPin, Lock, XCircle } from "lucide-react";
 import { toast } from "sonner";
 
-/**
- * LOCATION STEP
- *
- * Postcode is the single source of truth.
- * Uses Postcodes.io (via postcodeGeolookupV2 backend function) for authoritative data.
- * Checks that the postcode is within the Cornwall/Devon launch area (TR, PL, EX).
- *
- * If signupPostcode is provided (from the founding member record), it is pre-filled
- * into the postcode input and automatically verified on mount.
- */
-
 // HostKeep launch area — Cornwall & Devon postcode areas only
 const ALLOWED_AREAS = ["TR", "PL", "EX"];
 
 function getAreaLabel(postcodeArea) {
   if (!postcodeArea) return null;
-  const map = {
-    TR: "Cornwall",
-    PL: "Plymouth / Cornwall",
-    EX: "Devon / Exeter",
-  };
+  const map = { TR: "Cornwall", PL: "Plymouth / Cornwall", EX: "Devon / Exeter" };
   return map[postcodeArea] || null;
 }
 
-export default function LocationStep({ formData, onFormChange, onLocationChange, signupPostcode, isBeta }) {
-  const [isReady, setIsReady] = useState(false);
-  const buildPostcodeData = (fd) => {
-    if (fd.postcode) {
-      return {
-        postcode: fd.postcode,
-        county: fd.county,
-        district: fd.postcode_district,
-        postcode_area: fd.postcode_area,
-        parish: fd.town,
-        country: fd.country,
-        latitude: fd.latitude,
-        longitude: fd.longitude,
-        source: "saved",
-      };
-    }
-    return null;
+function buildPostcodeData(fd) {
+  if (!fd?.postcode) return null;
+  return {
+    postcode: fd.postcode,
+    county: fd.county,
+    district: fd.postcode_district,
+    postcode_area: fd.postcode_area,
+    parish: fd.town,
+    country: fd.country,
+    latitude: fd.latitude,
+    longitude: fd.longitude,
+    source: "saved",
   };
+}
 
-  // In beta with a signupPostcode, we always need to wait for the postcode to come in and verify
-  const expectAutoVerify = !!(isBeta && !formData.postcode);
+export default function LocationStep({ formData, onFormChange, onLocationChange, signupPostcode, isBeta }) {
+  // expectAutoVerify: true only when we have a signupPostcode to auto-verify and no saved postcode yet
+  const expectAutoVerify = !!(signupPostcode && !formData.postcode);
+
+  const [isReady, setIsReady] = useState(!expectAutoVerify);
   const [postcodeInput, setPostcodeInput] = useState(formData.postcode || signupPostcode || "");
   const [postcodeLoading, setPostcodeLoading] = useState(false);
   const [postcodeError, setPostcodeError] = useState("");
   const [postcodeData, setPostcodeData] = useState(() => buildPostcodeData(formData));
 
   const didAutoLookup = useRef(false);
+  const timeoutRef = useRef(null);
 
   // Derive in-area state directly from postcodeData
-  const inArea = postcodeData
-    ? ALLOWED_AREAS.includes(postcodeData.postcode_area)
-    : null;
+  const inArea = postcodeData ? ALLOWED_AREAS.includes(postcodeData.postcode_area) : null;
 
   // Sync when formData.postcode arrives asynchronously (e.g. after DB load)
   useEffect(() => {
@@ -78,24 +61,29 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
     didAutoLookup.current = true;
     const upper = signupPostcode.toUpperCase();
     setPostcodeInput(upper);
-    // Small delay to let state settle before calling lookup
-    const timer = setTimeout(() => handlePostcodeLookupForPostcode(upper), 100);
-    return () => clearTimeout(timer);
+
+    // Safety timeout — if lookup takes > 8s, show the form anyway so user isn't stuck
+    timeoutRef.current = setTimeout(() => {
+      setPostcodeError("Postcode verification timed out. Please verify manually.");
+      setPostcodeLoading(false);
+      setIsReady(true);
+    }, 8000);
+
+    doLookup(upper);
+
+    return () => clearTimeout(timeoutRef.current);
   }, [signupPostcode]);
 
-  // Mark ready once verified, or immediately if no auto-verify needed
+  // Mark ready once lookup completes (success or error)
   useEffect(() => {
-    if (!expectAutoVerify) {
-      setIsReady(true);
-      return;
-    }
-    // Wait until we have postcodeData OR an error (lookup completed)
+    if (isReady) return;
     if (didAutoLookup.current && !postcodeLoading && (postcodeData || postcodeError)) {
+      clearTimeout(timeoutRef.current);
       setIsReady(true);
     }
-  }, [postcodeLoading, postcodeData, postcodeError, expectAutoVerify]);
+  }, [postcodeLoading, postcodeData, postcodeError]);
 
-  const handlePostcodeLookupForPostcode = async (postcode) => {
+  const doLookup = async (postcode) => {
     const raw = (postcode || postcodeInput).trim();
     if (!raw) {
       setPostcodeError("Please enter a postcode.");
@@ -108,7 +96,6 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
 
     try {
       const sessionToken = localStorage.getItem("session_token");
-
       const { data } = await base44.functions.invoke("postcodeGeolookupV2", {
         postcode: raw,
         session_token: sessionToken,
@@ -120,7 +107,6 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
       }
 
       setPostcodeData(data);
-
       onFormChange("postcode", data.postcode);
       onFormChange("postcode_district", data.postcode_district);
       onFormChange("postcode_area", data.postcode_area);
@@ -131,16 +117,9 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
       onFormChange("longitude", data.longitude);
 
       const allowed = ALLOWED_AREAS.includes(data.postcode_area);
-
       if (allowed) {
         if (onLocationChange) {
-          onLocationChange({
-            lat: data.latitude,
-            lng: data.longitude,
-            county: data.county,
-            district: data.district,
-            country: data.country,
-          });
+          onLocationChange({ lat: data.latitude, lng: data.longitude, county: data.county, district: data.district, country: data.country });
         }
         toast.success(`Postcode verified — ${getAreaLabel(data.postcode_area) || data.county || data.district}`);
       } else {
@@ -153,14 +132,10 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
     }
   };
 
-  const handlePostcodeLookup = () => handlePostcodeLookupForPostcode(postcodeInput);
+  const canSave = () => postcodeData && inArea && formData.location?.street;
 
-  const canSave = () => {
-    return postcodeData && inArea && formData.location?.street;
-  };
-
-  // Block page while founding member postcode is being auto-verified
-  if (!isReady || postcodeLoading || (isBeta && signupPostcode && !postcodeData && !postcodeError)) {
+  // Show spinner while auto-verifying
+  if (!isReady) {
     return (
       <Card>
         <CardContent className="flex items-center justify-center h-64">
@@ -193,14 +168,8 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
               Postcode locked to your founding member registration area during beta.
             </div>
           )}
-          {signupPostcode && !isBeta && !formData.postcode && (
-            <p className="text-xs text-teal-600 font-medium">
-              Pre-filled from your founding member registration — verifying automatically.
-            </p>
-          )}
           <div className="flex gap-2">
             <Input
-              key="postcode-input"
               value={postcodeInput}
               onChange={(e) => {
                 const val = e.target.value.toUpperCase();
@@ -208,7 +177,7 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
                 setPostcodeError("");
                 if (postcodeData) setPostcodeData(null);
               }}
-              onKeyDown={(e) => e.key === "Enter" && handlePostcodeLookup()}
+              onKeyDown={(e) => e.key === "Enter" && doLookup(postcodeInput)}
               placeholder="e.g. PL13 2JE"
               className={`flex-1 ${postcodeError ? "border-red-500" : ""} ${postcodeData ? "bg-gray-50 text-gray-500 cursor-not-allowed" : ""}`}
               disabled={postcodeLoading || !!postcodeData || (isBeta && !!signupPostcode)}
@@ -216,7 +185,7 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
               autoComplete="off"
             />
             <Button
-              onClick={handlePostcodeLookup}
+              onClick={() => doLookup(postcodeInput)}
               disabled={postcodeLoading || !postcodeInput.trim() || (isBeta && !!signupPostcode)}
               className="bg-teal-600 hover:bg-teal-700"
             >
@@ -237,26 +206,14 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
               <CheckCircle2 className="w-4 h-4" />
               Postcode Verified — {getAreaLabel(postcodeData.postcode_area)}
               <span className="text-xs font-normal text-green-700 ml-1">
-                via {postcodeData.source === "cache" ? "cached data" : "Postcodes.io official API"}
+                via {postcodeData.source === "cache" ? "cached data" : postcodeData.source === "saved" ? "saved data" : "Postcodes.io official API"}
               </span>
             </h4>
             <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-              <div>
-                <span className="text-green-700 font-medium">Postcode:</span>{" "}
-                <span className="text-green-900">{postcodeData.postcode}</span>
-              </div>
-              <div>
-                <span className="text-green-700 font-medium">Country:</span>{" "}
-                <span className="text-green-900">{postcodeData.country}</span>
-              </div>
-              <div>
-                <span className="text-green-700 font-medium">County:</span>{" "}
-                <span className="text-green-900">{postcodeData.county || "—"}</span>
-              </div>
-              <div>
-                <span className="text-green-700 font-medium">District:</span>{" "}
-                <span className="text-green-900">{postcodeData.district || "—"}</span>
-              </div>
+              <div><span className="text-green-700 font-medium">Postcode:</span> <span className="text-green-900">{postcodeData.postcode}</span></div>
+              <div><span className="text-green-700 font-medium">Country:</span> <span className="text-green-900">{postcodeData.country}</span></div>
+              <div><span className="text-green-700 font-medium">County:</span> <span className="text-green-900">{postcodeData.county || "—"}</span></div>
+              <div><span className="text-green-700 font-medium">District:</span> <span className="text-green-900">{postcodeData.district || "—"}</span></div>
               <div>
                 <span className="text-green-700 font-medium">Coordinates:</span>{" "}
                 <span className="text-green-900 font-mono text-xs">
@@ -271,90 +228,60 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
           </div>
         )}
 
-        {/* OUT-OF-AREA: Postcode verified but not in launch region */}
+        {/* OUT-OF-AREA */}
         {postcodeData && !inArea && (
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 space-y-3">
             <h4 className="font-semibold text-amber-900 flex items-center gap-2">
-              <XCircle className="w-4 h-4 text-amber-600" />
-              Outside Launch Area
+              <XCircle className="w-4 h-4 text-amber-600" /> Outside Launch Area
             </h4>
             <p className="text-sm text-amber-800 leading-relaxed">
               <strong>{postcodeData.postcode}</strong> is in{" "}
-              {postcodeData.county || postcodeData.district || postcodeData.country}, which isn't in
-              our current launch region. HostKeep is currently available in{" "}
+              {postcodeData.county || postcodeData.district || postcodeData.country}, which isn't in our current launch region. HostKeep is currently available in{" "}
               <strong>Cornwall and Devon</strong> only (postcode areas TR, PL, EX).
             </p>
             <p className="text-sm text-amber-700">
               We're expanding across the UK throughout 2026 and 2027.{" "}
-              <a
-                href="/foundinghost"
-                className="underline font-medium hover:text-amber-900"
-              >
-                Apply as a Founding Host
-              </a>
+              <a href="/foundinghost" className="underline font-medium hover:text-amber-900">Apply as a Founding Host</a>
               {" "}to help shape the future of HostKeep and get early access.
             </p>
           </div>
         )}
 
-        {/* STREET ADDRESS — only shown when postcode is verified and in-area */}
+        {/* STREET ADDRESS */}
         {postcodeData && inArea && (
           <div className="space-y-4 pt-2 border-t">
             <h4 className="font-semibold text-gray-900 flex items-center gap-2">
               <MapPin className="w-4 h-4 text-gray-500" /> Address Details
             </h4>
-
             <div>
               <Label>Street Address <span className="text-red-500">*</span></Label>
               <Input
                 value={formData.location?.street || ""}
-                onChange={(e) =>
-                  onFormChange("location", { ...formData.location, street: e.target.value })
-                }
+                onChange={(e) => onFormChange("location", { ...formData.location, street: e.target.value })}
                 placeholder="123 High Street"
                 className={`mt-1 ${postcodeData && inArea && !formData.location?.street ? "border-amber-400" : ""}`}
               />
-              {postcodeData && inArea && !formData.location?.street && (
+              {!formData.location?.street && (
                 <p className="text-xs text-amber-600 mt-1">Street address is required to continue.</p>
               )}
             </div>
-
             <div>
-              <Label>
-                Locality / Village{" "}
-                <span className="text-gray-400 text-xs">(optional)</span>
-              </Label>
+              <Label>Locality / Village <span className="text-gray-400 text-xs">(optional)</span></Label>
               <Input
                 value={formData.location?.locality || ""}
-                onChange={(e) =>
-                  onFormChange("location", { ...formData.location, locality: e.target.value })
-                }
+                onChange={(e) => onFormChange("location", { ...formData.location, locality: e.target.value })}
                 placeholder="e.g. Polperro"
                 className="mt-1"
               />
             </div>
-
-            {/* Read-only admin fields populated from postcode */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="text-gray-500">
-                  County <span className="text-xs">(from postcode)</span>
-                </Label>
-                <Input
-                  value={postcodeData.county || postcodeData.district || ""}
-                  disabled
-                  className="mt-1 bg-gray-50 text-gray-600"
-                />
+                <Label className="text-gray-500">County <span className="text-xs">(from postcode)</span></Label>
+                <Input value={postcodeData.county || postcodeData.district || ""} disabled className="mt-1 bg-gray-50 text-gray-600" />
               </div>
               <div>
-                <Label className="text-gray-500">
-                  Country <span className="text-xs">(from postcode)</span>
-                </Label>
-                <Input
-                  value={postcodeData.country || ""}
-                  disabled
-                  className="mt-1 bg-gray-50 text-gray-600"
-                />
+                <Label className="text-gray-500">Country <span className="text-xs">(from postcode)</span></Label>
+                <Input value={postcodeData.country || ""} disabled className="mt-1 bg-gray-50 text-gray-600" />
               </div>
             </div>
           </div>
@@ -364,8 +291,7 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
         <div className="pt-2 border-t">
           {canSave() ? (
             <div className="flex items-center gap-2 text-sm text-green-700 font-medium p-3 bg-green-50 rounded-lg">
-              <CheckCircle2 className="w-4 h-4" />
-              Location complete. Ready to continue.
+              <CheckCircle2 className="w-4 h-4" /> Location complete. Ready to continue.
             </div>
           ) : (
             <div className="flex items-center gap-2 p-3 bg-amber-50 rounded-lg text-sm text-amber-700">
