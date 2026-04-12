@@ -96,29 +96,27 @@ export default function CreateProperty() {
     })();
   }, []);
 
-  // Load founding member postcode if user is a founding member
+  // Load founding member postcode — always try if authenticated, fallback to DB lookup by user ID
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || !user?.id) return;
 
-    // First try signup_postcode already on the user object from session
+    // Fast path: already on user session object
     if (user?.signup_postcode) {
       setFoundingPostcode(user.signup_postcode);
       return;
     }
 
-    // Fallback — fetch directly from FoundingMember via session token
-    if (!user?.founding_member_id) return;
+    // Always attempt DB lookup — founding member may not have signup_postcode on session
     (async () => {
       try {
-        const sessionToken = localStorage.getItem("session_token");
-        const res = await base44.functions.invoke("getUserFromSession", { session_token: sessionToken });
-        const postcode = res?.data?.user?.postcode;
+        const members = await base44.entities.FoundingMember.filter({ user_id: user.id });
+        const postcode = members?.[0]?.postcode;
         if (postcode) setFoundingPostcode(postcode);
       } catch (_) {
         // not a founding member, continue without locked postcode
       }
     })();
-  }, [isAuthenticated, user?.founding_member_id, user?.signup_postcode]);
+  }, [isAuthenticated, user?.id, user?.signup_postcode]);
 
   useEffect(() => {
     if (!isAuthenticated) {
