@@ -32,8 +32,8 @@ function buildPostcodeData(fd) {
 }
 
 export default function LocationStep({ formData, onFormChange, onLocationChange, signupPostcode, isBeta }) {
-  // expectAutoVerify: true only when we have a signupPostcode to auto-verify and no saved postcode yet
-  const expectAutoVerify = !!(signupPostcode && !formData.postcode);
+  // If in beta with no saved postcode, we MUST wait for signupPostcode to arrive and auto-verify
+  const expectAutoVerify = !!(isBeta && !formData.postcode);
 
   const [isReady, setIsReady] = useState(!expectAutoVerify);
   const [postcodeInput, setPostcodeInput] = useState(formData.postcode || signupPostcode || "");
@@ -54,6 +54,13 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
       setPostcodeData(buildPostcodeData(formData));
     }
   }, [formData.postcode]);
+
+  // Safety: if expectAutoVerify but signupPostcode never arrives after 5s, release the spinner
+  useEffect(() => {
+    if (!expectAutoVerify || isReady) return;
+    const t = setTimeout(() => setIsReady(true), 5000);
+    return () => clearTimeout(t);
+  }, [expectAutoVerify]);
 
   // Auto-verify from signupPostcode as soon as it arrives
   useEffect(() => {
