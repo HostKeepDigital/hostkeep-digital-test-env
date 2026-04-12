@@ -1,4 +1,14 @@
 import React, { useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
@@ -45,6 +55,37 @@ export default function PropertyListingCard({
   foundingMemberData,
 }) {
   const isUnderReview = foundingMemberData?.approval_status === "awaiting_document_verification";
+  const [showUnpublishDialog, setShowUnpublishDialog] = useState(false);
+  const [showRequirementsHint, setShowRequirementsHint] = useState(false);
+
+  // Requirements to publish: photos, description, amenities, rate, subscription, stripe
+  const canPublish = criteria[0] && criteria[1] && criteria[2] && criteria[3] && criteria[5] && criteria[6];
+
+  const missingRequirements = [
+    !criteria[0] && "At least 1 photo",
+    !criteria[1] && "Property description",
+    !criteria[2] && "At least 1 amenity",
+    !criteria[3] && "Nightly rate",
+    !criteria[5] && "Active subscription",
+    !criteria[6] && "Stripe payout account",
+  ].filter(Boolean);
+
+  const handlePublishClick = () => {
+    if (!canPublish || isUnderReview) {
+      setShowRequirementsHint(true);
+      setTimeout(() => setShowRequirementsHint(false), 4000);
+      return;
+    }
+    onStatusToggle();
+  };
+
+  const handleUnpublishClick = () => {
+    if (propertyBookings.length > 0 || missingCleaners.length > 0) {
+      setShowUnpublishDialog(true);
+    } else {
+      onStatusToggle();
+    }
+  };
   const [showActions, setShowActions] = useState(false);
 
   // Profile completeness score (7 criteria)
@@ -345,49 +386,62 @@ export default function PropertyListingCard({
         </div>
       )}
 
+      {/* Requirements hint */}
+      {showRequirementsHint && missingRequirements.length > 0 && (
+        <div className="mx-6 mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200">
+          <p className="text-xs font-semibold text-rose-800 mb-1">Complete these before publishing:</p>
+          <ul className="text-xs text-rose-700 space-y-0.5">
+            {missingRequirements.map((r) => <li key={r}>• {r}</li>)}
+          </ul>
+        </div>
+      )}
+      {showRequirementsHint && isUnderReview && (
+        <div className="mx-6 mb-3 p-3 rounded-xl bg-amber-50 border border-amber-200">
+          <p className="text-xs text-amber-800">Publishing is locked while your document is under review.</p>
+        </div>
+      )}
+
       {/* Management Action Bar */}
-      <div className="bg-gray-50 border-t border-gray-100 p-4 flex justify-between items-center gap-3">
+      <div className="bg-gray-50 border-t border-gray-100 p-4 flex items-center gap-3">
         <Link
           to={createPageUrl("EditProperty") + `?id=${property.id}`}
           className="flex-1"
         >
           <Button className="w-full bg-gray-900 hover:bg-gray-800 text-white rounded-xl h-11 text-base">
-            Manage Listing
+            Manage
           </Button>
         </Link>
 
+        {/* Publish / Unpublish Button */}
+        {property.status === "published" ? (
+          <Button
+            onClick={handleUnpublishClick}
+            className="flex-1 bg-amber-500 hover:bg-amber-600 text-white rounded-xl h-11 text-sm font-semibold"
+          >
+            <EyeOff className="w-4 h-4 mr-1.5" /> Unpublish
+          </Button>
+        ) : (
+          <Button
+            onClick={handlePublishClick}
+            className={`flex-1 rounded-xl h-11 text-sm font-semibold ${
+              canPublish && !isUnderReview
+                ? "bg-teal-600 hover:bg-teal-700 text-white"
+                : "bg-gray-200 text-gray-400 hover:bg-gray-200 cursor-default"
+            }`}
+          >
+            <Eye className="w-4 h-4 mr-1.5" /> Publish
+          </Button>
+        )}
+
         <DropdownMenu open={showActions} onOpenChange={setShowActions}>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl">
+            <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl shrink-0">
               <MoreVertical className="w-4 h-4" />
             </Button>
           </DropdownMenuTrigger>
-
           <DropdownMenuContent align="end">
             <DropdownMenuItem
-              onClick={isUnderReview ? undefined : onStatusToggle}
-              disabled={isUnderReview}
-              className={isUnderReview ? "cursor-not-allowed opacity-50" : "cursor-pointer"}
-            >
-              {property.status === "published" ||
-              property.status === "draft" ? (
-                <>
-                  <EyeOff className="w-4 h-4 mr-2" />
-                  <span>Deactivate</span>
-                </>
-              ) : (
-                <>
-                  <Eye className="w-4 h-4 mr-2" />
-                  <span>Reactivate</span>
-                </>
-              )}
-            </DropdownMenuItem>
-
-            <DropdownMenuItem
-              onClick={() => {
-                onDelete();
-                setShowActions(false);
-              }}
+              onClick={() => { onDelete(); setShowActions(false); }}
               className="cursor-pointer text-rose-600"
             >
               <Trash2 className="w-4 h-4 mr-2" />
@@ -396,6 +450,43 @@ export default function PropertyListingCard({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* Unpublish Warning Dialog */}
+      <AlertDialog open={showUnpublishDialog} onOpenChange={setShowUnpublishDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-500" /> Unpublish Property?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm text-gray-700">
+                <p>This will remove your listing from live search results immediately.</p>
+                {propertyBookings.length > 0 && (
+                  <div className="p-3 rounded-lg bg-amber-50 border border-amber-200">
+                    <p className="font-semibold text-amber-900">⚠️ You have {propertyBookings.length} outstanding confirmed booking{propertyBookings.length > 1 ? "s" : ""}</p>
+                    <p className="text-amber-800 mt-1">These guests still expect to stay. You are responsible for honouring existing bookings even after unpublishing.</p>
+                  </div>
+                )}
+                {missingCleaners.length > 0 && (
+                  <div className="p-3 rounded-lg bg-rose-50 border border-rose-200">
+                    <p className="font-semibold text-rose-900">🧹 {missingCleaners.length} booking{missingCleaners.length > 1 ? "s" : ""} without a cleaner assigned</p>
+                    <p className="text-rose-800 mt-1">Make sure your cleaning team is arranged for existing bookings before unpublishing.</p>
+                  </div>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep Published</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={onStatusToggle}
+              className="bg-amber-500 hover:bg-amber-600"
+            >
+              Unpublish Anyway
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
