@@ -174,8 +174,16 @@ export default function SignIn() {
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3">
-                <p className="text-sm text-red-600">{error}</p>
+              <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3.5 flex flex-col gap-1">
+                <p className="text-sm font-semibold text-red-700">{error}</p>
+                {error.toLowerCase().includes("password") || error.toLowerCase().includes("credentials") ? (
+                  <p className="text-xs text-red-500">
+                    Double-check your password or{" "}
+                    <Link to="/ResetPassword" className="underline font-medium hover:text-red-700">
+                      reset it here
+                    </Link>.
+                  </p>
+                ) : null}
               </div>
             )}
 
