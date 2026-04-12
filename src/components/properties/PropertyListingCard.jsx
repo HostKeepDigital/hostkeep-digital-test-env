@@ -19,6 +19,7 @@ import {
   EyeOff,
   Trash2,
   MoreVertical,
+  Clock,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -41,7 +42,9 @@ export default function PropertyListingCard({
   isFoundingMember,
   subscription,
   stripeConnected,
+  foundingMemberData,
 }) {
+  const isUnderReview = foundingMemberData?.approval_status === "awaiting_document_verification";
   const [showActions, setShowActions] = useState(false);
 
   // Profile completeness score (7 criteria)
@@ -331,6 +334,17 @@ export default function PropertyListingCard({
         </div>
       </div>
 
+      {/* Document Under Review Banner */}
+      {isUnderReview && (
+        <div className="mx-6 mb-4 p-3 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-2.5">
+          <Clock className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-amber-900">Document Under Review</p>
+            <p className="text-xs text-amber-700 mt-0.5">Your verification document is being reviewed by our team. Publishing will be available once approved.</p>
+          </div>
+        </div>
+      )}
+
       {/* Management Action Bar */}
       <div className="bg-gray-50 border-t border-gray-100 p-4 flex justify-between items-center gap-3">
         <Link
@@ -351,8 +365,9 @@ export default function PropertyListingCard({
 
           <DropdownMenuContent align="end">
             <DropdownMenuItem
-              onClick={onStatusToggle}
-              className="cursor-pointer"
+              onClick={isUnderReview ? undefined : onStatusToggle}
+              disabled={isUnderReview}
+              className={isUnderReview ? "cursor-not-allowed opacity-50" : "cursor-pointer"}
             >
               {property.status === "published" ||
               property.status === "draft" ? (

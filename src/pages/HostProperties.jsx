@@ -224,18 +224,19 @@ export default function HostProperties() {
                   }
                 >
                   <PropertyListingCard
-                   property={property}
-                   cleanerSettings={cleanerSettings.find(
-                     (cs) => cs.property_id === property.id
-                   )}
-                   upcomingBookings={upcomingBookings}
-                   cleaningJobs={cleaningJobs}
-                   isSingle={properties.length === 1}
-                   onStatusToggle={() => toggleStatus(property)}
-                   onDelete={() => setDeleteProperty(property)}
-                   isFoundingMember={isFoundingMember}
-                   subscription={subscription}
-                   stripeConnected={stripeConnected}
+                  property={property}
+                  cleanerSettings={cleanerSettings.find(
+                    (cs) => cs.property_id === property.id
+                  )}
+                  upcomingBookings={upcomingBookings}
+                  cleaningJobs={cleaningJobs}
+                  isSingle={properties.length === 1}
+                  onStatusToggle={() => toggleStatus(property)}
+                  onDelete={() => setDeleteProperty(property)}
+                  isFoundingMember={isFoundingMember}
+                  subscription={subscription}
+                  stripeConnected={stripeConnected}
+                  foundingMemberData={foundingMemberData}
                   />
                 </motion.div>
               ))}
