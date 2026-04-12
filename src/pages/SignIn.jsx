@@ -12,6 +12,7 @@ export default function SignIn() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -30,6 +31,8 @@ export default function SignIn() {
           missing_fields: "Please enter your email and password.",
           server_error: "Something went wrong. Please try again.",
         };
+        const newAttempts = data.error === "invalid_credentials" ? failedAttempts + 1 : failedAttempts;
+        if (data.error === "invalid_credentials") setFailedAttempts(newAttempts);
         setError(messages[data.error] || "Unable to sign in. Please try again.");
         return;
       }
@@ -174,9 +177,20 @@ export default function SignIn() {
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3.5 flex flex-col gap-1">
-                <p className="text-sm font-semibold text-red-700">{error}</p>
-                {error.toLowerCase().includes("password") || error.toLowerCase().includes("credentials") ? (
+              <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3.5 flex flex-col gap-1.5">
+                <p className="text-sm font-semibold text-red-700">
+                  {failedAttempts >= 3
+                    ? "Still having trouble? Your password may need resetting."
+                    : error}
+                </p>
+                {failedAttempts >= 3 ? (
+                  <p className="text-xs text-red-600">
+                    You've entered an incorrect password {failedAttempts} times.{" "}
+                    <Link to="/ResetPassword" className="underline font-semibold hover:text-red-800">
+                      Click here to reset your password
+                    </Link>.
+                  </p>
+                ) : failedAttempts > 0 ? (
                   <p className="text-xs text-red-500">
                     Double-check your password or{" "}
                     <Link to="/ResetPassword" className="underline font-medium hover:text-red-700">
