@@ -35,6 +35,7 @@ import {
   Upload,
   X,
   Check,
+  CheckCircle,
   Loader2,
   MoreVertical,
 } from "lucide-react";
@@ -1071,25 +1072,34 @@ export default function CreateProperty() {
                 <CardContent className="space-y-6">
                   <div>
                     <Label>Upload Verification Document</Label>
-                    <input
-                      type="file"
-                      accept="image/*,application/pdf"
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-
-                        const { file_url } =
-                          await base44.integrations.Core.UploadFile({ file });
-
-                        handleChange("verification_document", file_url);
-                      }}
-                      className="mt-2"
-                    />
-
+                    <p className="text-xs text-gray-500 mt-1 mb-3">
+                      Accepted: utility bill, council tax bill, mortgage statement, or similar (PDF or image).
+                    </p>
+                    {!formData.verification_document && (
+                      <input
+                        type="file"
+                        accept="image/*,application/pdf"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                          handleChange("verification_document", file_url);
+                        }}
+                        className="mt-1"
+                      />
+                    )}
                     {formData.verification_document && (
-                      <p className="text-sm text-teal-600 mt-2">
-                        Document uploaded successfully
-                      </p>
+                      <div className="flex items-center gap-2 mt-2 p-3 bg-teal-50 border border-teal-200 rounded-lg">
+                        <CheckCircle className="w-4 h-4 text-teal-600 flex-shrink-0" />
+                        <span className="text-sm text-teal-700 flex-1">Document uploaded successfully</span>
+                        <button
+                          type="button"
+                          onClick={() => handleChange("verification_document", null)}
+                          className="text-gray-400 hover:text-red-500 transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
                     )}
                   </div>
                 </CardContent>
