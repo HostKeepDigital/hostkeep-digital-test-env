@@ -368,7 +368,7 @@ export default function HostDashboard() {
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-base font-semibold text-gray-900">Your Properties</h2>
                 <Link to={createPageUrl("HostProperties")} className="text-teal-600 text-sm font-medium flex items-center gap-1">
-                  Manage <ArrowRight className="w-3.5 h-3.5" />
+                  View all <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
               {properties.length === 0 ? (
@@ -384,7 +384,7 @@ export default function HostDashboard() {
                   {properties.slice(0, 3).map((property) => (
                     <Link
                       key={property.id}
-                      to={createPageUrl("EditProperty") + `?id=${property.id}`}
+                      to={createPageUrl("HostProperties")}
                       className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors"
                     >
                       <img
