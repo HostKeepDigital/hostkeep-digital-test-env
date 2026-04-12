@@ -46,8 +46,13 @@ export default function SignIn() {
       const next = params.get("next");
       window.location.href = next || "/";
     } catch (err) {
-      console.error("SignIn error:", err);
-      setError("Something went wrong. Please try again.");
+      if (err?.response?.status === 401 || err?.response?.data?.error === "invalid_credentials") {
+        setFailedAttempts((prev) => prev + 1);
+        setError("Incorrect email or password.");
+      } else {
+        console.error("SignIn error:", err);
+        setError("Something went wrong. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
