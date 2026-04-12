@@ -1448,6 +1448,38 @@ const handleDocApprove = async (member) => {
   fetchMembers();
  };
 
+const handleDocFail = async (member, isAttempt2) => {
+  setML(member.id, "doc_fail");
+  try {
+    const nextStatus = member.approval_status === "awaiting_document_verification"
+      ? "documentation_failed_attempt_1"
+      : "documentation_failed_attempt_2";
+    
+    await base44.entities.FoundingMember.update(member.id, { approval_status: nextStatus });
+    
+    const docs = await base44.entities.VerificationDocuments.filter({ user_id: member.user_id });
+    if (docs.length > 0) {
+      const latestDoc = docs.sort((a, b) => new Date(b.created_date) - new Date(a.created_date))[0];
+      await base44.entities.VerificationDocuments.update(latestDoc.id, { verification_status: "rejected" });
+    }
+    
+    await base44.functions.invoke("sendEmail", {
+      to: member.email,
+      subject: "Action required: your verification document was not approved — HostKeep",
+      html: buildEmail({
+        heading: "Document Review Result",
+        body: `Your verification document has been reviewed by our team and deemed unsatisfactory.<br><br>Please log in to HostKeep and submit a new document. You will find the upload option on your property verification page, in the same place as when you first submitted your document.<br><br>Once submitted, your new document will be reviewed by our team. If you have any questions, contact <a href="mailto:hello@hostkeepdigital.co.uk">hello@hostkeepdigital.co.uk</a>.`,
+      }),
+    });
+    toast.success(`${member.full_name} — document failed, member notified`);
+  } catch (e) {
+    toast.error("Document fail action failed");
+    console.error(e);
+  }
+  setML(member.id, null);
+  fetchMembers();
+ };
+
   // ── VERIFICATION QUERIES ──────────────────────────────────────────────────
 
   const { data: pendingDocs   = [] } = useQuery({ queryKey:["pending-verifications"], queryFn: () => base44.entities.VerificationDocuments.filter({ verification_status:"pending" }, "-created_date") });
@@ -1797,11 +1829,11 @@ const handleDocApprove = async (member) => {
               </Section>
 
               <Section title="Awaiting Document Verification" count={awaitingDocMembers.length} accent="purple">
-                <DocMemberTable members={awaitingDocMembers} properties={allProperties} verificationDocs={allVerificationDocs} showApproveButton onApprove={handleDocApprove} actionLoading={actionLoading} />
+                <DocMemberTable members={awaitingDocMembers} properties={allProperties} verificationDocs={allVerificationDocs} showApproveButton onApprove={handleDocApprove} showFailButton onFail={handleDocFail} actionLoading={actionLoading} />
               </Section>
 
               <Section title="Document Failed — Attempt 1" count={docFail1Members.length} accent="orange">
-                <DocMemberTable members={docFail1Members} properties={allProperties} verificationDocs={allVerificationDocs} showApproveButton onApprove={handleDocApprove} actionLoading={actionLoading} />
+                <DocMemberTable members={docFail1Members} properties={allProperties} verificationDocs={allVerificationDocs} showApproveButton onApprove={handleDocApprove} showFailButton failIsAttempt2 onFail={handleDocFail} actionLoading={actionLoading} />
               </Section>
 
               <Section title="Document Failed — Attempt 2" count={docFail2Members.length} accent="red">

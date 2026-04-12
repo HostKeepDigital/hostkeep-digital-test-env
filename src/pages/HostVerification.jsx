@@ -25,6 +25,8 @@ import DocumentUpload from "@/components/verification/DocumentUpload";
 import PhoneVerification from "@/components/verification/PhoneVerification";
 import { addUserRole } from "@/components/utils/roleHelpers";
 import { useAuth } from "@/lib/AuthContext";
+import { useEffect } from "react";
+import { AlertCircle } from "lucide-react";
 
 export default function HostVerification() {
   const navigate = useNavigate();
@@ -32,6 +34,23 @@ export default function HostVerification() {
 
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
+  const [docFailedStatus, setDocFailedStatus] = useState(null);
+
+  useEffect(() => {
+    const checkDocFailStatus = async () => {
+      if (!user?.id) return;
+      try {
+        const members = await base44.entities.FoundingMember.filter({ user_id: user.id });
+        if (members.length > 0) {
+          const status = members[0].approval_status;
+          if (status === "documentation_failed_attempt_1" || status === "documentation_failed_attempt_2") {
+            setDocFailedStatus(status);
+          }
+        }
+      } catch (_) {}
+    };
+    checkDocFailStatus();
+  }, [user?.id]);
 
   const [formData, setFormData] = useState({
     government_id: null,
@@ -43,8 +62,31 @@ export default function HostVerification() {
     sort_code: ""
   });
 
-  const handleDocumentUpload = (type, url) => {
+  const handleDocumentUpload = async (type, url) => {
     setFormData((prev) => ({ ...prev, [type]: url }));
+    
+    // If re-uploading after failure, create new VerificationDocuments record
+    if (docFailedStatus && type === "government_id") {
+      try {
+        await base44.entities.VerificationDocuments.create({
+          user_id: user.id,
+          document_type: "government_id",
+          file_url: url,
+          verification_status: "pending",
+        });
+        
+        const members = await base44.entities.FoundingMember.filter({ user_id: user.id });
+        if (members.length > 0) {
+          await base44.entities.FoundingMember.update(members[0].id, { approval_status: "awaiting_document_verification" });
+        }
+        
+        setDocFailedStatus(null);
+        toast.success("New document submitted for review");
+      } catch (e) {
+        toast.error("Failed to submit document");
+        console.error(e);
+      }
+    }
   };
 
   const handlePhoneVerified = (phone) => {
@@ -126,9 +168,18 @@ export default function HostVerification() {
 
         <Progress value={progress} className="mb-8" />
 
+        {docFailedStatus && (
+          <div className="mb-6 p-4 rounded-lg border-l-4 border-amber-400 bg-amber-50">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-amber-800"><strong>Your previous verification document was not approved.</strong> Please upload a new document below.</p>
+            </div>
+          </div>
+        )}
+
         <div className="space-y-6">
-          {/* Step 1: Identity Verification */}
-          <Card>
+           {/* Step 1: Identity Verification */}
+           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <span

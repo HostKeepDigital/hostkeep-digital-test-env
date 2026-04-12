@@ -2,7 +2,7 @@ import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 
-export default function DocMemberTable({ members, properties = [], verificationDocs = [], showApproveButton = false, onApprove, actionLoading = {} }) {
+export default function DocMemberTable({ members, properties = [], verificationDocs = [], showApproveButton = false, onApprove, actionLoading = {}, showFailButton = false, failIsAttempt2 = false, onFail }) {
   const getProperty = (userId) => properties.find(p => p.owner_id === userId);
   const getVerificationDoc = (userId) => verificationDocs.find(d => d.user_id === userId);
 
@@ -49,18 +49,30 @@ export default function DocMemberTable({ members, properties = [], verificationD
                   {m.signup_timestamp ? new Date(m.signup_timestamp).toLocaleDateString("en-GB") : "—"}
                 </td>
                 <td className="px-4 py-3">
-                  {showApproveButton ? (
-                    <Button
-                      size="sm"
-                      className="h-7 px-3 text-xs bg-green-600 hover:bg-green-700 text-white"
-                      disabled={!!actionLoading[m.id]}
-                      onClick={() => onApprove && onApprove(m)}
-                    >
-                      {actionLoading[m.id] === "doc_approve" ? "..." : <><Check className="w-3 h-3 mr-1" />Approve Document</>}
-                    </Button>
-                  ) : (
-                    <span className="text-sm text-gray-400">—</span>
-                  )}
+                  <div className="flex items-center gap-1.5">
+                    {showApproveButton && (
+                      <Button
+                        size="sm"
+                        className="h-7 px-3 text-xs bg-green-600 hover:bg-green-700 text-white"
+                        disabled={!!actionLoading[m.id]}
+                        onClick={() => onApprove && onApprove(m)}
+                      >
+                        {actionLoading[m.id] === "doc_approve" ? "..." : <><Check className="w-3 h-3 mr-1" />Approve</>}
+                      </Button>
+                    )}
+                    {showFailButton && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 px-3 text-xs border-orange-400 text-orange-700 hover:bg-orange-50"
+                        disabled={!!actionLoading[m.id]}
+                        onClick={() => onFail && onFail(m, failIsAttempt2)}
+                      >
+                        {actionLoading[m.id] === "doc_fail" ? "..." : "Failed"}
+                      </Button>
+                    )}
+                    {!showApproveButton && !showFailButton && <span className="text-sm text-gray-400">—</span>}
+                  </div>
                 </td>
               </tr>
             );
