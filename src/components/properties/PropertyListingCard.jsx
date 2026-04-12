@@ -57,8 +57,23 @@ export default function PropertyListingCard({
   const isUnderReview = foundingMemberData?.approval_status === "awaiting_document_verification";
   const [showUnpublishDialog, setShowUnpublishDialog] = useState(false);
   const [showRequirementsHint, setShowRequirementsHint] = useState(false);
+  const [showActions, setShowActions] = useState(false);
 
-  // Requirements to publish: photos, description, amenities, rate, subscription, stripe
+  // Profile completeness score (7 criteria) — must be defined before canPublish
+  const criteria = [
+    property.photos?.length > 0,
+    property.description?.length > 20,
+    Array.isArray(property.amenities) && property.amenities.length > 0,
+    property.nightly_rate > 0,
+    property.ical_url || property.blocked_dates?.length > 0 || property.day_based_restrictions_enabled,
+    !!(subscription && subscription.status === "active"),
+    !!stripeConnected,
+  ];
+  const score = Math.round((criteria.filter(Boolean).length / criteria.length) * 100);
+  const hasActiveSubscription = criteria[5];
+  const hasStripe = criteria[6];
+
+  // Requirements to publish
   const canPublish = criteria[0] && criteria[1] && criteria[2] && criteria[3] && criteria[5] && criteria[6];
 
   const missingRequirements = [
@@ -86,21 +101,6 @@ export default function PropertyListingCard({
       onStatusToggle();
     }
   };
-  const [showActions, setShowActions] = useState(false);
-
-  // Profile completeness score (7 criteria)
-  const criteria = [
-    property.photos?.length > 0,
-    property.description?.length > 20,
-    Array.isArray(property.amenities) && property.amenities.length > 0,
-    property.nightly_rate > 0,
-    property.ical_url || property.blocked_dates?.length > 0 || property.day_based_restrictions_enabled,
-    !!(subscription && subscription.status === "active"),
-    !!stripeConnected,
-  ];
-  const score = Math.round((criteria.filter(Boolean).length / criteria.length) * 100);
-  const hasActiveSubscription = criteria[5];
-  const hasStripe = criteria[6];
 
   const statusColors = {
     draft: "bg-gray-100 text-gray-700",
