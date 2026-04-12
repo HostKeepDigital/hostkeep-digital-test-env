@@ -256,6 +256,35 @@ Deno.serve(async (req) => {
     }
   }
 
+  if (event.type === 'checkout.session.expired') {
+    const session = event.data.object;
+    const { user_id } = session.metadata || {};
+    if (user_id) {
+      try {
+        const subs = await base44.asServiceRole.entities.Subscription.filter({ user_id });
+        const sub = subs.find(s => s.status === 'pending');
+        if (sub) {
+          await base44.asServiceRole.entities.Subscription.update(sub.id, { status: 'expired' });
+        }
+      } catch (_) {}
+    }
+    return Response.json({ received: true });
+  }
+
+  if (event.type === 'invoice.payment_failed') {
+    const invoice = event.data.object;
+    const stripeSubscriptionId = invoice.subscription;
+    if (stripeSubscriptionId) {
+      try {
+        const subs = await base44.asServiceRole.entities.Subscription.filter({ stripe_subscription_id: stripeSubscriptionId });
+        if (subs[0]) {
+          await base44.asServiceRole.entities.Subscription.update(subs[0].id, { status: 'expired' });
+        }
+      } catch (_) {}
+    }
+    return Response.json({ received: true });
+  }
+
   if (event.type === 'customer.subscription.deleted') {
     const subscription = event.data.object;
     const { user_id } = subscription.metadata || {};

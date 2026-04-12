@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
           plan,
           provider: 'stripe',
           stripe_customer_id: customer_id,
-          status: 'trial',
+          status: 'pending',
         });
       }
     }
