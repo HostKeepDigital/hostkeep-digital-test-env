@@ -1,6 +1,8 @@
 import { ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Check } from "lucide-react";
 
-export default function DocMemberTable({ members, properties = [], verificationDocs = [] }) {
+export default function DocMemberTable({ members, properties = [], verificationDocs = [], showApproveButton = false, onApprove, actionLoading = {} }) {
   const getProperty = (userId) => properties.find(p => p.owner_id === userId);
   const getVerificationDoc = (userId) => verificationDocs.find(d => d.user_id === userId);
 
@@ -46,7 +48,20 @@ export default function DocMemberTable({ members, properties = [], verificationD
                 <td className="px-4 py-3 text-gray-400 text-xs">
                   {m.signup_timestamp ? new Date(m.signup_timestamp).toLocaleDateString("en-GB") : "—"}
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-400">—</td>
+                <td className="px-4 py-3">
+                  {showApproveButton ? (
+                    <Button
+                      size="sm"
+                      className="h-7 px-3 text-xs bg-green-600 hover:bg-green-700 text-white"
+                      disabled={!!actionLoading[m.id]}
+                      onClick={() => onApprove && onApprove(m)}
+                    >
+                      {actionLoading[m.id] === "doc_approve" ? "..." : <><Check className="w-3 h-3 mr-1" />Approve Document</>}
+                    </Button>
+                  ) : (
+                    <span className="text-sm text-gray-400">—</span>
+                  )}
+                </td>
               </tr>
             );
           })}

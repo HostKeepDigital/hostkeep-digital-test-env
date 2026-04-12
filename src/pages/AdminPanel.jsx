@@ -1408,24 +1408,45 @@ const handleApproveGuestAsHost = async (member) => {
 };
 
 const handleBan = async (member) => {
-  const reason = window.prompt(`Ban reason for ${member.full_name} (this will strip their founding member access and auto-promote the next waitlisted person in their area):`);
-  if (reason === null) return;
-  setML(member.id, "ban");
+   const reason = window.prompt(`Ban reason for ${member.full_name} (this will strip their founding member access and auto-promote the next waitlisted person in their area):`);
+   if (reason === null) return;
+   setML(member.id, "ban");
+   try {
+     const res = await base44.functions.invoke("banFoundingMember", { member_id: member.id, ban_reason: reason || "Admin action" });
+     const promoted = res.data?.promoted;
+     if (promoted) {
+       toast.success(`${member.full_name} banned. Waitlist member ${promoted.full_name} has been invited.`);
+     } else {
+       toast.success(`${member.full_name} banned. No eligible waitlist members found to promote.`);
+     }
+   } catch (e) {
+     toast.error("Ban failed");
+     console.error(e);
+   }
+   setML(member.id, null);
+   fetchMembers();
+ };
+
+const handleDocApprove = async (member) => {
+  setML(member.id, "doc_approve");
   try {
-    const res = await base44.functions.invoke("banFoundingMember", { member_id: member.id, ban_reason: reason || "Admin action" });
-    const promoted = res.data?.promoted;
-    if (promoted) {
-      toast.success(`${member.full_name} banned. Waitlist member ${promoted.full_name} has been invited.`);
-    } else {
-      toast.success(`${member.full_name} banned. No eligible waitlist members found to promote.`);
-    }
+    await base44.entities.FoundingMember.update(member.id, { approval_status: "approved" });
+    await base44.functions.invoke("sendEmail", {
+      to: member.email,
+      subject: "You're one step closer to publishing your property — HostKeep",
+      html: buildEmail({
+        heading: "Document Approved",
+        body: `Great news — your verification document has been reviewed and approved by our team.<br><br>You are now one step closer to publishing your property on HostKeep. To publish, you will need all three of the following in place:<br><br><strong>1. Approved verification document</strong> — done ✓<br><strong>2. Active HostKeep subscription</strong><br><strong>3. Connected Stripe account</strong> (to receive payments from guests)<br><br>Once all three are confirmed, your publish button will become available. If you have any questions, contact us at <a href="mailto:hello@hostkeepdigital.co.uk">hello@hostkeepdigital.co.uk</a>.`,
+      }),
+    });
+    toast.success(`${member.full_name} — document approved`);
   } catch (e) {
-    toast.error("Ban failed");
+    toast.error("Approval failed");
     console.error(e);
   }
   setML(member.id, null);
   fetchMembers();
-};
+ };
 
   // ── VERIFICATION QUERIES ──────────────────────────────────────────────────
 
@@ -1776,11 +1797,11 @@ const handleBan = async (member) => {
               </Section>
 
               <Section title="Awaiting Document Verification" count={awaitingDocMembers.length} accent="purple">
-                <DocMemberTable members={awaitingDocMembers} properties={allProperties} verificationDocs={allVerificationDocs} />
+                <DocMemberTable members={awaitingDocMembers} properties={allProperties} verificationDocs={allVerificationDocs} showApproveButton onApprove={handleDocApprove} actionLoading={actionLoading} />
               </Section>
 
               <Section title="Document Failed — Attempt 1" count={docFail1Members.length} accent="orange">
-                <DocMemberTable members={docFail1Members} properties={allProperties} verificationDocs={allVerificationDocs} />
+                <DocMemberTable members={docFail1Members} properties={allProperties} verificationDocs={allVerificationDocs} showApproveButton onApprove={handleDocApprove} actionLoading={actionLoading} />
               </Section>
 
               <Section title="Document Failed — Attempt 2" count={docFail2Members.length} accent="red">
