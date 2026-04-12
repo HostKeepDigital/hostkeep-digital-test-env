@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { TrendingUp, TrendingDown, Minus, BarChart2, Calendar } from "lucide-react";
 
-export default function MarketPositionWidget({ nightlyRate, postcodeArea, propertyType }) {
+export default function MarketPositionWidget({ nightlyRate, postcodeArea, propertyType, month }) {
   const [market, setMarket] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -33,8 +33,8 @@ export default function MarketPositionWidget({ nightlyRate, postcodeArea, proper
     { label: "Christmas", months: [12, 1], boost: 1.30 },
   ];
 
-  const currentMonth = new Date().getMonth() + 1;
-  const currentSeasonalPeak = seasonalPeaks.find(peak => peak.months.includes(currentMonth));
+  const viewMonth = (month || new Date()).getMonth() + 1;
+  const currentSeasonalPeak = seasonalPeaks.find(peak => peak.months.includes(viewMonth));
   const recommendedRate = currentSeasonalPeak ? Math.round(median * currentSeasonalPeak.boost) : null;
 
   const diff = ((nightlyRate - median) / median) * 100;
@@ -43,6 +43,8 @@ export default function MarketPositionWidget({ nightlyRate, postcodeArea, proper
   const isAbove = diff > 5;
   const isBelow = diff < -5;
   const isInline = !isAbove && !isBelow;
+
+  const monthName = (month || new Date()).toLocaleString('default', { month: 'long' });
 
   return (
     <div className={`rounded-xl border px-4 py-3 flex items-start gap-3 ${
@@ -69,7 +71,7 @@ export default function MarketPositionWidget({ nightlyRate, postcodeArea, proper
           {isInline && <Minus className="w-3.5 h-3.5 text-gray-400" />}
         </div>
         <p className="text-xs text-gray-500 mt-0.5">
-          Market median for {market.town || market.county || postcodeArea}:{" "}
+          {monthName} market median for {market.town || market.county || postcodeArea}:{" "}
           <span className="font-medium text-gray-700">£{median}/night</span>
           {" "}· Range: £{market.min_nightly_rate}–£{market.max_nightly_rate}
         </p>

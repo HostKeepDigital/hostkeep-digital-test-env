@@ -24,8 +24,10 @@ const UK_SCHOOL_HOLIDAYS = [
   { label: "Christmas 2026", start: new Date(2026, 11, 15), end: new Date(2027, 0, 5), boost: 1.30 },
 ];
 
-export default function PricingCalendar({ pricingSettings, onDateClick, selectedDates = [], onApplyHolidayPricing = null }) {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+export default function PricingCalendar({ pricingSettings, onDateClick, selectedDates = [], onApplyHolidayPricing = null, currentMonth, onMonthChange }) {
+  const [internalMonth, setInternalMonth] = useState(new Date());
+  const activeMonth = currentMonth || internalMonth;
+  const setActiveMonth = (m) => { if (onMonthChange) onMonthChange(m); else setInternalMonth(m); };
 
   const calculatePrice = (date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
@@ -107,8 +109,8 @@ export default function PricingCalendar({ pricingSettings, onDateClick, selected
     return "bg-gray-50 text-gray-700 border-gray-200";
   };
 
-  const monthStart = startOfMonth(currentMonth);
-  const monthEnd = endOfMonth(currentMonth);
+  const monthStart = startOfMonth(activeMonth);
+  const monthEnd = endOfMonth(activeMonth);
   const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
   const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
   const days = eachDayOfInterval({ start: startDate, end: endDate });
@@ -133,13 +135,13 @@ export default function PricingCalendar({ pricingSettings, onDateClick, selected
                 Auto-fill Holidays
               </Button>
             )}
-            <Button variant="outline" size="icon" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
+            <Button variant="outline" size="icon" onClick={() => setActiveMonth(subMonths(activeMonth, 1))}>
               <ChevronLeft className="w-4 h-4" />
             </Button>
             <div className="min-w-[140px] text-center font-semibold">
-              {format(currentMonth, 'MMMM yyyy')}
+              {format(activeMonth, 'MMMM yyyy')}
             </div>
-            <Button variant="outline" size="icon" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
+            <Button variant="outline" size="icon" onClick={() => setActiveMonth(addMonths(activeMonth, 1))}>
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
@@ -166,7 +168,7 @@ export default function PricingCalendar({ pricingSettings, onDateClick, selected
                 onClick={() => onDateClick?.(format(day, 'yyyy-MM-dd'))}
                 className={`
                   p-2 rounded-lg border text-xs transition-all
-                  ${!isSameMonth(day, currentMonth) ? 'opacity-30' : 'opacity-100'}
+                  ${!isSameMonth(day, activeMonth) ? 'opacity-30' : 'opacity-100'}
                   ${isSelected ? 'ring-2 ring-teal-500' : ''}
                   ${colorClass}
                   hover:shadow-md hover:scale-105

@@ -17,7 +17,8 @@ import MarketPositionWidget from "./MarketPositionWidget";
 export default function PricingManager({ formData, onUpdate, onPromptSave, property }) {
   const [selectedDate, setSelectedDate] = useState(null);
   const [depositError, setDepositError] = useState("");
-  const [activeSection, setActiveSection] = useState("base"); // base, seasons, overrides
+  const [activeSection, setActiveSection] = useState("base");
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
 
   const handlePricingUpdate = (field, value) => {
     onUpdate('pricing_settings', {
@@ -85,11 +86,6 @@ export default function PricingManager({ formData, onUpdate, onPromptSave, prope
 
   return (
     <div className="space-y-6">
-      <MarketPositionWidget
-        nightlyRate={formData.nightly_rate || formData.pricing_settings?.base_rate}
-        postcodeArea={property?.postcode_area || formData.postcode_area}
-        propertyType={property?.property_type || formData.property_type}
-      />
 
       {/* Basic Fees */}
       <Card>
@@ -264,6 +260,16 @@ export default function PricingManager({ formData, onUpdate, onPromptSave, prope
             onDateClick={handleDateClick}
             selectedDates={selectedDate ? [selectedDate] : []}
             onApplyHolidayPricing={handleApplyHolidayPricing}
+            currentMonth={calendarMonth}
+            onMonthChange={setCalendarMonth}
+          />
+
+          {/* Market position — updates with the calendar month */}
+          <MarketPositionWidget
+            nightlyRate={formData.nightly_rate || formData.pricing_settings?.base_rate}
+            postcodeArea={property?.postcode_area || formData.postcode_area}
+            propertyType={property?.property_type || formData.property_type}
+            month={calendarMonth}
           />
 
           <Tabs defaultValue="base" className="w-full">
