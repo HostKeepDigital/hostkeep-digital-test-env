@@ -195,10 +195,10 @@ export default function CreateProperty() {
         const existing = await base44.entities.CancellationPolicy.list();
         if (existing.length < 4) {
           const toCreate = [
-            { policy_name: "Flexible", description: "Full refund if cancelled 30+ days before check-in. 50% refund if cancelled 7-29 days before.", tier_1_deadline_days: 30, tier_1_refund_percentage: 100, tier_2_deadline_days: 7, tier_2_refund_percentage: 50, final_tier_refund_percentage: 0 },
-            { policy_name: "Moderate", description: "Full refund if cancelled 30+ days before check-in. 25% refund if cancelled 7-29 days before.", tier_1_deadline_days: 30, tier_1_refund_percentage: 100, tier_2_deadline_days: 7, tier_2_refund_percentage: 25, final_tier_refund_percentage: 0 },
-            { policy_name: "Strict", description: "Full refund if cancelled 30+ days before. No refund if cancelled within 7 days.", tier_1_deadline_days: 30, tier_1_refund_percentage: 100, tier_2_deadline_days: 7, tier_2_refund_percentage: 0, final_tier_refund_percentage: 0 },
-            { policy_name: "Super Strict", description: "Full refund only if cancelled 60+ days before. Non-refundable within 60 days.", tier_1_deadline_days: 60, tier_1_refund_percentage: 100, tier_2_deadline_days: 0, tier_2_refund_percentage: 0, final_tier_refund_percentage: 0 },
+            { policy_name: "Flexible", description: "Full refund up to 7 days before check-in, 50% from 3-7 days, no refund within 3 days.", tier_1_deadline_days: 7, tier_1_refund_percentage: 100, tier_2_deadline_days: 3, tier_2_refund_percentage: 50, final_tier_refund_percentage: 0 },
+            { policy_name: "Moderate", description: "Full refund up to 14 days before check-in, 50% from 7-14 days, no refund within 7 days.", tier_1_deadline_days: 14, tier_1_refund_percentage: 100, tier_2_deadline_days: 7, tier_2_refund_percentage: 50, final_tier_refund_percentage: 0 },
+            { policy_name: "Strict", description: "Full refund up to 30 days before check-in, 25% from 14-30 days, no refund within 14 days.", tier_1_deadline_days: 30, tier_1_refund_percentage: 100, tier_2_deadline_days: 14, tier_2_refund_percentage: 25, final_tier_refund_percentage: 0 },
+            { policy_name: "Super Strict", description: "50% refund if cancelled more than 30 days before check-in. No refund within 30 days.", tier_1_deadline_days: 30, tier_1_refund_percentage: 50, tier_2_deadline_days: 0, tier_2_refund_percentage: 0, final_tier_refund_percentage: 0 },
           ].slice(existing.length);
           await Promise.all(toCreate.map(p => base44.entities.CancellationPolicy.create(p)));
         }
