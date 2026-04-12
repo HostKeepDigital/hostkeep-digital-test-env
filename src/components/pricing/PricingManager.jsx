@@ -265,6 +265,7 @@ export default function PricingManager({ formData, onUpdate, onPromptSave, prope
             nightlyRate={formData.nightly_rate || formData.pricing_settings?.base_rate}
             postcodeArea={property?.postcode_area || formData.postcode_area}
             propertyType={property?.property_type || formData.property_type}
+            bedrooms={property?.bedrooms || formData.bedrooms}
           />
 
           <Tabs defaultValue="base" className="w-full">

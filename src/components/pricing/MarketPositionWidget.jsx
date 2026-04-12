@@ -2,45 +2,70 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { TrendingUp, TrendingDown, Minus, BarChart2 } from "lucide-react";
 
-export default function MarketPositionWidget({ nightlyRate, postcodeArea, propertyType, month }) {
+export default function MarketPositionWidget({ nightlyRate, postcodeArea, propertyType, bedrooms, month }) {
   const [market, setMarket] = useState(null);
+  const [matchQuality, setMatchQuality] = useState("none");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!postcodeArea) { setLoading(false); return; }
 
-    base44.entities.MarketPricing.list("-created_date", 20)
+    base44.entities.MarketPricing.list("-scraped_at", 50)
       .then(records => {
-        const filtered = (records || []).filter(r => r.postcode_area === postcodeArea);
-        const best = filtered.length > 0 ? filtered[0] : (records || [])[0];
-        setMarket(best || null);
+        const active = (records || []).filter(r => !r.is_stale);
+
+        // Priority: exact (area + type + bedrooms), then type match, then area only
+        const exact = active.find(r =>
+          r.postcode_area === postcodeArea &&
+          r.property_type === propertyType &&
+          r.bedrooms === bedrooms
+        );
+        const typeMatch = active.find(r =>
+          r.postcode_area === postcodeArea &&
+          r.property_type === propertyType
+        );
+        const areaMatch = active.find(r => r.postcode_area === postcodeArea);
+
+        const best = exact || typeMatch || areaMatch || null;
+        setMarket(best);
+        setMatchQuality(exact ? "exact" : typeMatch ? "type" : areaMatch ? "area" : "none");
       })
       .finally(() => setLoading(false));
-  }, [postcodeArea]);
+  }, [postcodeArea, propertyType, bedrooms]);
 
   if (loading || !market || !nightlyRate) return null;
 
   const median = market.median_nightly_rate || market.avg_nightly_rate;
   if (!median) return null;
 
+  // UK seasonal peaks
   const seasonalPeaks = [
-    { label: "Easter", months: [3, 4], boost: 1.25 },
-    { label: "Summer", months: [7, 8], boost: 1.35 },
-    { label: "Half-term (Feb)", months: [2], boost: 1.15 },
-    { label: "Half-term (Oct)", months: [10], boost: 1.20 },
-    { label: "Christmas", months: [12, 1], boost: 1.30 },
+    { label: "Easter",          months: [3, 4],  boost: 1.25 },
+    { label: "Summer",          months: [7, 8],  boost: 1.35 },
+    { label: "Half-term (Feb)", months: [2],     boost: 1.15 },
+    { label: "Half-term (Oct)", months: [10],    boost: 1.20 },
+    { label: "Christmas",       months: [12, 1], boost: 1.30 },
   ];
 
   const viewMonth = (month || new Date()).getMonth() + 1;
-  const currentSeasonalPeak = seasonalPeaks.find(peak => peak.months.includes(viewMonth));
+  const currentSeasonalPeak = seasonalPeaks.find(p => p.months.includes(viewMonth));
 
-  const diff = ((nightlyRate - median) / median) * 100;
+  // Use monthly_rate_index if available for a more accurate median this month
+  const monthName = (month || new Date()).toLocaleString('default', { month: 'long' });
+  const monthMultiplier = market.monthly_rate_index?.[monthName] || null;
+  const adjustedMedian = monthMultiplier ? Math.round(median * monthMultiplier) : median;
+
+  const diff = ((nightlyRate - adjustedMedian) / adjustedMedian) * 100;
   const absDiff = Math.abs(diff).toFixed(0);
   const isAbove = diff > 5;
   const isBelow = diff < -5;
   const isInline = !isAbove && !isBelow;
 
-  const monthName = (month || new Date()).toLocaleString('default', { month: 'long' });
+  const matchLabel = matchQuality === "exact"
+    ? `${market.bedrooms}-bed ${market.property_type}`
+    : matchQuality === "type"
+    ? `${market.property_type} (all sizes)`
+    : `${postcodeArea} area average`;
 
   return (
     <div className={`rounded-xl border px-4 py-3 flex items-start gap-3 ${
@@ -72,10 +97,18 @@ export default function MarketPositionWidget({ nightlyRate, postcodeArea, proper
           )}
         </div>
         <p className="text-xs text-gray-500 mt-0.5">
-          {monthName} median for {market.town || market.county || postcodeArea}:{" "}
-          <span className="font-medium text-gray-700">£{median}/night</span>
-          {" "}· £{market.min_nightly_rate}–£{market.max_nightly_rate}
+          {monthName} median ({matchLabel}):{" "}
+          <span className="font-medium text-gray-700">£{adjustedMedian}/night</span>
+          {monthMultiplier && adjustedMedian !== median && (
+            <span className="text-gray-400"> (base £{median})</span>
+          )}
+          {" "}· Range: £{market.min_nightly_rate}–£{market.max_nightly_rate}
         </p>
+        {matchQuality !== "exact" && (
+          <p className="text-xs text-amber-600 mt-0.5">
+            ⚠ Using {matchLabel} — run a scrape with exact bedroom count for better accuracy
+          </p>
+        )}
       </div>
     </div>
   );

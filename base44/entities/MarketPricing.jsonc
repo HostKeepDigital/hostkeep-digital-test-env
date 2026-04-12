@@ -14,14 +14,19 @@
     },
     "property_type": {
       "type": "string",
-      "description": "e.g. cottage, apartment, lodge"
+      "description": "e.g. cottage, apartment, lodge, house, chalet, cabin"
     },
     "bedrooms": {
-      "type": "number"
+      "type": "number",
+      "description": "Number of bedrooms \u2014 key differentiator for pricing"
+    },
+    "guest_capacity": {
+      "type": "number",
+      "description": "Max guests this data applies to"
     },
     "avg_nightly_rate": {
       "type": "number",
-      "description": "Average competitor nightly rate \u00a3"
+      "description": "Average competitor nightly rate \u00a3 for this spec"
     },
     "min_nightly_rate": {
       "type": "number"
@@ -38,7 +43,7 @@
     },
     "avg_occupancy_rate": {
       "type": "number",
-      "description": "Estimated % occupancy"
+      "description": "Estimated % annual occupancy"
     },
     "peak_months": {
       "type": "array",
@@ -58,23 +63,27 @@
       "type": "number",
       "description": "Typical % premium for weekend stays"
     },
+    "monthly_rate_index": {
+      "type": "object",
+      "description": "Month name to rate multiplier e.g. {July: 1.4, January: 0.7}"
+    },
     "key_insights": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "Actionable bullet points"
+      "description": "Actionable bullet points specific to this property spec"
     },
     "positioning_advice": {
       "type": "string",
-      "description": "Narrative pricing strategy recommendation"
+      "description": "Narrative pricing strategy for this specific property type/size"
     },
     "data_sources": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "Sources used (Airbnb, Booking.com, etc.)"
+      "description": "Platforms searched (Airbnb, Sykes, etc.)"
     },
     "scraped_at": {
       "type": "string",
@@ -83,7 +92,7 @@
     "is_stale": {
       "type": "boolean",
       "default": false,
-      "description": "True if data is older than 30 days"
+      "description": "True when superseded by a newer scrape for same spec"
     }
   },
   "required": [

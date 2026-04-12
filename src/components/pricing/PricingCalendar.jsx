@@ -25,7 +25,7 @@ const UK_SCHOOL_HOLIDAYS = [
   { label: "Christmas 2026", start: new Date(2026, 11, 15), end: new Date(2027, 0, 5), boost: 1.30 },
 ];
 
-export default function PricingCalendar({ pricingSettings, onDateClick, selectedDates = [], onApplyHolidayPricing = null, currentMonth, onMonthChange, nightlyRate, postcodeArea, propertyType }) {
+export default function PricingCalendar({ pricingSettings, onDateClick, selectedDates = [], onApplyHolidayPricing = null, currentMonth, onMonthChange, nightlyRate, postcodeArea, propertyType, bedrooms }) {
   const [internalMonth, setInternalMonth] = useState(new Date());
   const activeMonth = currentMonth || internalMonth;
   const setActiveMonth = (m) => { if (onMonthChange) onMonthChange(m); else setInternalMonth(m); };
@@ -155,6 +155,7 @@ export default function PricingCalendar({ pricingSettings, onDateClick, selected
               nightlyRate={nightlyRate}
               postcodeArea={postcodeArea}
               propertyType={propertyType}
+              bedrooms={bedrooms}
               month={activeMonth}
             />
           </div>
