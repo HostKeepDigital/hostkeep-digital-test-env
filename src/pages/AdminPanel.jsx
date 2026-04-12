@@ -1480,6 +1480,20 @@ const handleDocFail = async (member, isAttempt2) => {
   fetchMembers();
  };
 
+const handleDeleteMember = async (member) => {
+  if (!window.confirm(`Permanently delete ${member.full_name} and all associated records? This cannot be undone.`)) return;
+  setML(member.id, "delete");
+  try {
+    await base44.functions.invoke("deleteFoundingMember", { member_id: member.id, user_id: member.user_id });
+    toast.success(`${member.full_name} and all associated records deleted`);
+  } catch (e) {
+    toast.error("Delete failed");
+    console.error(e);
+  }
+  setML(member.id, null);
+  fetchMembers();
+};
+
 const handleDocBan = async (member) => {
   setML(member.id, "doc_ban");
   try {
@@ -1865,15 +1879,15 @@ const handleDocBan = async (member) => {
               </Section>
 
               <Section title="Awaiting Document Verification" count={awaitingDocMembers.length} accent="purple">
-                <DocMemberTable members={awaitingDocMembers} properties={allProperties} verificationDocs={allVerificationDocs} showApproveButton onApprove={handleDocApprove} showFailButton onFail={handleDocFail} actionLoading={actionLoading} />
+                <DocMemberTable members={awaitingDocMembers} properties={allProperties} verificationDocs={allVerificationDocs} showApproveButton onApprove={handleDocApprove} showFailButton onFail={handleDocFail} showDeleteButton onDelete={handleDeleteMember} actionLoading={actionLoading} />
               </Section>
 
               <Section title="Document Failed — Attempt 1" count={docFail1Members.length} accent="orange">
-                <DocMemberTable members={docFail1Members} properties={allProperties} verificationDocs={allVerificationDocs} showApproveButton onApprove={handleDocApprove} showFailButton failIsAttempt2 onFail={handleDocFail} actionLoading={actionLoading} />
+                <DocMemberTable members={docFail1Members} properties={allProperties} verificationDocs={allVerificationDocs} showApproveButton onApprove={handleDocApprove} showFailButton failIsAttempt2 onFail={handleDocFail} showDeleteButton onDelete={handleDeleteMember} actionLoading={actionLoading} />
               </Section>
 
               <Section title="Document Failed — Attempt 2" count={docFail2Members.length} accent="red">
-                <DocMemberTable members={docFail2Members} properties={allProperties} verificationDocs={allVerificationDocs} showApproveButton onApprove={handleDocApprove} showFailButton failIsAttempt2 onFail={handleDocBan} actionLoading={actionLoading} />
+                <DocMemberTable members={docFail2Members} properties={allProperties} verificationDocs={allVerificationDocs} showApproveButton onApprove={handleDocApprove} showFailButton failIsAttempt2 onFail={handleDocBan} showDeleteButton onDelete={handleDeleteMember} actionLoading={actionLoading} />
               </Section>
 
               <Section title="Approved" count={approvedMembers.length} accent="green">

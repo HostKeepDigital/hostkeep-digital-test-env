@@ -1,8 +1,8 @@
 import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { Check, Trash2 } from "lucide-react";
 
-export default function DocMemberTable({ members, properties = [], verificationDocs = [], showApproveButton = false, onApprove, actionLoading = {}, showFailButton = false, failIsAttempt2 = false, onFail }) {
+export default function DocMemberTable({ members, properties = [], verificationDocs = [], showApproveButton = false, onApprove, actionLoading = {}, showFailButton = false, failIsAttempt2 = false, onFail, showDeleteButton = false, onDelete }) {
   const getProperty = (userId) => properties.find(p => p.owner_id === userId);
   const getVerificationDoc = (userId) => verificationDocs.find(d => d.user_id === userId);
 
@@ -71,7 +71,18 @@ export default function DocMemberTable({ members, properties = [], verificationD
                         {actionLoading[m.id] === "doc_fail" || actionLoading[m.id] === "doc_ban" ? "..." : "Failed"}
                       </Button>
                     )}
-                    {!showApproveButton && !showFailButton && <span className="text-sm text-gray-400">—</span>}
+                    {showDeleteButton && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 px-3 text-xs border-red-400 text-red-700 hover:bg-red-50"
+                        disabled={!!actionLoading[m.id]}
+                        onClick={() => onDelete && onDelete(m)}
+                      >
+                        {actionLoading[m.id] === "delete" ? "..." : <><Trash2 className="w-3 h-3" />Delete</>}
+                      </Button>
+                    )}
+                    {!showApproveButton && !showFailButton && !showDeleteButton && <span className="text-sm text-gray-400">—</span>}
                   </div>
                 </td>
               </tr>
