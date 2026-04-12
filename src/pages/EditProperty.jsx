@@ -1239,7 +1239,36 @@ export default function EditProperty() {
                   </p>
                 </div>
               </label>
-
+              {formData.smart_lock_enabled && (
+                <div className="mt-4 pl-6 space-y-2">
+                  <Label>Auto-send timing</Label>
+                  <select
+                    value={formData.smart_lock_send_hours ?? ""}
+                    onChange={(e) => handleChange("smart_lock_send_hours", e.target.value ? parseInt(e.target.value) : null)}
+                    className="mt-1 w-full border rounded-md p-2"
+                  >
+                    <option value="">Select timing</option>
+                    {[24, 48, 72, 96, 120, 144, 168].map((hours) => {
+                      const policy = policies?.find(p => p.id === formData.cancellation_policy_id);
+                      const noRefundDays = policy
+                        ? (policy.final_tier_refund_percentage === 0 && (policy.tier_2_deadline_days ?? 0) > 0
+                            ? policy.tier_2_deadline_days
+                            : policy.tier_1_deadline_days ?? 0)
+                        : 999;
+                      const maxAllowed = policy ? Math.max(noRefundDays * 24 - 12, 0) : 999;
+                      const disabled = hours > maxAllowed;
+                      return (
+                        <option key={hours} value={hours} disabled={disabled}>
+                          {hours} Hours ({hours / 24} Day{hours > 24 ? "s" : ""}){disabled ? " — too early for selected policy" : ""}
+                        </option>
+                      );
+                    })}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Options unavailable due to your cancellation policy window are marked above.
+                  </p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
