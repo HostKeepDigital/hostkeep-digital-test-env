@@ -32,7 +32,7 @@ function getAreaLabel(postcodeArea) {
 }
 
 export default function LocationStep({ formData, onFormChange, onLocationChange, signupPostcode, isBeta }) {
-  const [isReady, setIsReady] = useState(false); // block until postcode lookup attempt completes
+  const [isReady, setIsReady] = useState(false);
   const buildPostcodeData = (fd) => {
     if (fd.postcode) {
       return {
@@ -50,18 +50,19 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
     return null;
   };
 
+  // Start as not-ready if we expect an auto-verify (signupPostcode present, no saved postcode)
+  const expectAutoVerify = !!(signupPostcode && !formData.postcode);
   const [postcodeInput, setPostcodeInput] = useState(formData.postcode || signupPostcode || "");
   const [postcodeLoading, setPostcodeLoading] = useState(false);
   const [postcodeError, setPostcodeError] = useState("");
   const [postcodeData, setPostcodeData] = useState(() => buildPostcodeData(formData));
 
   const didAutoLookup = useRef(false);
-  const readyTimeoutRef = useRef(null);
 
   // Derive in-area state directly from postcodeData
   const inArea = postcodeData
     ? ALLOWED_AREAS.includes(postcodeData.postcode_area)
-    : null; // null = not yet checked
+    : null;
 
   // Sync when formData.postcode arrives asynchronously (e.g. after DB load)
   useEffect(() => {
@@ -71,47 +72,30 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
     }
   }, [formData.postcode]);
 
-  // Pre-fill postcode from founding member signup record
+  // Auto-verify from signupPostcode as soon as it arrives
   useEffect(() => {
     if (!signupPostcode || formData.postcode || postcodeData || didAutoLookup.current) return;
     didAutoLookup.current = true;
-    setPostcodeInput(signupPostcode.toUpperCase());
+    const upper = signupPostcode.toUpperCase();
+    setPostcodeInput(upper);
+    // Small delay to let state settle before calling lookup
+    const timer = setTimeout(() => handlePostcodeLookupForPostcode(upper), 100);
+    return () => clearTimeout(timer);
   }, [signupPostcode]);
 
-  // Auto-verify once input has been pre-filled from signupPostcode
+  // Mark ready: if we expect auto-verify, wait for it; otherwise ready immediately
   useEffect(() => {
-    if (
-      didAutoLookup.current &&
-      !postcodeData &&
-      !postcodeLoading &&
-      postcodeInput.length >= 5 &&
-      postcodeInput === (signupPostcode || "").toUpperCase()
-    ) {
-      handlePostcodeLookup();
-    }
-  }, [postcodeInput]);
-
-  // Mark as ready once postcode lookup attempt completes (success or error) or after 8s fallback
-  useEffect(() => {
-    if (!postcodeLoading) {
-      // Lookup complete (or never started for non-founding members)
+    if (!expectAutoVerify) {
       setIsReady(true);
-      if (readyTimeoutRef.current) clearTimeout(readyTimeoutRef.current);
       return;
     }
-    // Safety fallback: unblock after 8 seconds even if lookup still pending
-    if (!readyTimeoutRef.current) {
-      readyTimeoutRef.current = setTimeout(() => {
-        setIsReady(true);
-      }, 8000);
+    if (!postcodeLoading && didAutoLookup.current) {
+      setIsReady(true);
     }
-    return () => {
-      if (readyTimeoutRef.current) clearTimeout(readyTimeoutRef.current);
-    };
-  }, [postcodeLoading]);
+  }, [postcodeLoading, expectAutoVerify]);
 
-  const handlePostcodeLookup = async () => {
-    const raw = postcodeInput.trim();
+  const handlePostcodeLookupForPostcode = async (postcode) => {
+    const raw = (postcode || postcodeInput).trim();
     if (!raw) {
       setPostcodeError("Please enter a postcode.");
       return;
@@ -134,10 +118,8 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
         return;
       }
 
-      // Store the authoritative postcode data
       setPostcodeData(data);
 
-      // Update formData with ALL authoritative fields from Postcodes.io
       onFormChange("postcode", data.postcode);
       onFormChange("postcode_district", data.postcode_district);
       onFormChange("postcode_area", data.postcode_area);
@@ -170,12 +152,14 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
     }
   };
 
+  const handlePostcodeLookup = () => handlePostcodeLookupForPostcode(postcodeInput);
+
   const canSave = () => {
     return postcodeData && inArea && formData.location?.street;
   };
 
-  // Block page while founding member postcode is being verified
-  if (!isReady) {
+  // Block page while founding member postcode is being auto-verified
+  if (!isReady || postcodeLoading) {
     return (
       <Card>
         <CardContent className="flex items-center justify-center h-64">
