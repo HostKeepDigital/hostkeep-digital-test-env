@@ -50,8 +50,8 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
     return null;
   };
 
-  // Start as not-ready if we expect an auto-verify (signupPostcode present, no saved postcode)
-  const expectAutoVerify = !!(signupPostcode && !formData.postcode);
+  // In beta with a signupPostcode, we always need to wait for the postcode to come in and verify
+  const expectAutoVerify = !!(isBeta && !formData.postcode);
   const [postcodeInput, setPostcodeInput] = useState(formData.postcode || signupPostcode || "");
   const [postcodeLoading, setPostcodeLoading] = useState(false);
   const [postcodeError, setPostcodeError] = useState("");
@@ -83,16 +83,17 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
     return () => clearTimeout(timer);
   }, [signupPostcode]);
 
-  // Mark ready: if we expect auto-verify, wait for it; otherwise ready immediately
+  // Mark ready once verified, or immediately if no auto-verify needed
   useEffect(() => {
     if (!expectAutoVerify) {
       setIsReady(true);
       return;
     }
-    if (!postcodeLoading && didAutoLookup.current) {
+    // Wait until we have postcodeData OR an error (lookup completed)
+    if (didAutoLookup.current && !postcodeLoading && (postcodeData || postcodeError)) {
       setIsReady(true);
     }
-  }, [postcodeLoading, expectAutoVerify]);
+  }, [postcodeLoading, postcodeData, postcodeError, expectAutoVerify]);
 
   const handlePostcodeLookupForPostcode = async (postcode) => {
     const raw = (postcode || postcodeInput).trim();
@@ -159,7 +160,7 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
   };
 
   // Block page while founding member postcode is being auto-verified
-  if (!isReady || postcodeLoading) {
+  if (!isReady || postcodeLoading || (isBeta && signupPostcode && !postcodeData && !postcodeError)) {
     return (
       <Card>
         <CardContent className="flex items-center justify-center h-64">
