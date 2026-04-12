@@ -6,6 +6,7 @@ import SeasonManager from "./SeasonManager";
 import DateOverrideManager from "./DateOverrideManager";
 import PricingCalendar from "./PricingCalendar";
 import ExportPricing from "./ExportPricing";
+import MarketPositionWidget from "./MarketPositionWidget";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -262,10 +263,15 @@ export default function PricingManager({ formData, onUpdate, onPromptSave, prope
             onApplyHolidayPricing={handleApplyHolidayPricing}
             currentMonth={calendarMonth}
             onMonthChange={setCalendarMonth}
+          />
+
+          {/* Market Position Widget */}
+          <MarketPositionWidget
             nightlyRate={formData.nightly_rate || formData.pricing_settings?.base_rate}
             postcodeArea={property?.postcode_area || formData.postcode_area}
             propertyType={property?.property_type || formData.property_type}
             bedrooms={property?.bedrooms || formData.bedrooms}
+            month={calendarMonth}
           />
 
           <Tabs defaultValue="base" className="w-full">

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, addMonths, subMonths, startOfWeek, endOfWeek, isSameDay, parseISO, isWithinInterval } from "date-fns";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Sparkles } from "lucide-react";
-import MarketPositionWidget from "./MarketPositionWidget";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -25,7 +25,7 @@ const UK_SCHOOL_HOLIDAYS = [
   { label: "Christmas 2026", start: new Date(2026, 11, 15), end: new Date(2027, 0, 5), boost: 1.30 },
 ];
 
-export default function PricingCalendar({ pricingSettings, onDateClick, selectedDates = [], onApplyHolidayPricing = null, currentMonth, onMonthChange, nightlyRate, postcodeArea, propertyType, bedrooms }) {
+export default function PricingCalendar({ pricingSettings, onDateClick, selectedDates = [], onApplyHolidayPricing = null, currentMonth, onMonthChange }) {
   const [internalMonth, setInternalMonth] = useState(new Date());
   const activeMonth = currentMonth || internalMonth;
   const setActiveMonth = (m) => { if (onMonthChange) onMonthChange(m); else setInternalMonth(m); };
@@ -149,17 +149,6 @@ export default function PricingCalendar({ pricingSettings, onDateClick, selected
         </div>
       </CardHeader>
       <CardContent>
-        {(nightlyRate || postcodeArea) && (
-          <div className="mb-4">
-            <MarketPositionWidget
-              nightlyRate={nightlyRate}
-              postcodeArea={postcodeArea}
-              propertyType={propertyType}
-              bedrooms={bedrooms}
-              month={activeMonth}
-            />
-          </div>
-        )}
         <div className="grid grid-cols-7 gap-1 mb-2">
           {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
             <div key={day} className="text-center text-xs font-semibold text-gray-500 py-2">
