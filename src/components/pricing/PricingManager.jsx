@@ -13,7 +13,6 @@ import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import MarketPositionWidget from "./MarketPositionWidget";
-import PricingAssistant from "./PricingAssistant";
 
 export default function PricingManager({ formData, onUpdate, onPromptSave, property }) {
   const [selectedDate, setSelectedDate] = useState(null);
@@ -86,12 +85,6 @@ export default function PricingManager({ formData, onUpdate, onPromptSave, prope
 
   return (
     <div className="space-y-6">
-      <PricingAssistant
-        propertyId={property?.id}
-        currentSettings={formData.pricing_settings}
-        onApplyRecommendations={handleApplyAssistantRecommendation}
-      />
-
       <MarketPositionWidget
         nightlyRate={formData.nightly_rate || formData.pricing_settings?.base_rate}
         postcodeArea={property?.postcode_area || formData.postcode_area}
