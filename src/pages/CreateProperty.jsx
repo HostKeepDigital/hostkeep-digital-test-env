@@ -474,10 +474,7 @@ export default function CreateProperty() {
       case 6:
         return !!formData.cancellation_policy_id;
       case 7:
-        return (
-          formData.existing_listing_url.trim().length > 0 ||
-          formData.verification_document !== null
-        );
+        return formData.verification_document !== null;
       default:
         return true;
     }
@@ -1067,23 +1064,11 @@ export default function CreateProperty() {
                 <CardHeader>
                   <CardTitle>Verification</CardTitle>
                   <CardDescription>
-                    Provide proof of ownership or an existing listing link
+                    Please upload a utility bill or equivalent document (e.g. council tax bill, mortgage statement) to verify your property address and ownership.
                   </CardDescription>
                 </CardHeader>
 
                 <CardContent className="space-y-6">
-                  <div>
-                    <Label>Existing Listing URL (optional)</Label>
-                    <Input
-                      value={formData.existing_listing_url}
-                      onChange={(e) =>
-                        handleChange("existing_listing_url", e.target.value)
-                      }
-                      placeholder="https://airbnb.com/..."
-                      className="mt-1"
-                    />
-                  </div>
-
                   <div>
                     <Label>Upload Verification Document</Label>
                     <input
