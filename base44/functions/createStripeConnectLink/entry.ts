@@ -1,4 +1,4 @@
-import { createClientFromRequest } from "npm:@base44/sdk@0.8.25";
+import { createClientFromRequest } from "npm:@base44/sdk@0.8.23";
 import Stripe from "npm:stripe@14";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY"));
@@ -9,58 +9,48 @@ Deno.serve(async (req) => {
     const serviceRole = base44.asServiceRole;
 
     const body = await req.json();
-    const { return_url: customReturnUrl, refresh_url: customRefreshUrl, session_token } = body;
+    const { session_token, return_url, refresh_url } = body;
 
-    let user_id, email;
-
-    // Try SDK auth first, fall back to session_token
-    try {
-      const me = await base44.auth.me();
-      if (me?.id) {
-        user_id = me.id;
-        email = me.email;
-      }
-    } catch (_) {}
-
-    // Fall back to session_token if SDK auth didn't work
-    if (!user_id && session_token) {
-      const userSessions = await serviceRole.entities.UserSession.filter({ session_token });
-      const userSession = userSessions?.[0];
-      if (userSession && new Date(userSession.expires_at) >= new Date()) {
-        user_id = userSession.user_id;
-        email = userSession.email;
-      }
+    if (!session_token) {
+      return Response.json({ error: "session_token is required" }, { status: 400 });
     }
 
-    if (!user_id) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    // Authenticate via session token
+    const sessions = await serviceRole.entities.UserSession.filter({ session_token });
+    const session = sessions?.[0];
+
+    if (!session) {
+      return Response.json({ error: "Invalid session token" }, { status: 401 });
     }
 
-    // Fetch user record (needed for stripe_connect_account_id)
+    if (new Date(session.expires_at) < new Date()) {
+      return Response.json({ error: "Session has expired" }, { status: 401 });
+    }
+
+    const user_id = session.user_id;
+
+    // Load user record
     const users = await serviceRole.entities.User.filter({ id: user_id });
-    const user = users[0];
+    const user = users?.[0];
 
     if (!user) {
-      return Response.json({ error: 'User not found' }, { status: 404 });
+      return Response.json({ error: "User not found" }, { status: 404 });
     }
 
-    const origin = req.headers.get('origin') || 'https://hostkeepdigital.co.uk';
-
-    // Reuse existing account or create new one
+    // Reuse or create Stripe Express account
     let accountId = user.stripe_connect_account_id;
 
     if (!accountId) {
       const account = await stripe.accounts.create({
         type: "express",
         country: "GB",
-        email: email || user.email,
+        email: user.email,
         capabilities: {
           card_payments: { requested: true },
           transfers: { requested: true },
         },
         business_profile: {
           mcc: "7011",
-          url: origin,
         },
       });
 
@@ -75,14 +65,14 @@ Deno.serve(async (req) => {
     // Create onboarding link
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
-      refresh_url: customRefreshUrl || `https://hostkeepdigital.co.uk/Settings?tab=payments&stripe_return=refresh`,
-      return_url: customReturnUrl || `https://hostkeepdigital.co.uk/Settings?tab=payments&stripe_return=success`,
+      return_url: return_url || "https://hostkeepdigital.co.uk/Settings?tab=payments&stripe_return=success",
+      refresh_url: refresh_url || "https://hostkeepdigital.co.uk/Settings?tab=payments&stripe_return=refresh",
       type: "account_onboarding",
     });
 
     return Response.json({ url: accountLink.url });
   } catch (error) {
-    console.error("Stripe Connect error:", error);
+    console.error("createStripeConnectLink error:", error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
