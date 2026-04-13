@@ -751,7 +751,7 @@ const handleDocBan = async (member) => {
               <td className="px-4 py-3 text-gray-400 text-xs">
                 {m.signup_timestamp ? new Date(m.signup_timestamp).toLocaleDateString("en-GB") : "—"}
               </td>
-              {(showActions || showBanAction || canDelete) && (
+              {(showActions || showBanAction || (showDeleteButton && canDelete)) && (
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     {showActions && <>      
@@ -770,12 +770,12 @@ const handleDocBan = async (member) => {
                         {actionLoading[m.id]==="ban" ? "..." : <><Ban className="w-3 h-3 mr-1"/>Ban</>}
                       </Button>
                     )}
-                    {canDelete && (
+                    {showDeleteButton && canDelete && (
                       <Button size="sm" variant="outline" className="h-7 px-3 text-xs border-amber-400 text-amber-700 hover:bg-amber-50" disabled={!!actionLoading[m.id]} onClick={() => handleResetMember(m)}>
                         {actionLoading[m.id]==="reset" ? "..." : "Reset"}
                       </Button>
                     )}
-                    {canDelete && (
+                    {showDeleteButton && canDelete && (
                       <Button size="sm" variant="outline" className="h-7 px-3 text-xs border-red-400 text-red-700 hover:bg-red-50" disabled={!!actionLoading[m.id]} onClick={() => handleDeleteMember(m)}>
                         {actionLoading[m.id]==="delete" ? "..." : "Delete"}
                       </Button>
@@ -1010,11 +1010,11 @@ const handleDocBan = async (member) => {
               </Section>
 
               <Section title="Approved" count={approvedMembers.length} accent="green">
-                <MemberTable members={approvedMembers} showBanAction showDeleteButton={canDelete} />
+                 <MemberTable members={approvedMembers} showBanAction />
               </Section>
 
               <Section title="Waitlist" count={waitlistMembers.length} accent="orange">
-                <MemberTable members={waitlistMembers} showDeleteButton={canDelete} />
+                 <MemberTable members={waitlistMembers} />
               </Section>
 
               <Section title="Rejected — Second Chance" count={rejectedPendingMembers.length} accent="yellow">
@@ -1026,7 +1026,7 @@ const handleDocBan = async (member) => {
               </Section>
 
               <Section title="Out of Area" count={outOfAreaMembers.length} accent="gray">
-                <MemberTable members={outOfAreaMembers} showDeleteButton={canDelete} />
+                 <MemberTable members={outOfAreaMembers} />
               </Section>
 
               <Section title="Banned" count={bannedEmailMembers.length + bannedDocMembers.length + bannedFraudMembers.length + bannedManualMembers.length + bannedAdminMembers.length} accent="red">
