@@ -585,6 +585,14 @@ export default function HostDashboard() {
                           </div>
                         )}
                       </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full mt-2 text-red-600 border-red-200 hover:bg-red-50 text-xs"
+                        onClick={() => setShowCancelSubDialog(true)}
+                      >
+                        Cancel Subscription
+                      </Button>
                     </div>
                   );
                 }
@@ -626,7 +634,7 @@ export default function HostDashboard() {
                         <Button className="w-full bg-teal-600 hover:bg-teal-700 text-white">Resubscribe</Button>
                       </Link>
                     )}
-                    {subscription.status === "active" && (
+                    {subscription.status !== "cancelled" && (
                       <Button
                         size="sm"
                         variant="outline"
