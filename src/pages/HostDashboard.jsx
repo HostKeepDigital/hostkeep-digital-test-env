@@ -212,7 +212,7 @@ export default function HostDashboard() {
       return base44.entities.Subscription.update(subscription.id, { status: "cancelled" });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(["subscription", user?.id]);
+      queryClient.invalidateQueries({ queryKey: ["subscription", user?.id] });
       setShowCancelSubDialog(false);
     },
   });
