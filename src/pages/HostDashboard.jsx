@@ -204,7 +204,13 @@ export default function HostDashboard() {
     .filter(Boolean);
 
   const cancelSubMutation = useMutation({
-    mutationFn: () => base44.entities.Subscription.update(subscription.id, { status: "cancelled" }),
+    mutationFn: () => {
+      const isBeta = ["beta_host_access", "beta_cleaner_access"].includes(subscription?.plan);
+      if (isBeta) {
+        return base44.entities.Subscription.delete(subscription.id);
+      }
+      return base44.entities.Subscription.update(subscription.id, { status: "cancelled" });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(["subscription", user?.id]);
       setShowCancelSubDialog(false);
