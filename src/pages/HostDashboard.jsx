@@ -66,6 +66,7 @@ export default function HostDashboard() {
   const [showPolicyDialog, setShowPolicyDialog] = useState(false);
   const [policyDraft, setPolicyDraft] = useState("");
   const [policySaved, setPolicySaved] = useState(false);
+  const [showCancelSubDialog, setShowCancelSubDialog] = useState(false);
 
   // Selected property for calendar
   const [selectedPropertyId, setSelectedPropertyId] = useState(null);
@@ -201,6 +202,14 @@ export default function HostDashboard() {
       return null;
     })
     .filter(Boolean);
+
+  const cancelSubMutation = useMutation({
+    mutationFn: () => base44.entities.Subscription.update(subscription.id, { status: "cancelled" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["subscription", user?.id]);
+      setShowCancelSubDialog(false);
+    },
+  });
 
   const savePolicyMutation = useMutation({
     mutationFn: ({ propertyId, policyId }) =>
@@ -617,6 +626,16 @@ export default function HostDashboard() {
                         <Button className="w-full bg-teal-600 hover:bg-teal-700 text-white">Resubscribe</Button>
                       </Link>
                     )}
+                    {subscription.status === "active" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full mt-3 text-red-600 border-red-200 hover:bg-red-50 text-xs"
+                        onClick={() => setShowCancelSubDialog(true)}
+                      >
+                        Cancel Subscription
+                      </Button>
+                    )}
                   </div>
                 );
               })() : (
@@ -689,6 +708,28 @@ export default function HostDashboard() {
         confirmLabel={savePolicyMutation.isPending ? "Saving…" : "Confirm Change"}
         showNote={true}
       />
+
+      {/* Cancel Subscription Dialog */}
+      <AlertDialog open={showCancelSubDialog} onOpenChange={setShowCancelSubDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Subscription?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to cancel your subscription? You'll retain access until the end of your current billing period.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <Button variant="outline" onClick={() => setShowCancelSubDialog(false)} disabled={cancelSubMutation.isPending}>Keep Plan</Button>
+            <Button
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={() => cancelSubMutation.mutate()}
+              disabled={cancelSubMutation.isPending}
+            >
+              {cancelSubMutation.isPending ? "Cancelling…" : "Yes, Cancel"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* New Message Modal */}
       <NewMessageModal
