@@ -357,12 +357,7 @@ export default function AdminPanel() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const ALLOWED_DELETE_EMAILS = [
-    "tyler-92@hotmail.co.uk",
-    "tyleris1192@gmail.com",
-    "hkdcleaner@outlook.com",
-  ];
-  const canDelete = ALLOWED_DELETE_EMAILS.includes(user?.email);
+  const canDelete = true; // Admin panel already requires admin role
 
   const [members,       setMembers      ] = useState([]);
   const [loading,       setLoading      ] = useState(true);
