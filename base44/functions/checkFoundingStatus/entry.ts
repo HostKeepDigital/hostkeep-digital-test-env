@@ -42,11 +42,11 @@ Deno.serve(async (req) => {
     }
 
     const userUpdates = { is_founding_member: true };
-    if (member.postcode) userUpdates.signup_postcode = member.postcode.trim().toUpperCase();
-    await base44.asServiceRole.entities.User.update(user_id, userUpdates);
+      if (member.postcode) userUpdates.signup_postcode = member.postcode.trim().toUpperCase();
+      await base44.asServiceRole.entities.User.update(user_id, userUpdates);
 
-    return Response.json({ matched: true, role: member.role });
-  } catch (e) {
+      return Response.json({ matched: true, role: member.role });
+    } catch (e) {
     console.error("checkFoundingStatus error:", e);
     return Response.json({ matched: false, error: e.message }, { status: 500 });
   }
