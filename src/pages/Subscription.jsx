@@ -329,13 +329,25 @@ export default function Subscription() {
   const [pendingPlan, setPendingPlan] = useState(null); // plan awaiting confirmation
   const [showStripePrompt, setShowStripePrompt] = useState(false);
   const [stripeConnecting, setStripeConnecting] = useState(false);
-  const [stripeStatus, setStripeStatus] = useState(null); // null=unchecked
+  const [stripeStatus, setStripeStatus] = useState(null); // null=loading, 'connected'|'pending'|'not_connected'
+  const [stripeStatusLoading, setStripeStatusLoading] = useState(false);
+
+  // Load Stripe Connect status on mount for beta host users
+  useEffect(() => {
+    if (!user?.id) return;
+    setStripeStatusLoading(true);
+    base44.functions.invoke('getStripeConnectStatus', {})
+      .then(res => setStripeStatus(res.data?.status || 'not_connected'))
+      .catch(() => setStripeStatus('not_connected'))
+      .finally(() => setStripeStatusLoading(false));
+  }, [user?.id]);
+
+  const stripeConnected = stripeStatus === 'connected' || stripeStatus === 'pending';
 
   const handleSetNextSubscription = async (planId) => {
     setNextSubscriptionLoading(true);
     try {
       const session_token = localStorage.getItem("session_token");
-      // Create/update the Stripe customer and beta subscription record
       const res = await base44.functions.invoke('setupFoundingSubscription', {
         next_plan: planId,
         session_token,
@@ -346,20 +358,6 @@ export default function Subscription() {
       }
       queryClient.invalidateQueries({ queryKey: ["subscription"] });
       setPendingPlan(null);
-
-      // Check stripe connect status — prompt if not yet connected
-      try {
-        const connectRes = await base44.functions.invoke('getStripeConnectStatus', {});
-        const st = connectRes.data?.status || 'not_connected';
-        setStripeStatus(st);
-        if (st === 'not_connected') {
-          setShowStripePrompt(true);
-          return;
-        }
-      } catch (_) {
-        // If check fails, skip the stripe connect prompt
-      }
-
       navigate(createPageUrl("HostDashboard"));
     } catch (error) {
       toast.error("Failed to set subscription. Please try again.");
@@ -602,6 +600,37 @@ export default function Subscription() {
             </div>
           ) : null}
 
+          {/* Stripe Connect gate — shown for beta host users who haven't connected */}
+          {isBetaUser && activeTab === 'host' && (
+            <div className={`rounded-2xl border-2 p-6 mb-8 ${stripeConnected ? 'border-teal-300 bg-teal-50' : 'border-amber-300 bg-amber-50'}`}>
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <div className="flex-1 text-left">
+                  <p className="font-bold text-gray-900 flex items-center gap-2">
+                    {stripeConnected ? (
+                      <><CheckCircle className="w-5 h-5 text-teal-600" /> Step 1: Payment account set up ✓</>
+                    ) : (
+                      <><AlertCircle className="w-5 h-5 text-amber-600" /> Step 1: Set up your payment account first</>
+                    )}
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {stripeConnected
+                      ? 'Your Stripe account is connected. Now choose your founding plan below.'
+                      : 'You must connect Stripe before selecting a plan. This is required to receive guest payments.'}
+                  </p>
+                </div>
+                {!stripeConnected && (
+                  <Button
+                    className="bg-amber-600 hover:bg-amber-700 text-white flex-shrink-0"
+                    onClick={handleStripeConnect}
+                    disabled={stripeConnecting || stripeStatusLoading}
+                  >
+                    {stripeConnecting ? <><Loader2 className="w-4 h-4 animate-spin" /> Redirecting...</> : stripeStatusLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Set Up Payments'}
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Free Tier — full width */}
           <div className="rounded-2xl border-2 border-teal-300 bg-teal-50 dark:bg-teal-950 dark:border-teal-800 p-6 text-center mb-8">
             <Badge className="bg-teal-500 text-white mb-3">Current</Badge>
@@ -634,18 +663,15 @@ export default function Subscription() {
                     {isBetaUser ? (
                       <Button
                         onClick={() => setPendingPlan(plan)}
-                        disabled={subscription?.next_subscription === plan.id}
+                        disabled={subscription?.next_subscription === plan.id || !stripeConnected}
+                        title={!stripeConnected ? 'Set up your payment account first' : ''}
                         className={`w-full ${
                           subscription?.next_subscription === plan.id
                             ? 'bg-amber-600 hover:bg-amber-700'
                             : 'bg-gray-600 hover:bg-gray-700'
                         }`}
                       >
-                        {subscription?.next_subscription === plan.id ? (
-                          'Selected for Beta Exit'
-                        ) : (
-                          'Choose This Plan'
-                        )}
+                        {subscription?.next_subscription === plan.id ? 'Selected for Beta Exit' : 'Choose This Plan'}
                       </Button>
                     ) : (
                       <div className="text-xs text-gray-500">Choose your plan below</div>
@@ -669,7 +695,7 @@ export default function Subscription() {
                 <p className="text-xs text-gray-500 mb-4">Locked in for founding members<br /><strong>Standard: £19.99/mo</strong></p>
                 <Button
                   onClick={() => setPendingPlan({ id: 'founding_cleaner_solo', name: 'Cleaner Solo Founding', price: 19 })}
-                  disabled={subscription?.next_subscription === 'founding_cleaner_solo'}
+                  disabled={subscription?.next_subscription === 'founding_cleaner_solo' || !stripeConnected}
                   className={`w-full ${
                     subscription?.next_subscription === 'founding_cleaner_solo'
                       ? 'bg-blue-600 hover:bg-blue-700'
