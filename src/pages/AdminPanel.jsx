@@ -1646,7 +1646,7 @@ const handleDocBan = async (member) => {
               <td className="px-4 py-3 text-gray-400 text-xs">
                 {m.signup_timestamp ? new Date(m.signup_timestamp).toLocaleDateString("en-GB") : "—"}
               </td>
-              {(showActions || showBanAction) && (
+              {(showActions || showBanAction || (showDeleteButton && canDelete)) && (
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     {showActions && <>      
