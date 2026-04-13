@@ -1278,6 +1278,13 @@ export default function AdminPanel() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
+  const ALLOWED_DELETE_EMAILS = [
+    "tyler-92@hotmail.co.uk",
+    "tyleris1192@gmail.com",
+    "hkdcleaner@outlook.com",
+  ];
+  const canDelete = ALLOWED_DELETE_EMAILS.includes(user?.email);
+
   const [members,       setMembers      ] = useState([]);
   const [loading,       setLoading      ] = useState(true);
   const [actionLoading, setActionLoading] = useState({});
@@ -1611,12 +1618,12 @@ const handleDocBan = async (member) => {
 
   // ── UI HELPERS ────────────────────────────────────────────────────────────
 
-  const MemberTable = ({ members: rows, showActions = false, showBanAction = false }) => (
+  const MemberTable = ({ members: rows, showActions = false, showBanAction = false, showDeleteButton = false }) => (
     <div className="max-h-[220px] overflow-y-auto rounded-xl border border-gray-200 bg-white">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-gray-100 bg-gray-50">
-            {["Full Name","Email","Role","Postcode","Status","Signed Up", (showActions || showBanAction) ? "Actions" : null]
+            {["Full Name","Email","Role","Postcode","Status","Signed Up", (showActions || showBanAction || showDeleteButton) ? "Actions" : null]
               .filter(Boolean).map(h => <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">{h}</th>)}
           </tr>
         </thead>
@@ -1642,7 +1649,7 @@ const handleDocBan = async (member) => {
               {(showActions || showBanAction) && (
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    {showActions && <>
+                    {showActions && <>      
                       <Button size="sm" className="h-7 px-3 text-xs bg-green-600 hover:bg-green-700 text-white" disabled={!!actionLoading[m.id]} onClick={() => handleApprove(m)}>
                         {actionLoading[m.id]==="approve" ? "..." : <><Check className="w-3 h-3 mr-1"/>Approve</>}
                       </Button>
@@ -1652,13 +1659,15 @@ const handleDocBan = async (member) => {
                       <Button size="sm" variant="outline" className="h-7 px-3 text-xs border-red-300 text-red-600 hover:bg-red-50" disabled={!!actionLoading[m.id]} onClick={() => handleReject(m)}>
                         {actionLoading[m.id]==="reject" ? "..." : <><X className="w-3 h-3 mr-1"/>Reject</>}
                       </Button>
-                      <Button size="sm" variant="outline" className="h-7 px-3 text-xs border-gray-200 text-gray-400 hover:bg-gray-50" disabled={!!actionLoading[m.id]} onClick={() => handleDelete(m)}>
-                        {actionLoading[m.id]==="delete" ? "..." : "Delete"}
-                      </Button>
                     </>}
                     {showBanAction && (
                       <Button size="sm" variant="outline" className="h-7 px-3 text-xs border-red-800 text-red-800 hover:bg-red-50" disabled={!!actionLoading[m.id]} onClick={() => handleBan(m)}>
                         {actionLoading[m.id]==="ban" ? "..." : <><Ban className="w-3 h-3 mr-1"/>Ban</>}
+                      </Button>
+                    )}
+                    {(showDeleteButton || showActions) && canDelete && (
+                      <Button size="sm" variant="outline" className="h-7 px-3 text-xs border-red-400 text-red-700 hover:bg-red-50" disabled={!!actionLoading[m.id]} onClick={() => handleDeleteMember(m)}>
+                        {actionLoading[m.id]==="delete" ? "..." : "Delete"}
                       </Button>
                     )}
                   </div>
@@ -1667,7 +1676,7 @@ const handleDocBan = async (member) => {
             </tr>
           ))}
           {rows.length === 0 && (
-            <tr><td colSpan={showActions ? 7 : 6} className="px-4 py-8 text-center text-gray-300 text-sm">No records in this section</td></tr>
+            <tr><td colSpan={(showActions || showBanAction || showDeleteButton) ? 7 : 6} className="px-4 py-8 text-center text-gray-300 text-sm">No records in this section</td></tr>
           )}
         </tbody>
       </table>
@@ -1863,55 +1872,55 @@ const handleDocBan = async (member) => {
               </div>
 
               <Section title="Interest (Not Yet Applied)" count={interestMembers.length} accent="gray">
-               <MemberTable members={interestMembers} />
+               <MemberTable members={interestMembers} showDeleteButton={canDelete} />
               </Section>
 
               <Section title="Pending Applications" count={pendingMembers.length} accent="amber">
-               <MemberTable members={pendingMembers} showActions />
+               <MemberTable members={pendingMembers} showActions showDeleteButton={canDelete} />
               </Section>
 
               <Section title="Invited" count={invitedMembers.length} accent="blue">
-                <MemberTable members={invitedMembers} showBanAction />
+                <MemberTable members={invitedMembers} showBanAction showDeleteButton={canDelete} />
               </Section>
 
               <Section title="Password Protected" count={passwordProtectedMembers.length} accent="indigo">
-                <MemberTable members={passwordProtectedMembers} showBanAction />
+                <MemberTable members={passwordProtectedMembers} showBanAction showDeleteButton={canDelete} />
               </Section>
 
               <Section title="Awaiting Document Verification" count={awaitingDocMembers.length} accent="purple">
-                <DocMemberTable members={awaitingDocMembers} properties={allProperties} verificationDocs={allVerificationDocs} showApproveButton onApprove={handleDocApprove} showFailButton onFail={handleDocFail} showDeleteButton onDelete={handleDeleteMember} actionLoading={actionLoading} />
+                <DocMemberTable members={awaitingDocMembers} properties={allProperties} verificationDocs={allVerificationDocs} showApproveButton onApprove={handleDocApprove} showFailButton onFail={handleDocFail} showDeleteButton={canDelete} onDelete={handleDeleteMember} actionLoading={actionLoading} />
               </Section>
 
               <Section title="Document Failed — Attempt 1" count={docFail1Members.length} accent="orange">
-                <DocMemberTable members={docFail1Members} properties={allProperties} verificationDocs={allVerificationDocs} showApproveButton onApprove={handleDocApprove} showFailButton failIsAttempt2 onFail={handleDocFail} showDeleteButton onDelete={handleDeleteMember} actionLoading={actionLoading} />
+                <DocMemberTable members={docFail1Members} properties={allProperties} verificationDocs={allVerificationDocs} showApproveButton onApprove={handleDocApprove} showFailButton failIsAttempt2 onFail={handleDocFail} showDeleteButton={canDelete} onDelete={handleDeleteMember} actionLoading={actionLoading} />
               </Section>
 
               <Section title="Document Failed — Attempt 2" count={docFail2Members.length} accent="red">
-                <DocMemberTable members={docFail2Members} properties={allProperties} verificationDocs={allVerificationDocs} showApproveButton onApprove={handleDocApprove} showFailButton failIsAttempt2 onFail={handleDocBan} showDeleteButton onDelete={handleDeleteMember} actionLoading={actionLoading} />
+                <DocMemberTable members={docFail2Members} properties={allProperties} verificationDocs={allVerificationDocs} showApproveButton onApprove={handleDocApprove} showFailButton failIsAttempt2 onFail={handleDocBan} showDeleteButton={canDelete} onDelete={handleDeleteMember} actionLoading={actionLoading} />
               </Section>
 
               <Section title="Approved" count={approvedMembers.length} accent="green">
-                <MemberTable members={approvedMembers} showBanAction />
+                <MemberTable members={approvedMembers} showBanAction showDeleteButton={canDelete} />
               </Section>
 
               <Section title="Waitlist" count={waitlistMembers.length} accent="orange">
-                <MemberTable members={waitlistMembers} />
+                <MemberTable members={waitlistMembers} showDeleteButton={canDelete} />
               </Section>
 
               <Section title="Rejected — Second Chance" count={rejectedPendingMembers.length} accent="yellow">
-                <MemberTable members={rejectedPendingMembers} />
+                <MemberTable members={rejectedPendingMembers} showDeleteButton={canDelete} />
               </Section>
 
               <Section title="Rejected" count={rejectedMembers.length} accent="red">
-                <MemberTable members={rejectedMembers} />
+                <MemberTable members={rejectedMembers} showDeleteButton={canDelete} />
               </Section>
 
               <Section title="Out of Area" count={outOfAreaMembers.length} accent="gray">
-                <MemberTable members={outOfAreaMembers} />
+                <MemberTable members={outOfAreaMembers} showDeleteButton={canDelete} />
               </Section>
 
               <Section title="Banned" count={bannedEmailMembers.length + bannedDocMembers.length + bannedFraudMembers.length + bannedManualMembers.length + bannedAdminMembers.length} accent="red">
-                <MemberTable members={[...bannedEmailMembers, ...bannedDocMembers, ...bannedFraudMembers, ...bannedManualMembers, ...bannedAdminMembers]} />
+                <MemberTable members={[...bannedEmailMembers, ...bannedDocMembers, ...bannedFraudMembers, ...bannedManualMembers, ...bannedAdminMembers]} showDeleteButton={canDelete} />
               </Section>
             </>
           )}
