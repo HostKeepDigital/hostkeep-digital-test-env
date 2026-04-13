@@ -336,7 +336,9 @@ export default function Subscription() {
   useEffect(() => {
     if (!user?.id) return;
     setStripeStatusLoading(true);
-    base44.functions.invoke('getStripeConnectStatus', {})
+    base44.functions.invoke('getStripeConnectStatus', {
+      session_token: localStorage.getItem('session_token')
+    })
       .then(res => setStripeStatus(res.data?.status || 'not_connected'))
       .catch(() => setStripeStatus('not_connected'))
       .finally(() => setStripeStatusLoading(false));
