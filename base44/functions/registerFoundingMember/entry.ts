@@ -2,7 +2,7 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.23";
 
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
-  const { full_name, email, postcode, role } = await req.json();
+  const { full_name, email, postcode, role, is_existing_guest } = await req.json();
 
   if (!full_name || !email || !postcode || !role) {
     return Response.json({ error: "Missing required fields" }, { status: 400 });
@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
     email: email.toLowerCase().trim(),
     postcode: cleanPostcode,
     role,
-    approval_status: outOfArea ? "out_of_area" : "interest",
+    approval_status: is_existing_guest ? "guest_pending_application" : outOfArea ? "out_of_area" : "interest",
     email_verified: false,
     signup_timestamp: new Date().toISOString(),
   });
