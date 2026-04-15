@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
 
 import { Toaster } from "@/components/ui/toaster";
 import NavigationTracker from "@/lib/NavigationTracker";
@@ -91,13 +92,9 @@ function PostLoginRedirect() {
       try {
         if (user?.email && user?.id) {
           try {
-            await fetch("/functions/checkFoundingStatus", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                email: user.email,
-                user_id: user.id,
-              }),
+            await base44.functions.invoke('checkFoundingStatus', { 
+              email: user.email, 
+              user_id: user.id 
             });
           } catch (_) {
             // swallow founding check errors
