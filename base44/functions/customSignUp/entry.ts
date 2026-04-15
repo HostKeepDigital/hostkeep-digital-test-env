@@ -39,38 +39,64 @@ Deno.serve(async (req) => {
     const password_hash = await hashPassword(password, salt);
 
     // Create User record
-    const user = await serviceRole.entities.User.create({
-      email: normalisedEmail,
-      forename,
-      middle_name: middle_name || null,
-      surname,
-      full_name,
-    });
+    let user;
+    try {
+      user = await serviceRole.entities.User.create({
+        email: normalisedEmail,
+        forename,
+        middle_name: middle_name || null,
+        surname,
+        full_name,
+      });
+    } catch (err) {
+      console.error('Failed to create User:', err.message);
+      throw err;
+    }
 
     // Create UserCredentials record
-    await serviceRole.entities.UserCredentials.create({
-      email: normalisedEmail,
-      password_hash,
-    });
+    try {
+      await serviceRole.entities.UserCredentials.create({
+        email: normalisedEmail,
+        password_hash,
+      });
+    } catch (err) {
+      console.error('Failed to create UserCredentials:', err.message);
+      throw err;
+    }
 
     // Create guest UserRole
-    await serviceRole.entities.UserRole.create({
-      user_id: user.id,
-      role: 'guest',
-      approval_status: 'approved',
-    });
+    try {
+      await serviceRole.entities.UserRole.create({
+        user_id: user.id,
+        role: 'guest',
+        approval_status: 'approved',
+      });
+    } catch (err) {
+      console.error('Failed to create UserRole:', err.message);
+      throw err;
+    }
 
     // Create Guest record for profile storage
-    await serviceRole.entities.Guest.create({
-      full_name,
-      forename,
-      middle_name: middle_name || null,
-      surname,
-      email: normalisedEmail,
-    });
+    try {
+      await serviceRole.entities.Guest.create({
+        full_name,
+        forename,
+        middle_name: middle_name || null,
+        surname,
+        email: normalisedEmail,
+      });
+    } catch (err) {
+      console.error('Failed to create Guest:', err.message);
+      // Don't throw - Guest is optional
+    }
 
     // Send verification code
-    await serviceRole.functions.invoke('sendVerificationCode', { email: normalisedEmail, name: forename });
+    try {
+      await serviceRole.functions.invoke('sendVerificationCode', { email: normalisedEmail, name: forename });
+    } catch (err) {
+      console.error('Failed to send verification code:', err.message);
+      // Don't throw - email sending is optional
+    }
 
     return Response.json({ success: true, email: normalisedEmail });
 
