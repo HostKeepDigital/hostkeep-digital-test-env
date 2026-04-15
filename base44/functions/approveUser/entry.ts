@@ -70,6 +70,63 @@ function generateToken() {
 }
 
 // ------------------------------------------------------
+// Helper: Send approval email for existing guests (Path B)
+// ------------------------------------------------------
+async function sendGuestApprovalEmail(to, fullName) {
+  if (!RESEND_API_KEY) return;
+
+  try {
+    await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: "HostKeep <hello@hostkeepdigital.co.uk>",
+        to,
+        subject: "You've been approved — Log in to complete verification",
+        html: `
+          <!DOCTYPE html>
+          <html>
+          <body style="margin:0;padding:0;background:#f9fafb;font-family:sans-serif;">
+            <div style="max-width:560px;margin:40px auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+              <div style="background:#1E3A5F;padding:24px 32px;">
+                <h1 style="color:#ffffff;font-size:20px;margin:0;">HostKeep</h1>
+              </div>
+              <div style="padding:32px;">
+                <h2 style="color:#111827;font-size:22px;margin:0 0 16px;">You've been approved! 🎉</h2>
+                <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 12px;">
+                  Hi ${fullName || "there"},
+                </p>
+                <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px;">
+                  Your Founding Host application has been approved. You can now log in to your existing HostKeep account to complete the verification process.
+                </p>
+                <a href="https://hostkeepdigital.co.uk/SignIn"
+                   style="display:inline-block;background:#0d9488;color:#ffffff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;">
+                  Log In to HostKeep
+                </a>
+                <p style="color:#6b7280;font-size:13px;margin-top:24px;">
+                  If you have any questions, contact us at hello@hostkeepdigital.co.uk
+                </p>
+              </div>
+              <div style="background:#f3f4f6;padding:16px 32px;text-align:center;">
+                <p style="color:#9ca3af;font-size:12px;margin:0;">
+                  HostKeep · <a href="mailto:hello@hostkeepdigital.co.uk" style="color:#9ca3af;">hello@hostkeepdigital.co.uk</a>
+                </p>
+              </div>
+            </div>
+          </body>
+          </html>
+        `,
+      }),
+    });
+  } catch (_) {
+    // Non-fatal
+  }
+}
+
+// ------------------------------------------------------
 // MAIN FUNCTION — Approve user + send onboarding invite
 // ------------------------------------------------------
 Deno.serve(async (req) => {
@@ -108,6 +165,46 @@ Deno.serve(async (req) => {
         password: generateToken(), // temporary, never used
       });
     }
+
+    // ------------------------------------------------------
+    // PATH B — Existing guest: already has credentials
+    // ------------------------------------------------------
+    if (member.approval_status === "guest_pending_application") {
+      const existingCreds = await base44.asServiceRole.entities.UserCredentials.filter({ email });
+      if (existingCreds?.[0]) {
+        // Skip token creation and invite email — user can already log in
+
+        // Update FoundingMember status
+        await base44.asServiceRole.entities.FoundingMember.update(member_id, {
+          approval_status: "password_protected",
+          user_id: user.id,
+        });
+
+        // Create UserRole if one doesn't already exist for this role
+        const existingRoles = await base44.asServiceRole.entities.UserRole.filter({
+          user_id: user.id,
+          role: member.role,
+        });
+        if (!existingRoles?.[0]) {
+          await base44.asServiceRole.entities.UserRole.create({
+            user_id: user.id,
+            email,
+            role: member.role,
+            approval_status: "pending",
+            founding_member_id: member_id,
+          });
+        }
+
+        // Send simple approval email
+        await sendGuestApprovalEmail(email, member.full_name);
+
+        return Response.json({ success: true, path: "existing_guest" });
+      }
+    }
+
+    // ------------------------------------------------------
+    // PATH A — Standard flow: create token + send invite
+    // ------------------------------------------------------
 
     // 3) Create onboarding password token
     const token = generateToken();
