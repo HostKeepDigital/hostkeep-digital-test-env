@@ -67,6 +67,26 @@
     "ban_reason": {
       "type": "string",
       "description": "Reason recorded when a member is banned"
+    },
+    "documents_verified": {
+      "type": "boolean",
+      "default": false,
+      "description": "Admin has approved the member's verification documents"
+    },
+    "documents_submitted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the member last submitted their verification documents"
+    },
+    "stripe_verified": {
+      "type": "boolean",
+      "default": false,
+      "description": "Stripe Connect account is connected and charges enabled"
+    },
+    "subscription_active": {
+      "type": "boolean",
+      "default": false,
+      "description": "Member has an active HostKeep subscription"
     }
   },
   "required": [

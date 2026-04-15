@@ -18,6 +18,7 @@ import ComplaintsTab from "@/components/admin/ComplaintsTab";
 import SectorsTab from "@/components/admin/SectorsTab";
 import SmartPricingTab from "@/components/admin/SmartPricingTab";
 import DocMemberTable from "@/components/admin/DocMemberTable";
+import GateChecklist from "@/components/admin/GateChecklist";
 import IntegrationTestsTab from "@/components/admin/IntegrationTestsTab";
 
 

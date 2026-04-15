@@ -1,17 +1,18 @@
 import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Check, Trash2 } from "lucide-react";
+import GateChecklist from "./GateChecklist";
 
 export default function DocMemberTable({ members, properties = [], verificationDocs = [], showApproveButton = false, onApprove, actionLoading = {}, showFailButton = false, failIsAttempt2 = false, onFail, showDeleteButton = false, onDelete }) {
   const getProperty = (userId) => properties.find(p => p.owner_id === userId);
   const getVerificationDoc = (userId) => verificationDocs.find(d => d.user_id === userId);
 
   return (
-    <div className="max-h-[220px] overflow-y-auto rounded-xl border border-gray-200 bg-white">
+    <div className="max-h-[280px] overflow-y-auto rounded-xl border border-gray-200 bg-white">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-gray-100 bg-gray-50">
-            {["Full Name", "Email", "Role", "Street Name", "County", "Country", "Uploaded Document", "Status", "Signed Up", "Actions"]
+            {["Full Name", "Email", "Role", "Street Name", "County", "Country", "Uploaded Document", "Status", "Gates", "Signed Up", "Actions"]
               .map(h => <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">{h}</th>)}
           </tr>
         </thead>
@@ -19,6 +20,7 @@ export default function DocMemberTable({ members, properties = [], verificationD
           {members.map(m => {
             const prop = getProperty(m.user_id);
             const doc = getVerificationDoc(m.user_id);
+            const allGatesPassed = m.documents_verified && m.stripe_verified && m.subscription_active;
             return (
               <tr key={m.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-4 py-3 font-medium text-gray-900">{m.full_name}</td>
@@ -34,7 +36,7 @@ export default function DocMemberTable({ members, properties = [], verificationD
                 <td className="px-4 py-3">
                   {doc?.file_url ? (
                     <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:text-teal-700 inline-flex items-center gap-1 text-sm font-medium">
-                      View Document <ExternalLink className="w-3 h-3" />
+                      View <ExternalLink className="w-3 h-3" />
                     </a>
                   ) : (
                     <span className="text-gray-400 text-sm">—</span>
@@ -44,6 +46,9 @@ export default function DocMemberTable({ members, properties = [], verificationD
                   <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
                     {doc?.verification_status || "pending"}
                   </span>
+                </td>
+                <td className="px-4 py-3">
+                  <GateChecklist member={m} />
                 </td>
                 <td className="px-4 py-3 text-gray-400 text-xs">
                   {m.signup_timestamp ? new Date(m.signup_timestamp).toLocaleDateString("en-GB") : "—"}
@@ -57,8 +62,11 @@ export default function DocMemberTable({ members, properties = [], verificationD
                         disabled={!!actionLoading[m.id]}
                         onClick={() => onApprove && onApprove(m)}
                       >
-                        {actionLoading[m.id] === "doc_approve" ? "..." : <><Check className="w-3 h-3 mr-1" />Approve</>}
+                        {actionLoading[m.id] === "doc_approve" ? "..." : <><Check className="w-3 h-3 mr-1" />Approve docs</>}
                       </Button>
+                    )}
+                    {allGatesPassed && (
+                      <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-0.5 rounded-full">Auto-approving…</span>
                     )}
                     {showFailButton && (
                       <Button
@@ -89,7 +97,7 @@ export default function DocMemberTable({ members, properties = [], verificationD
             );
           })}
           {members.length === 0 && (
-            <tr><td colSpan={10} className="px-4 py-8 text-center text-gray-300 text-sm">No records in this section</td></tr>
+            <tr><td colSpan={11} className="px-4 py-8 text-center text-gray-300 text-sm">No records in this section</td></tr>
           )}
         </tbody>
       </table>
