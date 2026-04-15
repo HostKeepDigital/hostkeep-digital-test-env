@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
       });
 
     const member = members?.find(m =>
-      ['invited', 'doc_review', 'approved', 'password_protected']
+      ['invited', 'approved', 'password_protected']
         .includes(m.approval_status)
     );
 
@@ -24,29 +24,26 @@ Deno.serve(async (req) => {
     }
 
     const existingRoles = await base44.asServiceRole
-      .entities.UserRole.filter({
-        user_id: user_id
-      });
+      .entities.UserRole.filter({ user_id });
 
     const hasRole = existingRoles?.some(r => r.role === member.role);
 
     if (!hasRole) {
       await base44.asServiceRole.entities.UserRole.create({
-        user_id: user_id,
+        user_id,
         role: member.role,
         approval_status: 'approved',
-        is_founding_member: member.is_founding_member || false,
       });
       await base44.asServiceRole.entities.FoundingMember
-        .update(member.id, { user_id: user_id });
+        .update(member.id, { user_id });
     }
 
     const userUpdates = { is_founding_member: true };
-      if (member.postcode) userUpdates.signup_postcode = member.postcode.trim().toUpperCase();
-      await base44.asServiceRole.entities.User.update(user_id, userUpdates);
+    if (member.postcode) userUpdates.signup_postcode = member.postcode.trim().toUpperCase();
+    await base44.asServiceRole.entities.User.update(user_id, userUpdates);
 
-      return Response.json({ matched: true, role: member.role });
-    } catch (e) {
+    return Response.json({ matched: true, role: member.role });
+  } catch (e) {
     console.error("checkFoundingStatus error:", e);
     return Response.json({ matched: false, error: e.message }, { status: 500 });
   }
