@@ -1,4 +1,4 @@
-import { createClientFromRequest } from "npm:@base44/sdk@0.8.23";
+import { createClientFromRequest } from "npm:@base44/sdk@0.8.25";
 
 Deno.serve(async (req) => {
   try {
@@ -25,8 +25,10 @@ Deno.serve(async (req) => {
       return Response.json({ status: "not_connected", error: "no_user_id" });
     }
 
-    const users = await serviceRole.entities.User.filter({ id: user_id });
-    const user = users?.[0];
+    let user;
+    try {
+      user = await serviceRole.entities.User.get(user_id);
+    } catch (_) {}
 
     if (!user) {
       return Response.json({ status: "not_connected", error: "user_not_found" });
