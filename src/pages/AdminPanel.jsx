@@ -511,7 +511,19 @@ const handleBan = async (member) => {
 const handleDocApprove = async (member) => {
   setML(member.id, "doc_approve");
   try {
-    await base44.entities.FoundingMember.update(member.id, { approval_status: "approved" });
+    // Update the VerificationDocuments record
+    if (member.user_id) {
+      const docs = await base44.entities.VerificationDocuments.filter({ user_id: member.user_id });
+      if (docs.length > 0) {
+        const latestDoc = docs.sort((a, b) => new Date(b.created_date) - new Date(a.created_date))[0];
+        await base44.entities.VerificationDocuments.update(latestDoc.id, { verification_status: "approved" });
+      }
+    }
+
+    // Mark documents_verified on FoundingMember
+    await base44.entities.FoundingMember.update(member.id, { documents_verified: true });
+
+    // Send approval email
     await base44.functions.invoke("sendEmail", {
       to: member.email,
       subject: "You're one step closer to publishing your property — HostKeep",
@@ -520,6 +532,12 @@ const handleDocApprove = async (member) => {
         body: `Great news — your verification document has been reviewed and approved by our team.<br><br>You are now one step closer to publishing your property on HostKeep. To publish, you will need all three of the following in place:<br><br><strong>1. Approved verification document</strong> — done ✓<br><strong>2. Active HostKeep subscription</strong><br><strong>3. Connected Stripe account</strong> (to receive payments from guests)<br><br>Once all three are confirmed, your publish button will become available. If you have any questions, contact us at <a href="mailto:hello@hostkeepdigital.co.uk">hello@hostkeepdigital.co.uk</a>.`,
       }),
     });
+
+    // Run gate check — may promote to approved if other gates are also met
+    if (member.user_id) {
+      await base44.functions.invoke("checkApprovalGates", { user_id: member.user_id });
+    }
+
     toast.success(`${member.full_name} — document approved`);
   } catch (e) {
     toast.error("Approval failed");
@@ -527,7 +545,7 @@ const handleDocApprove = async (member) => {
   }
   setML(member.id, null);
   fetchMembers();
- };
+};
 
 const handleDocFail = async (member, isAttempt2) => {
   setML(member.id, "doc_fail");
