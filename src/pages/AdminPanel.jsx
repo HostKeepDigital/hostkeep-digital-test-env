@@ -510,75 +510,88 @@ const handleBan = async (member) => {
  };
 
 const handleDocApprove = async (member) => {
-  setML(member.id, "doc_approve");
-  try {
-    // Update the VerificationDocuments record
-    if (member.user_id) {
-      const docs = await base44.entities.VerificationDocuments.filter({ user_id: member.user_id });
-      if (docs.length > 0) {
-        const latestDoc = docs.sort((a, b) => new Date(b.created_date) - new Date(a.created_date))[0];
-        await base44.entities.VerificationDocuments.update(latestDoc.id, { verification_status: "approved" });
-      }
-    }
+   setML(member.id, "doc_approve");
+   try {
+     // Update the VerificationDocuments record
+     if (member.user_id) {
+       const docs = await base44.entities.VerificationDocuments.filter({ user_id: member.user_id });
+       if (docs.length > 0) {
+         const latestDoc = docs.sort((a, b) => new Date(b.created_date) - new Date(a.created_date))[0];
+         await base44.entities.VerificationDocuments.update(latestDoc.id, { verification_status: "approved" });
+       }
+     }
 
-    // Mark documents_verified on FoundingMember
-    await base44.entities.FoundingMember.update(member.id, { documents_verified: true });
+     // Mark documents_verified on both FoundingMember and User
+     await base44.entities.FoundingMember.update(member.id, { documents_verified: true });
+     if (member.user_id) {
+       await base44.entities.User.update(member.user_id, { documents_verified: true });
+     }
 
-    // Send approval email
-    await base44.functions.invoke("sendEmail", {
-      to: member.email,
-      subject: "You're one step closer to publishing your property — HostKeep",
-      html: buildEmail({
-        heading: "Document Approved",
-        body: `Great news — your verification document has been reviewed and approved by our team.<br><br>You are now one step closer to publishing your property on HostKeep. To publish, you will need all three of the following in place:<br><br><strong>1. Approved verification document</strong> — done ✓<br><strong>2. Active HostKeep subscription</strong><br><strong>3. Connected Stripe account</strong> (to receive payments from guests)<br><br>Once all three are confirmed, your publish button will become available. If you have any questions, contact us at <a href="mailto:hello@hostkeepdigital.co.uk">hello@hostkeepdigital.co.uk</a>.`,
-      }),
-    });
+     // Send approval email
+     await base44.functions.invoke("sendEmail", {
+       to: member.email,
+       subject: "You're one step closer to publishing your property — HostKeep",
+       html: buildEmail({
+         heading: "Document Approved",
+         body: `Great news — your verification document has been reviewed and approved by our team.<br><br>You are now one step closer to publishing your property on HostKeep. To publish, you will need all three of the following in place:<br><br><strong>1. Approved verification document</strong> — done ✓<br><strong>2. Active HostKeep subscription</strong><br><strong>3. Connected Stripe account</strong> (to receive payments from guests)<br><br>Once all three are confirmed, your publish button will become available. If you have any questions, contact us at <a href="mailto:hello@hostkeepdigital.co.uk">hello@hostkeepdigital.co.uk</a>.`,
+       }),
+     });
 
-    // Run gate check — may promote to approved if other gates are also met
-    if (member.user_id) {
-      await base44.functions.invoke("checkApprovalGates", { user_id: member.user_id });
-    }
+     // Run gate check — may promote to approved if other gates are also met
+     if (member.user_id) {
+       await base44.functions.invoke("checkApprovalGates", { user_id: member.user_id });
+     }
 
-    toast.success(`${member.full_name} — document approved`);
-  } catch (e) {
-    toast.error("Approval failed");
-    console.error(e);
-  }
-  setML(member.id, null);
-  fetchMembers();
-};
+     toast.success(`${member.full_name} — document approved`);
+   } catch (e) {
+     toast.error("Approval failed");
+     console.error(e);
+   }
+   setML(member.id, null);
+   fetchMembers();
+ };
 
 const handleDocFail = async (member, isAttempt2) => {
-  setML(member.id, "doc_fail");
-  try {
-    const nextStatus = member.approval_status === "awaiting_document_verification"
-      ? "documentation_failed_attempt_1"
-      : "documentation_failed_attempt_2";
-    
-    await base44.entities.FoundingMember.update(member.id, { approval_status: nextStatus });
-    
-    const docs = await base44.entities.VerificationDocuments.filter({ user_id: member.user_id });
-    if (docs.length > 0) {
-      const latestDoc = docs.sort((a, b) => new Date(b.created_date) - new Date(a.created_date))[0];
-      await base44.entities.VerificationDocuments.update(latestDoc.id, { verification_status: "rejected" });
-    }
-    
-    await base44.functions.invoke("sendEmail", {
-      to: member.email,
-      subject: "Action required: your verification document was not approved — HostKeep",
-      html: buildEmail({
-        heading: "Document Review Result",
-        body: `Your verification document has been reviewed by our team and deemed unsatisfactory.<br><br>Please log in to HostKeep and submit a new document. You will find the upload option on your property verification page, in the same place as when you first submitted your document.<br><br>Once submitted, your new document will be reviewed by our team. If you have any questions, contact <a href="mailto:hello@hostkeepdigital.co.uk">hello@hostkeepdigital.co.uk</a>.`,
-      }),
-    });
-    toast.success(`${member.full_name} — document failed, member notified`);
-  } catch (e) {
-    toast.error("Document fail action failed");
-    console.error(e);
-  }
-  setML(member.id, null);
-  fetchMembers();
- };
+   setML(member.id, "doc_fail");
+   try {
+     // Count previous rejections for this user
+     const rejectedDocs = (await base44.entities.VerificationDocuments.filter({ user_id: member.user_id, verification_status: "rejected" })) || [];
+     const rejectionCount = rejectedDocs.length;
+
+     // Determine next status based on rejection count
+     let nextStatus;
+     if (rejectionCount === 0) {
+       nextStatus = "documentation_failed_attempt_1";
+     } else if (rejectionCount === 1) {
+       nextStatus = "documentation_failed_attempt_2";
+     } else {
+       nextStatus = "documentation_failed_attempt_2"; // Cap at attempt 2
+     }
+
+     await base44.entities.FoundingMember.update(member.id, { approval_status: nextStatus });
+
+     const docs = await base44.entities.VerificationDocuments.filter({ user_id: member.user_id });
+     if (docs.length > 0) {
+       const latestDoc = docs.sort((a, b) => new Date(b.created_date) - new Date(a.created_date))[0];
+       await base44.entities.VerificationDocuments.update(latestDoc.id, { verification_status: "rejected" });
+     }
+
+     await base44.functions.invoke("sendEmail", {
+       to: member.email,
+       subject: "Action required: your verification document was not approved — HostKeep",
+       html: buildEmail({
+         heading: "Document Review Result",
+         body: `Your verification document has been reviewed by our team and deemed unsatisfactory.<br><br>Please log in to HostKeep and submit a new document. You will find the upload option on your property verification page, in the same place as when you first submitted your document.<br><br>Once submitted, your new document will be reviewed by our team. If you have any questions, contact <a href="mailto:hello@hostkeepdigital.co.uk">hello@hostkeepdigital.co.uk</a>.`,
+       }),
+     });
+     toast.success(`${member.full_name} — document failed, member notified`);
+   } catch (e) {
+     toast.error("Document fail action failed");
+     console.error(e);
+   }
+   setML(member.id, null);
+   fetchMembers();
+  };
 
 const handleResetMember = async (member) => {
   if (!window.confirm(`Reset ${member.full_name} back to Pending? This clears their onboarding progress.`)) return;
