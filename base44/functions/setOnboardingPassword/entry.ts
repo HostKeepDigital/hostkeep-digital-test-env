@@ -95,10 +95,13 @@ Deno.serve(async (req) => {
       founding_member_id,
     });
 
-    // Move FoundingMember from invited → password_protected
+    // Move FoundingMember from invited → password_protected, and stamp user_id
     if (founding_member_id) {
+      const users = await serviceRole.entities.User.filter({ email: normalisedEmail });
+      const foundUser = users?.[0];
       await serviceRole.entities.FoundingMember.update(founding_member_id, {
         approval_status: "password_protected",
+        user_id: foundUser?.id || null,
       });
     }
 
