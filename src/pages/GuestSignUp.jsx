@@ -54,11 +54,13 @@ export default function GuestSignUp() {
       const response = await base44.functions.invoke('customSignUp', {
         email,
         password,
-        full_name: fullName(),
+        forename: forename.trim(),
+        middle_name: middleName.trim() || undefined,
+        surname: surname.trim(),
       });
 
       if (response.data?.success) {
-        window.location.href = '/SignIn?registered=true';
+        window.location.href = `/verify-email?email=${encodeURIComponent(email.toLowerCase().trim())}`;
       } else {
         setError(response.data?.message || 'Sign-up failed');
       }
