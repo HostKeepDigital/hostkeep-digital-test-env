@@ -52,6 +52,7 @@ import {
 import LocationStep from "@/components/properties/LocationStep";
 import AmenitiesSelector from "@/components/properties/AmenitiesSelector";
 import PolicyPickerDialog from "@/components/properties/PolicyPickerDialog";
+import PublishGateModal from "@/components/properties/PublishGateModal";
 
 import { AMENITY_GROUPS, AMENITY_MAP } from "@/data/amenities";
 
@@ -77,6 +78,8 @@ export default function EditProperty() {
   const [formData, setFormData] = useState(null);
   const [stripeStatus, setStripeStatus] = useState(null);
   const [hostSubscription, setHostSubscription] = useState(undefined); // undefined = loading
+  const [foundingMember, setFoundingMember] = useState(null);
+  const [showGateModal, setShowGateModal] = useState(false);
   const [originalData, setOriginalData] = useState(null);
   const [uploadedFileIdentifiers, setUploadedFileIdentifiers] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState(null);
@@ -106,13 +109,17 @@ export default function EditProperty() {
     const urlP = new URLSearchParams(window.location.search);
     const propId = urlP.get("id");
     if (!propId) return;
-    // Get owner_id from property to look up subscription
+    // Get owner_id from property to look up subscription + founding member
     base44.entities.Property.filter({ id: propId }).then(async (results) => {
       const prop = results[0];
       if (!prop?.owner_id) { setHostSubscription(null); return; }
-      const subs = await base44.entities.Subscription.filter({ user_id: prop.owner_id });
+      const [subs, fms] = await Promise.all([
+        base44.entities.Subscription.filter({ user_id: prop.owner_id }),
+        base44.entities.FoundingMember.filter({ user_id: prop.owner_id }),
+      ]);
       setHostSubscription(subs[0] || null);
-    }).catch(() => setHostSubscription(null));
+      setFoundingMember(fms[0] || null);
+    }).catch(() => { setHostSubscription(null); setFoundingMember(null); });
   }, []);
 
   const { data: property, isLoading } = useQuery({
@@ -515,15 +522,24 @@ export default function EditProperty() {
   };
 
   const handlePublish = async () => {
+    // Check founding member gates first
+    const isApproved = foundingMember?.approval_status === "approved";
+    const subscriptionOk = hostSubscription?.status === "active";
+    const gatesPass = isApproved && subscriptionOk;
+
+    if (!gatesPass) {
+      setShowGateModal(true);
+      return;
+    }
+
+    // Check form validation errors
     const errorsByTab = validateMandatoryFields();
     const stripeOk = stripeStatus === "verified";
-    const subscriptionOk = hostSubscription && hostSubscription.status === "active";
-
     const hasTabErrors = Object.values(errorsByTab).some(e => e.length > 0);
-    const hasBlockers = !stripeOk || !subscriptionOk;
+    const hasStripeBlocker = !stripeOk;
 
-    if (hasTabErrors || hasBlockers) {
-      setValidationErrors({ ...errorsByTab, _stripeOk: stripeOk, _subscriptionOk: subscriptionOk });
+    if (hasTabErrors || hasStripeBlocker) {
+      setValidationErrors({ ...errorsByTab, _stripeOk: stripeOk, _subscriptionOk: true });
       setShowValidationDialog(true);
       return;
     }
@@ -555,6 +571,13 @@ export default function EditProperty() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
+      {/* Publish Gate Modal */}
+      <PublishGateModal
+        open={showGateModal}
+        onClose={() => setShowGateModal(false)}
+        foundingMember={foundingMember}
+      />
+
       {/* Save Result Overlay */}
       <Dialog open={!!saveResult} onOpenChange={() => setSaveResult(null)}>
         <DialogContent className="max-w-sm text-center">
@@ -743,7 +766,7 @@ export default function EditProperty() {
             </div>
 
             <div className="flex items-center gap-2">
-              {formData.status === "draft" && (
+              {formData.status !== "published" && (
                 <Button
                   onClick={handlePublish}
                   disabled={updateMutation.isPending}

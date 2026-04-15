@@ -29,7 +29,6 @@ import {
   EyeOff,
   Trash2,
   MoreVertical,
-  Clock,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -38,6 +37,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { format, isAfter, parseISO } from "date-fns";
+import PublishGateModal from "./PublishGateModal";
 
 const FOUNDER_BADGE = "https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/HostFounderBadge.png";
 
@@ -54,9 +54,8 @@ export default function PropertyListingCard({
   stripeConnected,
   foundingMemberData,
 }) {
-  const isUnderReview = foundingMemberData?.approval_status === "awaiting_document_verification";
   const [showUnpublishDialog, setShowUnpublishDialog] = useState(false);
-  const [showRequirementsHint, setShowRequirementsHint] = useState(false);
+  const [showGateModal, setShowGateModal] = useState(false);
   const [showActions, setShowActions] = useState(false);
 
   // Profile completeness score (7 criteria) — must be defined before canPublish
@@ -73,22 +72,16 @@ export default function PropertyListingCard({
   const hasActiveSubscription = criteria[5];
   const hasStripe = criteria[6];
 
-  // Requirements to publish
-  const canPublish = criteria[0] && criteria[1] && criteria[2] && criteria[3] && criteria[5] && criteria[6];
+  // Gate check: approval approved + active subscription
+  const isApproved = foundingMemberData?.approval_status === "approved";
+  const gatesPass = isApproved && hasActiveSubscription;
 
-  const missingRequirements = [
-    !criteria[0] && "At least 1 photo",
-    !criteria[1] && "Property description",
-    !criteria[2] && "At least 1 amenity",
-    !criteria[3] && "Nightly rate",
-    !criteria[5] && "Active subscription",
-    !criteria[6] && "Stripe payout account",
-  ].filter(Boolean);
+  // Full publish requires gates + content criteria
+  const canPublish = gatesPass && criteria[0] && criteria[1] && criteria[2] && criteria[3];
 
   const handlePublishClick = () => {
-    if (!canPublish || isUnderReview) {
-      setShowRequirementsHint(true);
-      setTimeout(() => setShowRequirementsHint(false), 4000);
+    if (!gatesPass) {
+      setShowGateModal(true);
       return;
     }
     onStatusToggle();
@@ -375,32 +368,6 @@ export default function PropertyListingCard({
         </div>
       </div>
 
-      {/* Document Under Review Banner */}
-      {isUnderReview && (
-        <div className="mx-6 mb-4 p-3 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-2.5">
-          <Clock className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-semibold text-amber-900">Document Under Review</p>
-            <p className="text-xs text-amber-700 mt-0.5">Your verification document is being reviewed by our team. Publishing will be available once approved.</p>
-          </div>
-        </div>
-      )}
-
-      {/* Requirements hint */}
-      {showRequirementsHint && missingRequirements.length > 0 && (
-        <div className="mx-6 mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200">
-          <p className="text-xs font-semibold text-rose-800 mb-1">Complete these before publishing:</p>
-          <ul className="text-xs text-rose-700 space-y-0.5">
-            {missingRequirements.map((r) => <li key={r}>• {r}</li>)}
-          </ul>
-        </div>
-      )}
-      {showRequirementsHint && isUnderReview && (
-        <div className="mx-6 mb-3 p-3 rounded-xl bg-amber-50 border border-amber-200">
-          <p className="text-xs text-amber-800">Publishing is locked while your document is under review.</p>
-        </div>
-      )}
-
       {/* Management Action Bar */}
       <div className="bg-gray-50 border-t border-gray-100 p-4 flex items-center gap-3">
         <Link
@@ -424,9 +391,9 @@ export default function PropertyListingCard({
           <Button
             onClick={handlePublishClick}
             className={`flex-1 rounded-xl h-11 text-sm font-semibold ${
-              canPublish && !isUnderReview
+              canPublish
                 ? "bg-teal-600 hover:bg-teal-700 text-white"
-                : "bg-gray-200 text-gray-400 hover:bg-gray-200 cursor-default"
+                : "bg-gray-200 text-gray-400 cursor-not-allowed"
             }`}
           >
             <Eye className="w-4 h-4 mr-1.5" /> Publish
@@ -450,6 +417,13 @@ export default function PropertyListingCard({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* Publish Gate Modal */}
+      <PublishGateModal
+        open={showGateModal}
+        onClose={() => setShowGateModal(false)}
+        foundingMember={foundingMemberData}
+      />
 
       {/* Unpublish Warning Dialog */}
       <AlertDialog open={showUnpublishDialog} onOpenChange={setShowUnpublishDialog}>
