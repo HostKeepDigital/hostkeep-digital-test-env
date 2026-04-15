@@ -86,40 +86,50 @@ const PLAN_DETAILS = {
 };
 
 async function handleSubscriptionDeactivated(base44, user_id) {
-  // Mark FoundingMember subscription_active = false
-  const members = await base44.asServiceRole.entities.FoundingMember.filter({ user_id });
-  if (members?.[0]) {
-    await base44.asServiceRole.entities.FoundingMember.update(members[0].id, { subscription_active: false });
-  }
+   try {
+     // Mark User subscription_active = false
+     await base44.asServiceRole.entities.User.update(user_id, { subscription_active: false });
 
-  // Unpublish all published properties
-  const properties = await base44.asServiceRole.entities.Property.filter({ owner_id: user_id, status: 'published' });
-  for (const property of (properties || [])) {
-    await base44.asServiceRole.entities.Property.update(property.id, { status: 'draft' });
-  }
+     // Mark FoundingMember subscription_active = false
+     const members = await base44.asServiceRole.entities.FoundingMember.filter({ user_id });
+     if (members?.[0]) {
+       await base44.asServiceRole.entities.FoundingMember.update(members[0].id, { subscription_active: false });
+     }
 
-  // Send subscription expired email
-  const users = await base44.asServiceRole.entities.User.filter({ id: user_id });
-  const user = users?.[0];
-  if (user?.email) {
-    const html = buildEmail({
-      heading: 'Your subscription has expired',
-      body: `
-        <p>Hi ${user.full_name?.split(' ')[0] || 'there'},</p>
-        <p>Your HostKeep subscription has ended. As a result:</p>
-        <ul style="padding-left:20px;line-height:1.8;">
-          <li>Your properties have been moved to <strong>Draft</strong> and are no longer visible to guests.</li>
-          <li>Any existing confirmed bookings will continue as normal and will not be affected.</li>
-        </ul>
-        <p>To republish your properties and continue accepting new bookings, simply resubscribe from your dashboard.</p>
-        <p style="margin-top:24px;">If you have any questions, we're happy to help.</p>
-        <p>Warm regards,<br/><strong>The HostKeep Digital Team</strong></p>
-      `,
-      buttonText: 'Resubscribe Now',
-      buttonUrl: 'https://hostkeepdigital.co.uk/Subscription',
-    });
-    await sendEmail({ to: user.email, subject: 'Your HostKeep subscription has expired', html });
-  }
+     // Unpublish all published properties
+     const properties = await base44.asServiceRole.entities.Property.filter({ owner_id: user_id, status: 'published' });
+     for (const property of (properties || [])) {
+       await base44.asServiceRole.entities.Property.update(property.id, { status: 'draft' });
+     }
+
+     // Send subscription expired email
+     const users = await base44.asServiceRole.entities.User.filter({ id: user_id });
+     const user = users?.[0];
+     if (user?.email) {
+       const html = buildEmail({
+         heading: 'Your subscription has expired',
+         body: `
+           <p>Hi ${user.full_name?.split(' ')[0] || 'there'},</p>
+           <p>Your HostKeep subscription has ended. As a result:</p>
+           <ul style="padding-left:20px;line-height:1.8;">
+             <li>Your properties have been moved to <strong>Draft</strong> and are no longer visible to guests.</li>
+             <li>Any existing confirmed bookings will continue as normal and will not be affected.</li>
+           </ul>
+           <p>To republish your properties and continue accepting new bookings, simply resubscribe from your dashboard.</p>
+           <p style="margin-top:24px;">If you have any questions, we're happy to help.</p>
+           <p>Warm regards,<br/><strong>The HostKeep Digital Team</strong></p>
+         `,
+         buttonText: 'Resubscribe Now',
+         buttonUrl: 'https://hostkeepdigital.co.uk/Subscription',
+       });
+       await sendEmail({ to: user.email, subject: 'Your HostKeep subscription has expired', html });
+     }
+
+     // Invoke messaging cutoff check
+     await base44.asServiceRole.functions.invoke('checkHostMessagingCutoff', { host_user_id: user_id });
+   } catch (err) {
+     console.error('handleSubscriptionDeactivated error:', err);
+   }
 }
 
 Deno.serve(async (req) => {
@@ -378,12 +388,13 @@ Deno.serve(async (req) => {
         const subs = await base44.asServiceRole.entities.Subscription.filter({ stripe_subscription_id: stripeSubscriptionId });
         const sub = subs?.[0];
         if (sub && sub.status === 'active') {
-          const members = await base44.asServiceRole.entities.FoundingMember.filter({ user_id: sub.user_id });
-          if (members?.[0]) {
-            await base44.asServiceRole.entities.FoundingMember.update(members[0].id, { subscription_active: true });
-          }
-          await base44.asServiceRole.functions.invoke('checkApprovalGates', { user_id: sub.user_id });
-        }
+           const members = await base44.asServiceRole.entities.FoundingMember.filter({ user_id: sub.user_id });
+           if (members?.[0]) {
+             await base44.asServiceRole.entities.FoundingMember.update(members[0].id, { subscription_active: true });
+           }
+           await base44.asServiceRole.entities.User.update(sub.user_id, { subscription_active: true });
+           await base44.asServiceRole.functions.invoke('checkApprovalGates', { user_id: sub.user_id });
+         }
       } catch (err) {
         console.error('invoice.payment_succeeded handler error:', err);
       }
@@ -396,14 +407,15 @@ Deno.serve(async (req) => {
     if (user_id) {
       try {
         if (subscription.status === 'active') {
-          const members = await base44.asServiceRole.entities.FoundingMember.filter({ user_id });
-          if (members?.[0]) {
-            await base44.asServiceRole.entities.FoundingMember.update(members[0].id, { subscription_active: true });
-          }
-          await base44.asServiceRole.functions.invoke('checkApprovalGates', { user_id });
-        } else if (subscription.status === 'canceled' || subscription.status === 'past_due') {
-          await handleSubscriptionDeactivated(base44, user_id);
-        }
+           const members = await base44.asServiceRole.entities.FoundingMember.filter({ user_id });
+           if (members?.[0]) {
+             await base44.asServiceRole.entities.FoundingMember.update(members[0].id, { subscription_active: true });
+           }
+           await base44.asServiceRole.entities.User.update(user_id, { subscription_active: true });
+           await base44.asServiceRole.functions.invoke('checkApprovalGates', { user_id });
+         } else if (subscription.status === 'canceled' || subscription.status === 'past_due') {
+           await handleSubscriptionDeactivated(base44, user_id);
+         }
       } catch (err) {
         console.error('customer.subscription.updated handler error:', err);
       }
