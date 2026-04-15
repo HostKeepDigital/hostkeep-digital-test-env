@@ -99,6 +99,7 @@ export default function FoundingHost() {
       const result = await base44.functions.invoke("registerFoundingMember", {
         full_name: fullName(), email: form.email.toLowerCase().trim(),
         postcode: form.postcode.toUpperCase().trim(), role: "host",
+        is_existing_guest: isGuest,
       });
      if (result?.data?.error === "duplicate_email") {
         const s = result?.data?.status;
