@@ -44,13 +44,24 @@ const INCLUDES = [
 export default function FoundingHost() {
   const navigate = useNavigate();
   const formRef  = useRef(null);
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, roles } = useAuth();
   const [hostCount,    setHostCount   ] = useState(0);
   const [loading,      setLoading     ] = useState(true);
   const [submitting,   setSubmitting  ] = useState(false);
   const [cornwallWarn, setCornwallWarn] = useState(false);
-  const isGuest = isAuthenticated && user?.role === 'guest';
-  const [form, setForm] = useState({ forename: isGuest ? user?.full_name?.split(' ')[0] || "" : "", middle_name: "", surname: isGuest ? user?.full_name?.split(' ').slice(1).join(' ') || "" : "", email: isGuest ? user?.email || "" : "", postcode: "" });
+  const isGuest = isAuthenticated && roles?.some(r => r.role === 'guest' && r.approval_status === 'approved');
+  const [form, setForm] = useState({ forename: '', middle_name: '', surname: '', email: '', postcode: '' });
+
+  useEffect(() => {
+    if (isGuest && user) {
+      setForm(f => ({
+        ...f,
+        forename: user.forename || '',
+        surname: user.surname || '',
+        email: user.email || '',
+      }));
+    }
+  }, [isGuest, user]);
   const [errors, setErrors] = useState({});
   const [duplicateInfo, setDuplicateInfo] = useState(null);
 
