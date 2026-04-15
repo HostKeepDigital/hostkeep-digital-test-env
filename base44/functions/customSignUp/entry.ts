@@ -13,16 +13,17 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const serviceRole = base44.asServiceRole;
 
-    const { email, password, full_name } = await req.json();
+    const { email, password, forename, middle_name, surname } = await req.json();
 
-    if (!email || !password || !full_name) {
+    if (!email || !password || !forename || !surname) {
       return Response.json(
-        { success: false, message: 'Email, password, and full name are required' },
+        { success: false, message: 'Email, password, forename, and surname are required' },
         { status: 400 }
       );
     }
 
     const normalisedEmail = email.toLowerCase().trim();
+    const full_name = [forename, middle_name, surname].filter(Boolean).join(' ');
 
     // Check if credentials already exist
     const existing = await serviceRole.entities.UserCredentials.filter({ email: normalisedEmail });
@@ -40,6 +41,9 @@ Deno.serve(async (req) => {
     // Create User record
     const user = await serviceRole.entities.User.create({
       email: normalisedEmail,
+      forename,
+      middle_name: middle_name || null,
+      surname,
       full_name,
     });
 
@@ -59,10 +63,16 @@ Deno.serve(async (req) => {
     // Create Guest record for profile storage
     await serviceRole.entities.Guest.create({
       full_name,
+      forename,
+      middle_name: middle_name || null,
+      surname,
       email: normalisedEmail,
     });
 
-    return Response.json({ success: true, message: 'Account created successfully' });
+    // Send verification code
+    await serviceRole.functions.invoke('sendVerificationCode', { email: normalisedEmail, name: forename });
+
+    return Response.json({ success: true, email: normalisedEmail });
 
   } catch (error) {
     console.error('Sign-up error:', error);
