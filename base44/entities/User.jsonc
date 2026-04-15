@@ -74,6 +74,26 @@
       "type": "string",
       "format": "date-time",
       "description": "when the flag was set"
+    },
+    "documents_verified": {
+      "type": "boolean",
+      "default": false,
+      "description": "Admin has verified identity documents"
+    },
+    "stripe_verified": {
+      "type": "boolean",
+      "default": false,
+      "description": "Stripe Connect bank account verified via webhook"
+    },
+    "subscription_active": {
+      "type": "boolean",
+      "default": false,
+      "description": "Host has an active subscription confirmed via webhook"
+    },
+    "documents_submitted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the user first submitted their verification documents"
     }
   },
   "required": []
