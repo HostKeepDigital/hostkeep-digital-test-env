@@ -607,7 +607,7 @@ export default function Subscription() {
             <div className={`rounded-2xl border-2 p-6 mb-8 ${stripeConnected ? 'border-teal-300 bg-teal-50' : 'border-amber-300 bg-amber-50'}`}>
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 <div className="flex-1 text-left">
-                  <p className="font-bold text-gray-900 flex items-center gap-2">
+                  <p className="font-bold flex items-center gap-2" style={{ color: '#000000' }}>
                     {stripeConnected ? (
                       <><CheckCircle className="w-5 h-5 text-teal-600" /> Step 1: Payment account set up ✓</>
                     ) : (
