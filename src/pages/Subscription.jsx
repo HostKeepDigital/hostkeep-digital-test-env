@@ -558,7 +558,7 @@ export default function Subscription() {
               <Crown className="w-7 h-7 text-amber-600" />
             </div>
             <Badge className="bg-amber-500 mb-3">Founding Member</Badge>
-            <h2 className="text-2xl font-bold text-gray-900 mb-3">
+            <h2 className="text-2xl font-bold text-black mb-3">
               You have free beta access
             </h2>
             <p className="text-gray-600 text-base leading-relaxed mb-3">
