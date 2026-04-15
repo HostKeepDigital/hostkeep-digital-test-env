@@ -113,12 +113,20 @@ export default function FoundingHost() {
         return;
       }
       if (result?.data?.out_of_area || isOutOfArea) {
-        try { await base44.functions.invoke("sendVerificationCode", { email: form.email.toLowerCase().trim(), name: form.forename.trim() }); } catch (_) {}
-        navigate(`/verify-email?email=${encodeURIComponent(form.email.toLowerCase().trim())}&status=out_of_area`);
+        if (!isGuest) {
+          try { await base44.functions.invoke("sendVerificationCode", { email: form.email.toLowerCase().trim(), name: form.forename.trim() }); } catch (_) {}
+          navigate(`/verify-email?email=${encodeURIComponent(form.email.toLowerCase().trim())}&status=out_of_area`);
+        } else {
+          navigate('/founding-thankyou');
+        }
         return;
-      } 
-      try { await base44.functions.invoke("sendVerificationCode", { email: form.email.toLowerCase().trim(), name: form.forename.trim() }); } catch (_) {}
-      navigate(`/verify-email?email=${encodeURIComponent(form.email.toLowerCase().trim())}`);
+      }
+      if (!isGuest) {
+        try { await base44.functions.invoke("sendVerificationCode", { email: form.email.toLowerCase().trim(), name: form.forename.trim() }); } catch (_) {}
+        navigate(`/verify-email?email=${encodeURIComponent(form.email.toLowerCase().trim())}`);
+      } else {
+        navigate('/founding-thankyou');
+      }
     } catch { setErrors({ submit: "Something went wrong. Please try again." }); }
     finally { setSubmitting(false); }
   };
