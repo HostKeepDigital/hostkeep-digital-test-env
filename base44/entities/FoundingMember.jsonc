@@ -51,16 +51,18 @@
     "approval_status": {
       "type": "string",
       "enum": [
-        "pending",
-        "approved",
-        "rejected",
-        "out_of_area",
+        "interest",
+        "pending_application",
         "invited",
         "password_protected",
-        "banned"
+        "awaiting_document_verification",
+        "documentation_failed_attempt_1",
+        "documentation_failed_attempt_2",
+        "guest_pending_application",
+        "approved"
       ],
-      "default": "pending",
-      "description": "Admin approval + onboarding status. 'banned' strips founding member access and auto-promotes next eligible waitlist member."
+      "default": "interest",
+      "description": "Admin approval + onboarding status."
     },
     "ban_reason": {
       "type": "string",
