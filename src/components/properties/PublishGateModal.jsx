@@ -1,107 +1,184 @@
+import React, { useEffect, useState } from "react";
+import { base44 } from "@/api/base44Client";
+import { createPageUrl } from "@/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { XCircle, FileText, CreditCard, Receipt } from "lucide-react";
-import { differenceInHours } from "date-fns";
 
 export default function PublishGateModal({ open, onClose, foundingMember }) {
-  if (!foundingMember) return null;
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const { documents_verified, stripe_verified, subscription_active, documents_submitted_at, approval_status } = foundingMember;
+  useEffect(() => {
+    if (!open || !foundingMember?.user_id) {
+      setLoading(true);
+      return;
+    }
 
-  // Gates that are incomplete
-  const gates = [];
+    const fetchUser = async () => {
+      try {
+        const users = await base44.entities.User.filter({ id: foundingMember.user_id });
+        setUser(users?.[0] || null);
+      } catch (e) {
+        console.error("Failed to fetch user:", e);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // 1. Documents
-  if (!documents_verified) {
-    const submittedAt = documents_submitted_at ? new Date(documents_submitted_at) : null;
-    const hoursSince = submittedAt ? differenceInHours(new Date(), submittedAt) : null;
-    gates.push({
-      key: "docs",
-      icon: FileText,
-      title: "Identity Documents Not Yet Verified",
-      body: submittedAt ? (
-        <>
-          <p className="text-sm text-gray-600">Your identity documents are still under review.</p>
-          {hoursSince > 24 && (
-            <p className="text-sm text-gray-600 mt-1">
-              If you have not heard back, please contact us at{" "}
-              <a href="mailto:hello@hostkeepdigital.co.uk" className="text-teal-600 underline font-medium">
-                hello@hostkeepdigital.co.uk
-              </a>.
-            </p>
-          )}
-        </>
-      ) : (
-        <>
-          <p className="text-sm text-gray-600">You haven't submitted your identity documents yet.</p>
-          <Link to="/HostVerification" onClick={onClose} className="inline-flex items-center gap-1 mt-2 text-sm font-medium text-teal-600 underline">
-            Submit your documents →
-          </Link>
-        </>
-      ),
-    });
+    fetchUser();
+  }, [open, foundingMember?.user_id]);
+
+  if (!open) return null;
+
+  if (loading) {
+    return (
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent className="max-w-md">
+          <div className="flex items-center justify-center py-8">
+            <div className="w-6 h-6 border-2 border-gray-200 border-t-teal-600 rounded-full animate-spin" />
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
   }
 
-  // 2. Stripe
-  if (!stripe_verified) {
-    gates.push({
-      key: "stripe",
-      icon: CreditCard,
-      title: "Bank Account Not Connected",
-      body: (
-        <>
-          <p className="text-sm text-gray-600">You need to connect your bank account to receive payments from guests.</p>
-          <Link to="/Settings" onClick={onClose} className="inline-flex items-center gap-1 mt-2 text-sm font-medium text-teal-600 underline">
-            Connect your Stripe account →
-          </Link>
-        </>
-      ),
-    });
+  // Determine which gates are incomplete
+  const gatesIncomplete = [];
+
+  if (!user?.documents_verified) {
+    gatesIncomplete.push("documents");
+  }
+  if (!user?.stripe_verified) {
+    gatesIncomplete.push("stripe");
+  }
+  if (!user?.subscription_active) {
+    gatesIncomplete.push("subscription");
   }
 
-  // 3. Subscription
-  if (!subscription_active) {
-    gates.push({
-      key: "subscription",
-      icon: Receipt,
-      title: "No Active Subscription",
-      body: (
-        <>
-          <p className="text-sm text-gray-600">You need an active subscription to publish your property.</p>
-          <Link to="/Subscription" onClick={onClose} className="inline-flex items-center gap-1 mt-2 text-sm font-medium text-teal-600 underline">
-            View subscription plans →
-          </Link>
-        </>
-      ),
-    });
+  // If no incomplete gates, this shouldn't happen, but close the modal
+  if (gatesIncomplete.length === 0) {
+    return null;
   }
+
+  const hoursElapsed = user?.documents_submitted_at
+    ? Math.floor((Date.now() - new Date(user.documents_submitted_at).getTime()) / (1000 * 60 * 60))
+    : null;
+  const over24Hours = hoursElapsed && hoursElapsed > 24;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-gray-900">
-            <XCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-            Your listing isn't ready to publish yet
+          <DialogTitle className="flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 text-amber-600" />
+            Complete Setup to Publish
           </DialogTitle>
+          <DialogDescription>
+            Before you can publish your property, please complete the following requirements:
+          </DialogDescription>
         </DialogHeader>
 
-        <p className="text-sm text-gray-500 -mt-1">
-          Complete the following before your property can go live:
-        </p>
-
-        <div className="space-y-4 mt-2">
-          {gates.map(({ key, icon: Icon, title, body }) => (
-            <div key={key} className="flex gap-3 p-4 rounded-xl bg-gray-50 border border-gray-200">
-              <div className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <Icon className="w-4 h-4 text-gray-500" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-800 mb-1">{title}</p>
-                {body}
+        <div className="space-y-4 mt-6">
+          {/* Documents Gate */}
+          {gatesIncomplete.includes("documents") && (
+            <div className="p-4 rounded-lg bg-red-50 border border-red-200">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-red-900 text-sm">Identity Documents</h3>
+                  <p className="text-sm text-red-800 mt-1">
+                    Your identity documents are still under review.
+                  </p>
+                  {over24Hours && (
+                    <p className="text-sm text-red-700 mt-2">
+                      If you have not heard back, please contact us at{" "}
+                      <a href="mailto:hello@hostkeepdigital.co.uk" className="font-semibold hover:underline">
+                        hello@hostkeepdigital.co.uk
+                      </a>
+                    </p>
+                  )}
+                  {!user?.documents_submitted_at && (
+                    <Link to={createPageUrl("HostVerification")} className="mt-3 inline-block">
+                      <Button
+                        size="sm"
+                        className="bg-red-600 hover:bg-red-700 text-white"
+                      >
+                        Complete Identity Verification
+                      </Button>
+                    </Link>
+                  )}
+                </div>
               </div>
             </div>
-          ))}
+          )}
+
+          {/* Stripe Gate */}
+          {gatesIncomplete.includes("stripe") && (
+            <div className="p-4 rounded-lg bg-amber-50 border border-amber-200">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-amber-900 text-sm">Bank Account Connection</h3>
+                  <p className="text-sm text-amber-800 mt-1">
+                    You need to connect your bank account to receive payments from guests.
+                  </p>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const res = await base44.functions.invoke("createStripeConnectLink", {});
+                        if (res.data?.url) {
+                          window.location.href = res.data.url;
+                        }
+                      } catch (e) {
+                        console.error("Failed to get Stripe link:", e);
+                      }
+                    }}
+                    className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-lg transition-colors"
+                  >
+                    Connect Stripe Account
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Subscription Gate */}
+          {gatesIncomplete.includes("subscription") && (
+            <div className="p-4 rounded-lg bg-blue-50 border border-blue-200">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-blue-900 text-sm">Active Subscription</h3>
+                  <p className="text-sm text-blue-800 mt-1">
+                    You need an active subscription to publish your property.
+                  </p>
+                  <Link to={createPageUrl("Subscription")} className="mt-3 inline-block">
+                    <Button
+                      size="sm"
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      View Subscription Plans
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-end gap-2 mt-6 pt-4 border-t">
+          <Button variant="outline" onClick={onClose}>
+            Close
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

@@ -522,35 +522,35 @@ export default function EditProperty() {
   };
 
   const handlePublish = async () => {
-    // Check founding member gates first
-    const isApproved = foundingMember?.approval_status === "approved";
-    const subscriptionOk = hostSubscription?.status === "active";
-    const gatesPass = isApproved && subscriptionOk;
+     // Check founding member gates first
+     const isApproved = foundingMember?.approval_status === "approved";
+     const subscriptionActive = hostSubscription?.status === "active";
+     const gatesPass = isApproved && subscriptionActive;
 
-    if (!gatesPass) {
-      setShowGateModal(true);
-      return;
-    }
+     if (!gatesPass) {
+       setShowGateModal(true);
+       return;
+     }
 
-    // Check form validation errors
-    const errorsByTab = validateMandatoryFields();
-    const stripeOk = stripeStatus === "verified";
-    const hasTabErrors = Object.values(errorsByTab).some(e => e.length > 0);
-    const hasStripeBlocker = !stripeOk;
+     // Check form validation errors
+     const errorsByTab = validateMandatoryFields();
+     const stripeOk = stripeStatus === "verified";
+     const hasTabErrors = Object.values(errorsByTab).some(e => e.length > 0);
+     const hasStripeBlocker = !stripeOk;
 
-    if (hasTabErrors || hasStripeBlocker) {
-      setValidationErrors({ ...errorsByTab, _stripeOk: stripeOk, _subscriptionOk: true });
-      setShowValidationDialog(true);
-      return;
-    }
+     if (hasTabErrors || hasStripeBlocker) {
+       setValidationErrors({ ...errorsByTab, _stripeOk: stripeOk, _subscriptionOk: true });
+       setShowValidationDialog(true);
+       return;
+     }
 
-    try {
-      await updateMutation.mutateAsync({ status: "published" });
-      toast.success("Property published successfully!");
-    } catch {
-      toast.error("Failed to publish property");
-    }
-  };
+     try {
+       await updateMutation.mutateAsync({ status: "published" });
+       toast.success("Property published successfully!");
+     } catch {
+       toast.error("Failed to publish property");
+     }
+   };
 
   if (isLoading || !formData) {
     return (

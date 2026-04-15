@@ -74,7 +74,8 @@ export default function PropertyListingCard({
 
   // Gate check: approval approved + active subscription
   const isApproved = foundingMemberData?.approval_status === "approved";
-  const gatesPass = isApproved && hasActiveSubscription;
+  const subscriptionActive = hasActiveSubscription;
+  const gatesPass = isApproved && subscriptionActive;
 
   // Full publish requires gates + content criteria
   const canPublish = gatesPass && criteria[0] && criteria[1] && criteria[2] && criteria[3];
@@ -82,9 +83,9 @@ export default function PropertyListingCard({
   const handlePublishClick = () => {
     if (!gatesPass) {
       setShowGateModal(true);
-      return;
+    } else {
+      onStatusToggle();
     }
-    onStatusToggle();
   };
 
   const handleUnpublishClick = () => {
@@ -380,25 +381,26 @@ export default function PropertyListingCard({
         </Link>
 
         {/* Publish / Unpublish Button */}
-        {property.status === "published" ? (
-          <Button
-            onClick={handleUnpublishClick}
-            className="flex-1 bg-amber-500 hover:bg-amber-600 text-white rounded-xl h-11 text-sm font-semibold"
-          >
-            <EyeOff className="w-4 h-4 mr-1.5" /> Unpublish
-          </Button>
-        ) : (
-          <Button
-            onClick={handlePublishClick}
-            className={`flex-1 rounded-xl h-11 text-sm font-semibold ${
-              canPublish
-                ? "bg-teal-600 hover:bg-teal-700 text-white"
-                : "bg-gray-200 text-gray-400 cursor-not-allowed"
-            }`}
-          >
-            <Eye className="w-4 h-4 mr-1.5" /> Publish
-          </Button>
-        )}
+         {property.status === "published" ? (
+           <Button
+             onClick={handleUnpublishClick}
+             className="flex-1 bg-amber-500 hover:bg-amber-600 text-white rounded-xl h-11 text-sm font-semibold"
+           >
+             <EyeOff className="w-4 h-4 mr-1.5" /> Unpublish
+           </Button>
+         ) : (
+           <Button
+             onClick={handlePublishClick}
+             disabled={!gatesPass || !canPublish}
+             className={`flex-1 rounded-xl h-11 text-sm font-semibold ${
+               gatesPass && canPublish
+                 ? "bg-teal-600 hover:bg-teal-700 text-white"
+                 : "bg-gray-200 text-gray-400 cursor-not-allowed"
+             }`}
+           >
+             <Eye className="w-4 h-4 mr-1.5" /> Publish
+           </Button>
+         )}
 
         <DropdownMenu open={showActions} onOpenChange={setShowActions}>
           <DropdownMenuTrigger asChild>
