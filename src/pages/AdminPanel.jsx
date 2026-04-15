@@ -778,75 +778,127 @@ const handleDocBan = async (member) => {
 
   // ── UI HELPERS ────────────────────────────────────────────────────────────
 
-  const MemberTable = ({ members: rows, showActions = false, showBanAction = false, showDeleteButton = false }) => (
-    <div className="max-h-[220px] overflow-y-auto rounded-xl border border-gray-200 bg-white">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-gray-100 bg-gray-50">
-            {["Full Name","Email","Role","Postcode","Status","Signed Up", (showActions || showBanAction || showDeleteButton) ? "Actions" : null]
-              .filter(Boolean).map(h => <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">{h}</th>)}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-50">
-          {rows.map(m => (
-            <tr key={m.id} className="hover:bg-gray-50 transition-colors">
-              <td className="px-4 py-3 font-medium text-gray-900">{m.full_name}</td>
-              <td className="px-4 py-3 text-gray-500">{m.email}</td>
-              <td className="px-4 py-3">
-                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${m.role==="host" ? "bg-teal-50 text-teal-700" : "bg-purple-50 text-purple-700"}`}>
-                  {m.role==="host" ? "Host" : "Cleaner"}
-                </span>
-              </td>
-              <td className="px-4 py-3 text-gray-500 uppercase tracking-wide text-xs">{m.postcode}</td>
-              <td className="px-4 py-3">
-                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[m.approval_status] || "bg-gray-100 text-gray-600"}`}>
-                  {STATUS_LABELS[m.approval_status] || m.approval_status}
-                </span>
-              </td>
-              <td className="px-4 py-3 text-gray-400 text-xs">
-                {m.signup_timestamp ? new Date(m.signup_timestamp).toLocaleDateString("en-GB") : "—"}
-              </td>
-              {(showActions || showBanAction || (showDeleteButton && canDelete)) && (
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    {showActions && <>      
-                      <Button size="sm" className="h-7 px-3 text-xs bg-green-600 hover:bg-green-700 text-white" disabled={!!actionLoading[m.id]} onClick={() => handleApprove(m)}>
-                        {actionLoading[m.id]==="approve" ? "..." : <><Check className="w-3 h-3 mr-1"/>Approve</>}
-                      </Button>
-                      <Button size="sm" variant="outline" className="h-7 px-3 text-xs border-amber-300 text-amber-700 hover:bg-amber-50" disabled={!!actionLoading[m.id]} onClick={() => handleWaitlist(m)}>
-                        {actionLoading[m.id]==="waitlist" ? "..." : "Waitlist"}
-                      </Button>
-                      <Button size="sm" variant="outline" className="h-7 px-3 text-xs border-red-300 text-red-600 hover:bg-red-50" disabled={!!actionLoading[m.id]} onClick={() => handleReject(m)}>
-                        {actionLoading[m.id]==="reject" ? "..." : <><X className="w-3 h-3 mr-1"/>Reject</>}
-                      </Button>
-                    </>}
-                    {showBanAction && (
-                      <Button size="sm" variant="outline" className="h-7 px-3 text-xs border-red-800 text-red-800 hover:bg-red-50" disabled={!!actionLoading[m.id]} onClick={() => handleBan(m)}>
-                        {actionLoading[m.id]==="ban" ? "..." : <><Ban className="w-3 h-3 mr-1"/>Ban</>}
-                      </Button>
-                    )}
-                    {showDeleteButton && canDelete && (
-                      <Button size="sm" variant="outline" className="h-7 px-3 text-xs border-amber-400 text-amber-700 hover:bg-amber-50" disabled={!!actionLoading[m.id]} onClick={() => handleResetMember(m)}>
-                        {actionLoading[m.id]==="reset" ? "..." : "Reset"}
-                      </Button>
-                    )}
-                    {showDeleteButton && canDelete && (
-                      <Button size="sm" variant="outline" className="h-7 px-3 text-xs border-red-400 text-red-700 hover:bg-red-50" disabled={!!actionLoading[m.id]} onClick={() => handleDeleteMember(m)}>
-                        {actionLoading[m.id]==="delete" ? "..." : "Delete"}
-                      </Button>
-                    )}
-                  </div>
-                </td>
-              )}
+  const MemberTable = ({ members: rows, showActions = false, showBanAction = false, showDeleteButton = false }) => {
+    const [userGates, setUserGates] = useState({});
+
+    useEffect(() => {
+      const fetchUserGates = async () => {
+        const gatesData = {};
+        for (const m of rows) {
+          if (m.user_id && ["awaiting_document_verification", "documentation_failed_attempt_1", "documentation_failed_attempt_2"].includes(m.approval_status)) {
+            try {
+              const users = await base44.entities.User.filter({ id: m.user_id });
+              if (users?.[0]) {
+                gatesData[m.id] = users[0];
+              }
+            } catch (e) {
+              console.error(`Failed to fetch user gates for ${m.id}:`, e);
+            }
+          }
+        }
+        setUserGates(gatesData);
+      };
+      if (rows.length > 0) {
+        fetchUserGates();
+      }
+    }, [rows]);
+
+    const GateItem = ({ label, status, timeElapsed }) => (
+      <div className="flex items-center gap-2 text-xs py-1">
+        {status ? (
+          <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+        ) : (
+          <X className="w-4 h-4 text-red-500 flex-shrink-0" />
+        )}
+        <span className={status ? "text-gray-600" : "text-gray-500"}>{label}</span>
+        {!status && timeElapsed && <span className="text-gray-400 text-xs">({timeElapsed})</span>}
+      </div>
+    );
+
+    return (
+      <div className="max-h-[220px] overflow-y-auto rounded-xl border border-gray-200 bg-white">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-gray-100 bg-gray-50">
+              {["Full Name","Email","Role","Postcode","Status","Signed Up", (showActions || showBanAction || showDeleteButton) ? "Actions / Gates" : null]
+                .filter(Boolean).map(h => <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">{h}</th>)}
             </tr>
-          ))}
-          {rows.length === 0 && (
-            <tr><td colSpan={(showActions || showBanAction || showDeleteButton) ? 7 : 6} className="px-4 py-8 text-center text-gray-300 text-sm">No records in this section</td></tr>
-          )}
-        </tbody>
-      </table>
-    </div>
-  );
+          </thead>
+          <tbody className="divide-y divide-gray-50">
+            {rows.map(m => {
+              const isAwaitingOrBeyond = ["awaiting_document_verification", "documentation_failed_attempt_1", "documentation_failed_attempt_2"].includes(m.approval_status);
+              const userGate = userGates[m.id];
+              const timeElapsedDocs = userGate?.documents_submitted_at ? Math.floor((Date.now() - new Date(userGate.documents_submitted_at).getTime()) / (1000 * 60 * 60)) : null;
+
+              return (
+                <tr key={m.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-4 py-3 font-medium text-gray-900">{m.full_name}</td>
+                  <td className="px-4 py-3 text-gray-500">{m.email}</td>
+                  <td className="px-4 py-3">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${m.role==="host" ? "bg-teal-50 text-teal-700" : "bg-purple-50 text-purple-700"}`}>
+                      {m.role==="host" ? "Host" : "Cleaner"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-gray-500 uppercase tracking-wide text-xs">{m.postcode}</td>
+                  <td className="px-4 py-3">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[m.approval_status] || "bg-gray-100 text-gray-600"}`}>
+                      {STATUS_LABELS[m.approval_status] || m.approval_status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-gray-400 text-xs">
+                    {m.signup_timestamp ? new Date(m.signup_timestamp).toLocaleDateString("en-GB") : "—"}
+                  </td>
+                  {(showActions || showBanAction || (showDeleteButton && canDelete)) && (
+                    <td className="px-4 py-3">
+                      {isAwaitingOrBeyond && userGate ? (
+                        <div className="space-y-0.5 text-xs">
+                          <GateItem label="Documents" status={userGate.documents_verified} timeElapsed={timeElapsedDocs ? `${timeElapsedDocs}h` : null} />
+                          <GateItem label="Stripe" status={userGate.stripe_verified} />
+                          <GateItem label="Subscription" status={userGate.subscription_active} />
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {showActions && <>      
+                            <Button size="sm" className="h-7 px-3 text-xs bg-green-600 hover:bg-green-700 text-white" disabled={!!actionLoading[m.id]} onClick={() => handleApprove(m)}>
+                              {actionLoading[m.id]==="approve" ? "..." : <><Check className="w-3 h-3 mr-1"/>Approve</>}
+                            </Button>
+                            <Button size="sm" variant="outline" className="h-7 px-3 text-xs border-amber-300 text-amber-700 hover:bg-amber-50" disabled={!!actionLoading[m.id]} onClick={() => handleWaitlist(m)}>
+                              {actionLoading[m.id]==="waitlist" ? "..." : "Waitlist"}
+                            </Button>
+                            <Button size="sm" variant="outline" className="h-7 px-3 text-xs border-red-300 text-red-600 hover:bg-red-50" disabled={!!actionLoading[m.id]} onClick={() => handleReject(m)}>
+                              {actionLoading[m.id]==="reject" ? "..." : <><X className="w-3 h-3 mr-1"/>Reject</>}
+                            </Button>
+                          </>}
+                          {showBanAction && (
+                            <Button size="sm" variant="outline" className="h-7 px-3 text-xs border-red-800 text-red-800 hover:bg-red-50" disabled={!!actionLoading[m.id]} onClick={() => handleBan(m)}>
+                              {actionLoading[m.id]==="ban" ? "..." : <><Ban className="w-3 h-3 mr-1"/>Ban</>}
+                            </Button>
+                          )}
+                          {showDeleteButton && canDelete && (
+                            <Button size="sm" variant="outline" className="h-7 px-3 text-xs border-amber-400 text-amber-700 hover:bg-amber-50" disabled={!!actionLoading[m.id]} onClick={() => handleResetMember(m)}>
+                              {actionLoading[m.id]==="reset" ? "..." : "Reset"}
+                            </Button>
+                          )}
+                          {showDeleteButton && canDelete && (
+                            <Button size="sm" variant="outline" className="h-7 px-3 text-xs border-red-400 text-red-700 hover:bg-red-50" disabled={!!actionLoading[m.id]} onClick={() => handleDeleteMember(m)}>
+                              {actionLoading[m.id]==="delete" ? "..." : "Delete"}
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </td>
+                  )}
+                </tr>
+              );
+            })}
+            {rows.length === 0 && (
+              <tr><td colSpan={(showActions || showBanAction || showDeleteButton) ? 7 : 6} className="px-4 py-8 text-center text-gray-300 text-sm">No records in this section</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
 
   const Section = ({ title, count, children, accent="gray" }) => {
     const dots = { gray:"bg-gray-300", amber:"bg-amber-400", blue:"bg-blue-400", indigo:"bg-indigo-400", purple:"bg-purple-400", green:"bg-green-500", orange:"bg-orange-400", red:"bg-red-500", yellow:"bg-yellow-400", rose:"bg-rose-600" };
