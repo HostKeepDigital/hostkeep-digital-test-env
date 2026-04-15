@@ -25,6 +25,11 @@
       ],
       "default": "pending",
       "description": "Role approval status"
+    },
+    "messaging_disabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether messaging is disabled for this role"
     }
   },
   "required": [
