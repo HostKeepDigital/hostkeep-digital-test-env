@@ -30,7 +30,7 @@ import MobileSelect from "@/components/MobileSelect";
 import { Link, useNavigate } from "react-router-dom";
 import { getUserRoles, hasRole } from "@/components/utils/roleHelpers";
 import { useAuth } from "@/lib/AuthContext";
-import { api } from "@/utils/api";
+
 
 const PLAN_DISPLAY_NAMES = {
   host_starter_monthly: "Single Property Host",
@@ -231,7 +231,8 @@ export default function Subscription() {
         attempts++;
         try {
           // Re-validate session
-          const session = await api("/functions/checkSession", {});
+          const sessionRes = await base44.functions.invoke("checkSession", { session_token: localStorage.getItem("session_token") });
+          const session = sessionRes.data;
           if (!session?.authenticated || !session.user_id) {
             return;
           }
@@ -401,15 +402,15 @@ export default function Subscription() {
     setCheckoutLoading(planId);
     try {
       const session_token = localStorage.getItem("session_token");
-      const response = await api("/functions/createCheckoutSession", {
+      const res = await base44.functions.invoke("createCheckoutSession", {
         plan: planId,
         user_id: user.id,
         session_token,
       });
-      if (response?.url) {
-        window.location.href = response.url;
+      if (res.data?.url) {
+        window.location.href = res.data.url;
       } else {
-        toast.error(response?.error || "Failed to create checkout session");
+        toast.error(res.data?.error || "Failed to create checkout session");
       }
     } catch (error) {
       toast.error("Failed to start checkout. Please try again.");
