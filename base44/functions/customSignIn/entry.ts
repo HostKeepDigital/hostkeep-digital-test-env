@@ -1,4 +1,4 @@
-import { createClientFromRequest } from "npm:@base44/sdk@0.8.23";
+import { createClientFromRequest } from "npm:@base44/sdk@0.8.25";
 
 async function hashPassword(password, salt) {
   const encoder = new TextEncoder();

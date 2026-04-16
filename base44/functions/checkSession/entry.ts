@@ -1,4 +1,4 @@
-import { createClientFromRequest } from "npm:@base44/sdk@0.8.23";
+import { createClientFromRequest } from "npm:@base44/sdk@0.8.25";
 
 Deno.serve(async (req) => {
   try {
@@ -38,21 +38,14 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Load signup_postcode from User entity
+    // Load User record once for all profile fields
     let signup_postcode = null;
-    try {
-      if (session.user_id) {
-        const u = await serviceRole.entities.User.get(session.user_id);
-        if (u?.signup_postcode) signup_postcode = u.signup_postcode;
-      }
-    } catch (_) {}
-
-    // Load User record for profile fields
     let full_name = null;
     let is_founding_member = false;
     try {
       if (session.user_id) {
         const userRecord = await serviceRole.entities.User.get(session.user_id);
+        if (userRecord?.signup_postcode) signup_postcode = userRecord.signup_postcode;
         if (userRecord?.full_name) full_name = userRecord.full_name;
         is_founding_member = userRecord?.is_founding_member || false;
       }

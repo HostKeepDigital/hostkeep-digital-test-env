@@ -34,7 +34,7 @@ import MobileBottomNav from "@/components/MobileBottomNav";
 import NotificationBell from "@/components/NotificationBell";
 import { hasRole } from "@/components/utils/roleHelpers";
 import RoleSwitcher from "@/components/RoleSwitcher";
-import AppLockWrapper from "@/components/AppLockWrapper";
+
 import { useAuth } from "@/lib/AuthContext";
 
 // Pages without layout (guest facing / public)
@@ -109,6 +109,7 @@ export default function Layout({ children, currentPageName }) {
   // -----------------------------
   if (isHostPage) {
     const hostNavItems = [
+
       { name: "Dashboard", icon: Home, page: "HostDashboard" },
       { name: "Properties", icon: Building2, page: "HostProperties" },
       { name: "Bookings", icon: Calendar, page: "HostBookings" },
@@ -118,7 +119,6 @@ export default function Layout({ children, currentPageName }) {
     ];
 
     return (
-      <AppLockWrapper>
         <div className="min-h-screen bg-gray-50">
 
           {/* Desktop Top Header */}
@@ -261,7 +261,6 @@ export default function Layout({ children, currentPageName }) {
           </main>
           <MobileBottomNav userRoles={userRoles} />
         </div>
-      </AppLockWrapper>
     );
   }
 
@@ -269,7 +268,6 @@ export default function Layout({ children, currentPageName }) {
   // PUBLIC / GUEST LAYOUT
   // -----------------------------
   return (
-    <AppLockWrapper>
       <div className="flex flex-col min-h-screen bg-white">
         {/* Header */}
         <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
@@ -491,6 +489,5 @@ export default function Layout({ children, currentPageName }) {
           <Footer />
         </div>
       </div>
-    </AppLockWrapper>
   );
 }

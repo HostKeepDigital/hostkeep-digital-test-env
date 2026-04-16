@@ -7,7 +7,7 @@ import NavigationTracker from "@/lib/NavigationTracker";
 import { pagesConfig } from "./pages.config";
 import PageNotFound from "./lib/PageNotFound";
 import { AuthProvider, useAuth } from "@/lib/AuthContext";
-import UserNotRegisteredError from "@/components/UserNotRegisteredError";
+
 import { queryClientInstance } from "@/lib/query-client";
 
 import { AnimatePresence, motion } from "framer-motion";
@@ -202,7 +202,7 @@ function RequirePendingCheck({ children }) {
 
 // Guard: redirects unauthenticated users to Home for protected routes
 function RequireAuth({ children }) {
-  const { isAuthenticated, isLoadingAuth, isLoadingPublicSettings } = useAuth();
+  const { isAuthenticated, isLoadingAuth } = useAuth();
   const location = useLocation();
 
   const basePath =
@@ -210,7 +210,7 @@ function RequireAuth({ children }) {
   const isPublic =
     PUBLIC_ROUTES.has(basePath) || PUBLIC_ROUTES.has(location.pathname);
 
-  if (isLoadingPublicSettings || isLoadingAuth) return null;
+  if (isLoadingAuth) return null;
   if (isPublic) return children;
   if (!isAuthenticated) {
     return <Navigate to="/Home" replace />;
@@ -233,8 +233,6 @@ const LayoutWrapper = ({ children, currentPageName }) =>
 const AuthenticatedApp = () => {
   const {
     isLoadingAuth,
-    isLoadingPublicSettings,
-    authError,
   } = useAuth();
   const location = useLocation();
 
@@ -247,7 +245,7 @@ const AuthenticatedApp = () => {
   const isPublicRoute =
     PUBLIC_ROUTES.has(basePath) || PUBLIC_ROUTES.has(location.pathname);
 
-  if (!isPublicRoute && (isLoadingPublicSettings || isLoadingAuth)) {
+  if (!isPublicRoute && isLoadingAuth) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
@@ -259,13 +257,7 @@ const AuthenticatedApp = () => {
     location.pathname
   );
 
-  if (!isPublicRoute && !isLoginRoute && authError) {
-    if (authError.type === "user_not_registered") {
-      return <UserNotRegisteredError />;
-    } else if (authError.type === "auth_required") {
-      return <Navigate to="/Home" replace />;
-    }
-  }
+
 
   const pageVariants = {
     initial: { opacity: 0, x: 20 },
