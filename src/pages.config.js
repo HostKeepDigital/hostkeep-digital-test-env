@@ -78,7 +78,6 @@ import HostProperties from './pages/HostProperties';
 import Settings from './pages/Settings';
 import HostTerms from './pages/HostTerms';
 import HostVerification from './pages/HostVerification';
-import Index from './pages/Index';
 import LegalCentre from './pages/LegalCentre';
 import LockScreen from './pages/LockScreen';
 import MyBookings from './pages/MyBookings';
@@ -128,7 +127,6 @@ export const PAGES = {
     "Settings": Settings,
     "HostTerms": HostTerms,
     "HostVerification": HostVerification,
-    "Index": Index,
     "LegalCentre": LegalCentre,
     "LockScreen": LockScreen,
     "MyBookings": MyBookings,
