@@ -351,6 +351,159 @@ function DeleteAccountTester() {
   );
 }
 
+function GuestManager() {
+  const [guests, setGuests] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(null);
+  const [status, setStatus] = useState(null);
+
+  const loadGuests = async () => {
+    setLoading(true);
+    setStatus(null);
+    try {
+      // Get all guest UserRoles
+      const roles = await base44.entities.UserRole.filter({ role: 'guest' });
+      if (!roles.length) { setGuests([]); setLoading(false); return; }
+
+      // For each role, load User + UserCredentials in parallel
+      const enriched = await Promise.all(roles.map(async (r) => {
+        let user = null;
+        let cred = null;
+        try { user = await base44.entities.User.get(r.user_id); } catch (_) {}
+        if (user?.email) {
+          try {
+            const creds = await base44.entities.UserCredentials.filter({ email: user.email });
+            cred = creds?.[0] || null;
+          } catch (_) {}
+        }
+        return {
+          roleId: r.id,
+          userId: r.user_id,
+          email: user?.email || '(unknown)',
+          full_name: user?.full_name || `${user?.forename || ''} ${user?.surname || ''}`.trim() || '(no name)',
+          email_verified: cred?.email_verified === true,
+          created_date: r.created_date || user?.created_date || null,
+        };
+      }));
+
+      setGuests(enriched.sort((a, b) => new Date(b.created_date) - new Date(a.created_date)));
+    } catch (e) {
+      setStatus({ type: 'err', message: `❌ Failed to load guests: ${e.message}` });
+    }
+    setLoading(false);
+  };
+
+  const deleteGuest = async (guest) => {
+    if (!confirm(`Delete guest account for ${guest.email}? This cannot be undone.`)) return;
+    setDeleting(guest.userId);
+    try {
+      const email = guest.email.toLowerCase().trim();
+
+      // UserSession
+      const sessions = await base44.entities.UserSession.filter({ email });
+      for (const s of sessions) await base44.entities.UserSession.delete(s.id);
+
+      // UserCredentials
+      const creds = await base44.entities.UserCredentials.filter({ email });
+      for (const c of creds) await base44.entities.UserCredentials.delete(c.id);
+
+      // UserRole
+      if (guest.roleId) await base44.entities.UserRole.delete(guest.roleId);
+
+      // Guest entity
+      const guestRecords = await base44.entities.Guest.filter({ email });
+      for (const g of guestRecords) await base44.entities.Guest.delete(g.id);
+
+      // EmailVerificationCode
+      const codes = await base44.entities.EmailVerificationCode.filter({ email });
+      for (const c of codes) await base44.entities.EmailVerificationCode.delete(c.id);
+
+      // User record (last — it's the anchor)
+      if (guest.userId) {
+        try { await base44.entities.User.delete(guest.userId); } catch (_) {}
+      }
+
+      setGuests(prev => prev.filter(g => g.userId !== guest.userId));
+      setStatus({ type: 'ok', message: `🧹 Deleted ${email} and all associated records.` });
+    } catch (e) {
+      setStatus({ type: 'err', message: `❌ Delete failed for ${guest.email}: ${e.message}` });
+    }
+    setDeleting(null);
+  };
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-5">
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-1">Guest Account Manager</h2>
+          <p className="text-xs text-gray-400">View and delete guest accounts. Cleans up User, UserCredentials, UserRole, Guest, UserSession, and EmailVerificationCode records.</p>
+        </div>
+        <button
+          onClick={loadGuests}
+          disabled={loading}
+          className="px-4 py-2 text-sm bg-[#1E3A5F] text-white rounded-lg hover:bg-[#162d4a] disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
+        >
+          {loading ? (
+            <><svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Loading...</>
+          ) : 'Load Guests'}
+        </button>
+      </div>
+
+      {status && (
+        <p className={`text-sm rounded-lg px-4 py-3 ${status.type === 'ok' ? 'bg-gray-50 text-gray-700' : 'bg-red-50 text-red-500'}`}>
+          {status.message}
+        </p>
+      )}
+
+      {guests.length > 0 && (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-100">
+                <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide pb-2 pr-4">Name</th>
+                <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide pb-2 pr-4">Email</th>
+                <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide pb-2 pr-4">Verified</th>
+                <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide pb-2 pr-4">Registered</th>
+                <th className="pb-2"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {guests.map(g => (
+                <tr key={g.userId} className="hover:bg-gray-50">
+                  <td className="py-2.5 pr-4 text-gray-900 font-medium">{g.full_name}</td>
+                  <td className="py-2.5 pr-4 text-gray-600">{g.email}</td>
+                  <td className="py-2.5 pr-4">
+                    <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${g.email_verified ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                      {g.email_verified ? '✓ Verified' : '⏳ Pending'}
+                    </span>
+                  </td>
+                  <td className="py-2.5 pr-4 text-gray-400 text-xs">
+                    {g.created_date ? new Date(g.created_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                  </td>
+                  <td className="py-2.5 text-right">
+                    <button
+                      onClick={() => deleteGuest(g)}
+                      disabled={deleting === g.userId}
+                      className="px-3 py-1 text-xs border border-red-200 text-red-600 rounded-lg hover:bg-red-50 disabled:opacity-50"
+                    >
+                      {deleting === g.userId ? 'Deleting...' : 'Delete'}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="text-xs text-gray-400 mt-3">{guests.length} guest account{guests.length !== 1 ? 's' : ''} found.</p>
+        </div>
+      )}
+
+      {!loading && guests.length === 0 && status === null && (
+        <p className="text-xs text-gray-400 text-center py-4">Click "Load Guests" to fetch all guest accounts.</p>
+      )}
+    </div>
+  );
+}
+
 export default function DevToolsSection({ members, user }) {
   const [devTab, setDevTab] = useState("integration");
   return (
