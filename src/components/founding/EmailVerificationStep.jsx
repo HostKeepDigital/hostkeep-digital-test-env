@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Mail, AlertCircle, RefreshCw } from "lucide-react";
 
-export default function EmailVerificationStep({ email, onVerified, onBack, message, initialShowResend = false }) {
+export default function EmailVerificationStep({ email, onVerified, onBack, message, initialShowResend = false, isGuest = false }) {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [verifying, setVerifying] = useState(false);
@@ -43,12 +43,12 @@ export default function EmailVerificationStep({ email, onVerified, onBack, messa
     setVerifying(false);
 
     if (data?.valid) {
-      // 🔹 NEW: move member from "interest" to "pending" after successful verification
+    // Only update FoundingMember status for founding member flow
+    if (!isGuest) {
       try {
         const members = await base44.entities.FoundingMember.filter({
           email: email.toLowerCase().trim(),
         });
-
         if (members && members.length > 0) {
           const member = members[0];
           if (member.approval_status === "interest") {
@@ -60,6 +60,8 @@ export default function EmailVerificationStep({ email, onVerified, onBack, messa
       } catch (err) {
         console.error("Failed to update approval_status to pending after verification:", err);
       }
+    }
+    onVerified();
 
       onVerified();
     } else {
@@ -131,11 +133,9 @@ export default function EmailVerificationStep({ email, onVerified, onBack, messa
           className="w-full h-12 bg-teal-600 hover:bg-teal-700 text-white text-base font-semibold"
         >
           {verifying ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Verifying...
-            </>
+            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Verifying...</>
           ) : (
-            "Verify & Complete Application"
+            isGuest ? "Verify Email" : "Verify & Complete Application"
           )}
         </Button>
 
