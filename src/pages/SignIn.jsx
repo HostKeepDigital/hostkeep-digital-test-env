@@ -26,6 +26,11 @@ export default function SignIn() {
       const data = res.data;
 
       if (!data.success) {
+        // NEW — unverified guest
+        if (data.error === 'email_not_verified') {
+          window.location.href = `/verify-email?email=${encodeURIComponent(data.email)}&role=guest`;
+          return;
+        }
         const messages = {
           invalid_credentials: "Incorrect email or password.",
           missing_fields: "Please enter your email and password.",
