@@ -51,18 +51,23 @@ export default function GuestSignUp() {
     setLoading(true);
 
     try {
-      const response = await base44.functions.invoke('customSignUp', {
-        email,
-        password,
-        forename: forename.trim(),
-        middle_name: middleName.trim() || undefined,
-        surname: surname.trim(),
+      const res = await fetch('/api/apps/698eee4108bd1d9467648326/functions/customSignUp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email.toLowerCase().trim(),
+          password,
+          forename: forename.trim(),
+          middle_name: middleName.trim() || null,
+          surname: surname.trim(),
+        }),
       });
+      const data = await res.json();
 
-      if (response.data?.success) {
+      if (data.success) {
         window.location.href = `/verify-email?email=${encodeURIComponent(email.toLowerCase().trim())}`;
       } else {
-        setError(response.data?.message || 'Sign-up failed');
+        setError(data.message || 'Sign-up failed');
       }
     } catch (err) {
       setError(err.message || 'An error occurred during sign-up');
