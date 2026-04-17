@@ -104,6 +104,16 @@ Deno.serve(async (req) => {
       role = "guest";
     }
 
+    // Block unverified guest accounts from signing in
+    if (role === "guest" && !adminEmails.includes(normalisedEmail)) {
+      if (cred.email_verified !== true) {
+        return Response.json(
+          { success: false, error: "email_not_verified", email: normalisedEmail },
+          { status: 200 }
+        );
+      }
+    }
+
     const session_token = crypto.randomUUID();
 
     const isApp = is_app === true;
