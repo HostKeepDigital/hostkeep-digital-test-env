@@ -87,6 +87,16 @@ Deno.serve(async (req) => {
   // Delete the used code
   await base44.asServiceRole.entities.EmailVerificationCode.delete(record.id);
 
+  // Mark email as verified in UserCredentials
+  try {
+    const credentials = await base44.asServiceRole.entities.UserCredentials.filter({ email });
+    if (credentials && credentials.length > 0) {
+      await base44.asServiceRole.entities.UserCredentials.update(credentials[0].id, { email_verified: true });
+    }
+  } catch (err) {
+    console.error("Failed to update email_verified on UserCredentials:", err);
+  }
+
   // Send branded thank-you email
   const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
   try {
