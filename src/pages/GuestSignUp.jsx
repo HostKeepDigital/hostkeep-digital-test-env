@@ -65,7 +65,7 @@ export default function GuestSignUp() {
       const data = await res.json();
 
       if (data.success) {
-        window.location.href = `/verify-email?email=${encodeURIComponent(email.toLowerCase().trim())}`;
+        window.location.href = `/verify-email?email=${encodeURIComponent(email.toLowerCase().trim())}&role=guest`;
       } else {
         setError(data.message || 'Sign-up failed');
       }
