@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, AlertCircle, Loader2, Crown, Sparkles } from "lucide-react";
-import { format } from "date-fns";
 import { toast } from "sonner";
 
 export default function CleanerSubscriptionPay() {
@@ -25,37 +24,26 @@ export default function CleanerSubscriptionPay() {
     enabled: !!cleanerId,
   });
 
-  const subscriptionMutation = useMutation({
-    mutationFn: async () => {
-      if (!cleaner) throw new Error('Cleaner not found');
-      
-      // Calculate subscription end date (30 days for trial, 1 month for paid)
-      const startDate = new Date();
-      const endDate = new Date();
-      endDate.setDate(endDate.getDate() + 30);
-
-      // Update cleaner subscription
-      await base44.entities.Cleaner.update(cleaner.id, {
-        subscription_plan: plan || 'basic',
-        subscription_status: 'active',
-        subscription_expires: format(endDate, 'yyyy-MM-dd')
-      });
-    },
-    onSuccess: () => {
-      setPaymentComplete(true);
-      setTimeout(() => {
-        navigate('/cleaner-dashboard');
-      }, 3000);
-    },
-    onError: (error) => {
-      toast.error(error.message || 'Failed to activate subscription');
-      setProcessing(false);
-    }
-  });
+  const planKeyMap = {
+    basic: 'cleaner_solo_monthly',
+    pro: 'cleaner_pro_monthly',
+  };
 
   const handleActivateSubscription = async () => {
     setProcessing(true);
-    subscriptionMutation.mutate();
+    try {
+      const res = await base44.functions.invoke('createCheckoutSession', {
+        plan_key: planKeyMap[plan] || 'cleaner_solo_monthly',
+        success_url: `${window.location.origin}/CleanerDashboard?subscription=success`,
+        cancel_url: `${window.location.origin}/CleanerSubscriptionPay?id=${cleanerId}&plan=${plan}`,
+      });
+      const url = res.data?.url;
+      if (!url) throw new Error('No checkout URL returned');
+      window.location.href = url;
+    } catch (error) {
+      toast.error(error.message || 'Failed to start checkout');
+      setProcessing(false);
+    }
   };
 
   if (!cleanerId || !plan) {
@@ -157,7 +145,7 @@ export default function CleanerSubscriptionPay() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center"
         >
-          <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br from-${planInfo.color}-500 to-${planInfo.color}-600 flex items-center justify-center mx-auto mb-4`}>
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#2563EB] to-[#1d4ed8] flex items-center justify-center mx-auto mb-4">
             {plan === 'pro' ? (
               <Crown className="w-8 h-8 text-white" />
             ) : (
@@ -272,17 +260,17 @@ export default function CleanerSubscriptionPay() {
               <Button
                 onClick={handleActivateSubscription}
                 disabled={processing}
-                className={`w-full py-6 text-lg bg-${planInfo.color}-600 hover:bg-${planInfo.color}-700`}
+                className="w-full py-6 text-lg bg-[#2563EB] hover:bg-[#1d4ed8] text-white"
               >
                 {processing ? (
                   <>
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Activating...
+                    Redirecting to payment...
                   </>
                 ) : (
                   <>
                     <CheckCircle2 className="w-5 h-5 mr-2" />
-                    Activate {planInfo.name} Plan
+                    Subscribe to {planInfo.name} Plan
                   </>
                 )}
               </Button>
