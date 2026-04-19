@@ -24,6 +24,12 @@ export default function CleanerPricingManager({ cleaner, onUpdate }) {
 
   const [basePrice, setBasePrice] = useState(cleaner?.base_price || "");
   const [minimumCharge, setMinimumCharge] = useState(cleaner?.minimum_charge || "");
+  const [rateCard, setRateCard] = useState({
+    studio_1bed:  cleaner?.rate_card?.studio_1bed  ?? "",
+    two_bed:      cleaner?.rate_card?.two_bed      ?? "",
+    three_bed:    cleaner?.rate_card?.three_bed    ?? "",
+    four_bed_plus: cleaner?.rate_card?.four_bed_plus ?? "",
+  });
 
   const handleServiceToggle = (service) => {
     setPricing(prev => ({
@@ -47,21 +53,23 @@ export default function CleanerPricingManager({ cleaner, onUpdate }) {
   };
 
   const handleSave = async () => {
-    if (!basePrice) {
-      toast.error('Please enter a base price');
-      return;
-    }
-
     setLoading(true);
     try {
+      const updatedRateCard = {
+        studio_1bed:   parseFloat(rateCard.studio_1bed)   || 0,
+        two_bed:       parseFloat(rateCard.two_bed)       || 0,
+        three_bed:     parseFloat(rateCard.three_bed)     || 0,
+        four_bed_plus: parseFloat(rateCard.four_bed_plus) || 0,
+      };
       await base44.entities.Cleaner.update(cleaner.id, {
-        base_price: parseFloat(basePrice),
+        base_price: parseFloat(basePrice) || 0,
         minimum_charge: parseFloat(minimumCharge) || 0,
+        rate_card: updatedRateCard,
         services: pricing
       });
       
       toast.success('Pricing updated successfully');
-      if (onUpdate) onUpdate({ ...cleaner, base_price: basePrice, services: pricing });
+      if (onUpdate) onUpdate({ ...cleaner, base_price: basePrice, rate_card: updatedRateCard, services: pricing });
     } catch (error) {
       toast.error('Failed to update pricing');
     } finally {
@@ -88,48 +96,58 @@ export default function CleanerPricingManager({ cleaner, onUpdate }) {
         )}
       </div>
 
-      {/* Base Pricing */}
+      {/* Rate Card */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Base Pricing</CardTitle>
-          <CardDescription>Your standard cleaning rate for a typical holiday home turnover</CardDescription>
+          <CardTitle className="text-lg">Rate Card</CardTitle>
+          <CardDescription>Your fixed cleaning rate by property size</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="base_price">Base Price (£) *</Label>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-gray-600">£</span>
-                <Input
-                  id="base_price"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={basePrice}
-                  onChange={(e) => setBasePrice(e.target.value)}
-                  placeholder="75.00"
-                  className="flex-1"
-                />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { key: "studio_1bed",   label: "Studio / 1 bed", placeholder: "65.00" },
+              { key: "two_bed",       label: "2 bed",          placeholder: "80.00" },
+              { key: "three_bed",     label: "3 bed",          placeholder: "100.00" },
+              { key: "four_bed_plus", label: "4 bed+",         placeholder: "125.00" },
+            ].map(({ key, label, placeholder }) => (
+              <div key={key}>
+                <Label htmlFor={key}>{label}</Label>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <span className="text-gray-500">£</span>
+                  <Input
+                    id={key}
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={rateCard[key]}
+                    onChange={(e) => setRateCard(prev => ({ ...prev, [key]: e.target.value }))}
+                    placeholder={placeholder}
+                    className="flex-1"
+                  />
+                </div>
               </div>
-            </div>
+            ))}
+          </div>
+          <p className="text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
+            💡 These rates are shown to hosts before they confirm a clean. Mileage is added automatically on top.
+          </p>
 
-            <div>
-              <Label htmlFor="minimum_charge">Minimum Job Charge (£)</Label>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-gray-600">£</span>
-                <Input
-                  id="minimum_charge"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={minimumCharge}
-                  onChange={(e) => setMinimumCharge(e.target.value)}
-                  placeholder="50.00"
-                  className="flex-1"
-                />
-              </div>
-              <p className="text-xs text-gray-500 mt-1">Lowest price you'll accept for any job</p>
+          <div>
+            <Label htmlFor="minimum_charge">Minimum Job Charge (£)</Label>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-gray-600">£</span>
+              <Input
+                id="minimum_charge"
+                type="number"
+                step="0.01"
+                min="0"
+                value={minimumCharge}
+                onChange={(e) => setMinimumCharge(e.target.value)}
+                placeholder="50.00"
+                className="flex-1 max-w-xs"
+              />
             </div>
+            <p className="text-xs text-gray-500 mt-1">Lowest price you'll accept for any job</p>
           </div>
         </CardContent>
       </Card>
