@@ -19,6 +19,7 @@ import CleanerApprovalBanner, { useCleanerGatesComplete } from "@/components/cle
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import CompleteJobModal from "@/components/cleaner-dashboard/CompleteJobModal";
 import ProposeRateModal from "@/components/cleaner-dashboard/ProposeRateModal";
+import ReviewForm from "@/components/reviews/ReviewForm";
 import { format, isToday, parseISO } from "date-fns";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -228,6 +229,7 @@ export default function CleanerDashboard() {
   const queryClient = useQueryClient();
   const [completeModalJob, setCompleteModalJob] = useState(null);
   const [proposeRateJob, setProposeRateJob] = useState(null);
+  const [reviewHostJob, setReviewHostJob] = useState(null);
   const [acceptingId, setAcceptingId] = useState(null);
   const [decliningId, setDecliningId] = useState(null);
   const [startingId, setStartingId] = useState(null);
@@ -244,6 +246,12 @@ export default function CleanerDashboard() {
       return profiles[0] || null;
     },
     enabled: !!user?.id && isAuthenticated,
+  });
+
+  const { data: hostReviews = [] } = useQuery({
+    queryKey: ["cleaner-host-reviews", cleanerProfile?.id],
+    queryFn: () => base44.entities.Review.filter({ reviewer_id: user?.id, review_type: "cleaner_to_host" }),
+    enabled: !!cleanerProfile?.id && !!user?.id,
   });
 
   // Single query for all jobs — filter client-side
@@ -464,6 +472,7 @@ export default function CleanerDashboard() {
                         <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-6 py-3">Property</th>
                         <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-6 py-3">Price</th>
                         <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-6 py-3">Status</th>
+                        <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wide px-6 py-3">Review</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -481,7 +490,21 @@ export default function CleanerDashboard() {
                           <td className="px-6 py-3">
                             <Badge className="bg-green-100 text-green-700 border-green-200">Completed</Badge>
                           </td>
-                        </tr>
+                          <td className="px-6 py-3">
+                            {hostReviews.some((r) => r.job_id === job.id) ? (
+                              <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-500 border border-gray-200">
+                                Reviewed ✓
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => setReviewHostJob(job)}
+                                className="text-xs font-medium text-[#0d9488] hover:text-[#0f766e] hover:underline"
+                              >
+                                Review Host
+                              </button>
+                            )}
+                          </td>
+                          </tr>
                       ))}
                     </tbody>
                   </table>
@@ -516,6 +539,18 @@ export default function CleanerDashboard() {
           job={proposeRateJob}
           cleanerId={cleanerProfile?.id}
           onClose={() => setProposeRateJob(null)}
+        />
+      )}
+
+      {reviewHostJob && (
+        <ReviewForm
+          open={!!reviewHostJob}
+          onOpenChange={(open) => !open && setReviewHostJob(null)}
+          job={reviewHostJob}
+          reviewType="cleaner_to_host"
+          reviewerId={user?.id}
+          reviewerName={user?.full_name || cleanerProfile?.business_name}
+          endDate={reviewHostJob.completed_at}
         />
       )}
     </div>
