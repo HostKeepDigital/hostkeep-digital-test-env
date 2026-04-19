@@ -22,6 +22,37 @@ Deno.serve(async (req) => {
       });
     };
 
+    if (eventType === "create") {
+      // Auto-select rate from cleaner's rate card based on property bedroom count
+      if (job.cleaner_id && job.property_id) {
+        try {
+          const [cleanerRecords, propertyRecords] = await Promise.all([
+            serviceRole.entities.Cleaner.filter({ id: job.cleaner_id }),
+            serviceRole.entities.Property.filter({ id: job.property_id }),
+          ]);
+          const cleaner = cleanerRecords?.[0];
+          const property = propertyRecords?.[0];
+
+          if (cleaner && property) {
+            const bedrooms = property.bedrooms ?? 0;
+            const rc = cleaner.rate_card || {};
+            let tierPrice = 0;
+            if (bedrooms <= 1)      tierPrice = rc.studio_1bed   || 0;
+            else if (bedrooms === 2) tierPrice = rc.two_bed       || 0;
+            else if (bedrooms === 3) tierPrice = rc.three_bed     || 0;
+            else                     tierPrice = rc.four_bed_plus || 0;
+
+            const resolvedPrice = tierPrice > 0 ? tierPrice : (cleaner.base_price || 0);
+            if (resolvedPrice > 0) {
+              await serviceRole.entities.CleaningJob.update(job.id, { cleaner_price: resolvedPrice });
+            }
+          }
+        } catch (e) {
+          console.error("Rate card lookup failed:", e);
+        }
+      }
+    }
+
     if (eventType === "create" && job.cleaner_user_id) {
       await notify(
         job.cleaner_user_id,
