@@ -126,16 +126,34 @@ export default function CleanerCard({ cleaner, delay = 0 }) {
           )}
 
           {/* Price + CTA — pushed to bottom */}
-          <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100">
-            <div>
-              <span className="text-xl font-bold text-gray-900">
-                £{cleaner.base_price}
-              </span>
-              <p className="text-xs text-gray-500 leading-none mt-0.5">
-                from £{cleaner.base_price} per clean
-              </p>
+          <div className="flex items-start justify-between mt-auto pt-3 border-t border-gray-100 gap-3">
+            <div className="min-w-0">
+              {cleaner.rate_card && Object.values(cleaner.rate_card).some(v => v > 0) ? (
+                <>
+                  <div className="space-y-0.5">
+                    {[
+                      { key: "studio_1bed",   label: "Studio/1 bed" },
+                      { key: "two_bed",       label: "2 bed" },
+                      { key: "three_bed",     label: "3 bed" },
+                      { key: "four_bed_plus", label: "4 bed+" },
+                    ]
+                      .filter(({ key }) => (cleaner.rate_card[key] || 0) > 0)
+                      .map(({ key, label }) => (
+                        <p key={key} className="text-xs text-gray-700 leading-snug">
+                          {label} — <span className="font-semibold">£{cleaner.rate_card[key]}</span>
+                        </p>
+                      ))}
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">+ mileage at 45p/mile</p>
+                </>
+              ) : (
+                <>
+                  <span className="text-xl font-bold text-gray-900">£{cleaner.base_price}</span>
+                  <p className="text-xs text-gray-500 leading-none mt-0.5">from £{cleaner.base_price} per clean</p>
+                </>
+              )}
             </div>
-            <Link to={createPageUrl("CleanerProfile") + "?id=" + cleaner.id}>
+            <Link to={createPageUrl("CleanerProfile") + "?id=" + cleaner.id} className="flex-shrink-0">
               <Button className="bg-[#2563EB] hover:bg-blue-700 text-white text-sm h-9 px-4">
                 View Profile
               </Button>
