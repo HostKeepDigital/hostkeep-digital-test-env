@@ -19,6 +19,8 @@ import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import CleanerApprovalBanner, { useCleanerGatesComplete } from "@/components/cleaners/CleanerApprovalBanner";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function CleanerDashboard() {
   const { user, isAuthenticated } = useAuth();
@@ -69,6 +71,8 @@ export default function CleanerDashboard() {
       }),
     enabled: !!cleanerProfile?.id,
   });
+
+  const gatesComplete = useCleanerGatesComplete(cleanerProfile, user);
 
   const totalEarnings = completedJobs.reduce(
     (sum, job) => sum + (job.cleaner_price || 0),
@@ -149,28 +153,7 @@ export default function CleanerDashboard() {
             )}
           </div>
 
-          {cleanerProfile.subscription_status !== "active" && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <AlertCircle className="w-5 h-5 text-amber-600" />
-                  <div>
-                    <div className="font-medium text-amber-900">
-                      Subscription Required
-                    </div>
-                    <div className="text-sm text-amber-700">
-                      Subscribe to start receiving job requests
-                    </div>
-                  </div>
-                </div>
-                <Link to={createPageUrl("Subscription") + "?tab=cleaner"}>
-                  <Button className="bg-amber-600 hover:bg-amber-700">
-                    View Plans
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          )}
+          <CleanerApprovalBanner cleanerProfile={cleanerProfile} user={user} />
         </motion.div>
 
         {/* Stats */}
@@ -333,12 +316,26 @@ export default function CleanerDashboard() {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        className="bg-green-600 hover:bg-green-700"
-                      >
-                        Accept
-                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span>
+                              <Button
+                                size="sm"
+                                className="bg-green-600 hover:bg-green-700"
+                                disabled={!gatesComplete}
+                              >
+                                Accept
+                              </Button>
+                            </span>
+                          </TooltipTrigger>
+                          {!gatesComplete && (
+                            <TooltipContent>
+                              Complete your profile setup first
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TooltipProvider>
                       <Button size="sm" variant="outline">
                         Decline
                       </Button>
