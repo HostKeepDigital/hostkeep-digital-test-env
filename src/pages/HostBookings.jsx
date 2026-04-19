@@ -50,6 +50,7 @@ export default function HostBookings() {
     booking: null,
   });
   const [reviewBooking, setReviewBooking] = useState(null);
+  const [reviewCleanerJob, setReviewCleanerJob] = useState(null);
   const [damageClaimBooking, setDamageClaimBooking] = useState(null);
   const queryClient = useQueryClient();
 
@@ -68,7 +69,7 @@ export default function HostBookings() {
     enabled: !!user?.id,
   });
 
-  // Load reviews
+  // Load reviews (guest)
   const { data: existingReviews = [] } = useQuery({
     queryKey: ["host-reviews", user?.id],
     queryFn: () =>
@@ -76,6 +77,24 @@ export default function HostBookings() {
         reviewer_id: user?.id,
         review_type: "host_to_guest",
       }),
+    enabled: !!user?.id,
+  });
+
+  // Load cleaner reviews
+  const { data: cleanerReviews = [] } = useQuery({
+    queryKey: ["host-cleaner-reviews", user?.id],
+    queryFn: () =>
+      base44.entities.Review.filter({
+        reviewer_id: user?.id,
+        review_type: "host_to_cleaner",
+      }),
+    enabled: !!user?.id,
+  });
+
+  // Load completed cleaning jobs for all bookings
+  const { data: cleaningJobs = [] } = useQuery({
+    queryKey: ["host-cleaning-jobs", user?.id],
+    queryFn: () => base44.entities.CleaningJob.filter({ host_id: user?.id, status: "completed" }),
     enabled: !!user?.id,
   });
 
@@ -106,6 +125,12 @@ export default function HostBookings() {
 
   const hasReviewedGuest = (bookingId) =>
     existingReviews.some((r) => r.booking_id === bookingId);
+
+  const hasReviewedCleaner = (jobId) =>
+    cleanerReviews.some((r) => r.job_id === jobId);
+
+  const completedJobsForBooking = (bookingId) =>
+    cleaningJobs.filter((j) => j.booking_id === bookingId);
 
   const today = new Date();
 
@@ -476,15 +501,35 @@ export default function HostBookings() {
                         </div>
                       )}
 
-                      <div className="flex items-center gap-2 pt-2">
+                      <div className="flex flex-wrap items-center gap-2 pt-2">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => setReviewBooking(booking)}
                           disabled={hasReviewedGuest(booking.id)}
                         >
-                          {hasReviewedGuest(booking.id) ? "Reviewed" : "Leave a Review"}
+                          {hasReviewedGuest(booking.id) ? "Reviewed ✓" : "Review Guest"}
                         </Button>
+
+                        {completedJobsForBooking(booking.id).map((job) =>
+                          hasReviewedCleaner(job.id) ? (
+                            <span
+                              key={job.id}
+                              className="inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium bg-gray-100 text-gray-500 border border-gray-200"
+                            >
+                              Cleaner Reviewed ✓
+                            </span>
+                          ) : (
+                            <Button
+                              key={job.id}
+                              size="sm"
+                              onClick={() => setReviewCleanerJob(job)}
+                              className="bg-[#0d9488] hover:bg-[#0f766e] text-white"
+                            >
+                              Review Cleaner
+                            </Button>
+                          )
+                        )}
                       </div>
                     </div>
                   </div>
@@ -521,6 +566,19 @@ export default function HostBookings() {
             reviewType="host_to_guest"
             reviewerName={user?.full_name}
             reviewerId={user?.id}
+          />
+        )}
+
+        {/* REVIEW CLEANER DIALOG */}
+        {reviewCleanerJob && (
+          <ReviewForm
+            open={!!reviewCleanerJob}
+            onOpenChange={(open) => !open && setReviewCleanerJob(null)}
+            job={reviewCleanerJob}
+            reviewType="host_to_cleaner"
+            reviewerName={user?.full_name}
+            reviewerId={user?.id}
+            endDate={reviewCleanerJob.completed_at}
           />
         )}
 
