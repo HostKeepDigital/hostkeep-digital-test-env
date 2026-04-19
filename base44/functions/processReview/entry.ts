@@ -118,7 +118,44 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ── 4. Flag for admin if performance concern ────────────────────
+    // ── 4. Sync host_to_cleaner review → CleanerReview + recalc stats ─
+    if (review.review_type === "host_to_cleaner") {
+      try {
+        const cleaners = await sr.entities.Cleaner.filter({ user_id: review.reviewee_id });
+        if (cleaners.length > 0) {
+          const cleanerRecord = cleaners[0];
+
+          await sr.entities.CleanerReview.create({
+            job_id: review.job_id,
+            cleaner_id: cleanerRecord.id,
+            host_id: review.reviewer_id,
+            property_id: review.property_id,
+            rating: review.rating,
+            quality_rating: review.quality_rating,
+            reliability_rating: review.reliability_rating,
+            communication_rating: review.communication_rating,
+            comment: review.comment,
+            visible: review.public_visible,
+          });
+
+          // Recalculate cleaner stats
+          const allCleanerReviews = await sr.entities.CleanerReview.filter({ cleaner_id: cleanerRecord.id });
+          const totalReviews = allCleanerReviews.length;
+          const avgRating = totalReviews > 0
+            ? allCleanerReviews.reduce((sum, r) => sum + (r.rating || 0), 0) / totalReviews
+            : 0;
+
+          await sr.entities.Cleaner.update(cleanerRecord.id, {
+            average_rating: Math.round(avgRating * 10) / 10,
+            total_reviews: totalReviews,
+          });
+        }
+      } catch (syncErr) {
+        console.error("CleanerReview sync error:", syncErr);
+      }
+    }
+
+    // ── 5. Flag for admin if performance concern ────────────────────
     if (performanceFlag && revieweeId) {
       // Create an admin notification
       const admins = await sr.entities.User.filter({ role: "admin" });
