@@ -64,6 +64,32 @@
       "type": "number",
       "description": "Minimum job charge"
     },
+    "rate_card": {
+      "type": "object",
+      "description": "Fixed prices by property size",
+      "properties": {
+        "studio_1bed": {
+          "type": "number",
+          "default": 0,
+          "description": "Fixed price for studio or 1-bedroom property"
+        },
+        "two_bed": {
+          "type": "number",
+          "default": 0,
+          "description": "Fixed price for 2-bedroom property"
+        },
+        "three_bed": {
+          "type": "number",
+          "default": 0,
+          "description": "Fixed price for 3-bedroom property"
+        },
+        "four_bed_plus": {
+          "type": "number",
+          "default": 0,
+          "description": "Fixed price for 4+ bedroom property"
+        }
+      }
+    },
     "services": {
       "type": "object",
       "properties": {
