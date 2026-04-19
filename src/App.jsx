@@ -27,6 +27,7 @@ import ResetPassword from "./pages/ResetPassword";
 import FoundingHost from "./pages/FoundingHost";
 import FoundingCleaner from "./pages/FoundingCleaner";
 import GuestSignUp from "./pages/GuestSignUp";
+import CleanerPayoutHistory from "./pages/CleanerPayoutHistory";
 
 // Pages accessible without authentication
 const PUBLIC_ROUTES = new Set([
@@ -347,6 +348,16 @@ const AuthenticatedApp = () => {
                   <Slide><AdminPanel /></Slide>
                 </LayoutWrapper>
               </RequireAdmin>
+            }
+          />
+          <Route
+            path="/CleanerPayoutHistory"
+            element={
+              <RequireAuth>
+                <LayoutWrapper currentPageName="CleanerPayoutHistory">
+                  <Slide><CleanerPayoutHistory /></Slide>
+                </LayoutWrapper>
+              </RequireAuth>
             }
           />
           <Route

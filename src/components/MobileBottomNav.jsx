@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Compass, CalendarDays, MessageSquare, User, Home, Building2, BookOpen } from "lucide-react";
+import { Compass, CalendarDays, MessageSquare, User, Home, Building2, BookOpen, PoundSterling } from "lucide-react";
 import { hasRole } from "@/components/utils/roleHelpers";
 
 // Root path for each guest tab — used to determine "active" state
@@ -31,6 +31,19 @@ const HOST_NAV = [
   { label: "Messages",    icon: MessageSquare, root: HOST_ROOT["Messages"]    },
 ];
 
+const CLEANER_ROOT = {
+  Dashboard: createPageUrl("CleanerDashboard"),
+  Messages:  createPageUrl("CleanerMessages"),
+  Pricing:   createPageUrl("CleanerPricing"),
+  Earnings:  createPageUrl("CleanerPayoutHistory"),
+};
+const CLEANER_NAV = [
+  { label: "Dashboard", icon: Home,           root: CLEANER_ROOT["Dashboard"] },
+  { label: "Messages",  icon: MessageSquare,  root: CLEANER_ROOT["Messages"]  },
+  { label: "Pricing",   icon: PoundSterling,  root: CLEANER_ROOT["Pricing"]   },
+  { label: "Earnings",  icon: CalendarDays,   root: CLEANER_ROOT["Earnings"]  },
+];
+
 const TAB_STACK_KEY = "tabStack";
 
 function getTabStacks() {
@@ -59,10 +72,11 @@ export default function MobileBottomNav({ userRoles = [] }) {
   const location = useLocation();
   const navigate = useNavigate();
   const isHost = hasRole(userRoles, "host");
-  const navItems = isHost ? HOST_NAV : GUEST_NAV;
+  const isCleaner = hasRole(userRoles, "cleaner");
+  const navItems = isHost ? HOST_NAV : isCleaner ? CLEANER_NAV : GUEST_NAV;
 
   // Track current path into the tab stack so we can restore it
-  const allRoots = [...Object.values(GUEST_ROOT), ...Object.values(HOST_ROOT)];
+  const allRoots = [...Object.values(GUEST_ROOT), ...Object.values(HOST_ROOT), ...Object.values(CLEANER_ROOT)];
   const currentRoot = allRoots.find(
     (r) => location.pathname === r || location.pathname.startsWith(r + "/")
   );

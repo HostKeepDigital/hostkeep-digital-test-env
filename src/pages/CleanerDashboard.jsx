@@ -358,11 +358,12 @@ export default function CleanerDashboard() {
         </div>
 
         {/* Quick nav */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           {[
             { label: "Messages", icon: MessageSquare, page: "CleanerMessages", color: "text-indigo-600" },
             { label: "Pricing", icon: PoundSterling, page: "CleanerPricing", color: "text-green-600" },
             { label: "My Profile", icon: Star, page: `CleanerProfile?id=${cleanerProfile.id}`, color: "text-amber-500" },
+            { label: "Earnings", icon: PoundSterling, page: "CleanerPayoutHistory", color: "text-blue-600" },
             { label: "Marketplace", icon: Sparkles, page: "CleanerMarketplace", color: "text-teal-600" },
           ].map(({ label, icon: Icon, page, color }) => (
             <Link key={page} to={`/${page}`}>
