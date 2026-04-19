@@ -7,6 +7,8 @@
 
 import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import { R1_GuestReviewsHost, R2_HostReviewsGuest, R3_HostReviewsCleaner, R4_CleanerReviewsHost, R5_BlindReveal } from '@/components/devtools/ReviewTests';
+import MobileChecklist from '@/components/devtools/MobileChecklist';
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 const APP_ID      = '698eee4108bd1d9467648326';
@@ -1231,383 +1233,7 @@ function N2_AllNotificationTypes({ user }) {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// REVIEW TESTS
-// ═══════════════════════════════════════════════════════════════════════════════
-
-// Shared helper: lookup devtest user IDs
-async function getReviewTestUsers() {
-  const [guestUsers, hostUsers, cleanerUsers] = await Promise.all([
-    base44.entities.User.filter({ email: GUEST_EMAIL }),
-    base44.entities.User.filter({ email: HOST_EMAIL }),
-    base44.entities.User.filter({ email: CLEANER_EMAIL }),
-  ]);
-  return {
-    guestUser: guestUsers[0] || null,
-    hostUser: hostUsers[0] || null,
-    cleanerUser: cleanerUsers[0] || null,
-  };
-}
-
-function R1_GuestReviewsHost() {
-  const [loading, setLoading] = useState(false);
-  const [cleaning, setCleaning] = useState(false);
-  const [result, setResult] = useState(null);
-  const [reviewId, setReviewId] = useState(null);
-
-  const run = async () => {
-    setLoading(true); setResult(null);
-    const checks = []; let error = null;
-    try {
-      const { guestUser, hostUser } = await getReviewTestUsers();
-      checks.push({ label: 'devtest-guest User found', pass: !!guestUser, detail: !guestUser ? 'Run H1 first' : null });
-      checks.push({ label: 'devtest-host User found', pass: !!hostUser, detail: !hostUser ? 'Run H4–H6 first' : null });
-      if (!guestUser || !hostUser) { setLoading(false); setResult({ checks, error }); return; }
-
-      const blindUntil = new Date(); blindUntil.setDate(blindUntil.getDate() + 7);
-      const review = await base44.entities.Review.create({
-        review_type: 'guest_to_host',
-        review_category: 'booking',
-        booking_id: 'devtest-review-booking',
-        reviewer_id: guestUser.id,
-        reviewer_name: guestUser.full_name || 'Dev Guest',
-        reviewee_id: hostUser.id,
-        rating: 5,
-        comment: 'DEV TEST review',
-        blind_until: blindUntil.toISOString(),
-      });
-      setReviewId(review.id);
-      checks.push({ label: 'Review record created', pass: !!review.id, detail: !review.id ? 'Create failed' : null });
-
-      await wait(3000);
-
-      const updated = await base44.entities.Review.get(review.id);
-      checks.push({ label: 'public_visible set by processReview automation', pass: updated.public_visible === true, detail: `Got: ${updated.public_visible} — expected true for 5-star review` });
-
-      const notifs = await base44.entities.Notification.filter({ user_id: hostUser.id });
-      const reviewNotif = notifs.find(n => n.type === 'general' && (n.body?.includes('review') || n.title?.includes('review')));
-      checks.push({ label: 'Reviewee (host) received a general notification', pass: !!reviewNotif, detail: !reviewNotif ? 'No general notification found for host — processReview may not have fired' : null });
-
-    } catch (e) { error = e?.message || String(e); }
-    setLoading(false); setResult({ checks, error });
-  };
-
-  const clean = async () => {
-    setCleaning(true);
-    if (reviewId) await base44.entities.Review.delete(reviewId).catch(() => {});
-    const { hostUser } = await getReviewTestUsers().catch(() => ({}));
-    if (hostUser) {
-      const notifs = await base44.entities.Notification.filter({ user_id: hostUser.id }).catch(() => []);
-      for (const n of notifs) if (n.title?.includes('DEV TEST') || n.body?.includes('DEV TEST')) await base44.entities.Notification.delete(n.id).catch(() => {});
-    }
-    setReviewId(null); setResult(null); setCleaning(false);
-  };
-
-  return (
-    <TestCard number="R1" title="Guest Reviews Host" description="Creates a 5-star guest→host review and verifies processReview sets public_visible and notifies the host" badge="processReview">
-      <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">⚠️ Run H1 + H4–H6 first. Takes ~3 seconds.</p>
-      <div className="flex gap-2 flex-wrap">
-        <RunButton onClick={run} loading={loading} />
-        <CleanButton onClick={clean} loading={cleaning} />
-      </div>
-      <ResultBlock testName="R1 Guest Reviews Host" {...(result || {})} />
-    </TestCard>
-  );
-}
-
-function R2_HostReviewsGuest() {
-  const [loading, setLoading] = useState(false);
-  const [cleaning, setCleaning] = useState(false);
-  const [result, setResult] = useState(null);
-  const [reviewId, setReviewId] = useState(null);
-
-  const run = async () => {
-    setLoading(true); setResult(null);
-    const checks = []; let error = null;
-    try {
-      const { guestUser, hostUser } = await getReviewTestUsers();
-      checks.push({ label: 'devtest-host User found', pass: !!hostUser, detail: !hostUser ? 'Run H4–H6 first' : null });
-      checks.push({ label: 'devtest-guest User found', pass: !!guestUser, detail: !guestUser ? 'Run H1 first' : null });
-      if (!guestUser || !hostUser) { setLoading(false); setResult({ checks, error }); return; }
-
-      const blindUntil = new Date(); blindUntil.setDate(blindUntil.getDate() + 7);
-      const review = await base44.entities.Review.create({
-        review_type: 'host_to_guest',
-        review_category: 'booking',
-        booking_id: 'devtest-review-booking-2',
-        reviewer_id: hostUser.id,
-        reviewer_name: hostUser.full_name || 'Dev Host',
-        reviewee_id: guestUser.id,
-        rating: 5,
-        comment: 'DEV TEST review',
-        blind_until: blindUntil.toISOString(),
-      });
-      setReviewId(review.id);
-      checks.push({ label: 'Review record created', pass: !!review.id, detail: !review.id ? 'Create failed' : null });
-
-      await wait(3000);
-
-      const updated = await base44.entities.Review.get(review.id);
-      checks.push({ label: 'public_visible set by processReview automation', pass: updated.public_visible === true, detail: `Got: ${updated.public_visible}` });
-
-      const notifs = await base44.entities.Notification.filter({ user_id: guestUser.id });
-      const reviewNotif = notifs.find(n => n.type === 'general' && (n.body?.includes('review') || n.title?.includes('review')));
-      checks.push({ label: 'Reviewee (guest) received a general notification', pass: !!reviewNotif, detail: !reviewNotif ? 'No general notification found for guest' : null });
-
-    } catch (e) { error = e?.message || String(e); }
-    setLoading(false); setResult({ checks, error });
-  };
-
-  const clean = async () => {
-    setCleaning(true);
-    if (reviewId) await base44.entities.Review.delete(reviewId).catch(() => {});
-    const { guestUser } = await getReviewTestUsers().catch(() => ({}));
-    if (guestUser) {
-      const notifs = await base44.entities.Notification.filter({ user_id: guestUser.id }).catch(() => []);
-      for (const n of notifs) if (n.title?.includes('DEV TEST') || n.body?.includes('DEV TEST')) await base44.entities.Notification.delete(n.id).catch(() => {});
-    }
-    setReviewId(null); setResult(null); setCleaning(false);
-  };
-
-  return (
-    <TestCard number="R2" title="Host Reviews Guest" description="Creates a 5-star host→guest review and verifies processReview sets public_visible and notifies the guest" badge="processReview">
-      <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">⚠️ Run H1 + H4–H6 first. Takes ~3 seconds.</p>
-      <div className="flex gap-2 flex-wrap">
-        <RunButton onClick={run} loading={loading} />
-        <CleanButton onClick={clean} loading={cleaning} />
-      </div>
-      <ResultBlock testName="R2 Host Reviews Guest" {...(result || {})} />
-    </TestCard>
-  );
-}
-
-function R3_HostReviewsCleaner() {
-  const [loading, setLoading] = useState(false);
-  const [cleaning, setCleaning] = useState(false);
-  const [result, setResult] = useState(null);
-  const [reviewId, setReviewId] = useState(null);
-
-  const run = async () => {
-    setLoading(true); setResult(null);
-    const checks = []; let error = null;
-    try {
-      const { hostUser, cleanerUser } = await getReviewTestUsers();
-      checks.push({ label: 'devtest-host User found', pass: !!hostUser, detail: !hostUser ? 'Run H4–H6 first' : null });
-      checks.push({ label: 'devtest-cleaner User found', pass: !!cleanerUser, detail: !cleanerUser ? 'Run C1 first' : null });
-      if (!hostUser || !cleanerUser) { setLoading(false); setResult({ checks, error }); return; }
-
-      const cleaners = await base44.entities.Cleaner.filter({ user_id: cleanerUser.id });
-      checks.push({ label: 'Cleaner profile found', pass: cleaners.length > 0, detail: !cleaners.length ? 'Run C1 first' : null });
-      if (!cleaners.length) { setLoading(false); setResult({ checks, error }); return; }
-      const cleanerProfile = cleaners[0];
-
-      const blindUntil = new Date(); blindUntil.setDate(blindUntil.getDate() + 7);
-      const review = await base44.entities.Review.create({
-        review_type: 'host_to_cleaner',
-        review_category: 'cleaning_job',
-        job_id: 'devtest-review-job',
-        reviewer_id: hostUser.id,
-        reviewer_name: hostUser.full_name || 'Dev Host',
-        reviewee_id: cleanerUser.id,
-        rating: 4,
-        quality_rating: 4,
-        reliability_rating: 5,
-        communication_rating: 4,
-        comment: 'DEV TEST review',
-        blind_until: blindUntil.toISOString(),
-      });
-      setReviewId(review.id);
-      checks.push({ label: 'Review record created', pass: !!review.id, detail: !review.id ? 'Create failed' : null });
-
-      await wait(4000);
-
-      const updated = await base44.entities.Review.get(review.id);
-      checks.push({ label: 'public_visible set by processReview automation', pass: updated.public_visible === true, detail: `Got: ${updated.public_visible}` });
-
-      const cleanerReviews = await base44.entities.CleanerReview.filter({ job_id: 'devtest-review-job' });
-      checks.push({ label: 'CleanerReview record synced (processReview sync)', pass: cleanerReviews.length > 0, detail: !cleanerReviews.length ? 'No CleanerReview found for job_id=devtest-review-job — sync block may have failed' : null });
-
-      const updatedCleaner = await base44.entities.Cleaner.get(cleanerProfile.id);
-      checks.push({ label: 'Cleaner.average_rating updated (> 0)', pass: (updatedCleaner.average_rating || 0) > 0, detail: `Got: ${updatedCleaner.average_rating}` });
-      checks.push({ label: 'Cleaner.total_reviews is at least 1', pass: (updatedCleaner.total_reviews || 0) >= 1, detail: `Got: ${updatedCleaner.total_reviews}` });
-
-    } catch (e) { error = e?.message || String(e); }
-    setLoading(false); setResult({ checks, error });
-  };
-
-  const clean = async () => {
-    setCleaning(true);
-    if (reviewId) await base44.entities.Review.delete(reviewId).catch(() => {});
-    const syncedReviews = await base44.entities.CleanerReview.filter({ job_id: 'devtest-review-job' }).catch(() => []);
-    for (const r of syncedReviews) await base44.entities.CleanerReview.delete(r.id).catch(() => {});
-    const { cleanerUser } = await getReviewTestUsers().catch(() => ({}));
-    if (cleanerUser) {
-      const cleaners = await base44.entities.Cleaner.filter({ user_id: cleanerUser.id }).catch(() => []);
-      if (cleaners[0]) await base44.entities.Cleaner.update(cleaners[0].id, { average_rating: 0, total_reviews: 0 }).catch(() => {});
-    }
-    setReviewId(null); setResult(null); setCleaning(false);
-  };
-
-  return (
-    <TestCard number="R3" title="Host Reviews Cleaner (+ CleanerReview sync)" description="Creates a host→cleaner review, verifies processReview automation, CleanerReview sync, and cleaner stats update" badge="processReview + sync">
-      <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">⚠️ Run C1 + H4–H6 first. Takes ~4 seconds.</p>
-      <div className="flex gap-2 flex-wrap">
-        <RunButton onClick={run} loading={loading} />
-        <CleanButton onClick={clean} loading={cleaning} />
-      </div>
-      <ResultBlock testName="R3 Host Reviews Cleaner" {...(result || {})} />
-    </TestCard>
-  );
-}
-
-function R4_CleanerReviewsHost() {
-  const [loading, setLoading] = useState(false);
-  const [cleaning, setCleaning] = useState(false);
-  const [result, setResult] = useState(null);
-  const [reviewId, setReviewId] = useState(null);
-
-  const run = async () => {
-    setLoading(true); setResult(null);
-    const checks = []; let error = null;
-    try {
-      const { hostUser, cleanerUser } = await getReviewTestUsers();
-      checks.push({ label: 'devtest-cleaner User found', pass: !!cleanerUser, detail: !cleanerUser ? 'Run C1 first' : null });
-      checks.push({ label: 'devtest-host User found', pass: !!hostUser, detail: !hostUser ? 'Run H4–H6 first' : null });
-      if (!cleanerUser || !hostUser) { setLoading(false); setResult({ checks, error }); return; }
-
-      const blindUntil = new Date(); blindUntil.setDate(blindUntil.getDate() + 7);
-      const review = await base44.entities.Review.create({
-        review_type: 'cleaner_to_host',
-        review_category: 'cleaning_job',
-        job_id: 'devtest-review-job-2',
-        reviewer_id: cleanerUser.id,
-        reviewer_name: cleanerUser.full_name || 'Dev Cleaner',
-        reviewee_id: hostUser.id,
-        rating: 5,
-        comment: 'DEV TEST review',
-        blind_until: blindUntil.toISOString(),
-      });
-      setReviewId(review.id);
-      checks.push({ label: 'Review record created', pass: !!review.id, detail: !review.id ? 'Create failed' : null });
-
-      await wait(3000);
-
-      const updated = await base44.entities.Review.get(review.id);
-      checks.push({ label: 'public_visible set by processReview automation', pass: updated.public_visible === true, detail: `Got: ${updated.public_visible}` });
-
-      const notifs = await base44.entities.Notification.filter({ user_id: hostUser.id });
-      const reviewNotif = notifs.find(n => n.type === 'general' && (n.body?.includes('review') || n.title?.includes('review')));
-      checks.push({ label: 'Reviewee (host) received a general notification', pass: !!reviewNotif, detail: !reviewNotif ? 'No general notification found for host' : null });
-
-    } catch (e) { error = e?.message || String(e); }
-    setLoading(false); setResult({ checks, error });
-  };
-
-  const clean = async () => {
-    setCleaning(true);
-    if (reviewId) await base44.entities.Review.delete(reviewId).catch(() => {});
-    const { hostUser } = await getReviewTestUsers().catch(() => ({}));
-    if (hostUser) {
-      const notifs = await base44.entities.Notification.filter({ user_id: hostUser.id }).catch(() => []);
-      for (const n of notifs) if (n.title?.includes('DEV TEST') || n.body?.includes('DEV TEST')) await base44.entities.Notification.delete(n.id).catch(() => {});
-    }
-    setReviewId(null); setResult(null); setCleaning(false);
-  };
-
-  return (
-    <TestCard number="R4" title="Cleaner Reviews Host" description="Creates a cleaner→host review and verifies processReview sets public_visible and notifies the host" badge="processReview">
-      <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">⚠️ Run C1 + H4–H6 first. Takes ~3 seconds.</p>
-      <div className="flex gap-2 flex-wrap">
-        <RunButton onClick={run} loading={loading} />
-        <CleanButton onClick={clean} loading={cleaning} />
-      </div>
-      <ResultBlock testName="R4 Cleaner Reviews Host" {...(result || {})} />
-    </TestCard>
-  );
-}
-
-function R5_BlindReveal() {
-  const [loading, setLoading] = useState(false);
-  const [cleaning, setCleaning] = useState(false);
-  const [result, setResult] = useState(null);
-  const [ids, setIds] = useState({ r1: null, r2: null });
-
-  const run = async () => {
-    setLoading(true); setResult(null);
-    const checks = []; let error = null;
-    try {
-      const { guestUser, hostUser } = await getReviewTestUsers();
-      checks.push({ label: 'devtest-guest User found', pass: !!guestUser, detail: !guestUser ? 'Run H1 first' : null });
-      checks.push({ label: 'devtest-host User found', pass: !!hostUser, detail: !hostUser ? 'Run H4–H6 first' : null });
-      if (!guestUser || !hostUser) { setLoading(false); setResult({ checks, error }); return; }
-
-      const blindUntil = new Date(); blindUntil.setDate(blindUntil.getDate() + 7);
-
-      // Create guest→host review first
-      const r1 = await base44.entities.Review.create({
-        review_type: 'guest_to_host',
-        review_category: 'booking',
-        booking_id: 'devtest-blind-booking',
-        reviewer_id: guestUser.id,
-        reviewer_name: guestUser.full_name || 'Dev Guest',
-        reviewee_id: hostUser.id,
-        rating: 4,
-        comment: 'DEV TEST blind reveal — guest',
-        blind_until: blindUntil.toISOString(),
-      });
-      checks.push({ label: 'First review (guest→host) created', pass: !!r1.id, detail: !r1.id ? 'Create failed' : null });
-
-      // Wait briefly then create host→guest (counterpart)
-      await wait(1500);
-      const r2 = await base44.entities.Review.create({
-        review_type: 'host_to_guest',
-        review_category: 'booking',
-        booking_id: 'devtest-blind-booking',
-        reviewer_id: hostUser.id,
-        reviewer_name: hostUser.full_name || 'Dev Host',
-        reviewee_id: guestUser.id,
-        rating: 4,
-        comment: 'DEV TEST blind reveal — host',
-        blind_until: blindUntil.toISOString(),
-      });
-      checks.push({ label: 'Second review (host→guest) created', pass: !!r2.id, detail: !r2.id ? 'Create failed' : null });
-      setIds({ r1: r1.id, r2: r2.id });
-
-      await wait(4000);
-
-      const [updated1, updated2] = await Promise.all([
-        base44.entities.Review.get(r1.id),
-        base44.entities.Review.get(r2.id),
-      ]);
-
-      checks.push({ label: 'First review has both_reviewed: true', pass: updated1.both_reviewed === true, detail: `Got: ${updated1.both_reviewed} — processReview should have set this when it detected the counterpart` });
-      checks.push({ label: 'Second review has both_reviewed: true', pass: updated2.both_reviewed === true, detail: `Got: ${updated2.both_reviewed}` });
-
-    } catch (e) { error = e?.message || String(e); }
-    setLoading(false); setResult({ checks, error });
-  };
-
-  const clean = async () => {
-    setCleaning(true);
-    if (ids.r1) await base44.entities.Review.delete(ids.r1).catch(() => {});
-    if (ids.r2) await base44.entities.Review.delete(ids.r2).catch(() => {});
-    // Also clean any stray blind-booking reviews
-    const stray = await base44.entities.Review.filter({ booking_id: 'devtest-blind-booking' }).catch(() => []);
-    for (const r of stray) await base44.entities.Review.delete(r.id).catch(() => {});
-    setIds({ r1: null, r2: null }); setResult(null); setCleaning(false);
-  };
-
-  return (
-    <TestCard number="R5" title="Blind Reveal (Both Parties Review)" description="Creates both sides of a booking review and verifies processReview sets both_reviewed: true on each when the counterpart is detected" badge="blind reveal logic">
-      <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">⚠️ Run H1 + H4–H6 first. Takes ~6 seconds total.</p>
-      <div className="flex gap-2 flex-wrap">
-        <RunButton onClick={run} loading={loading} />
-        <CleanButton onClick={clean} loading={cleaning} />
-      </div>
-      <ResultBlock testName="R5 Blind Reveal" {...(result || {})} />
-    </TestCard>
-  );
-}
+// R1–R5 imported from components/devtools/ReviewTests
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // DATA MANAGER
@@ -1782,6 +1408,7 @@ export default function DevToolsSection({ members, user }) {
     { id: 'cleaner', label: '🧹 Cleaner Journey',  count: 7  },
     { id: 'notifs',  label: '🔔 Notifications',    count: 2  },
     { id: 'reviews', label: '⭐ Reviews',            count: 5  },
+    { id: 'mobile',  label: '📱 Mobile Checks',     count: 21 },
     { id: 'data',    label: '🗄️ Data Manager',     count: null },
   ];
 
@@ -1880,6 +1507,17 @@ export default function DevToolsSection({ members, user }) {
           <R3_HostReviewsCleaner />
           <R4_CleanerReviewsHost />
           <R5_BlindReveal />
+        </div>
+      )}
+
+      {/* MOBILE CHECKS */}
+      {tab === 'mobile' && (
+        <div className="space-y-4">
+          <div className="bg-sky-50 border border-sky-200 rounded-xl px-5 py-3">
+            <p className="text-sm font-semibold text-sky-800">Manual checklist — test on a real device or browser DevTools mobile mode</p>
+            <p className="text-xs text-sky-600 mt-0.5">Open each screen on mobile, check what's described, then mark Pass or Fail. Results persist across sessions.</p>
+          </div>
+          <MobileChecklist />
         </div>
       )}
 
