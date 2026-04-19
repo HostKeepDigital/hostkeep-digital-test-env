@@ -34,15 +34,26 @@ Deno.serve(async (req) => {
           const property = propertyRecords?.[0];
 
           if (cleaner && property) {
-            const bedrooms = property.bedrooms ?? 0;
-            const rc = cleaner.rate_card || {};
-            let tierPrice = 0;
-            if (bedrooms <= 1)      tierPrice = rc.studio_1bed   || 0;
-            else if (bedrooms === 2) tierPrice = rc.two_bed       || 0;
-            else if (bedrooms === 3) tierPrice = rc.three_bed     || 0;
-            else                     tierPrice = rc.four_bed_plus || 0;
-
-            const resolvedPrice = tierPrice > 0 ? tierPrice : (cleaner.base_price || 0);
+            // 1. Check for an accepted counter-rate for this specific property
+            let resolvedPrice = 0;
+            const counterRateRecords = await serviceRole.entities.PropertyCleanerSettings.filter({
+              property_id: job.property_id,
+              default_cleaner_id: job.cleaner_id,
+              counter_rate_status: "accepted",
+            });
+            if (counterRateRecords?.[0]?.counter_rate > 0) {
+              resolvedPrice = counterRateRecords[0].counter_rate;
+            } else {
+              // 2. Fall back to rate card by bedroom count
+              const bedrooms = property.bedrooms ?? 0;
+              const rc = cleaner.rate_card || {};
+              let tierPrice = 0;
+              if (bedrooms <= 1)       tierPrice = rc.studio_1bed   || 0;
+              else if (bedrooms === 2)  tierPrice = rc.two_bed       || 0;
+              else if (bedrooms === 3)  tierPrice = rc.three_bed     || 0;
+              else                      tierPrice = rc.four_bed_plus || 0;
+              resolvedPrice = tierPrice > 0 ? tierPrice : (cleaner.base_price || 0);
+            }
             if (resolvedPrice > 0) {
               await serviceRole.entities.CleaningJob.update(job.id, { cleaner_price: resolvedPrice });
             }

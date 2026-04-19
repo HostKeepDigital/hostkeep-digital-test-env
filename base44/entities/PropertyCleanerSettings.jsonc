@@ -77,6 +77,19 @@
     "new_cleaner_price": {
       "type": "number",
       "description": "New cleaner price pending approval"
+    },
+    "counter_rate": {
+      "type": "number",
+      "description": "Cleaner's custom rate for this specific property, overrides their standard rate card"
+    },
+    "counter_rate_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "declined"
+      ],
+      "default": "pending"
     }
   },
   "required": [

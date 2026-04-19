@@ -18,6 +18,7 @@ import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import CleanerApprovalBanner, { useCleanerGatesComplete } from "@/components/cleaners/CleanerApprovalBanner";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import CompleteJobModal from "@/components/cleaner-dashboard/CompleteJobModal";
+import ProposeRateModal from "@/components/cleaner-dashboard/ProposeRateModal";
 import { format, isToday, parseISO } from "date-fns";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -156,7 +157,7 @@ function PendingJobCard({ job, gatesComplete, onAccept, onDecline, accepting, de
 
 // ─── Upcoming Job Card ────────────────────────────────────────────────────────
 
-function UpcomingJobCard({ job, onStartJob, onOpenComplete, starting }) {
+function UpcomingJobCard({ job, onStartJob, onOpenComplete, onProposeRate, starting }) {
   const canStart = isToday(parseISO(job.scheduled_date));
   const inProgress = job.status === "in_progress";
 
@@ -178,6 +179,12 @@ function UpcomingJobCard({ job, onStartJob, onOpenComplete, starting }) {
             <span><Calendar className="w-3.5 h-3.5 inline mr-1 text-teal-500" />{formatDate(job.scheduled_date)}{job.scheduled_time ? ` · ${job.scheduled_time}` : ""}</span>
             <span className="text-teal-700 font-semibold">£{job.cleaner_price}</span>
           </div>
+          <button
+            onClick={() => onProposeRate(job)}
+            className="text-xs text-blue-600 hover:underline mt-1 text-left"
+          >
+            Propose a different rate for this property
+          </button>
         </div>
         <div className="flex-shrink-0">
           {inProgress ? (
@@ -220,6 +227,7 @@ export default function CleanerDashboard() {
   const { user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const [completeModalJob, setCompleteModalJob] = useState(null);
+  const [proposeRateJob, setProposeRateJob] = useState(null);
   const [acceptingId, setAcceptingId] = useState(null);
   const [decliningId, setDecliningId] = useState(null);
   const [startingId, setStartingId] = useState(null);
@@ -427,6 +435,7 @@ export default function CleanerDashboard() {
                       job={job}
                       onStartJob={handleStartJob}
                       onOpenComplete={setCompleteModalJob}
+                      onProposeRate={setProposeRateJob}
                       starting={startingId === job.id}
                     />
                   ))}
@@ -499,6 +508,14 @@ export default function CleanerDashboard() {
           job={completeModalJob}
           onClose={() => setCompleteModalJob(null)}
           onComplete={handleJobCompleted}
+        />
+      )}
+
+      {proposeRateJob && (
+        <ProposeRateModal
+          job={proposeRateJob}
+          cleanerId={cleanerProfile?.id}
+          onClose={() => setProposeRateJob(null)}
         />
       )}
     </div>
