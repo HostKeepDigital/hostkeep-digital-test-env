@@ -1,124 +1,148 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, Shield, Award, MapPin, Clock, TrendingUp, Crown } from "lucide-react";
+import { Star, ShieldCheck, MapPin, Crown, Waves, Shirt, Sparkles } from "lucide-react";
 import { createPageUrl } from "@/utils";
 
+function Initials({ name }) {
+  const parts = (name || "?").trim().split(/\s+/);
+  const letters =
+    parts.length >= 2
+      ? parts[0][0] + parts[parts.length - 1][0]
+      : parts[0].slice(0, 2);
+  return (
+    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#2563EB] to-blue-400">
+      <span className="text-3xl font-bold text-white uppercase">{letters}</span>
+    </div>
+  );
+}
+
+const SERVICE_CHIPS = [
+  { key: "laundry",      label: "Laundry",    icon: Shirt },
+  { key: "linen_change", label: "Linen",      icon: Waves },
+  { key: "deep_cleaning",label: "Deep Clean", icon: Sparkles },
+];
+
 export default function CleanerCard({ cleaner, delay = 0 }) {
+  const services = cleaner.services || {};
+  const offeredServices = SERVICE_CHIPS.filter(
+    (s) => services[s.key]?.enabled
+  );
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay }}
+      whileHover={{ y: -2 }}
+      className="h-full"
     >
-      <Card className="h-full hover:shadow-lg transition-all duration-300 border-gray-200">
-        <CardContent className="p-0">
-          {/* Image */}
-          <div className="relative h-48 bg-gradient-to-br from-teal-100 to-teal-50 rounded-t-xl overflow-hidden">
-            {cleaner.profile_photo ? (
-              <img 
-                src={cleaner.profile_photo} 
-                alt={cleaner.business_name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <div className="w-20 h-20 rounded-full bg-teal-600 flex items-center justify-center">
-                  <span className="text-3xl font-bold text-white">
-                    {cleaner.business_name?.charAt(0)}
-                  </span>
-                </div>
+      <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow flex flex-col h-full">
+
+        {/* Photo / Avatar area */}
+        <div className="relative h-48 overflow-hidden flex-shrink-0 bg-blue-50">
+          {cleaner.profile_photo ? (
+            <img
+              src={cleaner.profile_photo}
+              alt={cleaner.business_name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <Initials name={cleaner.business_name} />
+          )}
+
+          {/* Pro badge — top left */}
+          {cleaner.subscription_plan === "pro" && (
+            <Badge className="absolute top-3 left-3 bg-gradient-to-r from-amber-500 to-amber-600 border-0 shadow-sm gap-1">
+              <Crown className="w-3 h-3" />
+              Pro
+            </Badge>
+          )}
+
+          {/* Verified badge — top right */}
+          {cleaner.verified && (
+            <Badge className="absolute top-3 right-3 bg-green-500 border-0 shadow-sm gap-1">
+              <ShieldCheck className="w-3 h-3" />
+              Verified
+            </Badge>
+          )}
+        </div>
+
+        {/* Body */}
+        <div className="p-4 flex flex-col flex-1">
+
+          {/* Name + rating row */}
+          <div className="flex items-start justify-between gap-2 mb-1">
+            <h3 className="font-semibold text-gray-900 text-base leading-tight line-clamp-1">
+              {cleaner.business_name}
+            </h3>
+            {cleaner.average_rating > 0 && (
+              <div className="flex items-center gap-0.5 text-xs flex-shrink-0">
+                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                <span className="font-semibold text-gray-900">
+                  {Number(cleaner.average_rating).toFixed(1)}
+                </span>
+                <span className="text-gray-400 ml-0.5">
+                  ({cleaner.total_reviews || 0})
+                </span>
               </div>
-            )}
-            
-            {/* Pro Badge */}
-            {cleaner.subscription_plan === 'pro' && (
-              <Badge className="absolute top-3 left-3 bg-gradient-to-r from-amber-500 to-amber-600 border-0">
-                <Crown className="w-3 h-3 mr-1" />
-                Pro
-              </Badge>
-            )}
-            
-            {/* Verified Badge */}
-            {cleaner.verified && (
-              <Badge className="absolute top-3 right-3 bg-blue-500 border-0">
-                <Shield className="w-3 h-3 mr-1" />
-                Verified
-              </Badge>
             )}
           </div>
 
-          <div className="p-4">
-            {/* Name & Rating */}
+          {/* Service area */}
+          {cleaner.service_area?.city && (
+            <p className="flex items-center gap-1 text-xs text-gray-500 mb-2">
+              <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+              {cleaner.service_area.city}
+              {cleaner.service_area.radius_miles
+                ? ` · ${cleaner.service_area.radius_miles} mi radius`
+                : ""}
+            </p>
+          )}
+
+          {/* Jobs completed badge */}
+          {(cleaner.total_jobs || 0) > 0 && (
             <div className="mb-3">
-              <h3 className="font-semibold text-lg text-gray-900 mb-1">
-                {cleaner.business_name}
-              </h3>
-              <div className="flex items-center gap-3 text-sm">
-                {cleaner.average_rating > 0 && (
-                  <div className="flex items-center gap-1">
-                    <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                    <span className="font-medium text-gray-900">{cleaner.average_rating.toFixed(1)}</span>
-                    <span className="text-gray-500">({cleaner.total_reviews})</span>
-                  </div>
-                )}
-                {cleaner.total_jobs > 0 && (
-                  <div className="flex items-center gap-1 text-gray-600">
-                    <TrendingUp className="w-4 h-4" />
-                    <span>{cleaner.total_jobs} jobs</span>
-                  </div>
-                )}
-              </div>
+              <Badge className="bg-[#2563EB]/10 text-[#2563EB] border-[#2563EB]/20 text-xs font-medium">
+                {cleaner.total_jobs} jobs completed
+              </Badge>
             </div>
+          )}
 
-            {/* Location */}
-            {cleaner.service_area?.city && (
-              <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
-                <MapPin className="w-4 h-4" />
-                <span>{cleaner.service_area.city} • {cleaner.service_area.radius_miles}mi radius</span>
-              </div>
-            )}
+          {/* Optional service chips */}
+          {offeredServices.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {offeredServices.map(({ key, label, icon: Icon }) => (
+                <span
+                  key={key}
+                  className="inline-flex items-center gap-1 text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-0.5"
+                >
+                  <Icon className="w-3 h-3" />
+                  {label}
+                </span>
+              ))}
+            </div>
+          )}
 
-            {/* Bio Preview */}
-            {cleaner.bio && (
-              <p className="text-sm text-gray-600 line-clamp-2 mb-4">
-                {cleaner.bio}
+          {/* Price + CTA — pushed to bottom */}
+          <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100">
+            <div>
+              <span className="text-xl font-bold text-gray-900">
+                £{cleaner.base_price}
+              </span>
+              <p className="text-xs text-gray-500 leading-none mt-0.5">
+                from £{cleaner.base_price} per clean
               </p>
-            )}
-
-            {/* Stats */}
-            <div className="grid grid-cols-2 gap-2 mb-4 text-xs">
-              <div className="bg-gray-50 rounded-lg p-2">
-                <div className="text-gray-500 mb-0.5">Response time</div>
-                <div className="font-medium text-gray-900">
-                  {cleaner.response_time_minutes < 60 
-                    ? `${cleaner.response_time_minutes}min` 
-                    : `${Math.round(cleaner.response_time_minutes / 60)}h`}
-                </div>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-2">
-                <div className="text-gray-500 mb-0.5">Acceptance</div>
-                <div className="font-medium text-gray-900">{cleaner.acceptance_rate}%</div>
-              </div>
             </div>
-
-            {/* Price & CTA */}
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-2xl font-bold text-gray-900">£{cleaner.base_price}</div>
-                <div className="text-xs text-gray-500">base price</div>
-              </div>
-              <Link to={createPageUrl('CleanerProfile') + '?id=' + cleaner.id}>
-                <Button className="bg-teal-600 hover:bg-teal-700">
-                  View Profile
-                </Button>
-              </Link>
-            </div>
+            <Link to={createPageUrl("CleanerProfile") + "?id=" + cleaner.id}>
+              <Button className="bg-[#2563EB] hover:bg-blue-700 text-white text-sm h-9 px-4">
+                View Profile
+              </Button>
+            </Link>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </motion.div>
   );
 }
