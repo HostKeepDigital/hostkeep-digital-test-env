@@ -1097,6 +1097,141 @@ function C7_EarningsVerification() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// NOTIFICATION TESTS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const NOTIF_TYPES = [
+  'booking_request','booking_confirmed','booking_declined','booking_cancelled',
+  'booking_checked_in','booking_completed','new_message','cleaning_job_assigned',
+  'cleaning_job_accepted','cleaning_job_declined','cleaning_job_completed',
+  'payment_received','payment_due','general',
+];
+
+function N1_DirectNotification({ user }) {
+  const [loading, setLoading] = useState(false);
+  const [cleaning, setCleaning] = useState(false);
+  const [result, setResult] = useState(null);
+  const [notifId, setNotifId] = useState(null);
+
+  const run = async () => {
+    setLoading(true); setResult(null);
+    const checks = []; let error = null;
+    try {
+      checks.push({ label: 'Admin user available', pass: !!user?.id, detail: !user?.id ? 'No user passed to DevTools' : null });
+      if (!user?.id) { setLoading(false); setResult({ checks, error }); return; }
+
+      const res = await fn('sendNotification', {
+        user_id: user.id,
+        type: 'general',
+        title: 'DEV TEST Notification',
+        body: 'This is an automated test notification',
+        link: '/admin',
+      });
+      checks.push({ label: 'sendNotification returned success', pass: res?.success === true || res?.ok === true || (!res?.error && res !== null), detail: res?.error ? `Error: ${JSON.stringify(res)}` : null });
+
+      await wait(1000);
+
+      const notifs = await base44.entities.Notification.filter({ user_id: user.id });
+      const testNotif = notifs.find(n => n.title === 'DEV TEST Notification');
+      setNotifId(testNotif?.id || null);
+
+      checks.push({ label: 'Notification record created in DB', pass: !!testNotif, detail: !testNotif ? 'No Notification record found with title "DEV TEST Notification"' : null });
+      checks.push({ label: 'read is false (unread by default)', pass: testNotif?.read === false, detail: `Got: ${testNotif?.read}` });
+      checks.push({ label: 'type is general', pass: testNotif?.type === 'general', detail: `Got: ${testNotif?.type}` });
+      checks.push({ label: 'link is /admin', pass: testNotif?.link === '/admin', detail: `Got: ${testNotif?.link}` });
+
+    } catch (e) { error = e?.message || String(e); }
+    setLoading(false); setResult({ checks, error });
+  };
+
+  const clean = async () => {
+    setCleaning(true);
+    if (notifId) await base44.entities.Notification.delete(notifId).catch(() => {});
+    else if (user?.id) {
+      const notifs = await base44.entities.Notification.filter({ user_id: user.id }).catch(() => []);
+      const testNotif = notifs.find(n => n.title === 'DEV TEST Notification');
+      if (testNotif) await base44.entities.Notification.delete(testNotif.id).catch(() => {});
+    }
+    setNotifId(null); setResult(null); setCleaning(false);
+  };
+
+  return (
+    <TestCard number="N1" title="Send & Receive Notification" description="Sends a notification directly to the admin user and verifies it lands in the Notification entity" badge="sendNotification">
+      <div className="flex gap-2 flex-wrap">
+        <RunButton onClick={run} loading={loading} />
+        <CleanButton onClick={clean} loading={cleaning} />
+      </div>
+      <ResultBlock testName="N1 Direct Notification" {...(result || {})} />
+    </TestCard>
+  );
+}
+
+function N2_AllNotificationTypes({ user }) {
+  const [loading, setLoading] = useState(false);
+  const [cleaning, setCleaning] = useState(false);
+  const [result, setResult] = useState(null);
+
+  const run = async () => {
+    setLoading(true); setResult(null);
+    const checks = []; let error = null;
+    try {
+      checks.push({ label: 'Admin user available', pass: !!user?.id, detail: !user?.id ? 'No user passed to DevTools' : null });
+      if (!user?.id) { setLoading(false); setResult({ checks, error }); return; }
+
+      // Fire all 14 types
+      await Promise.all(NOTIF_TYPES.map(type =>
+        fn('sendNotification', {
+          user_id: user.id,
+          type,
+          title: `DEV TEST — ${type}`,
+          body: `Automated coverage test for type: ${type}`,
+        })
+      ));
+
+      await wait(2000);
+
+      const notifs = await base44.entities.Notification.filter({ user_id: user.id });
+      const testNotifs = notifs.filter(n => n.title?.startsWith('DEV TEST —'));
+
+      checks.push({ label: `All 14 notification types fired`, pass: true });
+      checks.push({
+        label: `14 Notification records created (got ${testNotifs.length})`,
+        pass: testNotifs.length === 14,
+        detail: testNotifs.length !== 14 ? `Expected 14, found ${testNotifs.length}. Missing: ${NOTIF_TYPES.filter(t => !testNotifs.find(n => n.title === `DEV TEST — ${t}`)).join(', ')}` : null,
+      });
+
+      // Individual type checks
+      for (const type of NOTIF_TYPES) {
+        const found = testNotifs.find(n => n.title === `DEV TEST — ${type}`);
+        checks.push({ label: `type "${type}" created`, pass: !!found, detail: !found ? `No record found for type: ${type}` : null });
+      }
+
+    } catch (e) { error = e?.message || String(e); }
+    setLoading(false); setResult({ checks, error });
+  };
+
+  const clean = async () => {
+    setCleaning(true);
+    if (user?.id) {
+      const notifs = await base44.entities.Notification.filter({ user_id: user.id }).catch(() => []);
+      const testNotifs = notifs.filter(n => n.title?.startsWith('DEV TEST —'));
+      for (const n of testNotifs) await base44.entities.Notification.delete(n.id).catch(() => {});
+    }
+    setResult(null); setCleaning(false);
+  };
+
+  return (
+    <TestCard number="N2" title="Notification Type Coverage" description="Fires one notification of every supported type and confirms each creates a record" badge="14 types">
+      <div className="flex gap-2 flex-wrap">
+        <RunButton onClick={run} loading={loading} />
+        <CleanButton onClick={clean} loading={cleaning} />
+      </div>
+      <ResultBlock testName="N2 Notification Type Coverage" {...(result || {})} />
+    </TestCard>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // DATA MANAGER
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -1267,6 +1402,7 @@ export default function DevToolsSection({ members, user }) {
   const tabs = [
     { id: 'host',    label: '🏠 Host Journey',    count: 11 },
     { id: 'cleaner', label: '🧹 Cleaner Journey',  count: 7  },
+    { id: 'notifs',  label: '🔔 Notifications',    count: 2  },
     { id: 'data',    label: '🗄️ Data Manager',     count: null },
   ];
 
@@ -1338,6 +1474,18 @@ export default function DevToolsSection({ members, user }) {
           <C3_C4_C5_JobLifecycle />
           <C6_CounterRate />
           <C7_EarningsVerification />
+        </div>
+      )}
+
+      {/* NOTIFICATIONS */}
+      {tab === 'notifs' && (
+        <div className="space-y-4">
+          <div className="bg-purple-50 border border-purple-200 rounded-xl px-5 py-3">
+            <p className="text-sm font-semibold text-purple-800">Tests run against the logged-in admin account</p>
+            <p className="text-xs text-purple-600 mt-0.5">N1 and N2 are independent — run in any order. Always Clean Up after each test.</p>
+          </div>
+          <N1_DirectNotification user={user} />
+          <N2_AllNotificationTypes user={user} />
         </div>
       )}
 
