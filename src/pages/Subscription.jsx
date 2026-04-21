@@ -279,8 +279,7 @@ export default function Subscription() {
       const subs = await base44.entities.Subscription.filter({
         user_id: user?.id,
       });
-      // Ignore pending records — only the webhook sets status to active
-      return subs.find(s => s.status !== 'pending') || null;
+      return subs[0] || null;
     },
     enabled: !!user?.id,
   });
