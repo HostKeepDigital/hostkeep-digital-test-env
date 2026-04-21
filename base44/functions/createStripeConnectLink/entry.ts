@@ -1,10 +1,13 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.25";
 import Stripe from "npm:stripe@17.0.0";
 
-const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY"));
-
 Deno.serve(async (req) => {
   try {
+    const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!STRIPE_SECRET_KEY) {
+      return Response.json({ error: "Stripe key not configured" }, { status: 500 });
+    }
+    const stripe = new Stripe(STRIPE_SECRET_KEY);
     const base44 = createClientFromRequest(req);
     const serviceRole = base44.asServiceRole;
 
