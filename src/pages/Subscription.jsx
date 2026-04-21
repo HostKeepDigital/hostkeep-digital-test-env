@@ -370,25 +370,26 @@ export default function Subscription() {
   };
 
   const handleStripeConnect = async () => {
-    setStripeConnecting(true);
-    try {
-      const session_token = localStorage.getItem('session_token');
-      const res = await base44.functions.invoke('createStripeConnectLink', {
-        session_token,
+  setStripeConnecting(true);
+  try {
+    const res = await fetch('https://hostkeepdigital.co.uk/functions/createStripeConnectLink', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        session_token: localStorage.getItem('session_token'),
         return_url: `${window.location.origin}/Subscription?stripe_connect_return=success`,
         refresh_url: `${window.location.origin}/Subscription?stripe_connect_return=refresh`,
-      });
-      if (res.data?.url) {
-        window.location.href = res.data.url;
-      } else {
-        toast.error(res.data?.error || 'Failed to start Stripe setup');
-        setStripeConnecting(false);
-      }
-    } catch {
-      toast.error('Failed to connect to Stripe. Please try again.');
-      setStripeConnecting(false);
+      })
+    });
+    const data = await res.json();
+    if (data?.url) {
+      window.location.href = data.url;
     }
-  };
+    setStripeConnecting(false);
+  } catch {
+    setStripeConnecting(false);
+  }
+};
 
   const handleSubscribe = async (planId) => {
     if (!user) {
