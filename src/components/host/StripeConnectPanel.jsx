@@ -21,27 +21,15 @@ export default function StripeConnectPanel({ user }) {
   }, [user?.id]);
 
   const handleConnect = async () => {
-    setConnecting(true);
-    try {
-      const session_token = localStorage.getItem('session_token');
-      const res = await fetch('https://hostkeepdigital.co.uk/functions/createStripeConnectLink', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_token })
-      });
-      const data = await res.json();
-      console.log('Stripe Connect response:', data);
-      if (data?.url) {
-        console.log('Redirecting to:', data.url);
-        window.location.replace(data.url);
-      }else {
-        toast.error(data?.error || 'Failed to start Stripe onboarding');
-      }
-    } catch {
-      toast.error('Failed to connect to Stripe. Please try again.');
-    } finally {
-      setConnecting(false);
-    }
+  const session_token = localStorage.getItem('session_token');
+  const res = await fetch('https://hostkeepdigital.co.uk/functions/createStripeConnectLink', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ session_token })
+  });
+  const data = await res.json();
+  console.log('Redirecting to:', data.url);
+  window.location.replace(data.url);
   };
 
   if (!user) {
