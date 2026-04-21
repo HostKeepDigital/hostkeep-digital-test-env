@@ -17,27 +17,17 @@ export default function StripeStatusBanner({ user }) {
       .catch(() => setStatus('not_connected'));
   }, [user?.id]);
 
-  const handleConnect = async () => {
-    setConnecting(true);
-    try {
-      const session_token = localStorage.getItem('session_token');
-      const res = await fetch('/api/apps/698eee4108bd1d9467648326/functions/createStripeConnectLink', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_token })
-      });
-      const data = await res.json();
-      if (res.data?.url) {
-        window.location.href = res.data.url;
-      } else {
-        toast.error(res.data?.error || 'Failed to start Stripe onboarding');
-      }
-    } catch (err) {
-      toast.error('Failed to connect to Stripe.');
-    } finally {
-      setConnecting(false);
-    }
-  };
+  const res = await fetch('https://hostkeepdigital.co.uk/functions/createStripeConnectLink', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ session_token })
+  });
+  const data = await res.json();
+  if (data?.url) {
+    window.location.href = data.url;
+  } else {
+    toast.error(data?.error || 'Failed to start Stripe onboarding');
+  }
 
   if (status === null || status === 'verified') {
     // If verified, show a small green indicator (not a full banner)
