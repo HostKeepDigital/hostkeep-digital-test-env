@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
 
       accountId = account.id;
 
-      await serviceRole.entities.User.update(user.id, {
+      await serviceRole.entities.UserRole.update(userRole.id, {
         stripe_connect_account_id: accountId,
         stripe_connect_status: "pending",
       });
