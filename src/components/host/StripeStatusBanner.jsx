@@ -17,20 +17,29 @@ export default function StripeStatusBanner({ user }) {
       .catch(() => setStatus('not_connected'));
   }, [user?.id]);
 
-  const res = await fetch('https://hostkeepdigital.co.uk/functions/createStripeConnectLink', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ session_token })
-  });
-  const data = await res.json();
-  if (data?.url) {
-    window.location.href = data.url;
-  } else {
-    toast.error(data?.error || 'Failed to start Stripe onboarding');
-  }
+  const handleConnect = async () => {
+    setConnecting(true);
+    try {
+      const session_token = localStorage.getItem('session_token');
+      const res = await fetch('https://hostkeepdigital.co.uk/functions/createStripeConnectLink', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_token })
+      });
+      const data = await res.json();
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        toast.error(data?.error || 'Failed to start Stripe onboarding');
+      }
+    } catch (err) {
+      toast.error('Failed to connect to Stripe.');
+    } finally {
+      setConnecting(false);
+    }
+  };
 
   if (status === null || status === 'verified') {
-    // If verified, show a small green indicator (not a full banner)
     if (status === 'verified') {
       return (
         <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-100 rounded-xl px-4 py-2.5 mb-6">
