@@ -32,21 +32,19 @@ Deno.serve(async (req) => {
       return Response.json({ error: "Session missing user_id" }, { status: 400 });
     }
 
-    let user;
-    try {
-      const users = await serviceRole.entities.User.filter({ id: user_id });
-      user = users?.[0];
-    } catch (_) {}
+    const userRoles = await serviceRole.entities.UserRole.filter({ user_id });
+    const userRole = userRoles?.[0];
 
-    if (!user) {
-      return Response.json({ error: "User not found" }, { status: 404 });
+    if (!userRole) {
+      return Response.json({ error: "User role not found" }, { status: 404 });
     }
 
     const origin = req.headers.get("origin") || "https://hostkeepdigital.co.uk";
     const return_url = body.return_url || `${origin}/Subscription?stripe_connect_return=success`;
     const refresh_url = body.refresh_url || `${origin}/Subscription?stripe_connect_return=refresh`;
 
-    let accountId = user.stripe_connect_account_id;
+    let accountId = userRole.stripe_connect_account_id;
+
 
     if (!accountId) {
       const account = await stripe.accounts.create({
