@@ -34,7 +34,8 @@ Deno.serve(async (req) => {
 
     let user;
     try {
-      user = await serviceRole.entities.User.get(user_id);
+      const users = await serviceRole.entities.User.filter({ id: user_id });
+      user = users?.[0];
     } catch (_) {}
 
     if (!user) {
