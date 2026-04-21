@@ -32,7 +32,7 @@ export default function StripeConnectPanel({ user }) {
       const data = await res.json();
       console.log('Stripe Connect response:', data);
       if (data?.url) {
-        window.location.href = data.url;
+        window.open(data.url, '_self');
       } else {
         toast.error(data?.error || 'Failed to start Stripe onboarding');
       }
