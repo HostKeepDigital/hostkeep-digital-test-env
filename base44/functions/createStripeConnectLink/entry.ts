@@ -1,5 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.25";
-import Stripe from "npm:stripe@17.0.0";
+import Stripe from "npm:stripe@14";
 
 Deno.serve(async (req) => {
   try {
