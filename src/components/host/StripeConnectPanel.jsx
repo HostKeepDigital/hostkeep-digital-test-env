@@ -30,6 +30,7 @@ export default function StripeConnectPanel({ user }) {
         body: JSON.stringify({ session_token })
       });
       const data = await res.json();
+      console.log('Stripe Connect response:', data);
       if (data?.url) {
         window.location.href = data.url;
       } else {
