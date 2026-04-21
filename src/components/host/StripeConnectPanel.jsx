@@ -12,7 +12,7 @@ export default function StripeConnectPanel({ user }) {
   const [status, setStatus] = useState(null); // null=loading
   const [connecting, setConnecting] = useState(false);
 
-  useEffect(() => {
+ useEffect(() => {
     if (!user) return;
     const session_token = localStorage.getItem('session_token');
     base44.functions.invoke('getStripeConnectStatus', { session_token })
@@ -24,11 +24,16 @@ export default function StripeConnectPanel({ user }) {
     setConnecting(true);
     try {
       const session_token = localStorage.getItem('session_token');
-      const res = await base44.functions.invoke('createStripeConnectLink', { session_token });  
-      if (res.data?.url) {
-        window.location.href = res.data.url;
+      const res = await fetch('https://hostkeepdigital.co.uk/functions/createStripeConnectLink', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_token })
+      });
+      const data = await res.json();
+      if (data?.url) {
+        window.location.href = data.url;
       } else {
-        toast.error(res.data?.error || 'Failed to start Stripe onboarding');
+        toast.error(data?.error || 'Failed to start Stripe onboarding');
       }
     } catch {
       toast.error('Failed to connect to Stripe. Please try again.');
