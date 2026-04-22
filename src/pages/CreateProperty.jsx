@@ -318,6 +318,20 @@ export default function CreateProperty() {
         }
       }
 
+      // Save verification document to VerificationDocuments entity
+      if (data.verification_document && user?.id) {
+        try {
+          await base44.entities.VerificationDocuments.create({
+            user_id: user.id,
+            property_id: property.id,
+            file_url: data.verification_document,
+            verification_status: "pending",
+          });
+        } catch (e) {
+          console.warn("VerificationDocuments save skipped:", e);
+        }
+      }
+
       return property;
     },
     onSuccess: async () => {
