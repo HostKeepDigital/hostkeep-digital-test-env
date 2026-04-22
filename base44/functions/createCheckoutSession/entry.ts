@@ -6,6 +6,8 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
 const VALID_PLANS = new Set([
   'host_starter_monthly', 'host_growth_monthly', 'host_pro_monthly',
   'cleaner_solo_monthly', 'cleaner_pro_monthly', 'cleaner_team_monthly',
+  'founding_host_solo', 'founding_host_multi', 'founding_host_portfolio',
+  'founding_cleaner_solo',
 ]);
 
 Deno.serve(async (req) => {
