@@ -39,16 +39,22 @@ export default function StripeStatusBanner({ user }) {
     }
   };
 
-  if (status === null || status === 'verified') {
-    if (status === 'verified') {
-      return (
-        <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-100 rounded-xl px-4 py-2.5 mb-6">
-          <CheckCircle className="w-4 h-4 text-green-600" />
-          Bank account connected ✓
-        </div>
-      );
-    }
-    return null;
+  if (status === null) {
+    return (
+      <div className="flex items-center gap-2 text-sm text-gray-500 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 mb-6">
+        <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+        Checking payment account status...
+      </div>
+    );
+  }
+
+  if (status === 'verified') {
+    return (
+      <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-100 rounded-xl px-4 py-2.5 mb-6">
+        <CheckCircle className="w-4 h-4 text-green-600" />
+        Bank account connected ✓
+      </div>
+    );
   }
 
   if (status === 'pending_verification') {
