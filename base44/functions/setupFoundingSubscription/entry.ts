@@ -88,5 +88,13 @@ Deno.serve(async (req) => {
     });
   }
 
+  // Set subscription_active on FoundingMember so the gate turns green
+  try {
+    await base44.asServiceRole.entities.FoundingMember.update(foundingMember.id, {
+      subscription_active: true,
+    });
+    await base44.asServiceRole.functions.invoke('checkApprovalGates', { user_id });
+  } catch (_) {}
+
   return Response.json({ success: true, stripe_customer_id: stripeCustomerId });
 });
