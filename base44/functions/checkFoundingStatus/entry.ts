@@ -38,6 +38,13 @@ Deno.serve(async (req) => {
         .update(member.id, { user_id });
     }
 
+    // Advance from password_protected → awaiting_document_verification on login
+    if (member.approval_status === "password_protected") {
+      await base44.asServiceRole.entities.FoundingMember.update(member.id, {
+        approval_status: "awaiting_document_verification",
+      });
+    }
+
     const userUpdates = { is_founding_member: true };
     if (member.postcode) userUpdates.signup_postcode = member.postcode.trim().toUpperCase();
     await base44.asServiceRole.entities.User.update(user_id, userUpdates);
