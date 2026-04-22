@@ -199,6 +199,16 @@ Deno.serve(async (req) => {
         }
       }
 
+      // Set subscription_active on FoundingMember so the gate turns green
+      try {
+        const foundingMembers = await base44.asServiceRole.entities.FoundingMember.filter({ user_id });
+        if (foundingMembers?.[0]) {
+          await base44.asServiceRole.entities.FoundingMember.update(foundingMembers[0].id, {
+            subscription_active: true,
+          });
+        }
+      } catch (_) {}
+
       // Send subscription confirmation email to host
       const hostEmail = session.customer_details?.email;
       const hostName = session.customer_details?.name || 'there';
