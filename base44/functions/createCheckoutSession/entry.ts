@@ -42,8 +42,6 @@ Deno.serve(async (req) => {
     const stripePrice = prices.data[0];
 
     // Get or create Stripe customer
-    let customer_id = null;
-    const subs = await base44.asServiceRole.entities.Subscription.filter({ user_id });
     if (subs.length > 0 && subs[0].stripe_customer_id) {
       customer_id = subs[0].stripe_customer_id;
     } else {
@@ -52,19 +50,11 @@ Deno.serve(async (req) => {
         metadata: { user_id },
       });
       customer_id = customer.id;
-      
-      // Update or create subscription record
+
+      // Store customer ID on existing record if present, but never create a pending record
       if (subs.length > 0) {
         await base44.asServiceRole.entities.Subscription.update(subs[0].id, {
           stripe_customer_id: customer_id,
-        });
-      } else {
-        await base44.asServiceRole.entities.Subscription.create({
-          user_id,
-          plan,
-          provider: 'stripe',
-          stripe_customer_id: customer_id,
-          status: 'pending',
         });
       }
     }
