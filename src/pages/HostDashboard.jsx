@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import StripeStatusBanner from "@/components/host/StripeStatusBanner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -67,6 +68,18 @@ export default function HostDashboard() {
   const [policyDraft, setPolicyDraft] = useState("");
   const [policySaved, setPolicySaved] = useState(false);
   const [showCancelSubDialog, setShowCancelSubDialog] = useState(false);
+
+  // Handle Stripe Connect return from Stripe onboarding
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const stripeReturn = params.get('stripe_connect_return');
+    if (stripeReturn === 'success') {
+      window.history.replaceState({}, '', window.location.pathname);
+      toast.success("Stripe setup submitted! Your account is being verified.");
+    } else if (stripeReturn === 'refresh') {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
 
   // Selected property for calendar
   const [selectedPropertyId, setSelectedPropertyId] = useState(null);
