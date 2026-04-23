@@ -116,7 +116,7 @@ export default function HostDashboard() {
       const subs = await base44.entities.Subscription.filter({
         user_id: user?.id,
       });
-      return subs[0] ?? null;
+      return subs.find(s => s.status !== 'pending') ?? null;
     },
     enabled: !!user?.id,
   });
