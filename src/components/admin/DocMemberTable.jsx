@@ -5,7 +5,9 @@ import GateChecklist from "./GateChecklist";
 
 export default function DocMemberTable({ members, properties = [], verificationDocs = [], showApproveButton = false, onApprove, actionLoading = {}, showFailButton = false, failIsAttempt2 = false, onFail, showDeleteButton = false, onDelete }) {
   const getProperty = (userId) => properties.find(p => p.owner_id === userId);
-  const getVerificationDoc = (userId) => verificationDocs.find(d => d.user_id === userId);
+  const getVerificationDocs = (userId) => verificationDocs
+    .filter(d => d.user_id === userId)
+    .sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
 
   return (
     <div className="max-h-[280px] overflow-y-auto rounded-xl border border-gray-200 bg-white">
@@ -19,7 +21,8 @@ export default function DocMemberTable({ members, properties = [], verificationD
         <tbody className="divide-y divide-gray-50">
           {members.map(m => {
             const prop = getProperty(m.user_id);
-            const doc = getVerificationDoc(m.user_id);
+            const docs = getVerificationDocs(m.user_id);
+            const doc = docs[docs.length - 1]; // latest doc for status display
             const allGatesPassed = m.documents_verified && m.stripe_verified && m.subscription_active;
             return (
               <tr key={m.id} className="hover:bg-gray-50 transition-colors">
@@ -34,10 +37,14 @@ export default function DocMemberTable({ members, properties = [], verificationD
                 <td className="px-4 py-3 text-gray-500 text-sm">{prop?.county || "—"}</td>
                 <td className="px-4 py-3 text-gray-500 text-sm">{prop?.country || "—"}</td>
                 <td className="px-4 py-3">
-                  {doc?.file_url ? (
-                    <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:text-teal-700 inline-flex items-center gap-1 text-sm font-medium">
-                      View <ExternalLink className="w-3 h-3" />
-                    </a>
+                  {docs.length > 0 ? (
+                    <div className="flex flex-col gap-1">
+                      {docs.map((d, i) => (
+                        <a key={d.id || i} href={d.file_url} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:text-teal-700 inline-flex items-center gap-1 text-sm font-medium">
+                          Attempt {i + 1} <ExternalLink className="w-3 h-3" />
+                        </a>
+                      ))}
+                    </div>
                   ) : (
                     <span className="text-gray-400 text-sm">—</span>
                   )}
