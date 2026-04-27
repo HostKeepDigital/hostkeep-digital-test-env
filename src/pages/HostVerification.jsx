@@ -64,22 +64,8 @@ export default function HostVerification() {
     sort_code: ""
   });
 
-  const handleDocumentUpload = async (type, url) => {
+  const handleDocumentUpload = (type, url) => {
     setFormData((prev) => ({ ...prev, [type]: url }));
-    
-    // If re-uploading after failure, create new VerificationDocuments record
-    if (docFailedStatus) {
-      try {
-        await base44.entities.VerificationDocuments.create({
-          user_id: user.id,
-          document_type: type,
-          file_url: url,
-          verification_status: "pending",
-        });
-      } catch (e) {
-        console.error(e);
-      }
-    }
   };
 
   const handlePhoneVerified = (phone) => {
@@ -209,6 +195,7 @@ export default function HostVerification() {
                     userName={user?.full_name}
                     userEmail={user?.email}
                     onUploadComplete={handleDocumentUpload}
+                    localOnly={true}
                   />
                   <DocumentUpload
                     userId={user?.id}
@@ -218,6 +205,7 @@ export default function HostVerification() {
                     userName={user?.full_name}
                     userEmail={user?.email}
                     onUploadComplete={handleDocumentUpload}
+                    localOnly={true}
                   />
                   <DocumentUpload
                     userId={user?.id}
@@ -227,12 +215,28 @@ export default function HostVerification() {
                     userName={user?.full_name}
                     userEmail={user?.email}
                     onUploadComplete={handleDocumentUpload}
+                    localOnly={true}
                   />
                   {formData.government_id && formData.selfie && formData.proof_of_property && (
                     <Button
                       className="mt-4 w-full bg-teal-600 hover:bg-teal-700"
                       onClick={async () => {
                         try {
+                          const docTypes = [
+                            { field: "government_id", type: "government_id" },
+                            { field: "selfie", type: "selfie" },
+                            { field: "proof_of_property", type: "utility_bill" },
+                          ];
+                          for (const d of docTypes) {
+                            if (formData[d.field]) {
+                              await base44.entities.VerificationDocuments.create({
+                                user_id: user.id,
+                                document_type: d.type,
+                                file_url: formData[d.field],
+                                verification_status: "pending",
+                              });
+                            }
+                          }
                           const members = await base44.entities.FoundingMember.filter({ user_id: user.id });
                           if (members.length > 0) {
                             await base44.entities.FoundingMember.update(members[0].id, { approval_status: "awaiting_document_verification" });
