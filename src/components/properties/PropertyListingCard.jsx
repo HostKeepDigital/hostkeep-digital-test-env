@@ -353,7 +353,7 @@ export default function PropertyListingCard({
             </span>
           </div>
 
-          <div className="flex items-center gap-2 text-sm col-span-2">
+          <div className="flex items-center gap-2 text-sm">
             {docIcon}
             <span className={docColor}>
               {docStatus}
