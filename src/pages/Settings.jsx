@@ -162,7 +162,6 @@ export default function Settings() {
     }
   }, [hasPaymentsRole, user]);
 
-  // ⭐ FIXED: Now saves phone + location
   const handleSaveProfile = async () => {
     setSaveStatus(null);
 
@@ -174,23 +173,13 @@ export default function Settings() {
     setSaving(true);
 
     try {
-      const sessionToken = localStorage.getItem("session_token");
-
-      const res = await fetch("/functions/updateProfile", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          session_token: sessionToken,
-          forename: profile.forename,
-          middle_name: profile.middle_name,
-          surname: profile.surname,
-          phone: profile.phone,
-          location: profile.location,
-        }),
+      await base44.auth.updateMe({
+        forename: profile.forename,
+        middle_name: profile.middle_name,
+        surname: profile.surname,
+        phone: profile.phone,
+        location: profile.location,
       });
-
-      const data = await res.json();
-      if (!data.success) throw new Error(data.error || "save_failed");
 
       setSaveStatus("success");
       setTimeout(() => setSaveStatus(null), 4000);
@@ -212,93 +201,25 @@ export default function Settings() {
   };
 
   const handleDeletePreCheck = async () => {
-  setDeleteBlockReason(null);
-  const token = localStorage.getItem("session_token");
-  const sessionRes = await fetch("/functions/getUserFromSession", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ session_token: token }),
-  });
-  const sessionData = await sessionRes.json();
-  const foundingMemberId = sessionData?.user?.founding_member_id;
-  const role = sessionData?.user?.role;
-  const today = new Date().toISOString().split("T")[0];
+    setDeleteBlockReason(null);
+    setDeleteDialogOpen(true);
+  };
 
-  const activeBookingStatuses = ["awaiting_decision", "awaiting_payment", "confirmed", "checked_in"];
-  const activeJobStatuses = ["pending", "accepted", "in_progress"];
-
-  if (role === "host") {
-    const bookings = await base44.entities.Booking.filter({ host_id: foundingMemberId });
-    const activeBookings = bookings.filter(b =>
-      activeBookingStatuses.includes(b.booking_status) && b.check_out >= today
-    );
-    if (activeBookings.length > 0) {
-      setDeleteBlockReason(`You have ${activeBookings.length} active or upcoming booking(s). All bookings must be completed or cancelled before deleting your account.`);
-      return;
+  const handleDeleteAccount = async () => {
+    if (deleteConfirm !== "DELETE") return;
+    setDeleting(true);
+    try {
+      const res = await base44.functions.invoke("deleteAccount", {});
+      if (!res.data?.success) throw new Error(res.data?.error || "Delete failed");
+      localStorage.removeItem("session_token");
+      localStorage.removeItem("session_expires_at");
+      window.location.href = "/SignIn";
+    } catch (err) {
+      toast.error("Something went wrong. Please contact support.");
+      setDeleting(false);
+      setDeleteDialogOpen(false);
     }
-    const jobs = await base44.entities.CleaningJob.filter({ host_id: sessionData?.user?.id });
-    const activeJobs = jobs.filter(j => activeJobStatuses.includes(j.status));
-    if (activeJobs.length > 0) {
-      setDeleteBlockReason(`You have ${activeJobs.length} outstanding cleaning job(s). All jobs must be completed or cancelled before deleting your account.`);
-      return;
-    }
-  }
-
-  if (role === "guest") {
-    const bookings = await base44.entities.Booking.filter({ guest_id: foundingMemberId });
-    const activeBookings = bookings.filter(b =>
-      activeBookingStatuses.includes(b.booking_status) && b.check_out >= today
-    );
-    if (activeBookings.length > 0) {
-      setDeleteBlockReason(`You have ${activeBookings.length} upcoming trip(s) or outstanding balance(s). All trips must be completed or cancelled before deleting your account.`);
-      return;
-    }
-    const unpaidBookings = bookings.filter(b =>
-      b.payment_status === "partial" && b.booking_status !== "cancelled"
-    );
-    if (unpaidBookings.length > 0) {
-      setDeleteBlockReason(`You have outstanding payment balances on ${unpaidBookings.length} booking(s). Please settle all balances before deleting your account.`);
-      return;
-    }
-  }
-
-  if (role === "cleaner") {
-    const jobs = await base44.entities.CleaningJob.filter({ cleaner_user_id: sessionData?.user?.id });
-    const activeJobs = jobs.filter(j => activeJobStatuses.includes(j.status));
-    if (activeJobs.length > 0) {
-      setDeleteBlockReason(`You have ${activeJobs.length} outstanding job(s). All jobs must be completed or removed before deleting your account.`);
-      return;
-    }
-  }
-
-  setDeleteDialogOpen(true);
-};
-
-{deleteBlockReason && (
-  <p className="text-sm text-red-500 mt-2">{deleteBlockReason}</p>
-)}
-
-const handleDeleteAccount = async () => {
-  if (deleteConfirm !== "DELETE") return;
-  setDeleting(true);
-  try {
-    const token = localStorage.getItem("session_token");
-    const res = await fetch("/functions/deleteAccount", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ session_token: token }),
-    });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error);
-    localStorage.removeItem("session_token");
-    localStorage.removeItem("session_expires_at");
-    window.location.href = "/SignIn";
-  } catch {
-    toast.error("Something went wrong. Please contact support.");
-  }
-  setDeleting(false);
-  setDeleteDialogOpen(false);
-};
+  };
 
   const handleStripeConnect = async () => {
     setStripeLoading(true);
