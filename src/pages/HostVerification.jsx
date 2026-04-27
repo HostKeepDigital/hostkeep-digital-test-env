@@ -25,6 +25,7 @@ import DocumentUpload from "@/components/verification/DocumentUpload";
 import PhoneVerification from "@/components/verification/PhoneVerification";
 import { addUserRole } from "@/components/utils/roleHelpers";
 import { useAuth } from "@/lib/AuthContext";
+import { buildEmail } from "@/lib/emailTemplate";
 import { AlertCircle, AlertTriangle } from "lucide-react";
 
 export default function HostVerification() {
@@ -122,8 +123,20 @@ export default function HostVerification() {
       if (members.length > 0) {
         await base44.entities.FoundingMember.update(members[0].id, { approval_status: "awaiting_document_verification" });
       }
-      setDocFailedStatus(null);
-      toast.success("Documents resubmitted for review");
+      try {
+        await base44.functions.invoke("sendEmail", {
+          to: "admin@hostkeepdigital.co.uk",
+          subject: "Document resubmission received — HostKeep",
+          html: buildEmail({
+            heading: "Documents Resubmitted",
+            body: `A host has resubmitted their verification documents and is awaiting review. Please log in to the admin panel to review their updated submission.`,
+            buttonText: "Go to Admin Panel",
+            buttonUrl: "https://hostkeepdigital.co.uk/admin",
+          }),
+        });
+      } catch (_) {}
+      toast.success("Documents resubmitted for review. We'll be in touch within 24–48 hours.");
+      setTimeout(() => navigate(createPageUrl("HostDashboard")), 2000);
     } catch (e) {
       toast.error("Failed to resubmit documents");
     } finally {
