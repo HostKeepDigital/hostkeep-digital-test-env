@@ -685,10 +685,12 @@ const handleSubmitDocDecision = async (member, decisions) => {
     }
     await base44.functions.invoke("sendEmail", {
       to: member.email,
-      subject: "You're one step closer to publishing your property — HostKeep",
+      subject: "Your verification documents have been approved — HostKeep",
       html: buildEmail({
-        heading: "Document Approved",
-        body: `Great news — your verification documents have been reviewed and approved by our team.<br><br>You are now one step closer to publishing your property on HostKeep. To publish, you will need all three of the following in place:<br><br><strong>1. Approved verification documents</strong> — done ✓<br><strong>2. Active HostKeep subscription</strong><br><strong>3. Connected Stripe account</strong> (to receive payments from guests)<br><br>If you have any questions, contact us at <a href="mailto:hello@hostkeepdigital.co.uk">hello@hostkeepdigital.co.uk</a>.`,
+        heading: "Documents Approved ✓",
+        body: `Great news, ${member.full_name?.split(" ")[0] || "there"} — your verification documents have been reviewed and approved by our team.<br><br>You're almost ready to publish your property on HostKeep. To go live, you'll need two more things in place:<br><br><strong>1. A HostKeep subscription</strong> — choose the plan that works best for you from your dashboard.<br><br><strong>2. A connected Stripe account</strong> — this is how you'll receive payments from guests directly and securely.<br><br>Once both are confirmed, your property will be ready to publish and visible to guests across Cornwall.<br><br>If you have any questions or need a hand getting set up, we're always happy to help — just drop us a message at <a href="mailto:hello@hostkeepdigital.co.uk" style="color:#0d9488;">hello@hostkeepdigital.co.uk</a>.`,
+        buttonText: "Go to My Dashboard",
+        buttonUrl: "https://hostkeepdigital.co.uk/HostDashboard",
       }),
     });
     toast.success(`${member.full_name} — all documents approved`);
