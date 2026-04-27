@@ -37,6 +37,17 @@ export default function DocumentUpload({ userId, documentType, label, descriptio
     }
   };
 
+  // Notify admin
+  try {
+    const docLabel = documentType.replace(/_/g, " ");
+    const displayName = userName || userEmail || userId;
+    await base44.functions.invoke("sendEmail", {
+      to: "admin@hostkeepdigital.co.uk",
+      subject: `New verification document uploaded — ${displayName}`,
+      html: `<p><strong>${displayName}</strong>${userEmail ? ` (${userEmail})` : ""} has uploaded a <strong>${docLabel}</strong> document for verification.</p><p><a href="https://hostkeepdigital.co.uk/admin">Review in Admin Panel →</a></p>`,
+    });
+  } catch (_) {}
+
   return (
     <div>
       <Label className="text-sm font-medium mb-2 block">{label}</Label>
