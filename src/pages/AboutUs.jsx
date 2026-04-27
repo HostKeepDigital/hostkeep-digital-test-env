@@ -206,7 +206,7 @@ export default function AboutUs() {
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-12 text-center">Trust & Safety</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {trustFeatures.map((feature, i) => (
-              <Card key={i} className="border-0 shadow-md dark:bg-gray-700">
+              <Card key={i} className="border-0 shadow-md dark:[background-color:hsl(0_0%_17%)]">
                 <CardContent className="p-6 text-center">
                   <div className="w-12 h-12 bg-teal-100 dark:bg-teal-900 rounded-xl flex items-center justify-center mx-auto mb-4">
                     <feature.icon className="w-6 h-6 text-teal-600 dark:text-teal-400" />
