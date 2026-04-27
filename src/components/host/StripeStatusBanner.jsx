@@ -19,6 +19,7 @@ export default function StripeStatusBanner({ user }) {
 
   const handleConnect = async () => {
     setConnecting(true);
+    const session_token = localStorage.getItem("session_token");
     try {
       const res = await fetch('https://hostkeepdigital.co.uk/functions/createStripeConnectLink', {
         method: 'POST',
