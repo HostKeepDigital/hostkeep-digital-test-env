@@ -576,13 +576,17 @@ const handleDocFail = async (member, isAttempt2) => {
        await base44.entities.VerificationDocuments.update(latestDoc.id, { verification_status: "rejected" });
      }
 
+     const attemptBody = nextStatus === "documentation_failed_attempt_1"
+       ? "This was your first attempt. You have 1 attempt remaining. Please log in and re-upload a clear, valid document."
+       : "This was your second attempt. You have no attempts remaining after this. Please log in immediately and upload a clear, valid document — this is your final chance before your account is suspended.";
+
      await base44.functions.invoke("sendEmail", {
-       to: member.email,
-       subject: "Action required: your verification document was not approved — HostKeep",
-       html: buildEmail({
-         heading: "Document Review Result",
-         body: `Your verification document has been reviewed by our team and deemed unsatisfactory.<br><br>Please log in to HostKeep and submit a new document. You will find the upload option on your property verification page, in the same place as when you first submitted your document.<br><br>Once submitted, your new document will be reviewed by our team. If you have any questions, contact <a href="mailto:hello@hostkeepdigital.co.uk">hello@hostkeepdigital.co.uk</a>.`,
-       }),
+      to: member.email,
+      subject: "Action required: your verification document was not approved — HostKeep",
+      html: buildEmail({
+        heading: "Document Review Result",
+        body: `Your verification document has been reviewed by our team and deemed unsatisfactory.<br><br>${attemptBody}<br><br>You will find the upload option on your property verification page, in the same place as when you first submitted your document.<br><br>If you have any questions, contact <a href="mailto:hello@hostkeepdigital.co.uk">hello@hostkeepdigital.co.uk</a>.`,
+      }),
      });
      toast.success(`${member.full_name} — document failed, member notified`);
    } catch (e) {
