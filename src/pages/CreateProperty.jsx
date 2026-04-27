@@ -321,15 +321,24 @@ export default function CreateProperty() {
         }
       }
 
-      // Save verification document to VerificationDocuments entity
-      if (data.verification_document && user?.id) {
+      // Save all three verification documents
+      if (user?.id) {
         try {
-          await base44.entities.VerificationDocuments.create({
-            user_id: user.id,
-            document_type: "utility_bill",
-            file_url: data.verification_document,
-            verification_status: "pending",
-          });
+          const docTypes = [
+            { field: "doc_government_id", type: "government_id" },
+            { field: "doc_selfie", type: "selfie" },
+            { field: "doc_proof_of_property", type: "utility_bill" },
+          ];
+          for (const d of docTypes) {
+            if (data[d.field]) {
+              await base44.entities.VerificationDocuments.create({
+                user_id: user.id,
+                document_type: d.type,
+                file_url: data[d.field],
+                verification_status: "pending",
+              });
+            }
+          }
         } catch (e) {
           console.warn("VerificationDocuments save skipped:", e);
         }
@@ -338,8 +347,8 @@ export default function CreateProperty() {
       try {
         await base44.functions.invoke("sendEmail", {
           to: "admin@hostkeepdigital.co.uk",
-          subject: `New verification document uploaded — ${user?.full_name || user?.email || user?.id}`,
-          html: `<p><strong>${user?.full_name || "A host"}</strong>${user?.email ? ` (${user.email})` : ""} has uploaded a <strong>utility bill</strong> for property verification.</p><p><a href="https://hostkeepdigital.co.uk/admin">Review in Admin Panel →</a></p>`,
+          subject: "New verification documents uploaded — HostKeep",
+          html: "<p>" + (user?.full_name || "A host") + " has uploaded 3 verification documents. Please review in the admin panel.</p><p><a href='https://hostkeepdigital.co.uk/admin'>Admin Panel</a></p>",
         });
       } catch (_) {}
 
