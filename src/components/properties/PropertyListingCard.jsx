@@ -356,7 +356,7 @@ export default function PropertyListingCard({
           <div className="flex items-center gap-2 text-sm">
             {docIcon}
             <span className={docColor}>
-              {docStatus}
+              <strong>Documents:</strong> {docStatus}
             </span>
           </div>
         </div>
