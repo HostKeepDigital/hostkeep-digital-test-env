@@ -103,7 +103,7 @@ export default function Accessibility() {
                 <p className="text-gray-700 mb-4">
                   If you experience accessibility barriers or have suggestions for improving the Platform's accessibility, please contact us. We welcome feedback and will work to address accessibility issues promptly.
                 </p>
-                <div className="bg-teal-50 border border-teal-200 rounded-lg p-4 mt-4">
+                <div className="bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-lg p-4 mt-4">
                   <p className="text-gray-900 font-medium mb-2">Contact Information:</p>
                   <p className="text-gray-700">[Contact Email]</p>
                   <p className="text-gray-700">[Contact Phone]</p>
@@ -142,7 +142,7 @@ export default function Accessibility() {
               </section>
 
               {/* Last Updated */}
-              <section className="bg-blue-50 border border-blue-200 rounded-xl p-8">
+              <section className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-8">
                 <p className="text-gray-700">
                   This Accessibility Statement was last reviewed in February 2026. We will update this statement if significant changes are made to the Platform's accessibility features.
                 </p>
