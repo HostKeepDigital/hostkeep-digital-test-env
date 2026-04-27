@@ -164,43 +164,39 @@ export default function Settings() {
 
   // ⭐ FIXED: Now saves phone + location
   const handleSaveProfile = async () => {
-    setSaveStatus(null);
+  setSaveStatus(null);
 
-    if (!profile.forename.trim() || !profile.surname.trim()) {
-      setSaveStatus("error");
-      return;
-    }
+  if (!profile.forename.trim() || !profile.surname.trim()) {
+    setSaveStatus("error");
+    return;
+  }
 
-    setSaving(true);
+  setSaving(true);
 
-    try {
-      const sessionToken = localStorage.getItem("session_token");
+  try {
+    const fullName = [profile.forename, profile.middle_name, profile.surname]
+      .map(s => (s || "").trim())
+      .filter(Boolean)
+      .join(" ");
 
-      const res = await fetch("/functions/updateProfile", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          session_token: sessionToken,
-          forename: profile.forename,
-          middle_name: profile.middle_name,
-          surname: profile.surname,
-          phone: profile.phone,
-          location: profile.location,
-        }),
-      });
+    await base44.entities.User.update(user.id, {
+      forename: profile.forename.trim(),
+      middle_name: profile.middle_name.trim(),
+      surname: profile.surname.trim(),
+      full_name: fullName,
+      phone: profile.phone.trim(),
+      location: profile.location.trim(),
+    });
 
-      const data = await res.json();
-      if (!data.success) throw new Error(data.error || "save_failed");
-
-      setSaveStatus("success");
-      setTimeout(() => setSaveStatus(null), 4000);
-    } catch (err) {
-      console.error("Save profile error:", err);
-      setSaveStatus("error");
-    } finally {
-      setSaving(false);
-    }
-  };
+    setSaveStatus("success");
+    setTimeout(() => setSaveStatus(null), 4000);
+  } catch (err) {
+    console.error("Save profile error:", err);
+    setSaveStatus("error");
+  } finally {
+    setSaving(false);
+  }
+};
 
   const handleNotificationToggle = async (field, value) => {
     const updated = { ...notifications, [field]: value };
