@@ -554,19 +554,12 @@ const handleDocApprove = async (member) => {
 const handleDocFail = async (member, isAttempt2) => {
    setML(member.id, "doc_fail");
    try {
-     // Count previous rejections for this user
-     const rejectedDocs = (await base44.entities.VerificationDocuments.filter({ user_id: member.user_id, verification_status: "rejected" })) || [];
-     const rejectionCount = rejectedDocs.length;
-
-     // Determine next status based on rejection count
      let nextStatus;
-     if (rejectionCount === 0) {
-       nextStatus = "documentation_failed_attempt_1";
-     } else if (rejectionCount === 1) {
-       nextStatus = "documentation_failed_attempt_2";
-     } else {
-       nextStatus = "documentation_failed_attempt_2"; // Cap at attempt 2
-     }
+      if (member.approval_status === "documentation_failed_attempt_1") {
+        nextStatus = "documentation_failed_attempt_2";
+      } else {
+        nextStatus = "documentation_failed_attempt_1";
+      }
 
      await base44.entities.FoundingMember.update(member.id, { approval_status: nextStatus });
 
