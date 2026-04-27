@@ -122,6 +122,8 @@ export default function CleanerVerification() {
                 documentType="government_id"
                 label="Government ID"
                 description="Passport, driver's license, or national ID card"
+                userName={user?.full_name}
+                userEmail={user?.email}
                 onUploadComplete={handleDocumentUpload}
               />
 
@@ -130,6 +132,8 @@ export default function CleanerVerification() {
                 documentType="selfie"
                 label="Selfie"
                 description="Clear photo of your face"
+                userName={user?.full_name}
+                userEmail={user?.email}
                 onUploadComplete={handleDocumentUpload}
               />
 
