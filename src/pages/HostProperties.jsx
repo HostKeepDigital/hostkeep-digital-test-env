@@ -98,8 +98,21 @@ export default function HostProperties() {
     enabled: !!user?.id
   });
 
+  const { data: verificationDocs = [] } = useQuery({
+    queryKey: ["verification-docs", user?.id],
+    queryFn: () => base44.entities.VerificationDocuments.filter({ user_id: user?.id }),
+    enabled: !!user?.id
+  });
+
   const isFoundingMember = foundingMemberData?.is_founding_member === true;
-  const isBanned = foundingMemberData?.approval_status?.startsWith("banned_");
+  const approvalStatus = foundingMemberData?.approval_status;
+  const hasRejectedDocs = verificationDocs.some(d => d.verification_status === "rejected");
+  const isFirstSubmission = approvalStatus === "awaiting_document_verification" && !hasRejectedDocs;
+  const isResubmissionUnderReview = approvalStatus === "awaiting_document_verification" && hasRejectedDocs;
+  const isApproved = approvalStatus === "approved";
+  const isAttempt1 = approvalStatus === "documentation_failed_attempt_1";
+  const isAttempt2 = approvalStatus === "documentation_failed_attempt_2";
+  const isBanned = approvalStatus?.startsWith("banned_");
 
   const [stripeConnected, setStripeConnected] = useState(false);
 
@@ -159,10 +172,35 @@ export default function HostProperties() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-3 md:px-4 py-4 md:py-8">
-        {/* Ban Banner */}
-        {isBanned && (
+        {/* Document Status Banners */}
+        {isFirstSubmission && (
+          <div className="mb-6 p-4 rounded-lg border-l-4 border-green-500 bg-green-50">
+            <p className="text-sm text-green-800"><strong>Documents Submitted.</strong> Our team will review your documents within 24–48 hours. Your listing won't be publicly visible until approved.</p>
+          </div>
+        )}
+        {isApproved && (
+          <div className="mb-6 p-4 rounded-lg border-l-4 border-green-500 bg-green-50">
+            <p className="text-sm text-green-800"><strong>Documents Accepted.</strong> Your property is now publicly visible on HostKeep.</p>
+          </div>
+        )}
+        {isAttempt1 && (
+          <div className="mb-6 p-4 rounded-lg border-l-4 border-yellow-500 bg-yellow-50">
+            <p className="text-sm text-yellow-800"><strong>Document resubmission required.</strong> Your verification document was not approved. Please re-upload from your dashboard.</p>
+          </div>
+        )}
+        {isResubmissionUnderReview && (
+          <div className="mb-6 p-4 rounded-lg border-l-4 border-yellow-500 bg-yellow-50">
+            <p className="text-sm text-yellow-800"><strong>Submission 2 is under review.</strong> Our team will review your resubmitted documents within 24–48 hours.</p>
+          </div>
+        )}
+        {isAttempt2 && (
           <div className="mb-6 p-4 rounded-lg border-l-4 border-red-500 bg-red-50">
-            <p className="text-sm text-red-800"><strong>Your account has been suspended.</strong> You are unable to publish properties on HostKeep. Please contact <a href="mailto:hello@hostkeepdigital.co.uk" className="underline">hello@hostkeepdigital.co.uk</a> if you believe this is an error.</p>
+            <p className="text-sm text-red-800"><strong>Final attempt — document resubmission required.</strong> Your second submission was not approved. Please re-upload from your dashboard immediately.</p>
+          </div>
+        )}
+        {isBanned && (
+          <div className="mb-6 p-4 rounded-lg border-l-4 border-gray-900 bg-gray-900">
+            <p className="text-sm text-white"><strong>Your account has been suspended</strong> for attempting to create a property without proper documentation. If you believe this is an error please contact <a href="mailto:hello@hostkeepdigital.co.uk" className="underline">hello@hostkeepdigital.co.uk</a>.</p>
           </div>
         )}
 
