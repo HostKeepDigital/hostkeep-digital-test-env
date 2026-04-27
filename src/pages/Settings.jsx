@@ -88,42 +88,18 @@ export default function Settings() {
       .then((records) => {
         const u = records?.[0];
         if (!u) {
-          // Fallback to AuthContext full_name
-          if (user.full_name) {
-            const parts = splitFullName(user.full_name);
-            setProfile({
-              forename: parts.forename,
-              middle_name: parts.middle_name,
-              surname: parts.surname,
-              phone: "",
-              location: "",
-            });
-          }
           return;
         }
-        // Always use full_name as the source of truth
-        const parts = splitFullName(u.full_name || "");
+        // Pull forename, middle_name, surname directly (stored during signup)
         setProfile({
-          forename: parts.forename,
-          middle_name: parts.middle_name,
-          surname: parts.surname,
+          forename: u.forename || "",
+          middle_name: u.middle_name || "",
+          surname: u.surname || "",
           phone: u.phone || "",
           location: u.location || "",
         });
       })
-      .catch(() => {
-        // Fallback to AuthContext full_name
-        if (user.full_name) {
-          const parts = splitFullName(user.full_name);
-          setProfile({
-            forename: parts.forename,
-            middle_name: parts.middle_name,
-            surname: parts.surname,
-            phone: "",
-            location: "",
-          });
-        }
-      });
+      .catch(() => {});
 
     // Load notification preferences
     base44.entities.User.filter({ id: user.id }).then((records) => {
