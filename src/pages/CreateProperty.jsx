@@ -51,6 +51,7 @@ import LocationStep from "@/components/properties/LocationStep";
 import AmenitiesSelector from "@/components/properties/AmenitiesSelector";
 import { useAuth } from "@/lib/AuthContext";
 import PolicyPickerDialog from "@/components/properties/PolicyPickerDialog";
+import DocumentUpload from "@/components/verification/DocumentUpload";
 
 import { AMENITY_GROUPS, AMENITY_MAP } from "@/data/amenities";
 
@@ -1095,54 +1096,40 @@ export default function CreateProperty() {
             {currentStep === 7 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Verification</CardTitle>
+                  <CardTitle>Verification Documents</CardTitle>
                   <CardDescription>
-                     Please upload a utility bill or equivalent document to verify your property address and ownership.
+                    Please upload all three documents to verify your identity and property.
                   </CardDescription>
                 </CardHeader>
 
                 <CardContent className="space-y-6">
-                  <div>
-                    <Label>Upload Verification Document</Label>
-                    <p className="text-xs text-gray-500 mt-1 mb-3">
-                      Accepted: utility bill, council tax bill, mortgage statement, or similar (PDF or image).
-                    </p>
-                    {!formData.verification_document && (
-                      isUploading ? (
-                        <div className="flex items-center gap-3 mt-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                          <Loader2 className="w-4 h-4 animate-spin text-teal-600 flex-shrink-0" />
-                          <span className="text-sm text-gray-600">Uploading document...</span>
-                        </div>
-                      ) : (
-                        <input
-                          type="file"
-                          accept="image/*,application/pdf"
-                          onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (!file) return;
-                            setIsUploading(true);
-                            const { file_url } = await base44.integrations.Core.UploadFile({ file });
-                            handleChange("verification_document", file_url);
-                            setIsUploading(false);
-                          }}
-                          className="mt-1"
-                        />
-                      )
-                    )}
-                    {formData.verification_document && (
-                      <div className="flex items-center gap-2 mt-2 p-3 bg-teal-50 border border-teal-200 rounded-lg">
-                        <CheckCircle className="w-4 h-4 text-teal-600 flex-shrink-0" />
-                        <span className="text-sm text-teal-700 flex-1">Document uploaded successfully</span>
-                        <button
-                          type="button"
-                          onClick={() => handleChange("verification_document", null)}
-                          className="text-gray-400 hover:text-red-500 transition-colors"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  <DocumentUpload
+                    userId={user?.id}
+                    documentType="government_id"
+                    label="Government ID"
+                    description="Passport, driving licence, or national ID card"
+                    userName={user?.full_name}
+                    userEmail={user?.email}
+                    onUploadComplete={(type, url) => handleChange("doc_government_id", url)}
+                  />
+                  <DocumentUpload
+                    userId={user?.id}
+                    documentType="selfie"
+                    label="Selfie holding your ID"
+                    description="A clear photo of yourself holding your ID next to your face"
+                    userName={user?.full_name}
+                    userEmail={user?.email}
+                    onUploadComplete={(type, url) => handleChange("doc_selfie", url)}
+                  />
+                  <DocumentUpload
+                    userId={user?.id}
+                    documentType="utility_bill"
+                    label="Proof of Property"
+                    description="Utility bill, council tax bill, or mortgage statement showing your name and property address"
+                    userName={user?.full_name}
+                    userEmail={user?.email}
+                    onUploadComplete={(type, url) => handleChange("doc_proof_of_property", url)}
+                  />
                 </CardContent>
               </Card>
             )}
