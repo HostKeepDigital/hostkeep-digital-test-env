@@ -134,6 +134,8 @@ export default function HostDashboard() {
   });
 
   const isBanned = foundingMember?.approval_status?.startsWith("banned_");
+  const docFailed = ["documentation_failed_attempt_1", "documentation_failed_attempt_2"].includes(foundingMember?.approval_status);
+  const isLastAttempt = foundingMember?.approval_status === "documentation_failed_attempt_2";
 
   // Load cancellation policies
   const { data: cancellationPolicies = [] } = useQuery({
@@ -277,6 +279,26 @@ export default function HostDashboard() {
         {isBanned && (
           <div className="mb-6 p-4 rounded-lg border-l-4 border-red-500 bg-red-50">
             <p className="text-sm text-red-800"><strong>Your account has been suspended.</strong> You are unable to publish properties on HostKeep. Please contact <a href="mailto:hello@hostkeepdigital.co.uk" className="underline">hello@hostkeepdigital.co.uk</a> if you believe this is an error.</p>
+          </div>
+        )}
+
+        {/* Doc Failed Banner */}
+        {docFailed && (
+          <div className="mb-6 p-4 rounded-lg border-l-4 border-amber-500 bg-amber-50 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm text-amber-900 font-semibold mb-1">
+                {isLastAttempt ? "⚠️ Final Attempt — Your last verification document was not approved." : "Your verification document was not approved."}
+              </p>
+              <p className="text-sm text-amber-800 mb-3">
+                {isLastAttempt
+                  ? "This is your final chance to upload valid documentation. Failure to do so will result in account suspension."
+                  : "Please re-upload a valid document. You have 1 attempt remaining."}
+              </p>
+              <Link to="/HostVerification">
+                <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white">Re-upload Document</Button>
+              </Link>
+            </div>
           </div>
         )}
 
