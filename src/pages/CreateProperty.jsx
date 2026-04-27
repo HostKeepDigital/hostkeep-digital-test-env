@@ -323,7 +323,7 @@ export default function CreateProperty() {
         try {
           await base44.entities.VerificationDocuments.create({
             user_id: user.id,
-            property_id: property.id,
+            document_type: "utility_bill",
             file_url: data.verification_document,
             verification_status: "pending",
           });
