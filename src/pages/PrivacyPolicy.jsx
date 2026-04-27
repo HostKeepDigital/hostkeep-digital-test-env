@@ -132,7 +132,7 @@ export default function PrivacyPolicy() {
                       <li>Security monitoring</li>
                       <li>Customer support</li>
                     </ul>
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mt-4">
                       <p className="text-gray-700 text-sm">
                         <span className="font-medium">Legitimate Interests Summary:</span> Where we rely on legitimate interests, these include improving Platform performance, preventing fraud, detecting and stopping network security threats, conducting customer support, and enforcing Platform policies. We balance these interests against your rights and freedoms, implementing appropriate safeguards to protect your data.
                       </p>
