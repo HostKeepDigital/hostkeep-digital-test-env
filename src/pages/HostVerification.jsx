@@ -54,6 +54,8 @@ export default function HostVerification() {
 
   const [formData, setFormData] = useState({
     government_id: null,
+    selfie: null,
+    proof_of_property: null,
     phone: "",
     phone_verified: false,
     property_address: "",
@@ -66,24 +68,15 @@ export default function HostVerification() {
     setFormData((prev) => ({ ...prev, [type]: url }));
     
     // If re-uploading after failure, create new VerificationDocuments record
-    if (docFailedStatus && type === "government_id") {
+    if (docFailedStatus) {
       try {
         await base44.entities.VerificationDocuments.create({
           user_id: user.id,
-          document_type: "government_id",
+          document_type: type,
           file_url: url,
           verification_status: "pending",
         });
-        
-        const members = await base44.entities.FoundingMember.filter({ user_id: user.id });
-        if (members.length > 0) {
-          await base44.entities.FoundingMember.update(members[0].id, { approval_status: "awaiting_document_verification" });
-        }
-        
-        setDocFailedStatus(null);
-        toast.success("New document submitted for review");
       } catch (e) {
-        toast.error("Failed to submit document");
         console.error(e);
       }
     }
