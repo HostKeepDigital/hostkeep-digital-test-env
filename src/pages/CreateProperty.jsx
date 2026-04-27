@@ -264,7 +264,9 @@ export default function CreateProperty() {
     },
     status: "draft",
     existing_listing_url: "",
-    verification_document: null,
+    doc_government_id: null,
+    doc_selfie: null,
+    doc_proof_of_property: null,
 
     smart_lock_enabled: false,
     smart_lock_code: "",
@@ -505,7 +507,7 @@ export default function CreateProperty() {
       case 6:
         return !!formData.cancellation_policy_id;
       case 7:
-        return formData.verification_document !== null;
+        return formData.doc_government_id !== null && formData.doc_selfie !== null && formData.doc_proof_of_property !== null;
       default:
         return true;
     }
