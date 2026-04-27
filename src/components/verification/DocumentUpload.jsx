@@ -30,23 +30,23 @@ export default function DocumentUpload({ userId, documentType, label, descriptio
 
       toast.success("Document uploaded successfully");
       if (onUploadComplete) onUploadComplete(documentType, file_url);
+
+      // Notify admin
+      try {
+        const docLabel = documentType.replace(/_/g, " ");
+        const displayName = userName || userEmail || userId;
+        await base44.functions.invoke("sendEmail", {
+          to: "admin@hostkeepdigital.co.uk",
+          subject: `New verification document uploaded — ${displayName}`,
+          html: `<p><strong>${displayName}</strong>${userEmail ? ` (${userEmail})` : ""} has uploaded a <strong>${docLabel}</strong> document for verification.</p><p><a href="https://hostkeepdigital.co.uk/admin">Review in Admin Panel →</a></p>`,
+        });
+      } catch (_) {}
     } catch (error) {
       toast.error("Failed to upload document");
     } finally {
       setUploading(false);
     }
   };
-
-  // Notify admin
-  try {
-    const docLabel = documentType.replace(/_/g, " ");
-    const displayName = userName || userEmail || userId;
-    await base44.functions.invoke("sendEmail", {
-      to: "admin@hostkeepdigital.co.uk",
-      subject: `New verification document uploaded — ${displayName}`,
-      html: `<p><strong>${displayName}</strong>${userEmail ? ` (${userEmail})` : ""} has uploaded a <strong>${docLabel}</strong> document for verification.</p><p><a href="https://hostkeepdigital.co.uk/admin">Review in Admin Panel →</a></p>`,
-    });
-  } catch (_) {}
 
   return (
     <div>
