@@ -47,6 +47,15 @@ Deno.serve(async (req) => {
 
     const userUpdates = { is_founding_member: true };
     if (member.postcode) userUpdates.signup_postcode = member.postcode.trim().toUpperCase();
+
+    if (member.full_name) {
+      const parts = member.full_name.trim().split(/\s+/).filter(Boolean);
+      userUpdates.full_name = member.full_name.trim();
+      userUpdates.forename = parts[0] || "";
+      userUpdates.surname = parts.length > 1 ? parts[parts.length - 1] : "";
+      userUpdates.middle_name = parts.length > 2 ? parts.slice(1, -1).join(" ") : "";
+    }
+
     await base44.asServiceRole.entities.User.update(user_id, userUpdates);
 
     return Response.json({ matched: true, role: member.role });
