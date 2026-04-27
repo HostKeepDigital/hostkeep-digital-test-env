@@ -26,12 +26,6 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: "no_user_id" }, { status: 400 });
     }
 
-    // Build full_name from parts
-    const fullName = [forename || "", middle_name || "", surname || ""]
-      .map(s => (s || "").trim())
-      .filter(Boolean)
-      .join(" ");
-
     // Unified: always write to User entity
     const updates = {};
     if (forename != null) updates.forename = String(forename).trim();
