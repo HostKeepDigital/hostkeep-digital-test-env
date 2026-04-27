@@ -65,7 +65,44 @@ export default function HostVerification() {
   });
 
   const handleDocumentUpload = (type, url) => {
-    setFormData((prev) => ({ ...prev, [type]: url }));
+    const fieldMap = {
+      government_id: "government_id",
+      selfie: "selfie",
+      utility_bill: "proof_of_property",
+    };
+    const field = fieldMap[type] || type;
+    setFormData((prev) => ({ ...prev, [field]: url }));
+  };
+
+  const handleResubmit = async () => {
+    setLoading(true);
+    try {
+      const docTypes = [
+        { field: "government_id", type: "government_id" },
+        { field: "selfie", type: "selfie" },
+        { field: "proof_of_property", type: "utility_bill" },
+      ];
+      for (const d of docTypes) {
+        if (formData[d.field]) {
+          await base44.entities.VerificationDocuments.create({
+            user_id: user.id,
+            document_type: d.type,
+            file_url: formData[d.field],
+            verification_status: "pending",
+          });
+        }
+      }
+      const members = await base44.entities.FoundingMember.filter({ user_id: user.id });
+      if (members.length > 0) {
+        await base44.entities.FoundingMember.update(members[0].id, { approval_status: "awaiting_document_verification" });
+      }
+      setDocFailedStatus(null);
+      toast.success("Documents resubmitted for review");
+    } catch (e) {
+      toast.error("Failed to resubmit documents");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handlePhoneVerified = (phone) => {
@@ -186,90 +223,21 @@ export default function HostVerification() {
 
             <CardContent>
               {docFailedStatus ? (
-                <div className="space-y-4">
-                  <DocumentUpload
-                    userId={user?.id}
-                    documentType="government_id"
-                    label="Government ID"
-                    description="Passport, driver's license, or national ID card"
-                    userName={user?.full_name}
-                    userEmail={user?.email}
-                    onUploadComplete={handleDocumentUpload}
-                    localOnly={true}
-                  />
-                  <DocumentUpload
-                    userId={user?.id}
-                    documentType="selfie"
-                    label="Selfie with ID"
-                    description="A clear photo of you holding your government ID"
-                    userName={user?.full_name}
-                    userEmail={user?.email}
-                    onUploadComplete={handleDocumentUpload}
-                    localOnly={true}
-                  />
-                  <DocumentUpload
-                    userId={user?.id}
-                    documentType="utility_bill"
-                    label="Proof of Property"
-                    description="Utility bill, mortgage statement, or tenancy agreement"
-                    userName={user?.full_name}
-                    userEmail={user?.email}
-                    onUploadComplete={handleDocumentUpload}
-                    localOnly={true}
-                  />
+                <div className="space-y-6">
+                  <DocumentUpload userId={user?.id} documentType="government_id" label="Government ID" description="Passport, driving licence, or national ID card" onUploadComplete={handleDocumentUpload} localOnly />
+                  <DocumentUpload userId={user?.id} documentType="selfie" label="Selfie holding your ID" description="A clear photo of yourself holding your ID next to your face" onUploadComplete={handleDocumentUpload} localOnly />
+                  <DocumentUpload userId={user?.id} documentType="utility_bill" label="Proof of Property" description="Utility bill, council tax bill, or mortgage statement showing your name and property address" onUploadComplete={handleDocumentUpload} localOnly />
                   {formData.government_id && formData.selfie && formData.proof_of_property && (
-                    <Button
-                      className="mt-4 w-full bg-teal-600 hover:bg-teal-700"
-                      onClick={async () => {
-                        try {
-                          const docTypes = [
-                            { field: "government_id", type: "government_id" },
-                            { field: "selfie", type: "selfie" },
-                            { field: "proof_of_property", type: "utility_bill" },
-                          ];
-                          for (const d of docTypes) {
-                            if (formData[d.field]) {
-                              await base44.entities.VerificationDocuments.create({
-                                user_id: user.id,
-                                document_type: d.type,
-                                file_url: formData[d.field],
-                                verification_status: "pending",
-                              });
-                            }
-                          }
-                          const members = await base44.entities.FoundingMember.filter({ user_id: user.id });
-                          if (members.length > 0) {
-                            await base44.entities.FoundingMember.update(members[0].id, { approval_status: "awaiting_document_verification" });
-                          }
-                          setDocFailedStatus(null);
-                          toast.success("Documents resubmitted for review");
-                        } catch (e) {
-                          toast.error("Failed to resubmit documents");
-                        }
-                      }}
-                    >
-                      Resubmit Documents
+                    <Button onClick={handleResubmit} disabled={loading} className="w-full bg-teal-600 hover:bg-teal-700">
+                      {loading ? "Submitting..." : "Resubmit Documents for Review"}
                     </Button>
                   )}
                 </div>
               ) : (
                 <>
-                  <DocumentUpload
-                    userId={user?.id}
-                    documentType="government_id"
-                    label="Government ID"
-                    description="Passport, driver's license, or national ID card"
-                    userName={user?.full_name}
-                    userEmail={user?.email}
-                    onUploadComplete={handleDocumentUpload}
-                  />
+                  <DocumentUpload userId={user?.id} documentType="government_id" label="Government ID" description="Passport, driver's license, or national ID card" onUploadComplete={handleDocumentUpload} />
                   {formData.government_id && (
-                    <Button
-                      onClick={() => setStep(2)}
-                      className="mt-4 w-full"
-                    >
-                      Continue to Phone Verification
-                    </Button>
+                    <Button onClick={() => setStep(2)} className="mt-4 w-full">Continue to Phone Verification</Button>
                   )}
                 </>
               )}
