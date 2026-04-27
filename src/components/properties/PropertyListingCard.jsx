@@ -29,6 +29,9 @@ import {
   EyeOff,
   Trash2,
   MoreVertical,
+  FileCheck,
+  Clock,
+  XCircle,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -53,6 +56,8 @@ export default function PropertyListingCard({
   subscription,
   stripeConnected,
   foundingMemberData,
+  verificationDocs,
+  approvalStatus,
 }) {
   const [showUnpublishDialog, setShowUnpublishDialog] = useState(false);
   const [showGateModal, setShowGateModal] = useState(false);
@@ -132,6 +137,30 @@ export default function PropertyListingCard({
           cj.status !== "declined"
       )
   );
+
+  // Document status logic
+  const hasRejectedDocs = verificationDocs?.some(d => d.verification_status === "rejected");
+  let docStatus = null;
+  let docIcon = null;
+  let docColor = null;
+
+  if (approvalStatus === "approved") {
+    docStatus = "Documents Approved";
+    docIcon = <CheckCircle2 className="w-4 h-4 text-emerald-500" />;
+    docColor = "text-emerald-700";
+  } else if (approvalStatus === "awaiting_document_verification") {
+    docStatus = "Documents Pending";
+    docIcon = <Clock className="w-4 h-4 text-blue-500" />;
+    docColor = "text-blue-700";
+  } else if (hasRejectedDocs) {
+    docStatus = "Documents Need Resubmitting";
+    docIcon = <XCircle className="w-4 h-4 text-rose-500" />;
+    docColor = "text-rose-700";
+  } else {
+    docStatus = "Not Submitted";
+    docIcon = <AlertCircle className="w-4 h-4 text-gray-400" />;
+    docColor = "text-gray-500";
+  }
 
   return (
     <div
@@ -321,6 +350,13 @@ export default function PropertyListingCard({
             )}
             <span className={hasStripe ? "text-gray-700" : "text-gray-500"}>
               {hasStripe ? "Stripe Connected" : "No Stripe"}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 text-sm col-span-2">
+            {docIcon}
+            <span className={docColor}>
+              {docStatus}
             </span>
           </div>
         </div>

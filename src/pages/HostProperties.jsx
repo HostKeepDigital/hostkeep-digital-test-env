@@ -284,6 +284,8 @@ export default function HostProperties() {
                   subscription={subscription}
                   stripeConnected={stripeConnected}
                   foundingMemberData={foundingMemberData}
+                  verificationDocs={verificationDocs}
+                  approvalStatus={approvalStatus}
                   />
                 </motion.div>
               ))}
