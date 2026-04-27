@@ -26,7 +26,7 @@ import PhoneVerification from "@/components/verification/PhoneVerification";
 import { addUserRole } from "@/components/utils/roleHelpers";
 import { useAuth } from "@/lib/AuthContext";
 import { useEffect } from "react";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, AlertTriangle } from "lucide-react";
 
 export default function HostVerification() {
   const navigate = useNavigate();
@@ -168,11 +168,20 @@ export default function HostVerification() {
 
         <Progress value={progress} className="mb-8" />
 
-        {docFailedStatus && (
+        {docFailedStatus === "documentation_failed_attempt_1" && (
           <div className="mb-6 p-4 rounded-lg border-l-4 border-amber-400 bg-amber-50">
             <div className="flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-amber-800"><strong>Your previous verification document was not approved.</strong> Please upload a new document below.</p>
+              <p className="text-sm text-amber-800"><strong>Your previous verification document was not approved.</strong> You have 1 attempt remaining. Please upload a clear, valid document.</p>
+            </div>
+          </div>
+        )}
+
+        {docFailedStatus === "documentation_failed_attempt_2" && (
+          <div className="mb-6 p-4 rounded-lg border-l-4 border-red-400 bg-red-50">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-800"><strong>⚠️ Final Attempt — This is your last chance.</strong> If this document is also rejected your account will be suspended. Please ensure the document is clearly readable and valid.</p>
             </div>
           </div>
         )}
