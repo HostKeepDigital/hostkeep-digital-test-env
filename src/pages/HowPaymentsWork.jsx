@@ -194,7 +194,7 @@ export default function HowPaymentsWork() {
               <p className="text-gray-600 leading-relaxed">
                 <strong>HostKeep takes 0% commission.</strong> The only deduction is Stripe's standard card processing fee of <strong>1.4% + 20p per transaction</strong>. This goes directly to Stripe — not to HostKeep.
               </p>
-              <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-5 mt-2">
+              <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-xl p-5 mt-2">
                 <p className="text-sm font-semibold text-gray-700 mb-3">Example on a £300 booking</p>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
