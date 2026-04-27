@@ -199,23 +199,75 @@ export default function HostVerification() {
             </CardHeader>
 
             <CardContent>
-              <DocumentUpload
-                userId={user?.id}
-                documentType="government_id"
-                label="Government ID"
-                description="Passport, driver's license, or national ID card"
-                userName={user?.full_name}
-                userEmail={user?.email}
-                onUploadComplete={handleDocumentUpload}
-              />
-
-              {formData.government_id && (
-                <Button
-                  onClick={() => setStep(2)}
-                  className="mt-4 w-full"
-                >
-                  Continue to Phone Verification
-                </Button>
+              {docFailedStatus ? (
+                <div className="space-y-4">
+                  <DocumentUpload
+                    userId={user?.id}
+                    documentType="government_id"
+                    label="Government ID"
+                    description="Passport, driver's license, or national ID card"
+                    userName={user?.full_name}
+                    userEmail={user?.email}
+                    onUploadComplete={handleDocumentUpload}
+                  />
+                  <DocumentUpload
+                    userId={user?.id}
+                    documentType="selfie"
+                    label="Selfie with ID"
+                    description="A clear photo of you holding your government ID"
+                    userName={user?.full_name}
+                    userEmail={user?.email}
+                    onUploadComplete={handleDocumentUpload}
+                  />
+                  <DocumentUpload
+                    userId={user?.id}
+                    documentType="utility_bill"
+                    label="Proof of Property"
+                    description="Utility bill, mortgage statement, or tenancy agreement"
+                    userName={user?.full_name}
+                    userEmail={user?.email}
+                    onUploadComplete={handleDocumentUpload}
+                  />
+                  {formData.government_id && formData.selfie && formData.proof_of_property && (
+                    <Button
+                      className="mt-4 w-full bg-teal-600 hover:bg-teal-700"
+                      onClick={async () => {
+                        try {
+                          const members = await base44.entities.FoundingMember.filter({ user_id: user.id });
+                          if (members.length > 0) {
+                            await base44.entities.FoundingMember.update(members[0].id, { approval_status: "awaiting_document_verification" });
+                          }
+                          setDocFailedStatus(null);
+                          toast.success("Documents resubmitted for review");
+                        } catch (e) {
+                          toast.error("Failed to resubmit documents");
+                        }
+                      }}
+                    >
+                      Resubmit Documents
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <DocumentUpload
+                    userId={user?.id}
+                    documentType="government_id"
+                    label="Government ID"
+                    description="Passport, driver's license, or national ID card"
+                    userName={user?.full_name}
+                    userEmail={user?.email}
+                    onUploadComplete={handleDocumentUpload}
+                  />
+                  {formData.government_id && (
+                    <Button
+                      onClick={() => setStep(2)}
+                      className="mt-4 w-full"
+                    >
+                      Continue to Phone Verification
+                    </Button>
+                  )}
+                </>
               )}
             </CardContent>
           </Card>
