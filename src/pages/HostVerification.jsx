@@ -202,6 +202,8 @@ export default function HostVerification() {
                 documentType="government_id"
                 label="Government ID"
                 description="Passport, driver's license, or national ID card"
+                userName={user?.full_name}
+                userEmail={user?.email}
                 onUploadComplete={handleDocumentUpload}
               />
 
