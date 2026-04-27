@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { buildEmail } from "@/lib/emailTemplate";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -344,14 +345,6 @@ export default function CreateProperty() {
         }
       }
 
-      try {
-        await base44.functions.invoke("sendEmail", {
-          to: "admin@hostkeepdigital.co.uk",
-          subject: "New verification documents uploaded — HostKeep",
-          html: "<p>" + (user?.full_name || "A host") + " has uploaded 3 verification documents. Please review in the admin panel.</p><p><a href='https://hostkeepdigital.co.uk/admin'>Admin Panel</a></p>",
-        });
-      } catch (_) {}
-
       return property;
     },
     onSuccess: async () => {
@@ -369,6 +362,20 @@ export default function CreateProperty() {
       } catch (_) {
         // non-blocking — continue regardless
       }
+
+      // Notify admin of new document submission
+      try {
+        await base44.functions.invoke("sendEmail", {
+          to: "admin@hostkeepdigital.co.uk",
+          subject: "New verification documents submitted — HostKeep",
+          html: buildEmail({
+            heading: "New Documents to Review",
+            body: `<strong>${user?.full_name || "A host"}${user?.email ? ` (${user.email})` : ""}</strong> has submitted 3 verification documents and is awaiting review.<br><br>Please log in to the admin panel to review their submission.`,
+            buttonText: "Go to Admin Panel",
+            buttonUrl: "https://hostkeepdigital.co.uk/admin",
+          }),
+        });
+      } catch (_) {}
 
       try {
         const BETA_PLANS = ['beta_host_access', 'beta_cleaner_access'];
