@@ -17,9 +17,11 @@ const STATUS_STYLES = {
 
 function DocRow({ label, attempts, decision, onDecide, showDecisionButtons }) {
   return (
-    <div className="py-2 border-b border-gray-100 last:border-0">
-      <div className="flex items-center gap-2 mb-1.5">
-        <span className="text-xs font-medium text-gray-500 w-36 flex-shrink-0">{label}</span>
+    <div className="py-1 border-b border-gray-100 last:border-0">
+
+      {/* Row 1: Label + decision badge */}
+      <div className="flex items-center gap-2 mb-1">
+        <span className="text-xs font-medium text-gray-500 w-28 flex-shrink-0">{label}</span>
         {decision && (
           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${decision === "approved" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
             {decision === "approved" ? "Passed" : "Failed"}
@@ -30,9 +32,10 @@ function DocRow({ label, attempts, decision, onDecide, showDecisionButtons }) {
         )}
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-2">
+      {/* Row 2: Attempt links */}
+      <div className="flex flex-wrap gap-2 mb-1.5 pl-0">
         {attempts.length === 0 ? (
-          <span className="text-xs text-gray-300">No uploads</span>
+          <span className="text-xs text-gray-300">No uploads yet</span>
         ) : (
           attempts.map((doc, i) => (
             <a
@@ -52,24 +55,25 @@ function DocRow({ label, attempts, decision, onDecide, showDecisionButtons }) {
         )}
       </div>
 
+      {/* Row 3: Pass / Fail buttons */}
       {showDecisionButtons && (
         <div className="flex gap-1.5">
           <button
             onClick={() => onDecide("approved")}
-            className={`px-2.5 py-1 rounded text-xs font-medium transition-all border ${
+            className={`px-2.5 py-0.5 rounded text-xs font-medium transition-all border ${
               decision === "approved"
                 ? "bg-green-600 text-white border-green-600"
-                : "bg-white text-green-700 border-green-300 hover:bg-green-50 opacity-70"
+                : "bg-white text-green-700 border-green-300 hover:bg-green-50"
             }`}
           >
             Pass
           </button>
           <button
             onClick={() => onDecide("rejected")}
-            className={`px-2.5 py-1 rounded text-xs font-medium transition-all border ${
+            className={`px-2.5 py-0.5 rounded text-xs font-medium transition-all border ${
               decision === "rejected"
                 ? "bg-red-600 text-white border-red-600"
-                : "bg-white text-red-700 border-red-300 hover:bg-red-50 opacity-70"
+                : "bg-white text-red-700 border-red-300 hover:bg-red-50"
             }`}
           >
             Fail
@@ -140,7 +144,7 @@ export default function DocMemberTable({
   }
 
   return (
-    <div className="max-h-[560px] overflow-y-auto space-y-4">
+    <div className="max-h-[560px] overflow-y-auto space-y-2">
       {members.map(m => {
         const prop = getProperty(m.user_id);
         const memberDecisions = getMemberDecisions(m.id);
@@ -152,20 +156,23 @@ export default function DocMemberTable({
             <div className="flex flex-col md:flex-row">
 
               {/* LEFT — Member info */}
-              <div className="md:w-64 flex-shrink-0 bg-gray-50 border-b md:border-b-0 md:border-r border-gray-200 p-4 flex flex-col justify-between gap-3">
-                <div className="space-y-1">
-                  <p className="text-sm font-semibold text-gray-900 leading-tight">{m.full_name}</p>
-                  <p className="text-xs text-gray-500 break-all">{m.email}</p>
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${m.role === "host" ? "bg-teal-50 text-teal-700" : "bg-purple-50 text-purple-700"}`}>
+              <div className="md:w-48 flex-shrink-0 bg-gray-50 border-b md:border-b-0 md:border-r border-gray-200 p-3 flex flex-col justify-between gap-2">
+
+                <div className="space-y-0.5">
+                  <p className="text-xs font-semibold text-gray-900 leading-tight">{m.full_name}</p>
+                  <p className="text-xs text-gray-400 break-all">{m.email}</p>
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-0.5 ${m.role === "host" ? "bg-teal-50 text-teal-700" : "bg-purple-50 text-purple-700"}`}>
                     {m.role === "host" ? "Host" : "Cleaner"}
                   </span>
                 </div>
 
-                <div className="space-y-0.5 text-xs text-gray-500">
+                <div className="text-xs text-gray-500 space-y-0">
                   {prop?.location?.street && <p>{prop.location.street}</p>}
                   {prop?.county && <p>{prop.county}</p>}
-                  {!prop?.location?.street && !prop?.county && <p className="text-gray-300">No property on file</p>}
-                  <p className="text-gray-400 mt-1">
+                  {!prop?.location?.street && !prop?.county && (
+                    <p className="text-gray-300">No property on file</p>
+                  )}
+                  <p className="text-gray-400 pt-0.5">
                     Signed up: {m.signup_timestamp ? new Date(m.signup_timestamp).toLocaleDateString("en-GB") : "—"}
                   </p>
                 </div>
@@ -175,7 +182,7 @@ export default function DocMemberTable({
                   <GateChecklist member={m} />
                 </div>
 
-                {/* Submit Decision button */}
+                {/* Submit Decision */}
                 {showDecisionButtons && canSubmit && (
                   <Button
                     size="sm"
@@ -183,11 +190,13 @@ export default function DocMemberTable({
                     disabled={isSubmitting}
                     onClick={() => handleSubmit(m)}
                   >
-                    {isSubmitting ? <><Loader2 className="w-3 h-3 animate-spin mr-1" />Submitting…</> : <><Check className="w-3 h-3 mr-1" />Submit Decision</>}
+                    {isSubmitting
+                      ? <><Loader2 className="w-3 h-3 animate-spin mr-1" />Submitting…</>
+                      : <><Check className="w-3 h-3 mr-1" />Submit Decision</>}
                   </Button>
                 )}
 
-                {/* Delete button */}
+                {/* Delete */}
                 {showDeleteButton && (
                   <Button
                     size="sm"
@@ -196,14 +205,18 @@ export default function DocMemberTable({
                     disabled={!!actionLoading[m.id]}
                     onClick={() => onDelete && onDelete(m)}
                   >
-                    {actionLoading[m.id] === "delete" ? "..." : <><Trash2 className="w-3 h-3 mr-1" />Delete</>}
+                    {actionLoading[m.id] === "delete"
+                      ? "..."
+                      : <><Trash2 className="w-3 h-3 mr-1" />Delete</>}
                   </Button>
                 )}
               </div>
 
               {/* RIGHT — Documents */}
-              <div className="flex-1 p-4">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Verification Documents</p>
+              <div className="flex-1 p-3">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">
+                  Verification Documents
+                </p>
                 <div>
                   {DOC_TYPES.map(({ key, label }) => (
                     <DocRow
@@ -217,7 +230,9 @@ export default function DocMemberTable({
                   ))}
                 </div>
                 {showDecisionButtons && !canSubmit && (
-                  <p className="text-xs text-gray-400 mt-3">Pass or Fail all three documents to submit a decision.</p>
+                  <p className="text-xs text-gray-400 mt-2 italic">
+                    Pass or Fail all three documents to submit a decision.
+                  </p>
                 )}
               </div>
 
