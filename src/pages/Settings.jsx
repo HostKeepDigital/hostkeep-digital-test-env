@@ -183,7 +183,6 @@ export default function Settings() {
       forename: profile.forename.trim(),
       middle_name: profile.middle_name.trim(),
       surname: profile.surname.trim(),
-      full_name: fullName,
       phone: profile.phone.trim(),
       location: profile.location.trim(),
     });
