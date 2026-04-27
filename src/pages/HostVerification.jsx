@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
@@ -25,7 +25,6 @@ import DocumentUpload from "@/components/verification/DocumentUpload";
 import PhoneVerification from "@/components/verification/PhoneVerification";
 import { addUserRole } from "@/components/utils/roleHelpers";
 import { useAuth } from "@/lib/AuthContext";
-import { useEffect } from "react";
 import { AlertCircle, AlertTriangle } from "lucide-react";
 
 export default function HostVerification() {
@@ -35,6 +34,15 @@ export default function HostVerification() {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
   const [docFailedStatus, setDocFailedStatus] = useState(null);
+  const [failedDocTypes, setFailedDocTypes] = useState([]);
+  const [passedDocTypes, setPassedDocTypes] = useState([]);
+
+  const DOC_LABELS = { government_id: "Government ID", selfie: "Selfie with ID", utility_bill: "Proof of Property" };
+  const DOC_DESCRIPTIONS = {
+    government_id: "Passport, driving licence, or national ID card",
+    selfie: "A clear photo of yourself holding your ID next to your face",
+    utility_bill: "Utility bill, council tax bill, or mortgage statement showing your name and property address",
+  };
 
   useEffect(() => {
     const checkDocFailStatus = async () => {
@@ -51,6 +59,27 @@ export default function HostVerification() {
     };
     checkDocFailStatus();
   }, [user?.id]);
+
+  useEffect(() => {
+    if (!docFailedStatus || !user?.id) return;
+    const loadDocStatus = async () => {
+      const docs = await base44.entities.VerificationDocuments.filter({ user_id: user.id });
+      const types = ["government_id", "selfie", "utility_bill"];
+      const failed = [];
+      const passed = [];
+      for (const type of types) {
+        const ofType = docs.filter(d => d.document_type === type).sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+        if (ofType.length === 0 || ofType[0].verification_status === "rejected") {
+          failed.push(type);
+        } else if (ofType[0].verification_status === "approved") {
+          passed.push(type);
+        }
+      }
+      setFailedDocTypes(failed);
+      setPassedDocTypes(passed);
+    };
+    loadDocStatus();
+  }, [docFailedStatus, user?.id]);
 
   const [formData, setFormData] = useState({
     government_id: null,
@@ -77,17 +106,14 @@ export default function HostVerification() {
   const handleResubmit = async () => {
     setLoading(true);
     try {
-      const docTypes = [
-        { field: "government_id", type: "government_id" },
-        { field: "selfie", type: "selfie" },
-        { field: "proof_of_property", type: "utility_bill" },
-      ];
-      for (const d of docTypes) {
-        if (formData[d.field]) {
+      const fieldMap = { government_id: "government_id", selfie: "selfie", utility_bill: "proof_of_property" };
+      for (const type of failedDocTypes) {
+        const field = fieldMap[type];
+        if (formData[field]) {
           await base44.entities.VerificationDocuments.create({
             user_id: user.id,
-            document_type: d.type,
-            file_url: formData[d.field],
+            document_type: type,
+            file_url: formData[field],
             verification_status: "pending",
           });
         }
@@ -223,11 +249,33 @@ export default function HostVerification() {
 
             <CardContent>
               {docFailedStatus ? (
-                <div className="space-y-6">
-                  <DocumentUpload userId={user?.id} documentType="government_id" label="Government ID" description="Passport, driving licence, or national ID card" onUploadComplete={handleDocumentUpload} localOnly />
-                  <DocumentUpload userId={user?.id} documentType="selfie" label="Selfie holding your ID" description="A clear photo of yourself holding your ID next to your face" onUploadComplete={handleDocumentUpload} localOnly />
-                  <DocumentUpload userId={user?.id} documentType="utility_bill" label="Proof of Property" description="Utility bill, council tax bill, or mortgage statement showing your name and property address" onUploadComplete={handleDocumentUpload} localOnly />
-                  {formData.government_id && formData.selfie && formData.proof_of_property && (
+                <div className="space-y-4">
+                  {passedDocTypes.map(type => (
+                    <div key={type} className="flex items-center justify-between px-4 py-3 rounded-lg bg-green-50 border border-green-200">
+                      <span className="text-sm font-medium text-gray-700">{DOC_LABELS[type]}</span>
+                      <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-green-700">
+                        <CheckCircle className="w-4 h-4" /> Passed ✓
+                      </span>
+                    </div>
+                  ))}
+                  {failedDocTypes.map(type => {
+                    const fieldMap = { government_id: "government_id", selfie: "selfie", utility_bill: "proof_of_property" };
+                    return (
+                      <DocumentUpload
+                        key={type}
+                        userId={user?.id}
+                        documentType={type}
+                        label={DOC_LABELS[type]}
+                        description={DOC_DESCRIPTIONS[type]}
+                        onUploadComplete={handleDocumentUpload}
+                        localOnly
+                      />
+                    );
+                  })}
+                  {failedDocTypes.length > 0 && failedDocTypes.every(type => {
+                    const fieldMap = { government_id: "government_id", selfie: "selfie", utility_bill: "proof_of_property" };
+                    return !!formData[fieldMap[type]];
+                  }) && (
                     <Button onClick={handleResubmit} disabled={loading} className="w-full bg-teal-600 hover:bg-teal-700">
                       {loading ? "Submitting..." : "Resubmit Documents for Review"}
                     </Button>
