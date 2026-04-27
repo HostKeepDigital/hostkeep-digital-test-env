@@ -179,26 +179,26 @@ export default function FoundingCleaner() {
           <h2 className="text-2xl font-bold text-gray-900">Where does your money go?</h2>
           <p className="text-gray-500 text-sm mt-1">How CleanKeep compares to agencies and platforms</p>
         </div>
-        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[680px] text-sm">
               <thead>
-                <tr className="bg-gray-50 border-b border-gray-100">
+                <tr className="bg-gray-50 dark:bg-gray-700 border-b border-gray-100 dark:border-gray-600">
                   <th className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider"></th>
                   <th className="px-4 py-3 text-center"><span className="text-xs font-semibold text-red-400 uppercase tracking-wider">Agency</span></th>
                   <th className="px-4 py-3 text-center"><span className="text-xs font-semibold text-orange-400 uppercase tracking-wider">Bark.com</span></th>
                   <th className="px-4 py-3 text-center"><span className="text-xs font-semibold text-purple-400 uppercase tracking-wider">TaskRabbit</span></th>
-                  <th className="px-4 py-3 text-center bg-blue-50"><span className="text-xs font-bold text-blue-600 uppercase tracking-wider">CleanKeep</span></th>
+                  <th className="px-4 py-3 text-center bg-blue-50 dark:bg-blue-900/40"><span className="text-xs font-bold text-blue-600 uppercase tracking-wider">CleanKeep</span></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                 {COMPARISONS.map(row => (
-                  <tr key={row.label} className="hover:bg-gray-50/50">
+                  <tr key={row.label} className="hover:bg-gray-50/50 dark:bg-gray-800 dark:hover:bg-gray-700/50">
                     <td className="px-5 py-3 text-xs font-medium text-gray-700">{row.label}</td>
                     <td className="px-4 py-3 text-center text-xs text-red-500 font-medium">{row.agency}</td>
                     <td className="px-4 py-3 text-center text-xs text-orange-500 font-medium">{row.bark}</td>
                     <td className="px-4 py-3 text-center text-xs text-purple-500 font-medium">{row.taskrabbit}</td>
-                    <td className="px-4 py-3 text-center text-xs font-bold text-blue-600 bg-blue-50/40">{row.cleankeep}</td>
+                    <td className="px-4 py-3 text-center text-xs font-bold text-blue-600 bg-blue-50/40 dark:bg-blue-900/20">{row.cleankeep}</td>
                   </tr>
                 ))}
               </tbody>
