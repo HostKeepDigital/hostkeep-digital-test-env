@@ -34,12 +34,12 @@ Deno.serve(async (req) => {
 
     // Unified: always write to User entity
     const updates = {};
-    if (forename !== undefined) updates.forename = forename.trim();
-    if (middle_name !== undefined) updates.middle_name = middle_name.trim();
-    if (surname !== undefined) updates.surname = surname.trim();
+    if (forename != null) updates.forename = String(forename).trim();
+    if (middle_name != null) updates.middle_name = String(middle_name).trim();
+    if (surname != null) updates.surname = String(surname).trim();
     if (fullName) updates.full_name = fullName;
-    if (phone !== undefined) updates.phone = phone.trim();
-    if (location !== undefined) updates.location = location.trim();
+    if (phone != null) updates.phone = String(phone).trim();
+    if (location != null) updates.location = String(location).trim();
 
     if (Object.keys(updates).length > 0) {
       await serviceRole.entities.User.update(session.user_id, updates);
