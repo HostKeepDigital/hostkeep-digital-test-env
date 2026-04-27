@@ -6,7 +6,7 @@ import { Upload, FileText, Check, X, Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 
-export default function DocumentUpload({ userId, documentType, label, description, onUploadComplete }) {
+export default function DocumentUpload({ userId, documentType, label, description, onUploadComplete, userName, userEmail }) {
   const [uploading, setUploading] = useState(false);
   const [fileUrl, setFileUrl] = useState(null);
 
