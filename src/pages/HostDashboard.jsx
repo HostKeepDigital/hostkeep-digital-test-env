@@ -133,9 +133,12 @@ export default function HostDashboard() {
     enabled: !!user?.id,
   });
 
-  const isBanned = foundingMember?.approval_status?.startsWith("banned_");
-  const docFailed = ["documentation_failed_attempt_1", "documentation_failed_attempt_2"].includes(foundingMember?.approval_status);
-  const isLastAttempt = foundingMember?.approval_status === "documentation_failed_attempt_2";
+  const approvalStatus = foundingMember?.approval_status;
+  const isBanned = approvalStatus?.startsWith("banned_");
+  const isAwaitingDocs = approvalStatus === "awaiting_document_verification";
+  const isApproved = approvalStatus === "approved";
+  const isAttempt1 = approvalStatus === "documentation_failed_attempt_1";
+  const isAttempt2 = approvalStatus === "documentation_failed_attempt_2";
 
   // Load cancellation policies
   const { data: cancellationPolicies = [] } = useQuery({
@@ -275,30 +278,45 @@ export default function HostDashboard() {
       )}
 
       <div className="max-w-7xl mx-auto px-3 py-3 md:px-6 md:py-6">
-        {/* Ban Banner */}
-        {isBanned && (
-          <div className="mb-6 p-4 rounded-lg border-l-4 border-red-500 bg-red-50">
-            <p className="text-sm text-red-800"><strong>Your account has been suspended.</strong> You are unable to publish properties on HostKeep. Please contact <a href="mailto:hello@hostkeepdigital.co.uk" className="underline">hello@hostkeepdigital.co.uk</a> if you believe this is an error.</p>
+        {/* Awaiting Docs / Approved Banner */}
+        {(isAwaitingDocs || isApproved) && (
+          <div className="mb-6 p-4 rounded-lg border-l-4 border-green-500 bg-green-50">
+            <p className="text-sm text-green-800">
+              {isApproved
+                ? <><strong>Documents Accepted.</strong> Your property is now publicly visible on HostKeep.</>
+                : <><strong>Documents Submitted.</strong> Our team will review your documents within 24–48 hours. You can manage your listing now but it won't be publicly visible until approved.</>}
+            </p>
           </div>
         )}
 
-        {/* Doc Failed Banner */}
-        {docFailed && (
-          <div className="mb-6 p-4 rounded-lg border-l-4 border-amber-500 bg-amber-50 flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+        {/* Attempt 1 Banner */}
+        {isAttempt1 && (
+          <div className="mb-6 p-4 rounded-lg border-l-4 border-yellow-500 bg-yellow-50 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
-              <p className="text-sm text-amber-900 font-semibold mb-1">
-                {isLastAttempt ? "⚠️ Final Attempt — Your last verification document was not approved." : "Your verification document was not approved."}
-              </p>
-              <p className="text-sm text-amber-800 mb-3">
-                {isLastAttempt
-                  ? "This is your final chance to upload valid documentation. Failure to do so will result in account suspension."
-                  : "Please re-upload a valid document. You have 1 attempt remaining."}
-              </p>
-              <Link to="/HostVerification">
-                <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white">Re-upload Document</Button>
-              </Link>
+              <p className="text-sm text-yellow-900 font-semibold mb-1">Document resubmission required</p>
+              <p className="text-sm text-yellow-800 mb-3">Your verification document was not approved. Please re-upload valid documents. You have 1 attempt remaining.</p>
+              <Link to="/HostVerification"><Button size="sm" className="bg-yellow-600 hover:bg-yellow-700 text-white">Re-upload Documents</Button></Link>
             </div>
+          </div>
+        )}
+
+        {/* Attempt 2 Banner */}
+        {isAttempt2 && (
+          <div className="mb-6 p-4 rounded-lg border-l-4 border-red-500 bg-red-50 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm text-red-900 font-semibold mb-1">⚠️ Final attempt — document resubmission required</p>
+              <p className="text-sm text-red-800 mb-3">This is your last chance. If this submission is also rejected your account will be suspended.</p>
+              <Link to="/HostVerification"><Button size="sm" className="bg-red-600 hover:bg-red-700 text-white">Re-upload Documents</Button></Link>
+            </div>
+          </div>
+        )}
+
+        {/* Banned Banner */}
+        {isBanned && (
+          <div className="mb-6 p-4 rounded-lg border-l-4 border-gray-900 bg-gray-900">
+            <p className="text-sm text-white"><strong>Your account has been suspended.</strong> You are unable to publish properties on HostKeep. If you believe this is an error please contact <a href="mailto:hello@hostkeepdigital.co.uk" className="underline">hello@hostkeepdigital.co.uk</a>.</p>
           </div>
         )}
 
