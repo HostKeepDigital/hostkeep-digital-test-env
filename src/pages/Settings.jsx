@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,6 @@ import { User, Bell, CreditCard, Loader2, CheckCircle, AlertCircle, Trash2, Chec
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/AuthContext";
-import { useState, useEffect, useRef } from "react";
 
 function splitFullName(full_name = "") {
   const parts = full_name.trim().split(/\s+/).filter(Boolean);
