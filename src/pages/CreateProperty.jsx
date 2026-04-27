@@ -332,6 +332,14 @@ export default function CreateProperty() {
         }
       }
 
+      try {
+        await base44.functions.invoke("sendEmail", {
+          to: "admin@hostkeepdigital.co.uk",
+          subject: `New verification document uploaded — ${user?.full_name || user?.email || user?.id}`,
+          html: `<p><strong>${user?.full_name || "A host"}</strong>${user?.email ? ` (${user.email})` : ""} has uploaded a <strong>utility bill</strong> for property verification.</p><p><a href="https://hostkeepdigital.co.uk/admin">Review in Admin Panel →</a></p>`,
+        });
+      } catch (_) {}
+
       return property;
     },
     onSuccess: async () => {
