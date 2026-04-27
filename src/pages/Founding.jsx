@@ -122,27 +122,27 @@ export default function Founding() {
       </section>
 
       {/* COMPARISON TABLE */}
-      <section className="bg-gray-50 py-16">
+      <section className="bg-gray-50 dark:bg-gray-900 py-16">
         <div className="max-w-4xl mx-auto px-4">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-gray-900">Why HostKeep is different</h2>
             <p className="text-gray-500 text-sm mt-2">A direct comparison with the big platforms</p>
           </div>
-          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[420px] text-sm">
                 <thead>
-                  <tr className="bg-gray-50 border-b border-gray-100">
+                  <tr className="bg-gray-50 dark:bg-gray-700 border-b border-gray-100 dark:border-gray-600">
                     <th className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider"></th>
-                    <th className="px-5 py-3 text-center bg-teal-50"><span className="text-xs font-bold text-teal-600 uppercase tracking-wider">HostKeep</span></th>
+                    <th className="px-5 py-3 text-center bg-teal-50 dark:bg-teal-900/40"><span className="text-xs font-bold text-teal-600 uppercase tracking-wider">HostKeep</span></th>
                     <th className="px-5 py-3 text-center"><span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Others</span></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                   {PLATFORM_COMPARE.map(row => (
-                    <tr key={row.feature}>
+                    <tr key={row.feature} className="dark:bg-gray-800">
                       <td className="px-5 py-3 font-medium text-gray-700 text-xs">{row.feature}</td>
-                      <td className="px-5 py-3 text-center text-xs font-bold text-teal-600 bg-teal-50/40">
+                      <td className="px-5 py-3 text-center text-xs font-bold text-teal-600 bg-teal-50/40 dark:bg-teal-900/20">
                         <span className="inline-flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5" />{row.hostkeep}</span>
                       </td>
                       <td className="px-5 py-3 text-center text-xs text-red-500 font-medium">{row.others}</td>
