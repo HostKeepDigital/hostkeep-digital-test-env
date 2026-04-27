@@ -296,7 +296,7 @@ export default function HostProperties() {
                 transition={{ delay: 0.3 }}
                 className="mt-16 pt-10 border-t border-gray-200 text-center"
               >
-                <div className="inline-flex flex-col items-center p-8 rounded-3xl bg-gray-50/80 border border-gray-100">
+                <div className="inline-flex flex-col items-center p-8 rounded-3xl bg-gray-100/80 dark:bg-gray-800/40 border border-gray-200 dark:border-gray-700">
                   <PlusCircle className="w-10 h-10 text-teal-600 mb-4 opacity-80" />
                   <h4 className="text-lg font-semibold text-gray-900 mb-2">
                     Thinking of expanding?
