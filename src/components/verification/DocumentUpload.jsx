@@ -6,7 +6,7 @@ import { Upload, FileText, Check, X, Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 
-export default function DocumentUpload({ userId, documentType, label, description, onUploadComplete, userName, userEmail }) {
+export default function DocumentUpload({ userId, documentType, label, description, onUploadComplete, userName, userEmail, localOnly = false }) {
   const [uploading, setUploading] = useState(false);
   const [fileUrl, setFileUrl] = useState(null);
 
@@ -16,31 +16,31 @@ export default function DocumentUpload({ userId, documentType, label, descriptio
 
     setUploading(true);
     try {
-      // Upload file
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setFileUrl(file_url);
 
-      // Create verification document record
-      await base44.entities.VerificationDocuments.create({
-        user_id: userId,
-        document_type: documentType,
-        file_url: file_url,
-        verification_status: "pending"
-      });
+      if (!localOnly) {
+        await base44.entities.VerificationDocuments.create({
+          user_id: userId,
+          document_type: documentType,
+          file_url: file_url,
+          verification_status: "pending"
+        });
+
+        // Notify admin
+        try {
+          const docLabel = documentType.replace(/_/g, " ");
+          const displayName = userName || userEmail || userId;
+          await base44.functions.invoke("sendEmail", {
+            to: "admin@hostkeepdigital.co.uk",
+            subject: `New verification document uploaded — ${displayName}`,
+            html: `<p><strong>${displayName}</strong>${userEmail ? ` (${userEmail})` : ""} has uploaded a <strong>${docLabel}</strong> document for verification.</p><p><a href="https://hostkeepdigital.co.uk/admin">Review in Admin Panel →</a></p>`,
+          });
+        } catch (_) {}
+      }
 
       toast.success("Document uploaded successfully");
       if (onUploadComplete) onUploadComplete(documentType, file_url);
-
-      // Notify admin
-      try {
-        const docLabel = documentType.replace(/_/g, " ");
-        const displayName = userName || userEmail || userId;
-        await base44.functions.invoke("sendEmail", {
-          to: "admin@hostkeepdigital.co.uk",
-          subject: `New verification document uploaded — ${displayName}`,
-          html: `<p><strong>${displayName}</strong>${userEmail ? ` (${userEmail})` : ""} has uploaded a <strong>${docLabel}</strong> document for verification.</p><p><a href="https://hostkeepdigital.co.uk/admin">Review in Admin Panel →</a></p>`,
-        });
-      } catch (_) {}
     } catch (error) {
       toast.error("Failed to upload document");
     } finally {
@@ -60,8 +60,12 @@ export default function DocumentUpload({ userId, documentType, label, descriptio
               <Check className="w-5 h-5 text-green-600" />
               <div className="flex-1">
                 <p className="text-sm font-medium text-green-900">Document uploaded</p>
-                <p className="text-xs text-green-700">Pending verification</p>
+                <p className="text-xs text-green-700">{localOnly ? "Ready to submit" : "Pending verification"}</p>
               </div>
+              <label className="cursor-pointer text-xs text-teal-600 hover:underline font-medium">
+                Change
+                <input type="file" accept="image/*,.pdf" onChange={handleUpload} disabled={uploading} className="hidden" />
+              </label>
             </div>
           </CardContent>
         </Card>
