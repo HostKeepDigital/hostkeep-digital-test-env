@@ -325,7 +325,7 @@ export default function PropertyListingCard({
           </div>
         </div>
 
-        <div className="mb-6 bg-gray-50/50 p-4 rounded-xl border border-gray-100">
+        <div className="mb-6 bg-gray-100/60 dark:bg-gray-800/40 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
           <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
             Settings Categories
           </h4>
