@@ -361,7 +361,7 @@ export default function CreateProperty() {
       // Move founding member from password_protected → awaiting_document_verification
       try {
         const members = await base44.entities.FoundingMember.filter({ user_id: user?.id });
-        if (members?.[0]?.id && members[0].approval_status === "password_protected") {
+        if (members?.[0]?.id) {
           await base44.entities.FoundingMember.update(members[0].id, {
             approval_status: "awaiting_document_verification",
           });
@@ -1119,6 +1119,7 @@ export default function CreateProperty() {
                     description="Passport, driving licence, or national ID card"
                     userName={user?.full_name}
                     userEmail={user?.email}
+                    localOnly
                     onUploadComplete={(type, url) => handleChange("doc_government_id", url)}
                   />
                   <DocumentUpload
@@ -1128,6 +1129,7 @@ export default function CreateProperty() {
                     description="A clear photo of yourself holding your ID next to your face"
                     userName={user?.full_name}
                     userEmail={user?.email}
+                    localOnly
                     onUploadComplete={(type, url) => handleChange("doc_selfie", url)}
                   />
                   <DocumentUpload
@@ -1137,6 +1139,7 @@ export default function CreateProperty() {
                     description="Utility bill, council tax bill, or mortgage statement showing your name and property address"
                     userName={user?.full_name}
                     userEmail={user?.email}
+                    localOnly
                     onUploadComplete={(type, url) => handleChange("doc_proof_of_property", url)}
                   />
                 </CardContent>
