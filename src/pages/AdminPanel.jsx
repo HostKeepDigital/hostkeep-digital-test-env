@@ -658,6 +658,71 @@ const handleDeleteMember = async (member) => {
   fetchMembers();
 };
 
+const handleDocSubmitDecision = async (member, decisions) => {
+  // Update each individual VerificationDocument record's status
+  if (member.user_id) {
+    const allDocs = await base44.entities.VerificationDocuments.filter({ user_id: member.user_id });
+    for (const [docType, status] of Object.entries(decisions)) {
+      const typeDocs = allDocs
+        .filter(d => d.document_type === docType)
+        .sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+      if (typeDocs.length > 0) {
+        await base44.entities.VerificationDocuments.update(typeDocs[0].id, { verification_status: status });
+      }
+    }
+  }
+
+  const allApproved = Object.values(decisions).every(v => v === "approved");
+  const anyRejected = Object.values(decisions).some(v => v === "rejected");
+
+  if (allApproved) {
+    // All three passed — approve documents
+    await base44.entities.FoundingMember.update(member.id, { documents_verified: true });
+    if (member.user_id) {
+      await base44.entities.User.update(member.user_id, { documents_verified: true });
+      await base44.functions.invoke("checkApprovalGates", { user_id: member.user_id });
+    }
+    await base44.functions.invoke("sendEmail", {
+      to: member.email,
+      subject: "You're one step closer to publishing your property — HostKeep",
+      html: buildEmail({
+        heading: "Document Approved",
+        body: `Great news — your verification documents have been reviewed and approved by our team.<br><br>You are now one step closer to publishing your property on HostKeep. To publish, you will need all three of the following in place:<br><br><strong>1. Approved verification documents</strong> — done ✓<br><strong>2. Active HostKeep subscription</strong><br><strong>3. Connected Stripe account</strong> (to receive payments from guests)<br><br>If you have any questions, contact us at <a href="mailto:hello@hostkeepdigital.co.uk">hello@hostkeepdigital.co.uk</a>.`,
+      }),
+    });
+    toast.success(`${member.full_name} — all documents approved`);
+  } else if (anyRejected) {
+    // At least one rejected — advance fail state
+    const currentStatus = member.approval_status;
+    let nextStatus;
+    if (currentStatus === "documentation_failed_attempt_1") {
+      nextStatus = "documentation_failed_attempt_2";
+    } else if (currentStatus === "documentation_failed_attempt_2") {
+      // This is the final ban
+      await handleDocBan(member);
+      return;
+    } else {
+      nextStatus = "documentation_failed_attempt_1";
+    }
+    await base44.entities.FoundingMember.update(member.id, { approval_status: nextStatus });
+    const rejectedTypes = Object.entries(decisions).filter(([, v]) => v === "rejected").map(([k]) => k.replace(/_/g, " ")).join(", ");
+    const isLastChance = nextStatus === "documentation_failed_attempt_2";
+    const attemptBody = isLastChance
+      ? `The following document(s) were not approved: <strong>${rejectedTypes}</strong>.<br><br>This was your first attempt. You have 1 attempt remaining. Please log in and re-upload clear, valid documents.`
+      : `The following document(s) were not approved: <strong>${rejectedTypes}</strong>.<br><br>This was your second attempt. You have no attempts remaining after this. Please log in immediately and upload valid documents — this is your final chance.`;
+    await base44.functions.invoke("sendEmail", {
+      to: member.email,
+      subject: "Action required: your verification documents were not approved — HostKeep",
+      html: buildEmail({
+        heading: "Document Review Result",
+        body: `Your verification documents have been reviewed by our team.<br><br>${attemptBody}<br><br>If you have any questions, contact <a href="mailto:hello@hostkeepdigital.co.uk">hello@hostkeepdigital.co.uk</a>.`,
+      }),
+    });
+    toast.success(`${member.full_name} — decision submitted, member notified`);
+  }
+  fetchMembers();
+};
+
 const handleDocBan = async (member) => {
   setML(member.id, "doc_ban");
   try {
@@ -1102,15 +1167,15 @@ const handleDocBan = async (member) => {
               </Section>
 
               <Section title="Awaiting Document Verification" count={awaitingDocMembers.length} accent="purple">
-                <DocMemberTable members={awaitingDocMembers} properties={allProperties} verificationDocs={allVerificationDocs} showApproveButton onApprove={handleDocApprove} showFailButton onFail={handleDocFail} showDeleteButton={canDelete} onDelete={handleDeleteMember} actionLoading={actionLoading} />
+                <DocMemberTable members={awaitingDocMembers} properties={allProperties} verificationDocs={allVerificationDocs} showApproveButton showFailButton onSubmitDecision={handleDocSubmitDecision} showDeleteButton={canDelete} onDelete={handleDeleteMember} actionLoading={actionLoading} />
               </Section>
 
               <Section title="Document Failed — Attempt 1" count={docFail1Members.length} accent="orange">
-                <DocMemberTable members={docFail1Members} properties={allProperties} verificationDocs={allVerificationDocs} showApproveButton onApprove={handleDocApprove} showFailButton failIsAttempt2 onFail={handleDocFail} showDeleteButton={canDelete} onDelete={handleDeleteMember} actionLoading={actionLoading} />
+                <DocMemberTable members={docFail1Members} properties={allProperties} verificationDocs={allVerificationDocs} showApproveButton showFailButton onSubmitDecision={handleDocSubmitDecision} showDeleteButton={canDelete} onDelete={handleDeleteMember} actionLoading={actionLoading} />
               </Section>
 
               <Section title="Document Failed — Attempt 2" count={docFail2Members.length} accent="red">
-                <DocMemberTable members={docFail2Members} properties={allProperties} verificationDocs={allVerificationDocs} showApproveButton onApprove={handleDocApprove} showFailButton failIsAttempt2 onFail={handleDocBan} showDeleteButton={canDelete} onDelete={handleDeleteMember} actionLoading={actionLoading} />
+                <DocMemberTable members={docFail2Members} properties={allProperties} verificationDocs={allVerificationDocs} showApproveButton showFailButton onSubmitDecision={handleDocSubmitDecision} showDeleteButton={canDelete} onDelete={handleDeleteMember} actionLoading={actionLoading} />
               </Section>
 
               <Section title="Approved" count={approvedMembers.length} accent="green">

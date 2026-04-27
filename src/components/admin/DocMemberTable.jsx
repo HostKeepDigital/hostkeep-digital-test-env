@@ -1,11 +1,12 @@
-import { ExternalLink, Check, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { ExternalLink, Check, Trash2, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import GateChecklist from "./GateChecklist";
 
 const DOC_TYPES = [
-  { key: "government_id",   label: "Government ID" },
-  { key: "selfie",          label: "Selfie with ID" },
-  { key: "utility_bill",    label: "Proof of Property" },
+  { key: "government_id", label: "Government ID" },
+  { key: "selfie",        label: "Selfie with ID" },
+  { key: "utility_bill", label: "Proof of Property" },
 ];
 
 const STATUS_STYLES = {
@@ -14,13 +15,24 @@ const STATUS_STYLES = {
   rejected: "bg-red-100 text-red-700",
 };
 
-function DocRow({ label, attempts }) {
+function DocRow({ label, attempts, decision, onDecide, showDecisionButtons }) {
   return (
-    <div className="flex items-start gap-2 py-1.5 border-b border-gray-100 last:border-0">
-      <span className="w-36 flex-shrink-0 text-xs font-medium text-gray-500">{label}</span>
-      <div className="flex flex-wrap gap-2">
+    <div className="py-2 border-b border-gray-100 last:border-0">
+      <div className="flex items-center gap-2 mb-1.5">
+        <span className="text-xs font-medium text-gray-500 w-36 flex-shrink-0">{label}</span>
+        {decision && (
+          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${decision === "approved" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+            {decision === "approved" ? "Passed" : "Failed"}
+            <button onClick={() => onDecide(null)} className="ml-0.5 hover:opacity-70">
+              <X className="w-3 h-3" />
+            </button>
+          </span>
+        )}
+      </div>
+
+      <div className="flex flex-wrap gap-2 mb-2">
         {attempts.length === 0 ? (
-          <span className="text-xs text-gray-300">—</span>
+          <span className="text-xs text-gray-300">No uploads</span>
         ) : (
           attempts.map((doc, i) => (
             <a
@@ -39,6 +51,31 @@ function DocRow({ label, attempts }) {
           ))
         )}
       </div>
+
+      {showDecisionButtons && (
+        <div className="flex gap-1.5">
+          <button
+            onClick={() => onDecide("approved")}
+            className={`px-2.5 py-1 rounded text-xs font-medium transition-all border ${
+              decision === "approved"
+                ? "bg-green-600 text-white border-green-600"
+                : "bg-white text-green-700 border-green-300 hover:bg-green-50 opacity-70"
+            }`}
+          >
+            Pass
+          </button>
+          <button
+            onClick={() => onDecide("rejected")}
+            className={`px-2.5 py-1 rounded text-xs font-medium transition-all border ${
+              decision === "rejected"
+                ? "bg-red-600 text-white border-red-600"
+                : "bg-white text-red-700 border-red-300 hover:bg-red-50 opacity-70"
+            }`}
+          >
+            Fail
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -48,20 +85,51 @@ export default function DocMemberTable({
   properties = [],
   verificationDocs = [],
   showApproveButton = false,
-  onApprove,
-  actionLoading = {},
   showFailButton = false,
-  failIsAttempt2 = false,
-  onFail,
+  onSubmitDecision,
   showDeleteButton = false,
   onDelete,
+  actionLoading = {},
 }) {
+  const [decisions, setDecisions] = useState({});
+  const [submitting, setSubmitting] = useState({});
+
   const getProperty = (userId) => properties.find(p => p.owner_id === userId);
 
   const getDocsByType = (userId, typeKey) =>
     verificationDocs
       .filter(d => d.user_id === userId && d.document_type === typeKey)
       .sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+
+  const setDocDecision = (memberId, docKey, value) => {
+    setDecisions(prev => ({
+      ...prev,
+      [memberId]: {
+        ...(prev[memberId] || {}),
+        [docKey]: value,
+      },
+    }));
+  };
+
+  const getMemberDecisions = (memberId) => decisions[memberId] || {};
+
+  const allDecided = (memberId) => {
+    const d = getMemberDecisions(memberId);
+    return DOC_TYPES.every(({ key }) => d[key] === "approved" || d[key] === "rejected");
+  };
+
+  const handleSubmit = async (member) => {
+    if (!onSubmitDecision) return;
+    setSubmitting(prev => ({ ...prev, [member.id]: true }));
+    try {
+      await onSubmitDecision(member, getMemberDecisions(member.id));
+      setDecisions(prev => ({ ...prev, [member.id]: {} }));
+    } finally {
+      setSubmitting(prev => ({ ...prev, [member.id]: false }));
+    }
+  };
+
+  const showDecisionButtons = showApproveButton || showFailButton;
 
   if (members.length === 0) {
     return (
@@ -75,7 +143,9 @@ export default function DocMemberTable({
     <div className="max-h-[560px] overflow-y-auto space-y-4">
       {members.map(m => {
         const prop = getProperty(m.user_id);
-        const allGatesPassed = m.documents_verified && m.stripe_verified && m.subscription_active;
+        const memberDecisions = getMemberDecisions(m.id);
+        const canSubmit = allDecided(m.id);
+        const isSubmitting = !!submitting[m.id];
 
         return (
           <div key={m.id} className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
@@ -105,61 +175,50 @@ export default function DocMemberTable({
                   <GateChecklist member={m} />
                 </div>
 
-                {/* Action buttons */}
-                <div className="flex flex-wrap gap-1.5 pt-1">
-                  {showApproveButton && (
-                    <Button
-                      size="sm"
-                      className="h-7 px-3 text-xs bg-green-600 hover:bg-green-700 text-white"
-                      disabled={!!actionLoading[m.id]}
-                      onClick={() => onApprove && onApprove(m)}
-                    >
-                      {actionLoading[m.id] === "doc_approve" ? "..." : <><Check className="w-3 h-3 mr-1" />Approve</>}
-                    </Button>
-                  )}
-                  {allGatesPassed && (
-                    <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-0.5 rounded-full">Auto-approving…</span>
-                  )}
-                  {showFailButton && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-7 px-3 text-xs border-orange-400 text-orange-700 hover:bg-orange-50"
-                      disabled={!!actionLoading[m.id]}
-                      onClick={() => onFail && onFail(m, failIsAttempt2)}
-                    >
-                      {actionLoading[m.id] === "doc_fail" || actionLoading[m.id] === "doc_ban" ? "..." : "Failed"}
-                    </Button>
-                  )}
-                  {showDeleteButton && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-7 px-3 text-xs border-red-400 text-red-700 hover:bg-red-50"
-                      disabled={!!actionLoading[m.id]}
-                      onClick={() => onDelete && onDelete(m)}
-                    >
-                      {actionLoading[m.id] === "delete" ? "..." : <><Trash2 className="w-3 h-3 mr-1" />Delete</>}
-                    </Button>
-                  )}
-                  {!showApproveButton && !showFailButton && !showDeleteButton && (
-                    <span className="text-xs text-gray-400">—</span>
-                  )}
-                </div>
+                {/* Submit Decision button */}
+                {showDecisionButtons && canSubmit && (
+                  <Button
+                    size="sm"
+                    className="w-full bg-teal-600 hover:bg-teal-700 text-white text-xs"
+                    disabled={isSubmitting}
+                    onClick={() => handleSubmit(m)}
+                  >
+                    {isSubmitting ? <><Loader2 className="w-3 h-3 animate-spin mr-1" />Submitting…</> : <><Check className="w-3 h-3 mr-1" />Submit Decision</>}
+                  </Button>
+                )}
+
+                {/* Delete button */}
+                {showDeleteButton && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full h-7 px-3 text-xs border-red-400 text-red-700 hover:bg-red-50"
+                    disabled={!!actionLoading[m.id]}
+                    onClick={() => onDelete && onDelete(m)}
+                  >
+                    {actionLoading[m.id] === "delete" ? "..." : <><Trash2 className="w-3 h-3 mr-1" />Delete</>}
+                  </Button>
+                )}
               </div>
 
               {/* RIGHT — Documents */}
               <div className="flex-1 p-4">
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Verification Documents</p>
-                <div className="divide-y divide-gray-100">
+                <div>
                   {DOC_TYPES.map(({ key, label }) => (
                     <DocRow
                       key={key}
                       label={label}
                       attempts={getDocsByType(m.user_id, key)}
+                      decision={memberDecisions[key] || null}
+                      onDecide={(val) => setDocDecision(m.id, key, val)}
+                      showDecisionButtons={showDecisionButtons}
                     />
                   ))}
                 </div>
+                {showDecisionButtons && !canSubmit && (
+                  <p className="text-xs text-gray-400 mt-3">Pass or Fail all three documents to submit a decision.</p>
+                )}
               </div>
 
             </div>
