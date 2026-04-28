@@ -1,7 +1,6 @@
 export const AMENITIES_FULL = {
   Essentials: [
     "WiFi",
-    "Fast WiFi (100Mbps+)",
     "Heating",
     "Underfloor Heating",
     "Air Conditioning",

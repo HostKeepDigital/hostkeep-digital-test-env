@@ -9,7 +9,6 @@ function toSlug(name) {
 const ICON_MAP = {
   // Essentials
   "wifi": "Wifi",
-  "fast-wifi-100mbps": "Zap",
   "heating": "Thermometer",
   "underfloor-heating": "Thermometer",
   "air-conditioning": "Wind",
