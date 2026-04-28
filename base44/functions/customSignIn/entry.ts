@@ -51,27 +51,7 @@ Deno.serve(async (req) => {
     let founding_member_id = null;
     let userId = null;
 
-    try {
-      const userRecords = await serviceRole.entities.User.filter({ email: normalisedEmail });
-      if (userRecords?.[0]) {
-        userId = userRecords[0].id;
-      }
-    } catch (_) {}
-
-    if (!userId && members?.[0]?.user_id) {
-      userId = members[0].user_id;
-    }
-
-
-    // Look up the actual User entity record by email
-    try {
-      const userRecords = await serviceRole.entities.User.filter({ email: normalisedEmail });
-      if (userRecords?.[0]) {
-        userId = userRecords[0].id;
-      }
-    } catch (_) {}
-
-    // Check FoundingMember
+    // Check FoundingMember first so we can use it for userId fallback
     const members = await serviceRole.entities.FoundingMember.filter({
       email: normalisedEmail,
     });
@@ -79,13 +59,24 @@ Deno.serve(async (req) => {
       founding_member_id = members[0].id;
     }
 
+    // Resolve real User entity ID by email
+    try {
+      const userRecords = await serviceRole.entities.User.filter({ email: normalisedEmail });
+      if (userRecords?.[0]) {
+        userId = userRecords[0].id;
+      }
+    } catch (_) {}
+
+    // Fallback: use user_id stored on FoundingMember record
+    if (!userId && members?.[0]?.user_id) {
+      userId = members[0].user_id;
+    }
+
     // Resolve role via UserRole (approved)
     try {
-      let b44UserId = cred.id;
-      
-      if (b44UserId) {
+      if (userId) {
         const userRoles = await serviceRole.entities.UserRole.filter({
-          user_id: b44UserId,
+          user_id: userId,
         });
 
         const approved = userRoles.filter(
