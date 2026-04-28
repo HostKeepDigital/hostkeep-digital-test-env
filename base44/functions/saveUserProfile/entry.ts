@@ -3,6 +3,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const serviceRole = base44.asServiceRole;
     const { user_id, email, forename, middle_name, surname, phone, location } = await req.json();
 
     if (!forename || !surname) {
@@ -19,13 +20,17 @@ Deno.serve(async (req) => {
     };
 
     if (user_id) {
-      await base44.asServiceRole.entities.User.update(user_id, updates);
+      try {
+        await serviceRole.entities.User.update(user_id, updates);
+      } catch (_) {
+        await serviceRole.entities.User.create({ email, ...updates });
+      }
     } else {
-      const existing = await base44.asServiceRole.entities.User.filter({ email });
+      const existing = await serviceRole.entities.User.filter({ email });
       if (existing.length > 0) {
-        await base44.asServiceRole.entities.User.update(existing[0].id, updates);
+        await serviceRole.entities.User.update(existing[0].id, updates);
       } else {
-        await base44.asServiceRole.entities.User.create({ email, ...updates });
+        await serviceRole.entities.User.create({ email, ...updates });
       }
     }
 
