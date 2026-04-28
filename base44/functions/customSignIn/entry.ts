@@ -49,7 +49,15 @@ Deno.serve(async (req) => {
 
     let role = null;
     let founding_member_id = null;
-    let userId = cred.id;
+    let userId = null;
+
+    // Look up the actual User entity record by email
+    try {
+      const userRecords = await serviceRole.entities.User.filter({ email: normalisedEmail });
+      if (userRecords?.[0]) {
+        userId = userRecords[0].id;
+      }
+    } catch (_) {}
 
     // Check FoundingMember
     const members = await serviceRole.entities.FoundingMember.filter({
