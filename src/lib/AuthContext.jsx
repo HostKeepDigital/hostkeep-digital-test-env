@@ -47,7 +47,9 @@ export const AuthProvider = ({ children }) => {
         role: data.role,
         founding_member_id: data.founding_member_id,
         signup_postcode: data.signup_postcode || null,
-        full_name: data.full_name || null,
+        forename: data.forename || null,
+        middle_name: data.middle_name || null,
+        surname: data.surname || null,
         is_founding_member: data.is_founding_member || false,
       });
 
