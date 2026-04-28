@@ -40,13 +40,17 @@ Deno.serve(async (req) => {
 
     // Load User record once for all profile fields
     let signup_postcode = null;
-    let full_name = null;
+    let forename = null;
+    let middle_name = null;
+    let surname = null;
     let is_founding_member = false;
     try {
       if (session.user_id) {
         const userRecord = await serviceRole.entities.User.get(session.user_id);
         if (userRecord?.signup_postcode) signup_postcode = userRecord.signup_postcode;
-        if (userRecord?.full_name) full_name = userRecord.full_name;
+        if (userRecord?.forename) forename = userRecord.forename;
+        if (userRecord?.middle_name) middle_name = userRecord.middle_name;
+        if (userRecord?.surname) surname = userRecord.surname;
         is_founding_member = userRecord?.is_founding_member || false;
       }
     } catch (_) {}
@@ -59,7 +63,9 @@ Deno.serve(async (req) => {
       founding_member_id: session.founding_member_id || null,
       user_id: session.user_id || null,
       signup_postcode,
-      full_name,
+      forename,
+      middle_name,
+      surname,
       is_founding_member,
     });
   } catch (err) {
