@@ -67,29 +67,30 @@ export default function Settings() {
   useEffect(() => {
     if (!user?.email) return;
 
-    // Load profile by email — works for all account types including admin
-    base44.entities.User.filter({ email: user.email })
-      .then((records) => {
-        const u = records?.[0];
-        if (!u) return;
-        setProfile({
-          forename: u.forename || "",
-          middle_name: u.middle_name || "",
-          surname: u.surname || "",
-          phone: u.phone || "",
-          location: u.location || "",
-        });
-        const prefs = u.notification_preferences;
-        if (prefs && typeof prefs === "object") {
-          setNotifications((prev) => ({ ...prev, ...prefs }));
-        }
-      })
-      .catch(() => {});
+    // Load profile directly by user ID
+    if (user.id) {
+      base44.entities.User.get(user.id)
+        .then((u) => {
+          if (!u) return;
+          setProfile({
+            forename: u.forename || "",
+            middle_name: u.middle_name || "",
+            surname: u.surname || "",
+            phone: u.phone || "",
+            location: u.location || "",
+          });
+          const prefs = u.notification_preferences;
+          if (prefs && typeof prefs === "object") {
+            setNotifications((prev) => ({ ...prev, ...prefs }));
+          }
+        })
+        .catch(() => {});
+    }
 
     if (user?.id) {
       base44.entities.UserRole.filter({ user_id: user.id }).then(setUserRoles).catch(() => {});
     }
-  }, [user?.email]);
+  }, [user?.id]);
 
   const hasPaymentsRole = userRoles.some(
     (r) =>
@@ -177,12 +178,8 @@ export default function Settings() {
     const updated = { ...notifications, [field]: value };
     setNotifications(updated);
     // Persist immediately
-    if (user?.email) {
-      base44.entities.User.filter({ email: user.email }).then((records) => {
-        if (records.length > 0) {
-          base44.entities.User.update(records[0].id, { notification_preferences: updated }).catch(() => {});
-        }
-      }).catch(() => {});
+    if (user?.id) {
+      base44.entities.User.update(user.id, { notification_preferences: updated }).catch(() => {});
     }
   };
 
