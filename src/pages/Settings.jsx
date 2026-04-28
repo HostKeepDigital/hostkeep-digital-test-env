@@ -67,30 +67,27 @@ export default function Settings() {
   useEffect(() => {
     if (!user?.email) return;
 
-    // Load profile directly by user ID
-    if (user.id) {
-      base44.entities.User.get(user.id)
-        .then((u) => {
-          if (!u) return;
-          setProfile({
-            forename: u.forename || "",
-            middle_name: u.middle_name || "",
-            surname: u.surname || "",
-            phone: u.phone || "",
-            location: u.location || "",
-          });
-          const prefs = u.notification_preferences;
-          if (prefs && typeof prefs === "object") {
-            setNotifications((prev) => ({ ...prev, ...prefs }));
-          }
-        })
-        .catch(() => {});
-    }
+    base44.functions.invoke("getUserProfile", { email: user.email })
+      .then((res) => {
+        const u = res.data?.profile;
+        if (!u) return;
+        setProfile({
+          forename: u.forename || "",
+          middle_name: u.middle_name || "",
+          surname: u.surname || "",
+          phone: u.phone || "",
+          location: u.location || "",
+        });
+        if (u.notification_preferences && typeof u.notification_preferences === "object") {
+          setNotifications((prev) => ({ ...prev, ...u.notification_preferences }));
+        }
+      })
+      .catch(() => {});
 
     if (user?.id) {
       base44.entities.UserRole.filter({ user_id: user.id }).then(setUserRoles).catch(() => {});
     }
-  }, [user?.id]);
+  }, [user?.email]);
 
   const hasPaymentsRole = userRoles.some(
     (r) =>
