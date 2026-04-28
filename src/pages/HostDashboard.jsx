@@ -324,7 +324,7 @@ export default function HostDashboard() {
         <div className="flex items-center justify-between gap-3 mb-4">
           <div>
             <h1 className="text-xl md:text-2xl font-bold text-gray-900 leading-tight">
-              Welcome back{user?.full_name ? `, ${user.full_name.split(" ")[0]}` : ""}
+              Welcome back{user?.forename ? `, ${user.forename}` : ""}
             </h1>
             <p className="text-sm text-gray-500">Manage your properties and bookings</p>
           </div>
