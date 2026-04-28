@@ -12,22 +12,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { toast } from "sonner";
 import { useAuth } from "@/lib/AuthContext";
 
-function splitFullName(full_name = "") {
-  const parts = full_name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return { forename: "", middle_name: "", surname: "" };
-  if (parts.length === 1) return { forename: parts[0], middle_name: "", surname: "" };
-  if (parts.length === 2) return { forename: parts[0], middle_name: "", surname: parts[1] };
-  return {
-    forename: parts[0],
-    middle_name: parts.slice(1, -1).join(" "),
-    surname: parts[parts.length - 1],
-  };
-}
-
-function assembleFullName({ forename, middle_name, surname }) {
-  return [forename.trim(), middle_name.trim(), surname.trim()].filter(Boolean).join(" ");
-}
-
 function SaveBanner({ status }) {
   if (!status) return null;
   if (status === "success") {
@@ -162,7 +146,6 @@ export default function Settings() {
     }
   }, [hasPaymentsRole, user]);
 
-  // ⭐ FIXED: Now saves phone + location
   const handleSaveProfile = async () => {
   setSaveStatus(null);
 
@@ -174,11 +157,6 @@ export default function Settings() {
   setSaving(true);
 
   try {
-    const fullName = [profile.forename, profile.middle_name, profile.surname]
-      .map(s => (s || "").trim())
-      .filter(Boolean)
-      .join(" ");
-
     await base44.entities.User.update(user.id, {
       forename: profile.forename.trim(),
       middle_name: profile.middle_name.trim(),
