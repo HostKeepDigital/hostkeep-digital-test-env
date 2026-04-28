@@ -67,7 +67,7 @@ export default function Settings() {
   useEffect(() => {
     if (!user?.email) return;
 
-    base44.functions.invoke("getUserProfile", { email: user.email })
+    base44.functions.invoke("getUserProfile", { email: user.email, user_id: user.id || null })
       .then((res) => {
         const u = res.data?.profile;
         if (!u) return;

@@ -4,18 +4,20 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const serviceRole = base44.asServiceRole;
-    const { email } = await req.json();
+    const { email, user_id } = await req.json();
 
-    if (!email) {
-      return Response.json({ success: false, error: "email required" }, { status: 400 });
+    let u = null;
+
+    if (user_id) {
+      try { u = await serviceRole.entities.User.get(user_id); } catch (_) {}
     }
 
-    const records = await serviceRole.entities.User.filter({ email: email.toLowerCase().trim() });
-    const u = records?.[0];
-
-    if (!u) {
-      return Response.json({ success: true, profile: null });
+    if (!u && email) {
+      const records = await serviceRole.entities.User.filter({ email: email.toLowerCase().trim() });
+      u = records?.[0] || null;
     }
+
+    if (!u) return Response.json({ success: true, profile: null });
 
     return Response.json({
       success: true,
