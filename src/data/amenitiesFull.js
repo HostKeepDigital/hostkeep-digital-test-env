@@ -71,22 +71,9 @@ export const AMENITIES_FULL = {
     "Books"
   ],
 
-  Safety: [
-    "Smoke Alarm",
-    "Carbon Monoxide Alarm",
-    "Fire Extinguisher",
-    "First Aid Kit",
-    "Security Camera (exterior)",
-    "Safe / Lockbox"
-  ],
-
   Accessibility: [
     "Wheelchair Accessible",
     "Step-Free Access"
-  ],
-
-  Work: [
-    "Dedicated Workspace"
   ],
 
   Parking: [
@@ -97,13 +84,4 @@ export const AMENITIES_FULL = {
     "Electric Car Charger"
   ],
 
-  Other: [
-    "Fireplace",
-    "Log Burner",
-    "Cleaning Products",
-    "Vacuum Cleaner",
-    "Mop & Bucket",
-    "Washing Up Liquid",
-    "Laundry Detergent"
-  ],
 };
