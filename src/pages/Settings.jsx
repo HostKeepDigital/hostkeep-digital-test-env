@@ -152,26 +152,15 @@ export default function Settings() {
   setSaving(true);
 
   try {
-    const records = await base44.entities.User.filter({ email: user.email });
-
-    if (records.length > 0) {
-      await base44.entities.User.update(records[0].id, {
-        forename: profile.forename.trim(),
-        middle_name: profile.middle_name.trim(),
-        surname: profile.surname.trim(),
-        phone: profile.phone.trim(),
-        location: profile.location.trim(),
-      });
-    } else {
-      await base44.entities.User.create({
-        email: user.email,
-        forename: profile.forename.trim(),
-        middle_name: profile.middle_name.trim(),
-        surname: profile.surname.trim(),
-        phone: profile.phone.trim(),
-        location: profile.location.trim(),
-      });
-    }
+    const res = await base44.functions.invoke("saveUserProfile", {
+      email: user.email,
+      forename: profile.forename.trim(),
+      middle_name: profile.middle_name.trim(),
+      surname: profile.surname.trim(),
+      phone: profile.phone.trim(),
+      location: profile.location.trim(),
+    });
+    if (!res.data?.success) throw new Error(res.data?.error || "save_failed");
 
     setSaveStatus("success");
     setTimeout(() => setSaveStatus(null), 4000);
