@@ -65,16 +65,13 @@ export default function Settings() {
   });
 
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.email) return;
 
-    // Load profile directly from User entity — unified for all roles
-    base44.entities.User.filter({ id: user.id })
+    // Load profile by email — works for all account types including admin
+    base44.entities.User.filter({ email: user.email })
       .then((records) => {
         const u = records?.[0];
-        if (!u) {
-          return;
-        }
-        // Pull forename, middle_name, surname directly (stored during signup)
+        if (!u) return;
         setProfile({
           forename: u.forename || "",
           middle_name: u.middle_name || "",
@@ -82,19 +79,17 @@ export default function Settings() {
           phone: u.phone || "",
           location: u.location || "",
         });
+        const prefs = u.notification_preferences;
+        if (prefs && typeof prefs === "object") {
+          setNotifications((prev) => ({ ...prev, ...prefs }));
+        }
       })
       .catch(() => {});
 
-    // Load notification preferences
-    base44.entities.User.filter({ id: user.id }).then((records) => {
-      const prefs = records?.[0]?.notification_preferences;
-      if (prefs && typeof prefs === "object") {
-        setNotifications((prev) => ({ ...prev, ...prefs }));
-      }
-    }).catch(() => {});
-
-    base44.entities.UserRole.filter({ user_id: user.id }).then(setUserRoles).catch(() => {});
-  }, [user?.id]);
+    if (user?.id) {
+      base44.entities.UserRole.filter({ user_id: user.id }).then(setUserRoles).catch(() => {});
+    }
+  }, [user?.email]);
 
   const hasPaymentsRole = userRoles.some(
     (r) =>
@@ -157,25 +152,27 @@ export default function Settings() {
   setSaving(true);
 
   try {
-    const users = await base44.entities.User.filter({ email: user.email });
-      if (users.length > 0) {
-        await base44.entities.User.update(users[0].id, {
-          forename: profile.forename.trim(),
-          middle_name: profile.middle_name.trim(),
-          surname: profile.surname.trim(),
-          phone: profile.phone.trim(),
-          location: profile.location.trim(),
-        });
-      } else {
-        await base44.entities.User.create({
-          email: user.email,
-          forename: profile.forename.trim(),
-          middle_name: profile.middle_name.trim(),
-          surname: profile.surname.trim(),
-          phone: profile.phone.trim(),
-          location: profile.location.trim(),
-        });
-      }
+    const records = await base44.entities.User.filter({ email: user.email });
+
+    if (records.length > 0) {
+      await base44.entities.User.update(records[0].id, {
+        forename: profile.forename.trim(),
+        middle_name: profile.middle_name.trim(),
+        surname: profile.surname.trim(),
+        phone: profile.phone.trim(),
+        location: profile.location.trim(),
+      });
+    } else {
+      await base44.entities.User.create({
+        email: user.email,
+        forename: profile.forename.trim(),
+        middle_name: profile.middle_name.trim(),
+        surname: profile.surname.trim(),
+        phone: profile.phone.trim(),
+        location: profile.location.trim(),
+      });
+    }
+
     setSaveStatus("success");
     setTimeout(() => setSaveStatus(null), 4000);
   } catch (err) {
@@ -190,8 +187,12 @@ export default function Settings() {
     const updated = { ...notifications, [field]: value };
     setNotifications(updated);
     // Persist immediately
-    if (user?.id) {
-      base44.entities.User.update(user.id, { notification_preferences: updated }).catch(() => {});
+    if (user?.email) {
+      base44.entities.User.filter({ email: user.email }).then((records) => {
+        if (records.length > 0) {
+          base44.entities.User.update(records[0].id, { notification_preferences: updated }).catch(() => {});
+        }
+      }).catch(() => {});
     }
   };
 
@@ -257,10 +258,6 @@ export default function Settings() {
 
   setDeleteDialogOpen(true);
 };
-
-{deleteBlockReason && (
-  <p className="text-sm text-red-500 mt-2">{deleteBlockReason}</p>
-)}
 
 const handleDeleteAccount = async () => {
   if (deleteConfirm !== "DELETE") return;
