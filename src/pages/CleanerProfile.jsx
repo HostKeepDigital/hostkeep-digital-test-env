@@ -12,6 +12,7 @@ import {
   Star, Shield, Award, MapPin, Clock, TrendingUp, Crown, 
   MessageSquare, Heart, Share2, CheckCircle, Calendar, Loader2
 } from "lucide-react";
+import ReviewsDialog from "@/components/reviews/ReviewsDialog";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/AuthContext";
 
@@ -162,14 +163,15 @@ export default function CleanerProfile() {
 
               <div className="flex flex-wrap gap-4 mb-4">
                 {cleaner.average_rating > 0 && (
-                  <div className="flex items-center gap-2">
-                    <Star className="w-5 h-5 fill-white" />
-                    <span className="text-xl font-semibold">
-                      {cleaner.average_rating.toFixed(1)}
-                    </span>
-                    <span className="text-teal-100">
-                      ({cleaner.total_reviews} reviews)
-                    </span>
+                  <div className="flex items-center gap-2 text-white">
+                    <ReviewsDialog
+                      revieweeId={cleaner.user_id}
+                      reviewType="host_to_cleaner"
+                      averageRating={cleaner.average_rating}
+                      reviewCount={cleaner.total_reviews}
+                      isPrivilegedViewer={!!isAuthenticated}
+                      triggerClassName="text-white [&_svg.text-gray-300]:text-white/30 [&_svg.fill-amber-400]:fill-amber-400 [&_span]:text-white/80"
+                    />
                   </div>
                 )}
 

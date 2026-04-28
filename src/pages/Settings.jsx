@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, Bell, CreditCard, Loader2, CheckCircle, AlertCircle, Trash2, CheckCircle2 } from "lucide-react";
+import ReviewsDialog from "@/components/reviews/ReviewsDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/AuthContext";
@@ -395,6 +396,19 @@ const handleDeleteAccount = async () => {
                     />
                   </div>
                 </div>
+
+                {/* My Reviews */}
+                {user?.id && (
+                  <div className="pt-2 border-t border-gray-100">
+                    <p className="text-sm font-medium text-gray-700 mb-2">My Reviews</p>
+                    <ReviewsDialog
+                      revieweeId={user.id}
+                      reviewType={null}
+                      isPrivilegedViewer={true}
+                      emptyMessage="No reviews have been left for you yet."
+                    />
+                  </div>
+                )}
 
                 <SaveBanner status={saveStatus} />
 

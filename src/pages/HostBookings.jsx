@@ -36,6 +36,7 @@ import {
 import { toast } from "sonner";
 import BookingCard from "@/components/bookings/BookingCard";
 import ReviewForm from "@/components/reviews/ReviewForm";
+import ReviewsDialog from "@/components/reviews/ReviewsDialog";
 import DepositReturnTimer from "@/components/bookings/DepositReturnTimer";
 import DamageClaimModal from "@/components/bookings/DamageClaimModal";
 import { useAuth } from "@/lib/AuthContext";
@@ -513,6 +514,15 @@ export default function HostBookings() {
                       )}
 
                       <div className="flex flex-wrap items-center gap-2 pt-2">
+                        {booking.guest_id && (
+                          <ReviewsDialog
+                            revieweeId={booking.guest_id}
+                            reviewType="host_to_guest"
+                            isPrivilegedViewer={true}
+                            emptyMessage="No reviews for this guest yet."
+                          />
+                        )}
+
                         {hasReviewedGuest(booking.id) ? (
                           <span className="inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium bg-gray-100 text-gray-500 border border-gray-200">
                             Reviewed ✓

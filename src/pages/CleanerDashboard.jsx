@@ -20,6 +20,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import CompleteJobModal from "@/components/cleaner-dashboard/CompleteJobModal";
 import ProposeRateModal from "@/components/cleaner-dashboard/ProposeRateModal";
 import ReviewForm from "@/components/reviews/ReviewForm";
+import ReviewsDialog from "@/components/reviews/ReviewsDialog";
 import { format, isToday, parseISO } from "date-fns";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -353,6 +354,18 @@ export default function CleanerDashboard() {
               </h1>
               {cleanerProfile.business_name && (
                 <p className="text-gray-500 text-sm mt-0.5">{cleanerProfile.business_name}</p>
+              )}
+              {cleanerProfile.average_rating > 0 && (
+                <div className="mt-1">
+                  <ReviewsDialog
+                    revieweeId={user?.id}
+                    reviewType="host_to_cleaner"
+                    averageRating={cleanerProfile.average_rating}
+                    reviewCount={cleanerProfile.total_reviews}
+                    isPrivilegedViewer={true}
+                    emptyMessage="No reviews from hosts yet."
+                  />
+                </div>
               )}
             </div>
             {cleanerProfile.subscription_plan === "pro" && (
