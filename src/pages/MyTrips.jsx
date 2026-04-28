@@ -156,9 +156,18 @@ export default function MyTrips() {
         r.review_type === "guest_to_host"
     );
 
-  const canReview = (booking) =>
-    ["checked_in", "completed"].includes(booking.booking_status) &&
-    !hasReviewed(booking.id);
+  const canReview = (booking) => {
+    if (!["checked_in", "completed"].includes(booking.booking_status)) return false;
+    if (hasReviewed(booking.id)) return false;
+    // Must be within 3 days of checkout
+    const checkoutDate = booking.check_out ? new Date(booking.check_out) : null;
+    if (checkoutDate) {
+      const deadline = new Date(checkoutDate);
+      deadline.setDate(deadline.getDate() + 3);
+      if (new Date() > deadline) return false;
+    }
+    return true;
+  };
 
   const statusColors = {
     awaiting_decision: "bg-amber-50 text-amber-700 border-amber-200",
@@ -634,7 +643,7 @@ export default function MyTrips() {
             }
             booking={reviewBooking}
             reviewType="guest_to_host"
-            reviewerName={user?.full_name}
+            reviewerName={[user?.forename, user?.surname].filter(Boolean).join(" ") || user?.full_name}
             reviewerId={user?.id}
           />
         )}

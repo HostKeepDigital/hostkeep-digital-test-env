@@ -65,7 +65,7 @@ export default function ReviewForm({
       : job?.host_id; // cleaner_to_host
 
     const referenceDate = endDate || booking?.check_out || job?.completed_at || new Date().toISOString();
-    const blindUntil = addDays(new Date(referenceDate), 7).toISOString();
+    const blindUntil = addDays(new Date(referenceDate), 3).toISOString();
 
     const payload = {
       review_category: isJobReview ? "cleaning_job" : "booking",
@@ -258,7 +258,7 @@ export default function ReviewForm({
           </div>
 
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
-            🔒 Your review is confidential until both parties have submitted a review, or 7 days have passed. After 7 days without a review from either party, the option to review will be removed.
+            🔒 Your review is confidential until both parties have submitted a review, or 3 days have passed. After 3 days the option to review will close.
           </div>
 
           <Button

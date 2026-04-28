@@ -52,6 +52,7 @@ import { useAuth } from "@/lib/AuthContext";
 
 // NEW: hybrid booking + cleaning calendar
 import BookingBarCalendar from "@/components/BookingBarCalendar";
+import HostPerformancePanel from "@/components/dashboard/HostPerformancePanel";
 
 export default function HostDashboard() {
   const { user } = useAuth();
@@ -578,7 +579,10 @@ export default function HostDashboard() {
               );
             })()}
 
-            {/* Subscription Status */}
+            {/* Performance / Reviews */}
+            <HostPerformancePanel userId={user?.id} />
+
+          {/* Subscription Status */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}

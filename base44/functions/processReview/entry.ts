@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
       let notifTitle = "You received a new review";
       let notifBody = hasCounterpart
         ? `Your review for the recent ${friendlyType} has been revealed — both parties have now reviewed.`
-        : `You received a review for a recent ${friendlyType}. Reviews are revealed when both parties submit or after 7 days.`;
+        : `You received a review for a recent ${friendlyType}. Reviews are revealed when both parties submit or after 3 days.`;
 
       await sr.functions.invoke("sendNotification", {
         user_id: revieweeId,

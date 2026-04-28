@@ -126,6 +126,17 @@ export default function HostBookings() {
   const hasReviewedGuest = (bookingId) =>
     existingReviews.some((r) => r.booking_id === bookingId);
 
+  const canReviewGuest = (booking) => {
+    if (hasReviewedGuest(booking.id)) return false;
+    const checkoutDate = booking.check_out ? new Date(booking.check_out) : null;
+    if (checkoutDate) {
+      const deadline = new Date(checkoutDate);
+      deadline.setDate(deadline.getDate() + 3);
+      if (new Date() > deadline) return false;
+    }
+    return true;
+  };
+
   const hasReviewedCleaner = (jobId) =>
     cleanerReviews.some((r) => r.job_id === jobId);
 
@@ -502,14 +513,21 @@ export default function HostBookings() {
                       )}
 
                       <div className="flex flex-wrap items-center gap-2 pt-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setReviewBooking(booking)}
-                          disabled={hasReviewedGuest(booking.id)}
-                        >
-                          {hasReviewedGuest(booking.id) ? "Reviewed ✓" : "Review Guest"}
-                        </Button>
+                        {hasReviewedGuest(booking.id) ? (
+                          <span className="inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium bg-gray-100 text-gray-500 border border-gray-200">
+                            Reviewed ✓
+                          </span>
+                        ) : canReviewGuest(booking) ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setReviewBooking(booking)}
+                          >
+                            Review Guest
+                          </Button>
+                        ) : (
+                          <span className="text-xs text-gray-400">Review window closed</span>
+                        )}
 
                         {completedJobsForBooking(booking.id).map((job) =>
                           hasReviewedCleaner(job.id) ? (
@@ -564,19 +582,19 @@ export default function HostBookings() {
             onOpenChange={(open) => !open && setReviewBooking(null)}
             booking={reviewBooking}
             reviewType="host_to_guest"
-            reviewerName={user?.full_name}
+            reviewerName={[user?.forename, user?.surname].filter(Boolean).join(" ") || user?.full_name}
             reviewerId={user?.id}
-          />
-        )}
+            />
+            )}
 
-        {/* REVIEW CLEANER DIALOG */}
+            {/* REVIEW CLEANER DIALOG */}
         {reviewCleanerJob && (
           <ReviewForm
             open={!!reviewCleanerJob}
             onOpenChange={(open) => !open && setReviewCleanerJob(null)}
             job={reviewCleanerJob}
             reviewType="host_to_cleaner"
-            reviewerName={user?.full_name}
+            reviewerName={[user?.forename, user?.surname].filter(Boolean).join(" ") || user?.full_name}
             reviewerId={user?.id}
             endDate={reviewCleanerJob.completed_at}
           />
