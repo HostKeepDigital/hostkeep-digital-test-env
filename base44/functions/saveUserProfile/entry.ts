@@ -13,6 +13,7 @@ Deno.serve(async (req) => {
       forename,
       middle_name: middle_name || "",
       surname,
+      full_name: [forename, middle_name, surname].filter(Boolean).join(" "),
       phone: phone || "",
       location: location || "",
     };
