@@ -1,40 +1,36 @@
-import { createClientFromRequest } from "npm:@base44/sdk@0.8.23";
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const serviceRole = base44.asServiceRole;
-    const body = await req.json();
-    const { email, forename, middle_name, surname, phone, location } = body;
+    const { user_id, email, forename, middle_name, surname, phone, location } = await req.json();
 
-    if (!email || !forename || !surname) {
-      return Response.json({ success: false, error: "forename, surname and email are required" }, { status: 400 });
+    if (!forename || !surname) {
+      return Response.json({ success: false, error: "forename and surname are required" }, { status: 400 });
     }
 
-    const existing = await serviceRole.entities.User.filter({ email: email });
+    const updates = {
+      forename,
+      middle_name: middle_name || "",
+      surname,
+      phone: phone || "",
+      location: location || "",
+    };
 
-    if (existing.length > 0) {
-      await serviceRole.entities.User.update(existing[0].id, {
-        forename: forename,
-        middle_name: middle_name || "",
-        surname: surname,
-        phone: phone || "",
-        location: location || "",
-      });
+    if (user_id) {
+      await base44.asServiceRole.entities.User.update(user_id, updates);
     } else {
-      await serviceRole.entities.User.create({
-        email: email,
-        forename: forename,
-        middle_name: middle_name || "",
-        surname: surname,
-        phone: phone || "",
-        location: location || "",
-      });
+      const existing = await base44.asServiceRole.entities.User.filter({ email });
+      if (existing.length > 0) {
+        await base44.asServiceRole.entities.User.update(existing[0].id, updates);
+      } else {
+        await base44.asServiceRole.entities.User.create({ email, ...updates });
+      }
     }
 
     return Response.json({ success: true });
-  } catch (err) {
-    console.error("saveUserProfile error:", err.message || err);
-    return Response.json({ success: false, error: String(err.message || err) }, { status: 500 });
+  } catch (e) {
+    console.error("saveUserProfile error:", e);
+    return Response.json({ success: false, error: e.message }, { status: 500 });
   }
 });
