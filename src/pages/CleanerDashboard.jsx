@@ -349,7 +349,7 @@ export default function CleanerDashboard() {
           <div className="flex items-start justify-between mb-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                Welcome back, {user?.full_name?.split(" ")[0] || "there"}!
+                Welcome back, {user?.forename || "there"}!
               </h1>
               {cleanerProfile.business_name && (
                 <p className="text-gray-500 text-sm mt-0.5">{cleanerProfile.business_name}</p>
@@ -549,7 +549,7 @@ export default function CleanerDashboard() {
           job={reviewHostJob}
           reviewType="cleaner_to_host"
           reviewerId={user?.id}
-          reviewerName={user?.full_name || cleanerProfile?.business_name}
+          reviewerName={[user?.forename, user?.surname].filter(Boolean).join(" ") || cleanerProfile?.business_name}
           endDate={reviewHostJob.completed_at}
         />
       )}
