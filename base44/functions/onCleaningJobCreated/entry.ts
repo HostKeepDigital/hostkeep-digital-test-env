@@ -4,6 +4,52 @@
  */
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.23";
 
+// Inline pricing calculator (mirrors utils/cleanerPricing.js — no local imports in Deno)
+function calculateCleanerPrice(cleaner, { bedrooms = 1, scheduledDate, bookingDate } = {}) {
+  const rc = cleaner.rate_card || {};
+  let tier;
+  if (bedrooms <= 1)      tier = rc.studio_1bed   || 0;
+  else if (bedrooms === 2) tier = rc.two_bed       || 0;
+  else if (bedrooms === 3) tier = rc.three_bed     || 0;
+  else                     tier = rc.four_bed_plus || 0;
+
+  let price = tier > 0 ? tier : (cleaner.base_price || 0);
+  const minimum = cleaner.minimum_charge || 0;
+  const dp = cleaner.dynamic_pricing || {};
+
+  // Last-minute uplift
+  if (dp.last_minute?.enabled && scheduledDate) {
+    const cleanDate = new Date(scheduledDate);
+    const fromDate = bookingDate ? new Date(bookingDate) : new Date();
+    const daysUntil = Math.ceil((cleanDate - fromDate) / (1000 * 60 * 60 * 24));
+    const tiers = [...(dp.last_minute.tiers || [])].sort((a, b) => a.days_before - b.days_before);
+    for (const t of tiers) {
+      if (daysUntil <= t.days_before) {
+        price += (price * t.uplift_percent) / 100;
+        break;
+      }
+    }
+  }
+
+  // Seasonal multiplier
+  if (dp.seasonal?.enabled && scheduledDate) {
+    const cleanDate = new Date(scheduledDate);
+    const year = cleanDate.getFullYear();
+    for (const win of dp.seasonal.windows || []) {
+      if (!win.start_date || !win.end_date || !win.multiplier) continue;
+      const start = new Date(win.start_date.replace(/^\d{4}/, year));
+      const end = new Date(win.end_date.replace(/^\d{4}/, year));
+      if (cleanDate >= start && cleanDate <= end) {
+        price *= win.multiplier;
+        break;
+      }
+    }
+  }
+
+  price = Math.max(price, minimum);
+  return Math.round(price * 100) / 100;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -44,15 +90,12 @@ Deno.serve(async (req) => {
             if (counterRateRecords?.[0]?.counter_rate > 0) {
               resolvedPrice = counterRateRecords[0].counter_rate;
             } else {
-              // 2. Fall back to rate card by bedroom count
-              const bedrooms = property.bedrooms ?? 0;
-              const rc = cleaner.rate_card || {};
-              let tierPrice = 0;
-              if (bedrooms <= 1)       tierPrice = rc.studio_1bed   || 0;
-              else if (bedrooms === 2)  tierPrice = rc.two_bed       || 0;
-              else if (bedrooms === 3)  tierPrice = rc.three_bed     || 0;
-              else                      tierPrice = rc.four_bed_plus || 0;
-              resolvedPrice = tierPrice > 0 ? tierPrice : (cleaner.base_price || 0);
+              // 2. Calculate price using dynamic pricing rules
+              resolvedPrice = calculateCleanerPrice(cleaner, {
+                bedrooms: property.bedrooms ?? 1,
+                scheduledDate: job.scheduled_date,
+                bookingDate: new Date().toISOString().split("T")[0],
+              });
             }
             if (resolvedPrice > 0) {
               await serviceRole.entities.CleaningJob.update(job.id, { cleaner_price: resolvedPrice });

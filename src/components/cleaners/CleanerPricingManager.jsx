@@ -6,400 +6,322 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  DollarSign, Sparkles, AlertCircle, CheckCircle, 
-  Lightbulb, TrendingUp, Zap
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  PoundSterling, Sparkles, Zap, TrendingUp, Save, Lightbulb, CheckCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
+import DynamicPricingSettings from "./DynamicPricingSettings";
+import PriceSimulator from "./PriceSimulator";
 
 export default function CleanerPricingManager({ cleaner, onUpdate }) {
-  const [loading, setLoading] = useState(false);
-  const [pricing, setPricing] = useState(cleaner?.services || {
-    laundry: { enabled: false, price: 20, pricing_type: "per_job" },
-    linen_change: { enabled: false, price: 15 },
-    deep_cleaning: { enabled: false, price: 45 },
-    urgency_premium: { enabled: false, percentage: 10 }
-  });
+  const [saving, setSaving] = useState(false);
 
-  const [basePrice, setBasePrice] = useState(cleaner?.base_price || "");
-  const [minimumCharge, setMinimumCharge] = useState(cleaner?.minimum_charge || "");
   const [rateCard, setRateCard] = useState({
-    studio_1bed:  cleaner?.rate_card?.studio_1bed  ?? "",
-    two_bed:      cleaner?.rate_card?.two_bed      ?? "",
-    three_bed:    cleaner?.rate_card?.three_bed    ?? "",
+    studio_1bed:   cleaner?.rate_card?.studio_1bed   ?? "",
+    two_bed:       cleaner?.rate_card?.two_bed       ?? "",
+    three_bed:     cleaner?.rate_card?.three_bed     ?? "",
     four_bed_plus: cleaner?.rate_card?.four_bed_plus ?? "",
   });
+  const [minimumCharge, setMinimumCharge] = useState(cleaner?.minimum_charge ?? "");
 
-  const handleServiceToggle = (service) => {
-    setPricing(prev => ({
-      ...prev,
-      [service]: { ...prev[service], enabled: !prev[service].enabled }
-    }));
-  };
+  const [services, setServices] = useState(cleaner?.services || {
+    laundry:        { enabled: false, price: 20, pricing_type: "per_job" },
+    linen_change:   { enabled: false, price: 15 },
+    deep_cleaning:  { enabled: false, price: 45 },
+    urgency_premium:{ enabled: false, percentage: 10 },
+  });
 
-  const handleServicePrice = (service, price) => {
-    setPricing(prev => ({
-      ...prev,
-      [service]: { ...prev[service], price: parseFloat(price) || 0 }
-    }));
-  };
+  const [dynamicPricing, setDynamicPricing] = useState(cleaner?.dynamic_pricing || {});
 
-  const handleUrgencyPercentage = (percentage) => {
-    setPricing(prev => ({
-      ...prev,
-      urgency_premium: { ...prev.urgency_premium, percentage: parseInt(percentage) || 0 }
-    }));
+  // Build a preview-ready cleaner object that reflects live form state
+  const liveCleanerPreview = {
+    ...cleaner,
+    rate_card: {
+      studio_1bed:   parseFloat(rateCard.studio_1bed)   || 0,
+      two_bed:       parseFloat(rateCard.two_bed)       || 0,
+      three_bed:     parseFloat(rateCard.three_bed)     || 0,
+      four_bed_plus: parseFloat(rateCard.four_bed_plus) || 0,
+    },
+    minimum_charge: parseFloat(minimumCharge) || 0,
+    services,
+    dynamic_pricing: dynamicPricing,
   };
 
   const handleSave = async () => {
-    setLoading(true);
+    setSaving(true);
     try {
-      const updatedRateCard = {
-        studio_1bed:   parseFloat(rateCard.studio_1bed)   || 0,
-        two_bed:       parseFloat(rateCard.two_bed)       || 0,
-        three_bed:     parseFloat(rateCard.three_bed)     || 0,
-        four_bed_plus: parseFloat(rateCard.four_bed_plus) || 0,
+      const payload = {
+        rate_card: liveCleanerPreview.rate_card,
+        minimum_charge: liveCleanerPreview.minimum_charge,
+        services,
+        dynamic_pricing: dynamicPricing,
       };
-      await base44.entities.Cleaner.update(cleaner.id, {
-        base_price: parseFloat(basePrice) || 0,
-        minimum_charge: parseFloat(minimumCharge) || 0,
-        rate_card: updatedRateCard,
-        services: pricing
-      });
-      
-      toast.success('Pricing updated successfully');
-      if (onUpdate) onUpdate({ ...cleaner, base_price: basePrice, rate_card: updatedRateCard, services: pricing });
-    } catch (error) {
-      toast.error('Failed to update pricing');
+      await base44.entities.Cleaner.update(cleaner.id, payload);
+      toast.success("Pricing saved successfully");
+      if (onUpdate) onUpdate({ ...cleaner, ...payload });
+    } catch {
+      toast.error("Failed to save pricing");
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
-  const enabledServices = Object.entries(pricing).filter(([_, s]) => s.enabled && _ !== 'urgency_premium').length;
-  const showGrowthTip = enabledServices < 2;
+  const toggleService = (key) =>
+    setServices((prev) => ({ ...prev, [key]: { ...prev[key], enabled: !prev[key].enabled } }));
+
+  const setServiceField = (key, field, value) =>
+    setServices((prev) => ({
+      ...prev,
+      [key]: { ...prev[key], [field]: field === "pricing_type" ? value : parseFloat(value) || 0 },
+    }));
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      {/* Page header */}
+      <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <DollarSign className="w-6 h-6 text-green-600" />
-            Pricing Management
+            <PoundSterling className="w-6 h-6 text-green-600" />
+            Pricing Settings
           </h2>
-          <p className="text-gray-600">Set your rates and service pricing</p>
+          <p className="text-gray-500 text-sm mt-0.5">
+            Set your base rates, add-ons, last-minute premiums, and seasonal multipliers
+          </p>
         </div>
-        {cleaner?.subscription_plan === 'pro' && (
-          <Badge className="bg-indigo-100 text-indigo-700">Pro Features Unlocked</Badge>
+        {cleaner?.subscription_plan === "pro" && (
+          <Badge className="bg-indigo-100 text-indigo-700 text-xs px-2.5 py-1">Pro — all features unlocked</Badge>
         )}
       </div>
 
-      {/* Rate Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Rate Card</CardTitle>
-          <CardDescription>Your fixed cleaning rate by property size</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { key: "studio_1bed",   label: "Studio / 1 bed", placeholder: "65.00" },
-              { key: "two_bed",       label: "2 bed",          placeholder: "80.00" },
-              { key: "three_bed",     label: "3 bed",          placeholder: "100.00" },
-              { key: "four_bed_plus", label: "4 bed+",         placeholder: "125.00" },
-            ].map(({ key, label, placeholder }) => (
-              <div key={key}>
-                <Label htmlFor={key}>{label}</Label>
-                <div className="flex items-center gap-1.5 mt-1">
-                  <span className="text-gray-500">£</span>
-                  <Input
-                    id={key}
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={rateCard[key]}
-                    onChange={(e) => setRateCard(prev => ({ ...prev, [key]: e.target.value }))}
-                    placeholder={placeholder}
-                    className="flex-1"
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
-            💡 These rates are shown to hosts before they confirm a clean. Mileage is added automatically on top.
-          </p>
+      <div className="grid lg:grid-cols-[1fr_320px] gap-6 items-start">
+        {/* Left: tabs */}
+        <Tabs defaultValue="rates" className="space-y-4">
+          <TabsList className="grid grid-cols-3 w-full">
+            <TabsTrigger value="rates" className="gap-1.5 text-xs">
+              <PoundSterling className="w-3.5 h-3.5" /> Rate Card
+            </TabsTrigger>
+            <TabsTrigger value="dynamic" className="gap-1.5 text-xs">
+              <TrendingUp className="w-3.5 h-3.5" /> Dynamic Pricing
+            </TabsTrigger>
+            <TabsTrigger value="addons" className="gap-1.5 text-xs">
+              <Sparkles className="w-3.5 h-3.5" /> Add-Ons
+            </TabsTrigger>
+          </TabsList>
 
-          <div>
-            <Label htmlFor="minimum_charge">Minimum Job Charge (£)</Label>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-gray-600">£</span>
-              <Input
-                id="minimum_charge"
-                type="number"
-                step="0.01"
-                min="0"
-                value={minimumCharge}
-                onChange={(e) => setMinimumCharge(e.target.value)}
-                placeholder="50.00"
-                className="flex-1 max-w-xs"
-              />
-            </div>
-            <p className="text-xs text-gray-500 mt-1">Lowest price you'll accept for any job</p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Add-On Services */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Add-On Services</CardTitle>
-          <CardDescription>Earn more by offering additional services</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Laundry */}
-          <div className="border rounded-lg p-4">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-lg">🧺</span>
-                  <Label className="text-base font-semibold">Laundry Service</Label>
-                </div>
-                <p className="text-sm text-gray-600">Washing, drying, and folding guest laundry</p>
-                <p className="text-xs text-gray-500 mt-1">💡 Typical range: £15–£30</p>
-              </div>
-              <Switch
-                checked={pricing.laundry.enabled}
-                onCheckedChange={() => handleServiceToggle('laundry')}
-              />
-            </div>
-
-            {pricing.laundry.enabled && (
-              <div className="mt-4 pt-4 border-t space-y-3">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="laundry_price">Price (£)</Label>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-gray-600">£</span>
-                      <Input
-                        id="laundry_price"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={pricing.laundry.price}
-                        onChange={(e) => handleServicePrice('laundry', e.target.value)}
-                        placeholder="20.00"
-                        className="flex-1"
-                      />
+          {/* ── Rate Card tab ── */}
+          <TabsContent value="rates" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Base Rate Card</CardTitle>
+                <CardDescription>Your standard cleaning rate by property size</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[
+                    { key: "studio_1bed",   label: "Studio / 1 bed", placeholder: "65" },
+                    { key: "two_bed",       label: "2 bed",          placeholder: "80" },
+                    { key: "three_bed",     label: "3 bed",          placeholder: "100" },
+                    { key: "four_bed_plus", label: "4 bed+",         placeholder: "125" },
+                  ].map(({ key, label, placeholder }) => (
+                    <div key={key}>
+                      <Label className="text-xs text-gray-500">{label}</Label>
+                      <div className="flex items-center gap-1 mt-1">
+                        <span className="text-gray-400 text-sm">£</span>
+                        <Input
+                          type="number" step="0.01" min="0"
+                          value={rateCard[key]}
+                          onChange={(e) => setRateCard((p) => ({ ...p, [key]: e.target.value }))}
+                          placeholder={placeholder}
+                          className="flex-1 h-9"
+                        />
+                      </div>
                     </div>
-                  </div>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-400 bg-gray-50 rounded-lg px-3 py-2">
+                  💡 Rates shown to hosts before they confirm a clean. Mileage is added on top.
+                </p>
 
+                <div className="border-t pt-4">
+                  <Label className="text-xs text-gray-500">Minimum Job Charge</Label>
+                  <div className="flex items-center gap-2 mt-1 max-w-xs">
+                    <span className="text-gray-400 text-sm">£</span>
+                    <Input
+                      type="number" step="0.01" min="0"
+                      value={minimumCharge}
+                      onChange={(e) => setMinimumCharge(e.target.value)}
+                      placeholder="50"
+                      className="flex-1 h-9"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">Lowest price you'll accept for any job</p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ── Dynamic Pricing tab ── */}
+          <TabsContent value="dynamic">
+            <DynamicPricingSettings
+              dynamicPricing={dynamicPricing}
+              onChange={setDynamicPricing}
+            />
+          </TabsContent>
+
+          {/* ── Add-ons tab ── */}
+          <TabsContent value="addons" className="space-y-4">
+            {/* Laundry */}
+            <ServiceCard
+              emoji="🧺"
+              title="Laundry Service"
+              description="Washing, drying, and folding guest laundry"
+              tipRange="£15–£30"
+              enabled={services.laundry?.enabled}
+              onToggle={() => toggleService("laundry")}
+            >
+              {services.laundry?.enabled && (
+                <div className="grid md:grid-cols-2 gap-4 pt-3 mt-3 border-t">
+                  <PriceInput
+                    id="laundry_price"
+                    label="Price (£)"
+                    value={services.laundry.price}
+                    onChange={(v) => setServiceField("laundry", "price", v)}
+                  />
                   <div>
-                    <Label htmlFor="laundry_type">Pricing Type</Label>
+                    <Label htmlFor="laundry_type" className="text-xs text-gray-500">Pricing type</Label>
                     <Select
-                      value={pricing.laundry.pricing_type}
-                      onValueChange={(val) => setPricing(prev => ({
-                        ...prev,
-                        laundry: { ...prev.laundry, pricing_type: val }
-                      }))}
+                      value={services.laundry.pricing_type}
+                      onValueChange={(v) => setServiceField("laundry", "pricing_type", v)}
                     >
-                      <SelectTrigger className="mt-1">
+                      <SelectTrigger className="mt-1 h-9 text-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="per_job">Per Job</SelectItem>
-                        <SelectItem value="per_load">Per Load</SelectItem>
+                        <SelectItem value="per_job">Per job</SelectItem>
+                        <SelectItem value="per_load">Per load</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </ServiceCard>
 
-          {/* Linen Change */}
-          <div className="border rounded-lg p-4">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-lg">🛏️</span>
-                  <Label className="text-base font-semibold">Linen Change Service</Label>
-                </div>
-                <p className="text-sm text-gray-600">Changing guest bed linens and preparing beds for arrival</p>
-                <p className="text-xs text-gray-500 mt-1">💡 Typical range: £10–£20</p>
-              </div>
-              <Switch
-                checked={pricing.linen_change.enabled}
-                onCheckedChange={() => handleServiceToggle('linen_change')}
-              />
-            </div>
-
-            {pricing.linen_change.enabled && (
-              <div className="mt-4 pt-4 border-t">
-                <Label htmlFor="linen_price">Price (£)</Label>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-gray-600">£</span>
-                  <Input
+            {/* Linen change */}
+            <ServiceCard
+              emoji="🛏️"
+              title="Linen Change"
+              description="Changing bed linens and preparing beds for arrival"
+              tipRange="£10–£20"
+              enabled={services.linen_change?.enabled}
+              onToggle={() => toggleService("linen_change")}
+            >
+              {services.linen_change?.enabled && (
+                <div className="pt-3 mt-3 border-t max-w-xs">
+                  <PriceInput
                     id="linen_price"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={pricing.linen_change.price}
-                    onChange={(e) => handleServicePrice('linen_change', e.target.value)}
-                    placeholder="15.00"
-                    className="flex-1 max-w-xs"
+                    label="Price (£)"
+                    value={services.linen_change.price}
+                    onChange={(v) => setServiceField("linen_change", "price", v)}
                   />
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </ServiceCard>
 
-          {/* Deep Cleaning */}
-          <div className="border rounded-lg p-4">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-lg">🧼</span>
-                  <Label className="text-base font-semibold">Deep Cleaning Service</Label>
-                </div>
-                <p className="text-sm text-gray-600">Detailed cleaning including ovens, surfaces, and high-detail areas</p>
-                <p className="text-xs text-gray-500 mt-1">💡 Typical range: £25–£60+ depending on property size</p>
-              </div>
-              <Switch
-                checked={pricing.deep_cleaning.enabled}
-                onCheckedChange={() => handleServiceToggle('deep_cleaning')}
-              />
-            </div>
-
-            {pricing.deep_cleaning.enabled && (
-              <div className="mt-4 pt-4 border-t">
-                <Label htmlFor="deep_clean_price">Price (£)</Label>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-gray-600">£</span>
-                  <Input
-                    id="deep_clean_price"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={pricing.deep_cleaning.price}
-                    onChange={(e) => handleServicePrice('deep_cleaning', e.target.value)}
-                    placeholder="45.00"
-                    className="flex-1 max-w-xs"
+            {/* Deep cleaning */}
+            <ServiceCard
+              emoji="🧼"
+              title="Deep Cleaning"
+              description="Detailed cleaning including ovens, surfaces, and high-detail areas"
+              tipRange="£25–£60+"
+              enabled={services.deep_cleaning?.enabled}
+              onToggle={() => toggleService("deep_cleaning")}
+            >
+              {services.deep_cleaning?.enabled && (
+                <div className="pt-3 mt-3 border-t max-w-xs">
+                  <PriceInput
+                    id="deep_price"
+                    label="Price (£)"
+                    value={services.deep_cleaning.price}
+                    onChange={(v) => setServiceField("deep_cleaning", "price", v)}
                   />
                 </div>
+              )}
+            </ServiceCard>
+
+            {/* Growth tip */}
+            {Object.values(services).filter((s) => s.enabled).length < 2 && (
+              <div className="flex items-start gap-2 bg-blue-50 border border-blue-100 rounded-xl p-4 text-sm">
+                <Lightbulb className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                <div className="text-blue-800">
+                  <strong>Pro tip:</strong> Cleaners who offer at least 2 add-on services earn on average 23% more per job.
+                </div>
               </div>
             )}
-          </div>
-        </CardContent>
-      </Card>
+          </TabsContent>
+        </Tabs>
 
-      {/* Urgency Premium */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Urgency Premium</CardTitle>
-          <CardDescription>Add a premium for same-day or last-minute bookings</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-start justify-between mb-3">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <Zap className="w-5 h-5 text-amber-500" />
-                <Label className="text-base font-semibold">Enable Urgency Premium</Label>
-              </div>
-              <p className="text-sm text-gray-600">Charge extra for rush bookings</p>
-            </div>
-            <Switch
-              checked={pricing.urgency_premium.enabled}
-              onCheckedChange={() => setPricing(prev => ({
-                ...prev,
-                urgency_premium: { ...prev.urgency_premium, enabled: !prev.urgency_premium.enabled }
-              }))}
-            />
-          </div>
+        {/* Right: live simulator (sticky) */}
+        <div className="lg:sticky lg:top-24">
+          <PriceSimulator cleaner={liveCleanerPreview} />
+        </div>
+      </div>
 
-          {pricing.urgency_premium.enabled && (
-            <div className="pt-4 border-t">
-              <Label htmlFor="urgency_percent">Premium Percentage (%)</Label>
-              <Input
-                id="urgency_percent"
-                type="number"
-                min="0"
-                max="100"
-                value={pricing.urgency_premium.percentage}
-                onChange={(e) => handleUrgencyPercentage(e.target.value)}
-                placeholder="10"
-                className="mt-1 max-w-xs"
-              />
-              <p className="text-xs text-gray-500 mt-1">Typical: 10% - 25%</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Growth Tip */}
-      {showGrowthTip && (
-        <Card className="bg-blue-50 border-blue-200">
-          <CardContent className="p-4 flex items-start gap-3">
-            <Lightbulb className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-            <div>
-              <div className="font-semibold text-blue-900">Pro Tip for Growth</div>
-              <p className="text-sm text-blue-800 mt-1">
-                Most professional CleanKeep cleaners offer at least 2 add-on services. Pro cleaners often enable laundry and linen services to increase repeat bookings.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Price Preview */}
-      <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
-        <CardHeader>
-          <CardTitle className="text-lg">Your Current Pricing Structure</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-gray-700">Base Cleaning Rate</span>
-              <span className="font-semibold">£{basePrice || '—'}</span>
-            </div>
-            {pricing.laundry.enabled && (
-              <div className="flex items-center justify-between text-green-700">
-                <span>+ Laundry Service</span>
-                <span className="font-semibold">£{pricing.laundry.price}</span>
-              </div>
-            )}
-            {pricing.linen_change.enabled && (
-              <div className="flex items-center justify-between text-green-700">
-                <span>+ Linen Change</span>
-                <span className="font-semibold">£{pricing.linen_change.price}</span>
-              </div>
-            )}
-            {pricing.deep_cleaning.enabled && (
-              <div className="flex items-center justify-between text-green-700">
-                <span>+ Deep Cleaning</span>
-                <span className="font-semibold">£{pricing.deep_cleaning.price}</span>
-              </div>
-            )}
-            {pricing.urgency_premium.enabled && (
-              <div className="flex items-center justify-between text-amber-700">
-                <span>+ Urgency Premium</span>
-                <span className="font-semibold">{pricing.urgency_premium.percentage}%</span>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Save Button */}
+      {/* Save */}
       <Button
         onClick={handleSave}
-        disabled={loading}
-        className="w-full bg-green-600 hover:bg-green-700 text-white py-6 text-lg"
+        disabled={saving}
+        className="w-full bg-teal-600 hover:bg-teal-700 text-white h-12 text-base font-semibold gap-2"
       >
-        {loading ? 'Saving...' : '💾 Save Pricing Settings'}
+        {saving ? (
+          <>Saving…</>
+        ) : (
+          <><Save className="w-4 h-4" /> Save All Pricing Settings</>
+        )}
       </Button>
+    </div>
+  );
+}
+
+// ── Sub-components ────────────────────────────────────────────────────────────
+
+function ServiceCard({ emoji, title, description, tipRange, enabled, onToggle, children }) {
+  return (
+    <Card>
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className="text-xl">{emoji}</span>
+              <span className="font-semibold text-gray-900 text-sm">{title}</span>
+              {enabled && <CheckCircle className="w-4 h-4 text-green-500" />}
+            </div>
+            <p className="text-xs text-gray-500">{description}</p>
+            <p className="text-xs text-gray-400 mt-0.5">💡 Typical: {tipRange}</p>
+          </div>
+          <Switch checked={!!enabled} onCheckedChange={onToggle} />
+        </div>
+        {children}
+      </CardContent>
+    </Card>
+  );
+}
+
+function PriceInput({ id, label, value, onChange }) {
+  return (
+    <div>
+      <Label htmlFor={id} className="text-xs text-gray-500">{label}</Label>
+      <div className="flex items-center gap-1.5 mt-1">
+        <span className="text-gray-400 text-sm">£</span>
+        <Input
+          id={id}
+          type="number" step="0.01" min="0"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="flex-1 h-9 text-sm"
+        />
+      </div>
     </div>
   );
 }

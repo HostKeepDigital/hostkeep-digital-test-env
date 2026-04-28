@@ -70,23 +70,19 @@
       "properties": {
         "studio_1bed": {
           "type": "number",
-          "default": 0,
-          "description": "Fixed price for studio or 1-bedroom property"
+          "default": 0
         },
         "two_bed": {
           "type": "number",
-          "default": 0,
-          "description": "Fixed price for 2-bedroom property"
+          "default": 0
         },
         "three_bed": {
           "type": "number",
-          "default": 0,
-          "description": "Fixed price for 3-bedroom property"
+          "default": 0
         },
         "four_bed_plus": {
           "type": "number",
-          "default": 0,
-          "description": "Fixed price for 4+ bedroom property"
+          "default": 0
         }
       }
     },
@@ -150,6 +146,81 @@
             "percentage": {
               "type": "number",
               "default": 0
+            }
+          }
+        }
+      }
+    },
+    "dynamic_pricing": {
+      "type": "object",
+      "description": "Dynamic pricing rules for last-minute and seasonal demand",
+      "properties": {
+        "last_minute": {
+          "type": "object",
+          "description": "Last-minute urgency pricing tiers",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": false
+            },
+            "tiers": {
+              "type": "array",
+              "description": "Each tier defines a days_before threshold and a % uplift",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "days_before": {
+                    "type": "number",
+                    "description": "Booking is within this many days of the clean date"
+                  },
+                  "uplift_percent": {
+                    "type": "number",
+                    "description": "% increase to apply"
+                  },
+                  "label": {
+                    "type": "string",
+                    "description": "Display label e.g. Same day"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "seasonal": {
+          "type": "object",
+          "description": "Seasonal demand multipliers",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": false
+            },
+            "windows": {
+              "type": "array",
+              "description": "Date windows with a multiplier",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "e.g. Summer Peak, Christmas"
+                  },
+                  "start_date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "end_date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "multiplier": {
+                    "type": "number",
+                    "description": "e.g. 1.2 = 20% uplift"
+                  }
+                }
+              }
             }
           }
         }
