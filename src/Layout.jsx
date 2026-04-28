@@ -145,10 +145,10 @@ export default function Layout({ children, currentPageName }) {
                       <Avatar className="w-8 h-8">
                         <AvatarImage src={user?.profile_photo} />
                         <AvatarFallback className="bg-teal-100 text-teal-600">
-                          {getInitials(user?.full_name)}
+                          {user?.forename?.[0]?.toUpperCase() || "?"}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="hidden sm:inline">{user?.full_name?.split(" ")[0] || "Account"}</span>
+                      <span className="hidden sm:inline">{user?.forename || "Account"}</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
@@ -344,12 +344,12 @@ export default function Layout({ children, currentPageName }) {
                           <Avatar className="w-8 h-8">
                             <AvatarImage src={user?.profile_photo} />
                             <AvatarFallback className="bg-teal-100 text-teal-600">
-                              {user?.full_name?.charAt(0)?.toUpperCase() ||
+                              {user?.forename?.[0]?.toUpperCase() ||
                                 "U"}
                             </AvatarFallback>
                           </Avatar>
                           <span className="hidden sm:inline">
-                            {user?.full_name?.split(" ")[0] || "Account"}
+                            {user?.forename || "Account"}
                           </span>
                         </Button>
                       </DropdownMenuTrigger>
