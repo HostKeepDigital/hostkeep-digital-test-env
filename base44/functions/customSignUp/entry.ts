@@ -23,8 +23,6 @@ Deno.serve(async (req) => {
     }
 
     const normalisedEmail = email.toLowerCase().trim();
-    const full_name = [forename, middle_name, surname].filter(Boolean).join(' ');
-
     // Check if credentials already exist
     const existing = await serviceRole.entities.UserCredentials.filter({ email: normalisedEmail });
     if (existing && existing.length > 0) {
@@ -46,7 +44,6 @@ Deno.serve(async (req) => {
         forename,
         middle_name: middle_name || null,
         surname,
-        full_name,
       });
     } catch (err) {
       console.error('Failed to create User:', err.message);
@@ -79,7 +76,6 @@ Deno.serve(async (req) => {
     // Create Guest record for profile storage
     try {
       await serviceRole.entities.Guest.create({
-        full_name,
         forename,
         middle_name: middle_name || null,
         surname,
