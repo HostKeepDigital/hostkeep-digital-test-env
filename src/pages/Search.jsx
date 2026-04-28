@@ -37,6 +37,7 @@ import {
   Loader2,
 } from "lucide-react";
 import PropertyCard from "@/components/properties/PropertyCard";
+import ActiveFilterPills from "@/components/search/ActiveFilterPills";
 import {
   format,
   parseISO,
@@ -685,6 +686,34 @@ export default function Search() {
     }));
   };
 
+  const activeFilterCount = [
+    filters.type !== "all",
+    filters.bedrooms !== "any",
+    filters.minPrice > 0 || filters.maxPrice < 1000,
+    filters.petsAllowed,
+    filters.smokingAllowed,
+    filters.childrenAllowed,
+    ...filters.amenities.map(() => true),
+  ].filter(Boolean).length;
+
+  const handleClearFilter = (key, value) => {
+    if (key === "price") {
+      setFilters((prev) => ({ ...prev, minPrice: 0, maxPrice: 1000 }));
+    } else if (key === "amenity") {
+      setFilters((prev) => ({ ...prev, amenities: prev.amenities.filter((a) => a !== value) }));
+    } else {
+      setFilters((prev) => ({ ...prev, [key]: value }));
+    }
+  };
+
+  const handleClearAllFilters = () => {
+    setFilters((prev) => ({
+      ...prev,
+      amenities: [], petsAllowed: false, smokingAllowed: false,
+      childrenAllowed: false, bedrooms: "any", minPrice: 0, maxPrice: 1000, type: "all",
+    }));
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {refreshing && (
@@ -721,9 +750,14 @@ export default function Search() {
               </div>
               <Sheet>
                 <SheetTrigger asChild>
-                  <Button variant="outline" className="flex-shrink-0 h-11 px-3 gap-1.5">
+                  <Button variant="outline" className="flex-shrink-0 h-11 px-3 gap-1.5 relative">
                     <SlidersHorizontal className="w-4 h-4" />
                     <span className="text-sm">Filters</span>
+                    {activeFilterCount > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-teal-600 text-white text-[10px] font-bold flex items-center justify-center">
+                        {activeFilterCount}
+                      </span>
+                    )}
                   </Button>
                 </SheetTrigger>
                 <SheetContent className="w-full sm:max-w-md overflow-y-auto">
@@ -951,9 +985,14 @@ export default function Search() {
             </div>
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="outline" className="flex-shrink-0 h-11 gap-2">
+                <Button variant="outline" className="flex-shrink-0 h-11 gap-2 relative">
                   <SlidersHorizontal className="w-4 h-4" />
                   Filters
+                  {activeFilterCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-teal-600 text-white text-[10px] font-bold flex items-center justify-center">
+                      {activeFilterCount}
+                    </span>
+                  )}
                 </Button>
               </SheetTrigger>
               <SheetContent className="w-full sm:max-w-md overflow-y-auto">
@@ -1052,6 +1091,17 @@ export default function Search() {
           </div>
         </div>
       </div>
+
+      {/* Active filter pills */}
+      {activeFilterCount > 0 && (
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 pt-3">
+          <ActiveFilterPills
+            filters={filters}
+            onClear={handleClearFilter}
+            onClearAll={handleClearAllFilters}
+          />
+        </div>
+      )}
 
       {/* Results */}
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
