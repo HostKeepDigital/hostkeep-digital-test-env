@@ -403,7 +403,7 @@ const handleDeleteAccount = async () => {
                     <p className="text-sm font-medium text-gray-700 mb-2">My Reviews</p>
                     <ReviewsDialog
                       revieweeId={user.id}
-                      reviewType={null}
+                      showBothTypes={true}
                       isPrivilegedViewer={true}
                       emptyMessage="No reviews have been left for you yet."
                     />
