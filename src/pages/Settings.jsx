@@ -153,6 +153,7 @@ export default function Settings() {
 
   try {
     const res = await base44.functions.invoke("saveUserProfile", {
+      user_id: user.id || null,
       email: user.email,
       forename: profile.forename.trim(),
       middle_name: profile.middle_name.trim(),
