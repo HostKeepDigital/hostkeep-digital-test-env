@@ -56,7 +56,9 @@ Deno.serve(async (req) => {
       userUpdates.middle_name = parts.length > 2 ? parts.slice(1, -1).join(" ") : "";
     }
 
-    await base44.asServiceRole.entities.User.update(user_id, userUpdates);
+    try {
+  await base44.asServiceRole.entities.User.update(user_id, userUpdates);
+    } catch (_) {}
 
     return Response.json({ matched: true, role: member.role });
   } catch (e) {
