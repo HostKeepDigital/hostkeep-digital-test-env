@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, addMonths, subMonths, startOfWeek, endOfWeek, isSameDay, parseISO, isWithinInterval, isBefore, isToday, startOfDay, addDays, subDays } from "date-fns";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -91,7 +91,7 @@ function expandHolidayWindow(h) {
 
 const UK_SCHOOL_HOLIDAYS = UK_SCHOOL_HOLIDAYS_RAW.map(expandHolidayWindow);
 
-export default function PricingCalendar({ pricingSettings, onDateClick, selectedDates = [], onApplyHolidayPricing = null, currentMonth, onMonthChange }) {
+export default function PricingCalendar({ pricingSettings, onDateClick, selectedDates = [], currentMonth, onMonthChange }) {
   const [internalMonth, setInternalMonth] = useState(new Date());
   const activeMonth = currentMonth || internalMonth;
   const setActiveMonth = (m) => { if (onMonthChange) onMonthChange(m); else setInternalMonth(m); };
@@ -189,17 +189,6 @@ export default function PricingCalendar({ pricingSettings, onDateClick, selected
             Pricing Calendar
           </CardTitle>
           <div className="flex items-center gap-2">
-            {onApplyHolidayPricing && (
-              <Button
-                onClick={() => onApplyHolidayPricing(UK_SCHOOL_HOLIDAYS, pricingSettings)}
-                variant="outline"
-                size="sm"
-                className="gap-1"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                Auto-fill Holidays
-              </Button>
-            )}
             <Button variant="outline" size="icon" onClick={() => setActiveMonth(subMonths(activeMonth, 1))}>
               <ChevronLeft className="w-4 h-4" />
             </Button>
