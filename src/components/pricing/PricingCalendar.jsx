@@ -51,32 +51,40 @@ const UK_SCHOOL_HOLIDAYS_RAW = [
 ];
 
 // Expand each holiday window:
-// - Roll start back to the preceding Saturday (to capture arrival weekend)
-// - Roll end forward to the following Sunday (or Monday for bank holiday weekends)
+// - Roll start BACK to the preceding Saturday (includes Sat + Sun before holiday starts)
+// - Roll end FORWARD to the following Sunday (includes Sat + Sun after holiday ends)
+// - Exception: if bankHoliday=true, roll end forward to the following Monday instead
 function expandHolidayWindow(h) {
   let start = new Date(h.start);
   let end = new Date(h.end);
 
-  // Roll start back to nearest previous Saturday
+  // Always roll start back to the nearest preceding Saturday
+  // (so the weekend before the holiday is included)
   const startDay = start.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
   if (startDay !== 6) {
+    // Days to subtract to reach the previous Saturday
     const daysBack = startDay === 0 ? 1 : startDay + 1;
     start = subDays(start, daysBack);
   }
+  // start is now a Saturday — Sat + Sun before the holiday are included
 
-  // Roll end forward to nearest following Sunday (or Monday for bank holiday weekends)
+  // Always roll end forward to the following Sunday,
+  // OR to the following Monday if this is a bank holiday weekend
   const endDay = end.getDay();
-  if (h.bankHoliday) {
-    if (endDay !== 1) {
-      const daysForward = endDay === 0 ? 1 : (8 - endDay) % 7 + 1;
-      end = addDays(end, daysForward);
+  const targetEndDay = h.bankHoliday ? 1 : 0; // 1=Mon, 0=Sun
+
+  if (endDay !== targetEndDay) {
+    let daysForward;
+    if (targetEndDay === 0) {
+      // Roll to Sunday
+      daysForward = endDay === 0 ? 0 : 7 - endDay;
+    } else {
+      // Roll to Monday
+      daysForward = endDay === 0 ? 1 : endDay === 1 ? 0 : (8 - endDay) % 7 + 1;
     }
-  } else {
-    if (endDay !== 0) {
-      const daysForward = 7 - endDay;
-      end = addDays(end, daysForward);
-    }
+    end = addDays(end, daysForward);
   }
+  // end is now a Sunday (or Monday for bank holidays) — Sat + Sun after the holiday are included
 
   return { ...h, start, end };
 }
