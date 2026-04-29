@@ -68,18 +68,18 @@ export default function Settings() {
   useEffect(() => {
   if (!user?.email) return;
 
-  // Load name fields directly from AuthContext — already populated by checkSession
-  setProfile((prev) => ({
-    ...prev,
-    forename: user.forename || "",
-    middle_name: user.middle_name || "",
-    surname: user.surname || "",
-  }));
+    // AuthContext values used as initial fallback only — getUserProfile overwrites below
+    setProfile((prev) => ({
+      ...prev,
+      forename: user.forename || "",
+      middle_name: user.middle_name || "",
+      surname: user.surname || "",
+    }));
 
   // Load phone and location from User entity via getUserProfile
   base44.functions.invoke("getUserProfile", { email: user.email, user_id: user.id || null })
     .then((res) => {
-      const u = res.data?.profile;
+     const u = res.data?.profile;
       if (!u) return;
       setProfile((prev) => ({
         ...prev,
