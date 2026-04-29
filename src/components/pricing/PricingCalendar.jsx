@@ -114,14 +114,9 @@ export default function PricingCalendar({ pricingSettings, onDateClick, selected
 
   const getPriceColor = (date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    const holiday = getHolidayOverride(date);
     
     if (pricingSettings?.date_overrides?.[dateStr]) {
       return "bg-purple-100 text-purple-700 border-purple-300";
-    }
-
-    if (holiday) {
-      return "bg-orange-100 text-orange-700 border-orange-300";
     }
 
     if (pricingSettings?.seasons) {
@@ -215,7 +210,7 @@ export default function PricingCalendar({ pricingSettings, onDateClick, selected
               >
                 <div className="font-semibold">{format(day, 'd')}</div>
                 <div className="font-bold">£{price}</div>
-                {holiday && !isPast && (
+                {holiday && !isPast && pricingSettings?.date_overrides?.[format(day, 'yyyy-MM-dd')] && (
                   <div className="text-xs font-semibold mt-0.5 truncate leading-tight">
                     {holiday.label}
                   </div>
