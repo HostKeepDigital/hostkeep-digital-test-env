@@ -383,93 +383,14 @@ export default function ExportPricing({ pricingSettings, property, bookings = []
         });
 
         if (periodIdx < periods.length - 1) y += 8;
-      });
-
-    // Detailed export removed — always use grouped view
-      periods.forEach((period, periodIdx) => {
-        const dates = eachDayOfInterval({ start: period.start, end: period.end });
-        drawSectionHeading("Daily Pricing", period.label);
-        drawFinancialYearSummary(dates);
-
-        checkPage();
-        const cols = [
-          { label: "Date", x: margin },
-          { label: "Day", x: margin + 28 },
-          { label: "Rate", x: margin + 56 },
-          { label: "Rule / Override", x: margin + 76 },
-          { label: "Booking Status", x: margin + 140 },
-        ];
-        drawTableHeader(cols);
-
-        let currentMonth = "";
-        let rowAlt = false;
-
-        dates.forEach(date => {
-          checkPage();
-          const dateStr = format(date, 'yyyy-MM-dd');
-          const monthLabel = format(date, 'MMMM yyyy');
-
-          // Month separator row
-          if (monthLabel !== currentMonth) {
-            currentMonth = monthLabel;
-            doc.setFillColor(226, 232, 240);
-            doc.rect(margin - 2, y - 4, pageW - margin * 2 + 4, 7, 'F');
-            doc.setFontSize(8);
-            doc.setFont(undefined, 'bold');
-            doc.setTextColor(51, 65, 85);
-            doc.text(monthLabel, margin, y);
-            y += 7;
-            rowAlt = false;
-            checkPage();
-          }
-
-          const price = calculatePrice(date);
-          const rule = getRuleType(date, dateStr);
-          const booked = isBooked(dateStr);
-          const booking = getBookingForDate(dateStr);
-          const dayNum = date.getDay();
-          const isWeekend = dayNum === 0 || dayNum === 6;
-
-          if (rowAlt) {
-            doc.setFillColor(248, 250, 252);
-            doc.rect(margin - 2, y - 4, pageW - margin * 2 + 4, 6, 'F');
-          }
-          rowAlt = !rowAlt;
-
-          doc.setFontSize(7.5);
-          doc.setFont(undefined, isWeekend ? 'bold' : 'normal');
-          doc.setTextColor(booked ? 13 : 15, booked ? 148 : 23, booked ? 136 : 42);
-
-          doc.text(format(date, 'dd/MM/yyyy'), margin, y);
-          doc.text(format(date, 'EEE'), margin + 28, y);
-          doc.text(`£${price}`, margin + 56, y);
-
-          const ruleShort = rule.length > 34 ? rule.substring(0, 33) + "…" : rule;
-          doc.text(ruleShort, margin + 76, y);
-
-          if (booked) {
-            doc.setFont(undefined, 'bold');
-            doc.setTextColor(13, 148, 136);
-            const guestStr = booking?.guest_name ? `Booked — ${booking.guest_name}` : "Booked";
-            doc.text(guestStr.length > 28 ? guestStr.substring(0, 27) + "…" : guestStr, margin + 140, y);
-          } else {
-            doc.setFont(undefined, 'normal');
-            doc.setTextColor(148, 163, 184);
-            doc.text("Available", margin + 140, y);
-          }
-
-          y += 6;
-        });
-
-        if (periodIdx < periods.length - 1) y += 8;
         });
 
         // Final footer
         addFooter(pageNum, pageNum);
 
-    const fyEndYear = getCurrentFYEnd(today).getFullYear();
-    doc.save(`hostkeep-pricing-FY${fyEndYear}.pdf`);
-  };
+        const fyEndYear = getCurrentFYEnd(today).getFullYear();
+        doc.save(`hostkeep-pricing-FY${fyEndYear}.pdf`);
+        }
 
   return (
     <Card>
