@@ -54,6 +54,7 @@ import { useAuth } from "@/lib/AuthContext";
 import BookingBarCalendar from "@/components/BookingBarCalendar";
 import HostPerformancePanel from "@/components/dashboard/HostPerformancePanel";
 import PricingReportCard from "@/components/dashboard/PricingReportCard";
+import ExportPricing from "@/components/pricing/ExportPricing";
 
 export default function HostDashboard() {
   const { user } = useAuth();
@@ -521,6 +522,20 @@ export default function HostDashboard() {
                 ) : (
                   <p className="text-sm text-gray-500">Select a property to view its calendar.</p>
                 )}
+              </motion.div>
+            )}
+
+            {/* Export Pricing Report — only show if property exists */}
+            {properties.length > 0 && selectedPropertyId && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <ExportPricing 
+                  pricingSettings={properties.find(p => p.id === selectedPropertyId)?.pricing_settings || {}}
+                  property={properties.find(p => p.id === selectedPropertyId)}
+                  bookings={bookings.filter(b => b.property_id === selectedPropertyId)}
+                />
               </motion.div>
             )}
           </div>
