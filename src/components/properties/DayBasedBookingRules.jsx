@@ -159,7 +159,7 @@ useEffect(() => {
                   <div className="pl-4 space-y-3 border-l-2 border-gray-200">
                     <div className="grid grid-cols-2 gap-3">
                       <div className={rules[day].rule_type === "fixed_or_multiples" ? "opacity-40 pointer-events-none" : ""}>
-                        <Label className="text-xs text-gray-600">Minimum Days</Label>
+                         <Label className="text-xs text-gray-600">Min days</Label>
                         <Input
                           type="number"
                           min="1"
@@ -182,8 +182,8 @@ useEffect(() => {
                     </div>
                     {rules[day].rule_type === "fixed_or_multiples" && (
                       <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded px-2 py-1">
-                        Min/max days are not used when Fixed days & Multiples is selected — exact durations are controlled below.
-                      </p>
+                         Min days is not used when Fixed days & Multiples is selected — exact durations are controlled below.
+                       </p>
                     )}
 
                     <div>
