@@ -90,12 +90,12 @@ export default function PublishGateModal({ open, onClose, foundingMember }) {
         <div className="space-y-4 mt-6">
           {/* Documents Gate */}
           {gatesIncomplete.includes("documents") && (
-            <div className="p-4 rounded-lg bg-red-50 border border-red-200">
+            <div className="p-4 rounded-lg bg-teal-50 border border-teal-200">
               <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <AlertCircle className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <h3 className="font-semibold text-red-900 text-sm">Identity Documents</h3>
-                  <p className="text-sm text-red-800 mt-1">
+                  <h3 className="font-semibold text-teal-900 text-sm">Identity Documents</h3>
+                  <p className="text-sm text-teal-800 mt-1">
                     Your identity documents are still under review.
                   </p>
                   {over24Hours && (
