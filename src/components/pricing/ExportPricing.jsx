@@ -72,12 +72,14 @@ export default function ExportPricing({ pricingSettings, property, bookings = []
         ? `Holiday: ${pricingSettings.date_overrides[dateStr].holiday}`
         : "Manual Override";
     }
-    if (pricingSettings?.seasons?.some(s => {
+    // Check seasons and use season name if it has one
+    const matchingSeason = pricingSettings?.seasons?.find(s => {
       const start = parseISO(s.start_date);
       const end = parseISO(s.end_date);
       return date >= start && date <= end;
-    })) {
-      return "Seasonal";
+    });
+    if (matchingSeason) {
+      return matchingSeason.name || "Seasonal";
     }
     const d = date.getDay();
     if ((d === 0 || d === 5 || d === 6) && pricingSettings?.weekend_rate) return "Weekend";
@@ -180,14 +182,17 @@ export default function ExportPricing({ pricingSettings, property, bookings = []
 
       const getMinStay = () => {
         // Check if property has day-based booking rules with fixed values
-        if (property?.booking_rules && property.day_based_restrictions_enabled) {
+        if (property?.day_based_restrictions_enabled && property?.booking_rules) {
           let maxFixed = 0;
-          Object.values(property.booking_rules).forEach(rule => {
-            if (rule.enabled && rule.rule_type === 'fixed' && rule.fixed_values?.length > 0) {
-              maxFixed = Math.max(maxFixed, ...rule.fixed_values);
+          Object.entries(property.booking_rules).forEach(([day, rule]) => {
+            if (rule && rule.enabled && rule.rule_type === 'fixed' && Array.isArray(rule.fixed_values)) {
+              const values = rule.fixed_values.filter(v => typeof v === 'number' && v > 1);
+              if (values.length > 0) {
+                maxFixed = Math.max(maxFixed, ...values);
+              }
             }
           });
-          if (maxFixed > 1) {
+          if (maxFixed > 0) {
             return `${maxFixed} nights`;
           }
         }
