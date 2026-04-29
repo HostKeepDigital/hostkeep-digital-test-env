@@ -42,6 +42,7 @@ export default function Settings() {
 
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState(null);
+  const skipRefetchRef = useRef(false);
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState("");
@@ -67,6 +68,12 @@ export default function Settings() {
 
   useEffect(() => {
   if (!user?.email) return;
+
+  // Skip re-fetching profile after a save (validateSession triggers this effect)
+  if (skipRefetchRef.current) {
+    skipRefetchRef.current = false;
+    return;
+  }
 
     // AuthContext values used as initial fallback only — getUserProfile overwrites below
     setProfile((prev) => ({
@@ -174,6 +181,7 @@ export default function Settings() {
 
     setSaveStatus("success");
     setTimeout(() => setSaveStatus(null), 4000);
+    skipRefetchRef.current = true;
     validateSession();
   } catch (err) {
     console.error("Save profile error:", err);
