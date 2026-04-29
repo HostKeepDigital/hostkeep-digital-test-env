@@ -125,10 +125,7 @@ export default function Layout({ children, currentPageName }) {
           <header className="hidden lg:flex fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 h-16 items-center px-4">
             <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
               <Link to={createPageUrl("Home")} onClick={(e) => handleNavClick(e, createPageUrl("Home"))} className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center">
-                  <Home className="w-4 h-4 text-white" />
-                </div>
-                <span className="text-xl font-bold text-gray-900">HostKeep</span>
+                <img src="https://drive.google.com/uc?export=view&id=1yazuu-6sWc7hEOpyTncZpt-P9Cd-UOt1" alt="HostKeep" className="h-8 w-auto" />
               </Link>
               <nav className="flex items-center gap-6">
                 <Link to={createPageUrl("HostDashboard")} className={`text-sm font-medium ${currentPageName === "HostDashboard" ? "text-teal-600" : "text-gray-600 hover:text-gray-900"}`}>Dashboard</Link>
@@ -196,15 +193,12 @@ export default function Layout({ children, currentPageName }) {
           <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
             <div className="flex items-center justify-between px-4 py-3">
               <Link
-                  to={createPageUrl("Home")}
-                  onClick={(e) => handleNavClick(e, createPageUrl("Home"))}
-                  className="flex items-center gap-3"
-                >
-                  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center">
-                    <Home className="w-4 h-4 text-white" />
-                  </div>
-                  <span className="text-lg font-bold text-gray-900">HostKeep</span>
-                </Link>
+                to={createPageUrl("Home")}
+                onClick={(e) => handleNavClick(e, createPageUrl("Home"))}
+                className="flex items-center gap-3"
+              >
+                <img src="https://drive.google.com/uc?export=view&id=1yazuu-6sWc7hEOpyTncZpt-P9Cd-UOt1" alt="HostKeep" className="h-7 w-auto" />
+              </Link>
               <div className="flex items-center gap-2">
                 <RoleSwitcher userRoles={userRoles} currentPageName={currentPageName} />
                 <Button

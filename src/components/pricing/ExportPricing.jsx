@@ -108,13 +108,10 @@ export default function ExportPricing({ pricingSettings, property, bookings = []
   const buildPDF = (detailed) => {
     const today = new Date();
     const fyEnd = getCurrentFYEnd(today);
-    const nextFY = getNextFYRange(fyEnd);
 
-    // Period 1: today → end of current FY
-    // Period 2: start of next FY → end of next FY
+    // Only current financial year: today → end of current FY
     const periods = [
       { start: today, end: fyEnd, label: `Current Financial Year (to 5 Apr ${fyEnd.getFullYear()})` },
-      { start: nextFY.start, end: nextFY.end, label: `Financial Year ${nextFY.start.getFullYear()}–${nextFY.end.getFullYear()}` },
     ];
 
     const doc = new jsPDF();
