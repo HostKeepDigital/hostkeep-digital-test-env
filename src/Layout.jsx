@@ -145,7 +145,7 @@ export default function Layout({ children, currentPageName }) {
                       <Avatar className="w-8 h-8">
                         <AvatarImage src={user?.profile_photo} />
                         <AvatarFallback className="bg-teal-100 text-teal-600">
-                          {user?.forename?.[0]?.toUpperCase() || "?"}
+                          {[user?.forename?.[0], user?.surname?.[0]].filter(Boolean).join("").toUpperCase() || "?"}
                         </AvatarFallback>
                       </Avatar>
                       <span className="hidden sm:inline">{user?.forename || "Account"}</span>
@@ -344,8 +344,7 @@ export default function Layout({ children, currentPageName }) {
                           <Avatar className="w-8 h-8">
                             <AvatarImage src={user?.profile_photo} />
                             <AvatarFallback className="bg-teal-100 text-teal-600">
-                              {user?.forename?.[0]?.toUpperCase() ||
-                                "U"}
+                              {[user?.forename?.[0], user?.surname?.[0]].filter(Boolean).join("").toUpperCase() || "?"}
                             </AvatarFallback>
                           </Avatar>
                           <span className="hidden sm:inline">

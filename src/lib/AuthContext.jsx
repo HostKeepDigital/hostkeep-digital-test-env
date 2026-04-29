@@ -82,6 +82,10 @@ export const AuthProvider = ({ children }) => {
     window.location.href = "/SignIn";
   };
 
+  const updateUser = (fields) => {
+    setUser((prev) => prev ? { ...prev, ...fields } : prev);
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -90,7 +94,8 @@ export const AuthProvider = ({ children }) => {
       authError,
       roles,
       logout,
-      validateSession
+      validateSession,
+      updateUser,
     }}>
       {children}
     </AuthContext.Provider>
