@@ -32,7 +32,7 @@ function SaveBanner({ status }) {
 }
 
 export default function Settings() {
-  const { user } = useAuth();
+  const { user, validateSession } = useAuth();
 
   const [userRoles, setUserRoles] = useState([]);
   const [stripeStatus, setStripeStatus] = useState(null);
@@ -169,6 +169,7 @@ export default function Settings() {
     });
     if (!res.data?.success) throw new Error(res.data?.error || "save_failed");
 
+    await validateSession();
     setSaveStatus("success");
     setTimeout(() => setSaveStatus(null), 4000);
   } catch (err) {
