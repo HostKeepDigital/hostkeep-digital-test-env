@@ -1,0 +1,37 @@
+{
+  "name": "UserProfile",
+  "type": "object",
+  "properties": {
+    "email": {
+      "type": "string",
+      "description": "User email address"
+    },
+    "forename": {
+      "type": "string",
+      "description": "First name"
+    },
+    "middle_name": {
+      "type": "string",
+      "description": "Middle name"
+    },
+    "surname": {
+      "type": "string",
+      "description": "Last name"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Phone number"
+    },
+    "location": {
+      "type": "string",
+      "description": "Location / town"
+    },
+    "notification_preferences": {
+      "type": "object",
+      "description": "User notification preferences"
+    }
+  },
+  "required": [
+    "email"
+  ]
+}

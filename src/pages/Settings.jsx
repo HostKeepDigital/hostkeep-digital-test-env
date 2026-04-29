@@ -32,7 +32,7 @@ function SaveBanner({ status }) {
 }
 
 export default function Settings() {
-  const { user, validateSession } = useAuth();
+  const { user } = useAuth();
 
   const [userRoles, setUserRoles] = useState([]);
   const [stripeStatus, setStripeStatus] = useState(null);
@@ -67,16 +67,16 @@ export default function Settings() {
 
   useEffect(() => {
     if (!user?.email) return;
-
-    // Populate profile directly from AuthContext user (set by checkSession on login)
-    setProfile({
-      forename: user.forename || "",
-      middle_name: user.middle_name || "",
-      surname: user.surname || "",
-      phone: user.phone || "",
-      location: user.location || "",
-    });
-
+    base44.functions.invoke("getUserProfile", { email: user.email })
+      .then((res) => {
+        const u = res.data?.profile;
+        if (!u) return;
+        setProfile({ forename: u.forename || "", middle_name: u.middle_name || "", surname: u.surname || "", phone: u.phone || "", location: u.location || "" });
+        if (u.notification_preferences && typeof u.notification_preferences === "object") {
+          setNotifications((prev) => ({ ...prev, ...u.notification_preferences }));
+        }
+      })
+      .catch(() => {});
     if (user?.id) {
       base44.entities.UserRole.filter({ user_id: user.id }).then(setUserRoles).catch(() => {});
     }
@@ -134,17 +134,11 @@ export default function Settings() {
 
   const handleSaveProfile = async () => {
     setSaveStatus(null);
-
-    if (!profile.forename.trim() || !profile.surname.trim()) {
-      setSaveStatus("error");
-      return;
-    }
-
+    if (!profile.forename.trim() || !profile.surname.trim()) { setSaveStatus("error"); return; }
     setSaving(true);
     try {
-      const token = localStorage.getItem("session_token");
-      const res = await base44.functions.invoke("updateProfile", {
-        session_token: token,
+      const res = await base44.functions.invoke("saveUserProfile", {
+        email: user.email,
         forename: profile.forename.trim(),
         middle_name: profile.middle_name.trim(),
         surname: profile.surname.trim(),
@@ -152,8 +146,6 @@ export default function Settings() {
         location: profile.location.trim(),
       });
       if (!res.data?.success) throw new Error(res.data?.error || "save_failed");
-
-      await validateSession(); // refresh AuthContext with updated values
       setSaveStatus("success");
       setTimeout(() => setSaveStatus(null), 4000);
     } catch (err) {

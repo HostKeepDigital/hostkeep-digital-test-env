@@ -3,36 +3,16 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const serviceRole = base44.asServiceRole;
-    const { user_id, email, forename, middle_name, surname, phone, location } = await req.json();
-
-    if (!forename || !surname) {
-      return Response.json({ success: false, error: "forename and surname are required" }, { status: 400 });
-    }
-
-    if (!email) {
-      return Response.json({ success: false, error: "email is required" }, { status: 400 });
-    }
-
-    const updates = {
-      forename,
-      middle_name: middle_name || "",
-      surname,
-      full_name: [forename, middle_name, surname].filter(Boolean).join(" "),
-      phone: phone || "",
-      location: location || "",
-    };
-
-    // Always look up by email — reliable for custom User entity
-    const existing = await serviceRole.entities.User.filter({ email: email.toLowerCase().trim() });
-
-    if (existing && existing.length > 0) {
-      await serviceRole.entities.User.update(existing[0].id, updates);
+    const sr = base44.asServiceRole;
+    const { email, forename, middle_name, surname, phone, location } = await req.json();
+    if (!email || !forename || !surname) return Response.json({ success: false, error: "missing fields" }, { status: 400 });
+    const norm = email.toLowerCase().trim();
+    const existing = await sr.entities.UserProfile.filter({ email: norm });
+    if (existing.length > 0) {
+      await sr.entities.UserProfile.update(existing[0].id, { forename, middle_name: middle_name || "", surname, phone: phone || "", location: location || "" });
     } else {
-      // Create new record if none found
-      await serviceRole.entities.User.create({ email: email.toLowerCase().trim(), ...updates });
+      await sr.entities.UserProfile.create({ email: norm, forename, middle_name: middle_name || "", surname, phone: phone || "", location: location || "" });
     }
-
     return Response.json({ success: true });
   } catch (e) {
     console.error("saveUserProfile error:", e);
