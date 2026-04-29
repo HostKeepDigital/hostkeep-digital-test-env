@@ -474,19 +474,39 @@ export default function CreateProperty() {
     setIsUploading(true);
     const uploadedUrls = [];
 
-    for (const file of files) {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      uploadedUrls.push(file_url);
+    try {
+      for (const file of files) {
+        try {
+          const response = await base44.integrations.Core.UploadFile({ file });
+          if (response?.file_url) {
+            uploadedUrls.push(response.file_url);
+          } else {
+            throw new Error(`No file_url returned for ${file.name}`);
+          }
+        } catch (err) {
+          toast.error(`Failed to upload ${file.name}: ${err.message || 'Unknown error'}`);
+          console.error(`Upload error for ${file.name}:`, err);
+        }
+      }
+
+      if (uploadedUrls.length > 0) {
+        setFormData((prev) => ({
+          ...prev,
+          photos: [...prev.photos, ...uploadedUrls],
+        }));
+
+        setUploadedFileIdentifiers((prev) => [...prev, ...newIdentifiers.slice(0, uploadedUrls.length)]);
+        toast.success(`Uploaded ${uploadedUrls.length} photo(s)`);
+      } else if (uploadedUrls.length === 0 && files.length > 0) {
+        toast.error('No photos were uploaded. Please try again.');
+      }
+    } catch (err) {
+      toast.error(`Upload failed: ${err.message || 'Unknown error'}`);
+      console.error('Upload batch error:', err);
+    } finally {
+      setIsUploading(false);
+      e.target.value = "";
     }
-
-    setFormData((prev) => ({
-      ...prev,
-      photos: [...prev.photos, ...uploadedUrls],
-    }));
-
-    setUploadedFileIdentifiers((prev) => [...prev, ...newIdentifiers]);
-    setIsUploading(false);
-    e.target.value = "";
   };
 
   const removePhoto = (index) => {
