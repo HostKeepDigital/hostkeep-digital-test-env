@@ -124,7 +124,8 @@ export default function PublishGateModal({ open, onClose, foundingMember }) {
                   <button
                     onClick={async () => {
                       try {
-                        const res = await base44.functions.invoke("createStripeConnectLink", {});
+                        const session_token = localStorage.getItem("session_token");
+                        const res = await base44.functions.invoke("createStripeConnectLink", { session_token });
                         if (res.data?.url) {
                           window.location.href = res.data.url;
                         }
