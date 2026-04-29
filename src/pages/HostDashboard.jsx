@@ -53,6 +53,7 @@ import { useAuth } from "@/lib/AuthContext";
 // NEW: hybrid booking + cleaning calendar
 import BookingBarCalendar from "@/components/BookingBarCalendar";
 import HostPerformancePanel from "@/components/dashboard/HostPerformancePanel";
+import PricingReportCard from "@/components/dashboard/PricingReportCard";
 
 export default function HostDashboard() {
   const { user } = useAuth();
@@ -578,6 +579,9 @@ export default function HostDashboard() {
                 </motion.div>
               );
             })()}
+
+            {/* Pricing Report Download */}
+            <PricingReportCard properties={properties} bookings={bookings} />
 
             {/* Performance / Reviews */}
             <HostPerformancePanel userId={user?.id} />

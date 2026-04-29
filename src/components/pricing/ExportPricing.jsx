@@ -1,30 +1,49 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Download } from "lucide-react";
-import { format, eachDayOfInterval, addMonths, parseISO, differenceInDays } from "date-fns";
+import { format, eachDayOfInterval, parseISO, differenceInDays, addDays } from "date-fns";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { jsPDF } from "jspdf";
 
-export default function ExportPricing({ pricingSettings }) {
+// UK Financial Year: 6 April → 5 April
+function getCurrentFYEnd(from) {
+  const year = from.getFullYear();
+  const month = from.getMonth(); // 0-indexed
+  // FY ends 5 April — if we're past 5 April this year, FY ends next year
+  const fyEndThisYear = new Date(year, 3, 5); // April 5 (month 3)
+  if (from <= fyEndThisYear) {
+    return fyEndThisYear;
+  }
+  return new Date(year + 1, 3, 5);
+}
+
+function getNextFYRange(fyEnd) {
+  const start = addDays(fyEnd, 1); // 6 April
+  const end = new Date(start.getFullYear() + 1, 3, 5); // 5 April next year
+  return { start, end };
+}
+
+// The correct HostKeep logo (matches index.html / layout)
+const LOGO_URL = "https://drive.google.com/uc?export=view&id=1yazuu-6sWc7hEOpyTncZpt-P9Cd-UOt1";
+
+export default function ExportPricing({ pricingSettings, property, bookings = [] }) {
   const [exportDetailed, setExportDetailed] = useState(false);
+
   const calculatePrice = (date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
     const dayOfWeek = date.getDay();
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 5 || dayOfWeek === 6;
 
-    // Priority 1: Manual override
     if (pricingSettings?.date_overrides?.[dateStr]) {
       return pricingSettings.date_overrides[dateStr].rate;
     }
 
-    // Priority 2: Seasonal rules
     if (pricingSettings?.seasons) {
       for (const season of pricingSettings.seasons) {
         const start = parseISO(season.start_date);
         const end = parseISO(season.end_date);
-        
         if (date >= start && date <= end) {
           let rate = season.nightly_rate;
           if (isWeekend && season.weekend_modifier) {
@@ -35,7 +54,6 @@ export default function ExportPricing({ pricingSettings }) {
       }
     }
 
-    // Priority 3: Weekday/Weekend rates
     if (isWeekend && pricingSettings?.weekend_rate) {
       return applyRounding(pricingSettings.weekend_rate);
     }
@@ -43,7 +61,6 @@ export default function ExportPricing({ pricingSettings }) {
       return applyRounding(pricingSettings.weekday_rate);
     }
 
-    // Priority 4: Base rate
     return applyRounding(pricingSettings?.base_rate || 0);
   };
 
@@ -55,181 +72,423 @@ export default function ExportPricing({ pricingSettings }) {
 
   const getRuleType = (date, dateStr) => {
     if (pricingSettings?.date_overrides?.[dateStr]) {
-      return "Manual Override";
-    } else if (pricingSettings?.seasons?.some(s => {
+      return pricingSettings.date_overrides[dateStr].holiday
+        ? `Holiday: ${pricingSettings.date_overrides[dateStr].holiday}`
+        : "Manual Override";
+    }
+    if (pricingSettings?.seasons?.some(s => {
       const start = parseISO(s.start_date);
       const end = parseISO(s.end_date);
       return date >= start && date <= end;
     })) {
       return "Seasonal";
-    } else if ((date.getDay() === 0 || date.getDay() === 5 || date.getDay() === 6) && pricingSettings?.weekend_rate) {
-      return "Weekend";
-    } else if (pricingSettings?.weekday_rate) {
-      return "Weekday";
     }
+    const d = date.getDay();
+    if ((d === 0 || d === 5 || d === 6) && pricingSettings?.weekend_rate) return "Weekend";
+    if (pricingSettings?.weekday_rate) return "Weekday";
     return "Base Rate";
   };
 
-  const exportGroupedPDF = () => {
-    const today = new Date();
-    const endDate = addMonths(today, 12);
-    const dates = eachDayOfInterval({ start: today, end: endDate });
-
-    // Group consecutive dates with same price and rule type
-    const ranges = [];
-    let currentRange = null;
-
-    dates.forEach(date => {
-      const dateStr = format(date, 'yyyy-MM-dd');
-      const price = calculatePrice(date);
-      const ruleType = getRuleType(date, dateStr);
-
-      if (!currentRange || currentRange.price !== price || currentRange.ruleType !== ruleType) {
-        if (currentRange) ranges.push(currentRange);
-        currentRange = {
-          startDate: date,
-          endDate: date,
-          price,
-          ruleType,
-          dateStr: dateStr
-        };
-      } else {
-        currentRange.endDate = date;
-      }
+  const isBooked = (dateStr) => {
+    return bookings.some(b => {
+      if (!['confirmed', 'checked_in', 'completed'].includes(b.booking_status)) return false;
+      const checkIn = b.check_in;
+      const checkOut = b.check_out;
+      return dateStr >= checkIn && dateStr < checkOut;
     });
-    if (currentRange) ranges.push(currentRange);
-
-    // Build PDF
-    const doc = new jsPDF();
-    
-    // Add logo at the top left
-    const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698eee4108bd1d9467648326/4314a0b14_HostKeepandLogo.png';
-    doc.addImage(logoUrl, 'PNG', 14, 8, 100, 50);
-    
-    doc.setFontSize(16);
-    doc.text("Pricing Calendar - Grouped View", 14, 70);
-    
-    doc.setFontSize(10);
-    doc.text(`Generated: ${format(today, 'dd/MM/yyyy')}`, 14, 78);
-    doc.text(`Period: ${format(today, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')}`, 14, 83);
-
-    // Draw table manually
-    let y = 93;
-    const lineHeight = 7;
-    const pageHeight = 280;
-    
-    // Table headers
-    doc.setFontSize(9);
-    doc.setFont(undefined, 'bold');
-    doc.text("Start Date", 14, y);
-    doc.text("End Date", 44, y);
-    doc.text("Price", 74, y);
-    doc.text("Nights", 94, y);
-    doc.text("Total", 114, y);
-    doc.text("Rule Type", 140, y);
-    y += lineHeight;
-    
-    doc.setFont(undefined, 'normal');
-    
-    ranges.forEach(range => {
-      if (y > pageHeight) {
-        doc.addPage();
-        y = 20;
-      }
-      
-      const startStr = format(range.startDate, 'dd/MM/yyyy');
-      const endStr = format(range.endDate, 'dd/MM/yyyy');
-      const nights = differenceInDays(range.endDate, range.startDate) + 1;
-      const totalValue = range.price * nights;
-
-      doc.text(startStr, 14, y);
-      doc.text(endStr, 44, y);
-      doc.text(`£${range.price}`, 74, y);
-      doc.text(String(nights), 94, y);
-      doc.text(`£${totalValue}`, 114, y);
-      doc.text(range.ruleType, 140, y);
-      y += lineHeight;
-    });
-
-    doc.save(`pricing-grouped-${format(today, 'dd-MM-yyyy')}.pdf`);
   };
 
-  const exportDetailedPDF = () => {
-    const today = new Date();
-    const endDate = addMonths(today, 12);
-    const dates = eachDayOfInterval({ start: today, end: endDate });
-
-    const doc = new jsPDF();
-    
-    // Add logo at the top left
-    const logoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698eee4108bd1d9467648326/4314a0b14_HostKeepandLogo.png';
-    doc.addImage(logoUrl, 'PNG', 14, 8, 100, 50);
-    
-    doc.setFontSize(16);
-    doc.text("Pricing Calendar - Detailed View", 14, 70);
-    
-    doc.setFontSize(10);
-    doc.text(`Generated: ${format(today, 'dd/MM/yyyy')}`, 14, 78);
-    doc.text(`Period: ${format(today, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')}`, 14, 83);
-
-    // Draw table manually
-    let y = 93;
-    const lineHeight = 6;
-    const pageHeight = 280;
-    
-    // Table headers
-    doc.setFontSize(9);
-    doc.setFont(undefined, 'bold');
-    doc.text("Date", 14, y);
-    doc.text("Day", 50, y);
-    doc.text("Price", 90, y);
-    doc.text("Rule Type", 120, y);
-    y += lineHeight;
-    
-    doc.setFont(undefined, 'normal');
-    doc.setFontSize(8);
-    
-    dates.forEach(date => {
-      if (y > pageHeight) {
-        doc.addPage();
-        y = 20;
-      }
-      
-      const dateStr = format(date, 'yyyy-MM-dd');
-      const dayName = format(date, 'EEEE');
-      const price = calculatePrice(date);
-      const ruleType = getRuleType(date, dateStr);
-
-      doc.text(format(date, 'dd/MM/yyyy'), 14, y);
-      doc.text(dayName, 50, y);
-      doc.text(`£${price}`, 90, y);
-      doc.text(ruleType, 120, y);
-      y += lineHeight;
+  const getBookingForDate = (dateStr) => {
+    return bookings.find(b => {
+      if (!['confirmed', 'checked_in', 'completed'].includes(b.booking_status)) return false;
+      return dateStr >= b.check_in && dateStr < b.check_out;
     });
-
-    doc.save(`pricing-detailed-${format(today, 'dd-MM-yyyy')}.pdf`);
   };
 
-  const exportPDF = () => {
-    if (exportDetailed) {
-      exportDetailedPDF();
+  const buildPDF = (detailed) => {
+    const today = new Date();
+    const fyEnd = getCurrentFYEnd(today);
+    const nextFY = getNextFYRange(fyEnd);
+
+    // Period 1: today → end of current FY
+    // Period 2: start of next FY → end of next FY
+    const periods = [
+      { start: today, end: fyEnd, label: `Current Financial Year (to 5 Apr ${fyEnd.getFullYear()})` },
+      { start: nextFY.start, end: nextFY.end, label: `Financial Year ${nextFY.start.getFullYear()}–${nextFY.end.getFullYear()}` },
+    ];
+
+    const doc = new jsPDF();
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const margin = 14;
+
+    // ── Header ──────────────────────────────────────────────────────────────
+    const addHeader = (isFirstPage) => {
+      // Teal header bar
+      doc.setFillColor(13, 148, 136); // teal-600
+      doc.rect(0, 0, pageW, 28, 'F');
+
+      // Logo — try to add image, fall back to text if it fails
+      try {
+        doc.addImage(LOGO_URL, 'PNG', margin, 4, 36, 20);
+      } catch (_) {
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(14);
+        doc.setFont(undefined, 'bold');
+        doc.text("HostKeep", margin, 17);
+      }
+
+      // Title on header
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'bold');
+      doc.text(detailed ? "Pricing Calendar — Detailed View" : "Pricing Calendar — Grouped View", margin + 40, 14);
+      doc.setFontSize(8);
+      doc.setFont(undefined, 'normal');
+      doc.text("hostkeepdigital.co.uk", margin + 40, 21);
+
+      // Right side: generated date
+      doc.setFontSize(8);
+      doc.text(`Generated: ${format(today, 'dd/MM/yyyy')}`, pageW - margin, 14, { align: 'right' });
+
+      // Property name / info block
+      doc.setTextColor(30, 58, 95); // dark navy
+      doc.setFillColor(240, 253, 250); // teal-50
+      doc.rect(0, 28, pageW, 20, 'F');
+
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'bold');
+      const propName = property?.title || "Your Property";
+      doc.text(propName, margin, 38);
+
+      doc.setFontSize(8);
+      doc.setFont(undefined, 'normal');
+      doc.setTextColor(100, 116, 139);
+      const propDetail = [
+        property?.town || property?.postcode_area || "",
+        property?.property_type ? `${property.property_type.charAt(0).toUpperCase() + property.property_type.slice(1)}` : "",
+        property?.bedrooms ? `${property.bedrooms} bed` : "",
+        property?.guest_capacity ? `Sleeps ${property.guest_capacity}` : "",
+      ].filter(Boolean).join("  ·  ");
+      if (propDetail) doc.text(propDetail, margin, 44);
+
+      if (!isFirstPage) return 52;
+
+      // Summary stats block
+      doc.setFillColor(255, 255, 255);
+      doc.rect(0, 48, pageW, 22, 'F');
+      doc.setDrawColor(226, 232, 240);
+      doc.line(0, 48, pageW, 48);
+      doc.line(0, 70, pageW, 70);
+
+      const stats = [
+        { label: "Base Rate", value: `£${pricingSettings?.base_rate || 0}/night` },
+        { label: "Weekend Rate", value: pricingSettings?.weekend_rate ? `£${pricingSettings.weekend_rate}/night` : "—" },
+        { label: "Cleaning Fee", value: property?.cleaning_fee ? `£${property.cleaning_fee}` : "—" },
+        { label: "Min Stay", value: property?.minimum_stay ? `${property.minimum_stay} nights` : "—" },
+        { label: "Seasons", value: String(pricingSettings?.seasons?.length || 0) },
+        { label: "Overrides", value: String(Object.keys(pricingSettings?.date_overrides || {}).length) },
+      ];
+
+      const colW = (pageW - margin * 2) / stats.length;
+      stats.forEach((s, i) => {
+        const x = margin + i * colW + colW / 2;
+        doc.setFontSize(7);
+        doc.setTextColor(100, 116, 139);
+        doc.setFont(undefined, 'normal');
+        doc.text(s.label, x, 56, { align: 'center' });
+        doc.setFontSize(9);
+        doc.setTextColor(15, 23, 42);
+        doc.setFont(undefined, 'bold');
+        doc.text(s.value, x, 64, { align: 'center' });
+      });
+
+      return 76;
+    };
+
+    // ── Footer ───────────────────────────────────────────────────────────────
+    const addFooter = (pageNum, totalPages) => {
+      doc.setFillColor(248, 250, 252);
+      doc.rect(0, pageH - 12, pageW, 12, 'F');
+      doc.setDrawColor(226, 232, 240);
+      doc.line(0, pageH - 12, pageW, pageH - 12);
+      doc.setFontSize(7);
+      doc.setTextColor(148, 163, 184);
+      doc.setFont(undefined, 'normal');
+      doc.text("HostKeep Digital — Pricing Report. For internal use only.", margin, pageH - 4);
+      doc.text(`Page ${pageNum}`, pageW - margin, pageH - 4, { align: 'right' });
+    };
+
+    let y = addHeader(true);
+    let pageNum = 1;
+
+    const checkPage = () => {
+      if (y > pageH - 20) {
+        addFooter(pageNum, "?");
+        doc.addPage();
+        pageNum++;
+        y = addHeader(false);
+      }
+    };
+
+    const drawSectionHeading = (label, periodLabel) => {
+      checkPage();
+      doc.setFillColor(13, 148, 136);
+      doc.rect(margin - 2, y - 4, pageW - margin * 2 + 4, 10, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(9);
+      doc.setFont(undefined, 'bold');
+      doc.text(label, margin, y + 2);
+      doc.text(periodLabel, pageW - margin, y + 2, { align: 'right' });
+      y += 12;
+    };
+
+    const drawTableHeader = (columns) => {
+      doc.setFillColor(240, 253, 250);
+      doc.rect(margin - 2, y - 4, pageW - margin * 2 + 4, 8, 'F');
+      doc.setTextColor(13, 148, 136);
+      doc.setFontSize(8);
+      doc.setFont(undefined, 'bold');
+      columns.forEach(col => doc.text(col.label, col.x, y));
+      y += 7;
+      doc.setDrawColor(209, 250, 229);
+      doc.line(margin - 2, y - 2, pageW - margin + 2, y - 2);
+    };
+
+    const drawFinancialYearSummary = (dates) => {
+      // Calculate summary stats for the period
+      let totalRevenue = 0;
+      let bookedNights = 0;
+      let totalNights = dates.length;
+
+      dates.forEach(date => {
+        const dateStr = format(date, 'yyyy-MM-dd');
+        const price = calculatePrice(date);
+        const booked = isBooked(dateStr);
+        if (booked) {
+          totalRevenue += price;
+          bookedNights++;
+        }
+      });
+
+      const occupancy = totalNights > 0 ? ((bookedNights / totalNights) * 100).toFixed(1) : 0;
+      const avgRate = totalNights > 0 ? (dates.reduce((s, d) => s + calculatePrice(d), 0) / totalNights).toFixed(0) : 0;
+
+      checkPage();
+      doc.setFillColor(254, 252, 232); // amber-50
+      doc.setDrawColor(251, 191, 36);
+      doc.roundedRect(margin - 2, y - 2, pageW - margin * 2 + 4, 22, 2, 2, 'FD');
+
+      doc.setFontSize(8);
+      doc.setFont(undefined, 'bold');
+      doc.setTextColor(120, 53, 15);
+      doc.text("Period Summary", margin + 2, y + 5);
+
+      const summaryItems = [
+        { label: "Total Nights", value: String(totalNights) },
+        { label: "Booked Nights", value: String(bookedNights) },
+        { label: "Occupancy", value: `${occupancy}%` },
+        { label: "Confirmed Revenue", value: `£${totalRevenue.toLocaleString()}` },
+        { label: "Avg Nightly Rate", value: `£${avgRate}` },
+      ];
+
+      const itemW = (pageW - margin * 2 - 2) / summaryItems.length;
+      summaryItems.forEach((item, i) => {
+        const x = margin + 2 + i * itemW;
+        doc.setFontSize(7);
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(120, 53, 15);
+        doc.text(item.label, x, y + 12);
+        doc.setFontSize(9);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(92, 48, 10);
+        doc.text(item.value, x, y + 19);
+      });
+
+      y += 28;
+    };
+
+    // ── Grouped export ────────────────────────────────────────────────────────
+    if (!detailed) {
+      periods.forEach((period, periodIdx) => {
+        const dates = eachDayOfInterval({ start: period.start, end: period.end });
+        drawSectionHeading("Pricing Ranges", period.label);
+        drawFinancialYearSummary(dates);
+
+        const ranges = [];
+        let cur = null;
+
+        dates.forEach(date => {
+          const dateStr = format(date, 'yyyy-MM-dd');
+          const price = calculatePrice(date);
+          const rule = getRuleType(date, dateStr);
+          const booked = isBooked(dateStr);
+          const booking = getBookingForDate(dateStr);
+
+          const key = `${price}|${rule}|${booked ? (booking?.guest_name || 'booked') : ''}`;
+          if (!cur || cur.key !== key) {
+            if (cur) ranges.push(cur);
+            cur = { key, startDate: date, endDate: date, price, rule, booked, guestName: booking?.guest_name || "" };
+          } else {
+            cur.endDate = date;
+          }
+        });
+        if (cur) ranges.push(cur);
+
+        checkPage();
+        const cols = [
+          { label: "From", x: margin },
+          { label: "To", x: margin + 32 },
+          { label: "Nights", x: margin + 64 },
+          { label: "Nightly Rate", x: margin + 82 },
+          { label: "Period Total", x: margin + 112 },
+          { label: "Rule", x: margin + 142 },
+          { label: "Status", x: margin + 172 },
+        ];
+        drawTableHeader(cols);
+
+        let rowAlt = false;
+        ranges.forEach(range => {
+          checkPage();
+          const nights = differenceInDays(range.endDate, range.startDate) + 1;
+          const total = range.price * nights;
+
+          if (rowAlt) {
+            doc.setFillColor(248, 250, 252);
+            doc.rect(margin - 2, y - 4, pageW - margin * 2 + 4, 7, 'F');
+          }
+          rowAlt = !rowAlt;
+
+          doc.setFontSize(8);
+          doc.setFont(undefined, 'normal');
+          doc.setTextColor(range.booked ? 13 : 15, range.booked ? 148 : 23, range.booked ? 136 : 42);
+
+          doc.text(format(range.startDate, 'dd/MM/yyyy'), margin, y);
+          doc.text(format(range.endDate, 'dd/MM/yyyy'), margin + 32, y);
+          doc.text(String(nights), margin + 64, y);
+          doc.text(`£${range.price}`, margin + 82, y);
+          doc.text(`£${total.toLocaleString()}`, margin + 112, y);
+
+          const ruleShort = range.rule.length > 20 ? range.rule.substring(0, 19) + "…" : range.rule;
+          doc.text(ruleShort, margin + 142, y);
+
+          if (range.booked) {
+            doc.setFont(undefined, 'bold');
+            doc.text(`Booked${range.guestName ? ` — ${range.guestName}` : ''}`, margin + 172, y);
+            doc.setFont(undefined, 'normal');
+          } else {
+            doc.setTextColor(148, 163, 184);
+            doc.text("Available", margin + 172, y);
+          }
+
+          y += 7;
+        });
+
+        if (periodIdx < periods.length - 1) y += 8;
+      });
+
+    // ── Detailed export ───────────────────────────────────────────────────────
     } else {
-      exportGroupedPDF();
+      periods.forEach((period, periodIdx) => {
+        const dates = eachDayOfInterval({ start: period.start, end: period.end });
+        drawSectionHeading("Daily Pricing", period.label);
+        drawFinancialYearSummary(dates);
+
+        checkPage();
+        const cols = [
+          { label: "Date", x: margin },
+          { label: "Day", x: margin + 28 },
+          { label: "Rate", x: margin + 56 },
+          { label: "Rule / Override", x: margin + 76 },
+          { label: "Booking Status", x: margin + 140 },
+        ];
+        drawTableHeader(cols);
+
+        let currentMonth = "";
+        let rowAlt = false;
+
+        dates.forEach(date => {
+          checkPage();
+          const dateStr = format(date, 'yyyy-MM-dd');
+          const monthLabel = format(date, 'MMMM yyyy');
+
+          // Month separator row
+          if (monthLabel !== currentMonth) {
+            currentMonth = monthLabel;
+            doc.setFillColor(226, 232, 240);
+            doc.rect(margin - 2, y - 4, pageW - margin * 2 + 4, 7, 'F');
+            doc.setFontSize(8);
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(51, 65, 85);
+            doc.text(monthLabel, margin, y);
+            y += 7;
+            rowAlt = false;
+            checkPage();
+          }
+
+          const price = calculatePrice(date);
+          const rule = getRuleType(date, dateStr);
+          const booked = isBooked(dateStr);
+          const booking = getBookingForDate(dateStr);
+          const dayNum = date.getDay();
+          const isWeekend = dayNum === 0 || dayNum === 6;
+
+          if (rowAlt) {
+            doc.setFillColor(248, 250, 252);
+            doc.rect(margin - 2, y - 4, pageW - margin * 2 + 4, 6, 'F');
+          }
+          rowAlt = !rowAlt;
+
+          doc.setFontSize(7.5);
+          doc.setFont(undefined, isWeekend ? 'bold' : 'normal');
+          doc.setTextColor(booked ? 13 : 15, booked ? 148 : 23, booked ? 136 : 42);
+
+          doc.text(format(date, 'dd/MM/yyyy'), margin, y);
+          doc.text(format(date, 'EEE'), margin + 28, y);
+          doc.text(`£${price}`, margin + 56, y);
+
+          const ruleShort = rule.length > 34 ? rule.substring(0, 33) + "…" : rule;
+          doc.text(ruleShort, margin + 76, y);
+
+          if (booked) {
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(13, 148, 136);
+            const guestStr = booking?.guest_name ? `Booked — ${booking.guest_name}` : "Booked";
+            doc.text(guestStr.length > 28 ? guestStr.substring(0, 27) + "…" : guestStr, margin + 140, y);
+          } else {
+            doc.setFont(undefined, 'normal');
+            doc.setTextColor(148, 163, 184);
+            doc.text("Available", margin + 140, y);
+          }
+
+          y += 6;
+        });
+
+        if (periodIdx < periods.length - 1) y += 8;
+      });
     }
+
+    // Final footer
+    addFooter(pageNum, pageNum);
+
+    const fyEndYear = getCurrentFYEnd(today).getFullYear();
+    doc.save(`hostkeep-pricing-${detailed ? 'detailed' : 'grouped'}-FY${fyEndYear}.pdf`);
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Export Pricing</CardTitle>
-        <CardDescription>Download your pricing calendar for the next 12 months</CardDescription>
+        <CardTitle>Export Pricing Report</CardTitle>
+        <CardDescription>
+          Download a financial year pricing calendar — includes booking status and rate breakdown
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
           <div className="space-y-0.5">
             <Label htmlFor="export-mode" className="text-sm font-medium">Detailed Export</Label>
             <p className="text-xs text-gray-500">
-              {exportDetailed ? "Individual dates (1 row per day)" : "Grouped ranges (default)"}
+              {exportDetailed ? "1 row per day — full daily breakdown" : "Grouped ranges — consecutive same-rate periods"}
             </p>
           </div>
           <Switch
@@ -238,17 +497,16 @@ export default function ExportPricing({ pricingSettings }) {
             onCheckedChange={setExportDetailed}
           />
         </div>
-        
-        <Button type="button" onClick={exportPDF} className="w-full">
+
+        <Button type="button" onClick={() => buildPDF(exportDetailed)} className="w-full bg-teal-600 hover:bg-teal-700">
           <Download className="w-4 h-4 mr-2" />
           {exportDetailed ? "Export Detailed PDF" : "Export Grouped PDF"}
         </Button>
 
-        {!exportDetailed && (
-          <p className="text-xs text-gray-500">
-            Grouped export combines consecutive dates with the same price into ranges for easy reading.
-          </p>
-        )}
+        <p className="text-xs text-gray-400">
+          Covers the current financial year (from today to 5 Apr) and the full following financial year.
+          Confirmed bookings are highlighted in the report.
+        </p>
       </CardContent>
     </Card>
   );

@@ -302,7 +302,7 @@ export default function PricingManager({ formData, onUpdate, onPromptSave, prope
         </CardContent>
       </Card>
 
-      <ExportPricing pricingSettings={formData.pricing_settings} />
+      <ExportPricing pricingSettings={formData.pricing_settings} property={property || formData} bookings={[]} />
     </div>
   );
 }
