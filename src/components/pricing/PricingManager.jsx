@@ -287,7 +287,17 @@ export default function PricingManager({ formData, onUpdate, onPromptSave, prope
             <TabsContent value="seasons">
               <SeasonManager
                 seasons={formData.pricing_settings?.seasons || []}
-                onUpdate={(seasons) => handlePricingUpdate('seasons', seasons)}
+                onUpdate={(data) => {
+                  if (data.date_overrides) {
+                    handlePricingUpdate('date_overrides', {
+                      ...formData.pricing_settings?.date_overrides,
+                      ...data.date_overrides
+                    });
+                    if (onPromptSave) onPromptSave();
+                  } else {
+                    handlePricingUpdate('seasons', data);
+                  }
+                }}
               />
             </TabsContent>
 

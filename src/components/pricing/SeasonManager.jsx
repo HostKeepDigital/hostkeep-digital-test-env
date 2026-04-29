@@ -127,7 +127,8 @@ export default function SeasonManager({ seasons = [], onUpdate }) {
 
     const futureHolidays = UK_SCHOOL_HOLIDAYS.filter(h => h.end >= today);
 
-    const newSeasons = futureHolidays.map(holiday => {
+    const dateOverrides = {};
+    futureHolidays.forEach(holiday => {
       let start = new Date(holiday.start);
       let end = new Date(holiday.end);
 
@@ -136,22 +137,25 @@ export default function SeasonManager({ seasons = [], onUpdate }) {
         end = followingSunday(end);
       }
 
-      return {
-        id: `holiday-${holiday.label}-${Date.now()}-${Math.random()}`,
-        name: holiday.label,
-        start_date: formatDate(start),
-        end_date: formatDate(end),
-        nightly_rate: Math.round(baseRate * holiday.rate),
-        weekend_modifier: 0,
-        min_nights: 2,
-      };
+      const msPerDay = 86400000;
+      const d = new Date(start);
+      while (d <= end) {
+        const dateStr = formatDate(d);
+        dateOverrides[dateStr] = {
+          rate: Math.round(baseRate * holiday.rate),
+          holiday: holiday.label
+        };
+        d.setTime(d.getTime() + msPerDay);
+      }
     });
 
-    const manualSeasons = seasons.filter(s => !UK_SCHOOL_HOLIDAYS.some(h => s.name === h.label));
-    onUpdate([...manualSeasons, ...newSeasons]);
+    // Trigger callback to update pricing settings with date overrides
+    if (onUpdate) {
+      onUpdate({ date_overrides: dateOverrides });
+    }
   };
 
-  const hasAutofilled = seasons.some(s => s.id?.startsWith("holiday-"));
+  const hasAutofilled = false;
 
   return (
     <Card>
@@ -163,18 +167,12 @@ export default function SeasonManager({ seasons = [], onUpdate }) {
           </div>
           <div className="flex items-center gap-2">
             <Button
-              onClick={() => {
-                if (hasAutofilled) {
-                  onUpdate(seasons.filter(s => !s.id?.startsWith("holiday-")));
-                } else {
-                  handleAutofillHolidays();
-                }
-              }}
-              variant={hasAutofilled ? "destructive" : "outline"}
+              onClick={handleAutofillHolidays}
+              variant="outline"
               size="sm"
             >
               <Zap className="w-4 h-4 mr-2" />
-              {hasAutofilled ? "Remove Autofill Holidays" : "Autofill Holidays"}
+              Autofill Holidays
             </Button>
             <Button onClick={() => setShowForm(!showForm)} size="sm">
               <Plus className="w-4 h-4 mr-2" />
