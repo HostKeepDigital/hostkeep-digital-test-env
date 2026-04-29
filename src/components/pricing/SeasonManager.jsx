@@ -169,23 +169,13 @@ export default function SeasonManager({ seasons = [], onUpdate }) {
           </div>
           <div className="flex items-center gap-2">
             <Button
-              onClick={handleAutofillHolidays}
+              onClick={seasons.some(s => s.is_autofilled) ? handleRemoveAutofilled : handleAutofillHolidays}
               variant="outline"
               size="sm"
             >
               <Zap className="w-4 h-4 mr-2" />
-              Autofill Holidays
+              {seasons.some(s => s.is_autofilled) ? 'Remove Autofilled Holidays' : 'Autofill Holidays'}
             </Button>
-            {seasons.some(s => s.is_autofilled) && (
-              <Button
-                onClick={handleRemoveAutofilled}
-                variant="ghost"
-                size="sm"
-                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-              >
-                Remove Autofilled
-              </Button>
-            )}
             <Button onClick={() => setShowForm(!showForm)} size="sm">
               <Plus className="w-4 h-4 mr-2" />
               Add Season
