@@ -5,49 +5,73 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Sparkles } from "l
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-// UK School Holidays & Half-term Breaks — England (actual dates only - buffers added at render time)
-// Sources: eparenting.co.uk, skyparksecure.com, gov.uk — verified April 2026
+// UK School Holidays & Half-term Breaks — England & Wales
+// Sources: gov.uk/school-term-and-holiday-dates, eparenting.co.uk — verified April 2026
+// Dates are the ACTUAL school holiday start/end (Mon–Fri).
+// expandHolidayWindow() extends each window to include the surrounding weekend(s)
+// and, for bank holiday weekends, rolls forward to include the Monday too.
 const UK_SCHOOL_HOLIDAYS_RAW = [
-  // 2025-2026 Academic Year
-  { label: "Oct Half Term",   start: new Date(2025, 9, 27),  end: new Date(2025, 9, 31),  boost: 1.20, bankHoliday: false },
-  { label: "Christmas",       start: new Date(2025, 11, 22), end: new Date(2026, 0, 2),   boost: 1.30, bankHoliday: false },
-  { label: "Feb Half Term",   start: new Date(2026, 1, 16),  end: new Date(2026, 1, 20),  boost: 1.15, bankHoliday: false },
-  { label: "Easter",          start: new Date(2026, 2, 30),  end: new Date(2026, 3, 10),  boost: 1.25, bankHoliday: false },
-  { label: "May Half Term",   start: new Date(2026, 4, 25),  end: new Date(2026, 4, 29),  boost: 1.20, bankHoliday: true  },
-  { label: "Summer",          start: new Date(2026, 6, 21),  end: new Date(2026, 8, 1),   boost: 1.35, bankHoliday: false },
-  // 2026-2027 Academic Year
-  { label: "Oct Half Term",   start: new Date(2026, 9, 26),  end: new Date(2026, 9, 30),  boost: 1.20, bankHoliday: false },
-  { label: "Christmas",       start: new Date(2026, 11, 21), end: new Date(2027, 0, 1),   boost: 1.30, bankHoliday: false },
-  { label: "Feb Half Term",   start: new Date(2027, 1, 15),  end: new Date(2027, 1, 19),  boost: 1.15, bankHoliday: false },
-  { label: "Easter",          start: new Date(2027, 2, 26),  end: new Date(2027, 3, 9),   boost: 1.25, bankHoliday: false },
-  { label: "May Half Term",   start: new Date(2027, 4, 31),  end: new Date(2027, 5, 4),   boost: 1.20, bankHoliday: true  },
-  { label: "Summer",          start: new Date(2027, 6, 22),  end: new Date(2027, 8, 1),   boost: 1.35, bankHoliday: false },
+  // ── 2024-2025 Academic Year ──────────────────────────────────────────────
+  { label: "Oct Half Term",  start: new Date(2024, 9, 28),  end: new Date(2024, 10, 1),  boost: 1.20, bankHoliday: false },
+  { label: "Christmas",      start: new Date(2024, 11, 23), end: new Date(2025, 0, 3),   boost: 1.30, bankHoliday: false },
+  { label: "Feb Half Term",  start: new Date(2025, 1, 17),  end: new Date(2025, 1, 21),  boost: 1.15, bankHoliday: false },
+  { label: "Easter",         start: new Date(2025, 3, 11),  end: new Date(2025, 3, 25),  boost: 1.28, bankHoliday: false },
+  { label: "May Half Term",  start: new Date(2025, 4, 26),  end: new Date(2025, 4, 30),  boost: 1.20, bankHoliday: true  }, // incl. Early May BH
+  { label: "Summer",         start: new Date(2025, 6, 22),  end: new Date(2025, 8, 1),   boost: 1.40, bankHoliday: false },
+
+  // ── 2025-2026 Academic Year ──────────────────────────────────────────────
+  { label: "Oct Half Term",  start: new Date(2025, 9, 27),  end: new Date(2025, 9, 31),  boost: 1.20, bankHoliday: false },
+  { label: "Christmas",      start: new Date(2025, 11, 22), end: new Date(2026, 0, 2),   boost: 1.32, bankHoliday: false },
+  { label: "Feb Half Term",  start: new Date(2026, 1, 16),  end: new Date(2026, 1, 20),  boost: 1.15, bankHoliday: false },
+  { label: "Easter",         start: new Date(2026, 2, 30),  end: new Date(2026, 3, 13),  boost: 1.28, bankHoliday: false },
+  { label: "May Half Term",  start: new Date(2026, 4, 25),  end: new Date(2026, 4, 29),  boost: 1.22, bankHoliday: true  }, // incl. Spring BH
+  { label: "Summer",         start: new Date(2026, 6, 20),  end: new Date(2026, 8, 1),   boost: 1.40, bankHoliday: false },
+
+  // ── 2026-2027 Academic Year ──────────────────────────────────────────────
+  { label: "Oct Half Term",  start: new Date(2026, 9, 26),  end: new Date(2026, 9, 30),  boost: 1.20, bankHoliday: false },
+  { label: "Christmas",      start: new Date(2026, 11, 21), end: new Date(2027, 0, 1),   boost: 1.32, bankHoliday: false },
+  { label: "Feb Half Term",  start: new Date(2027, 1, 15),  end: new Date(2027, 1, 19),  boost: 1.15, bankHoliday: false },
+  { label: "Easter",         start: new Date(2027, 2, 26),  end: new Date(2027, 3, 9),   boost: 1.28, bankHoliday: false },
+  { label: "May Half Term",  start: new Date(2027, 4, 31),  end: new Date(2027, 5, 4),   boost: 1.22, bankHoliday: true  },
+  { label: "Summer",         start: new Date(2027, 6, 22),  end: new Date(2027, 8, 1),   boost: 1.40, bankHoliday: false },
+
+  // ── UK Bank Holidays (standalone — not part of school hols) ─────────────
+  // New Year's Day
+  { label: "New Year's Day", start: new Date(2025, 0, 1),   end: new Date(2025, 0, 1),   boost: 1.25, bankHoliday: true  },
+  { label: "New Year's Day", start: new Date(2026, 0, 1),   end: new Date(2026, 0, 1),   boost: 1.25, bankHoliday: true  },
+  { label: "New Year's Day", start: new Date(2027, 0, 1),   end: new Date(2027, 0, 1),   boost: 1.25, bankHoliday: true  },
+  // Early May Bank Holiday
+  { label: "May Bank Holiday", start: new Date(2025, 4, 5),  end: new Date(2025, 4, 5),  boost: 1.22, bankHoliday: true  },
+  { label: "May Bank Holiday", start: new Date(2026, 4, 4),  end: new Date(2026, 4, 4),  boost: 1.22, bankHoliday: true  },
+  { label: "May Bank Holiday", start: new Date(2027, 4, 3),  end: new Date(2027, 4, 3),  boost: 1.22, bankHoliday: true  },
+  // August Bank Holiday
+  { label: "Aug Bank Holiday", start: new Date(2025, 7, 25), end: new Date(2025, 7, 25), boost: 1.30, bankHoliday: true  },
+  { label: "Aug Bank Holiday", start: new Date(2026, 7, 31), end: new Date(2026, 7, 31), boost: 1.30, bankHoliday: true  },
+  { label: "Aug Bank Holiday", start: new Date(2027, 7, 30), end: new Date(2027, 7, 30), boost: 1.30, bankHoliday: true  },
 ];
 
-// Expand each holiday window to include the Sat/Sun before start and after end.
-// For bank holiday weekends, also include the Monday after.
+// Expand each holiday window:
+// - Roll start back to the preceding Saturday (to capture arrival weekend)
+// - Roll end forward to the following Sunday (or Monday for bank holiday weekends)
 function expandHolidayWindow(h) {
   let start = new Date(h.start);
   let end = new Date(h.end);
 
-  // Roll start back to the nearest Saturday (or earlier)
-  const startDay = start.getDay(); // 0=Sun,1=Mon,...,6=Sat
+  // Roll start back to nearest previous Saturday
+  const startDay = start.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
   if (startDay !== 6) {
-    // days to go back to previous Saturday
     const daysBack = startDay === 0 ? 1 : startDay + 1;
     start = subDays(start, daysBack);
   }
 
-  // Roll end forward to the nearest Sunday (or Monday for bank holidays)
+  // Roll end forward to nearest following Sunday (or Monday for bank holiday weekends)
   const endDay = end.getDay();
   if (h.bankHoliday) {
-    // extend to Monday
     if (endDay !== 1) {
       const daysForward = endDay === 0 ? 1 : (8 - endDay) % 7 + 1;
       end = addDays(end, daysForward);
     }
   } else {
-    // extend to Sunday
     if (endDay !== 0) {
       const daysForward = 7 - endDay;
       end = addDays(end, daysForward);
