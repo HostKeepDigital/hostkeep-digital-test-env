@@ -55,6 +55,7 @@ Deno.serve(async (req) => {
       await serviceRole.entities.UserCredentials.create({
         email: normalisedEmail,
         password_hash,
+        user_id: user.id,
       });
     } catch (err) {
       console.error('Failed to create UserCredentials:', err.message);
