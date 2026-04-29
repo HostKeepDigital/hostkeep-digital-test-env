@@ -66,39 +66,30 @@ export default function Settings() {
   });
 
   useEffect(() => {
-  if (!user?.email) return;
+    if (!user?.email) return;
 
-    // AuthContext values used as initial fallback only — getUserProfile overwrites below
-    setProfile((prev) => ({
-      ...prev,
-      forename: user.forename || "",
-      middle_name: user.middle_name || "",
-      surname: user.surname || "",
-    }));
+    // Load profile from checkSession (uses session_token — works with custom auth)
+    const token = localStorage.getItem("session_token");
+    if (token) {
+      base44.functions.invoke("checkSession", { session_token: token })
+        .then((res) => {
+          const d = res.data;
+          if (!d?.authenticated) return;
+          setProfile({
+            forename: d.forename || "",
+            middle_name: d.middle_name || "",
+            surname: d.surname || "",
+            phone: d.phone || "",
+            location: d.location || "",
+          });
+        })
+        .catch(() => {});
+    }
 
-  // Load phone and location from User entity via getUserProfile
-  base44.functions.invoke("getUserProfile", { email: user.email, user_id: user.id || null })
-    .then((res) => {
-     const u = res.data?.profile;
-      if (!u) return;
-      setProfile((prev) => ({
-        ...prev,
-        forename: u.forename || prev.forename || "",
-        middle_name: u.middle_name || prev.middle_name || "",
-        surname: u.surname || prev.surname || "",
-        phone: u.phone || "",
-        location: u.location || "",
-      }));
-      if (u.notification_preferences && typeof u.notification_preferences === "object") {
-        setNotifications((prev) => ({ ...prev, ...u.notification_preferences }));
-      }
-    })
-    .catch(() => {});
-
-  if (user?.id) {
-    base44.entities.UserRole.filter({ user_id: user.id }).then(setUserRoles).catch(() => {});
-  }
-}, [user?.email]);
+    if (user?.id) {
+      base44.entities.UserRole.filter({ user_id: user.id }).then(setUserRoles).catch(() => {});
+    }
+  }, [user?.email]);
 
   const hasPaymentsRole = userRoles.some(
     (r) =>
@@ -151,36 +142,35 @@ export default function Settings() {
   }, [hasPaymentsRole, user]);
 
   const handleSaveProfile = async () => {
-  setSaveStatus(null);
+    setSaveStatus(null);
 
-  if (!profile.forename.trim() || !profile.surname.trim()) {
-    setSaveStatus("error");
-    return;
-  }
+    if (!profile.forename.trim() || !profile.surname.trim()) {
+      setSaveStatus("error");
+      return;
+    }
 
-  setSaving(true);
+    setSaving(true);
+    try {
+      const token = localStorage.getItem("session_token");
+      const res = await base44.functions.invoke("updateProfile", {
+        session_token: token,
+        forename: profile.forename.trim(),
+        middle_name: profile.middle_name.trim(),
+        surname: profile.surname.trim(),
+        phone: profile.phone.trim(),
+        location: profile.location.trim(),
+      });
+      if (!res.data?.success) throw new Error(res.data?.error || "save_failed");
 
-  try {
-    const res = await base44.functions.invoke("saveUserProfile", {
-      user_id: user.id || null,
-      email: user.email,
-      forename: profile.forename.trim(),
-      middle_name: profile.middle_name.trim(),
-      surname: profile.surname.trim(),
-      phone: profile.phone.trim(),
-      location: profile.location.trim(),
-    });
-    if (!res.data?.success) throw new Error(res.data?.error || "save_failed");
-
-    setSaveStatus("success");
-    setTimeout(() => setSaveStatus(null), 4000);
-  } catch (err) {
-    console.error("Save profile error:", err);
-    setSaveStatus("error");
-  } finally {
-    setSaving(false);
-  }
-};
+      setSaveStatus("success");
+      setTimeout(() => setSaveStatus(null), 4000);
+    } catch (err) {
+      console.error("Save profile error:", err);
+      setSaveStatus("error");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleNotificationToggle = async (field, value) => {
     const updated = { ...notifications, [field]: value };

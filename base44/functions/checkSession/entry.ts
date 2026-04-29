@@ -43,6 +43,8 @@ Deno.serve(async (req) => {
     let forename = null;
     let middle_name = null;
     let surname = null;
+    let phone = null;
+    let location = null;
     let is_founding_member = false;
     try {
       // Filter by email — more reliable than .get() for custom User entity
@@ -53,6 +55,8 @@ Deno.serve(async (req) => {
         if (userRecord.forename) forename = userRecord.forename;
         if (userRecord.middle_name) middle_name = userRecord.middle_name;
         if (userRecord.surname) surname = userRecord.surname;
+        if (userRecord.phone) phone = userRecord.phone;
+        if (userRecord.location) location = userRecord.location;
         is_founding_member = userRecord.is_founding_member || false;
       }
     } catch (_) {}
@@ -68,6 +72,8 @@ Deno.serve(async (req) => {
       forename,
       middle_name,
       surname,
+      phone,
+      location,
       is_founding_member,
     });
   } catch (err) {

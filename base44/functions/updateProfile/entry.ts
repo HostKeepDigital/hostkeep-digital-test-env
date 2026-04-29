@@ -31,7 +31,9 @@ Deno.serve(async (req) => {
     if (forename != null) updates.forename = String(forename).trim();
     if (middle_name != null) updates.middle_name = String(middle_name).trim();
     if (surname != null) updates.surname = String(surname).trim();
-    if (fullName) updates.full_name = fullName;
+    if (forename != null || surname != null) {
+      updates.full_name = [forename, middle_name, surname].filter(Boolean).map(s => String(s).trim()).join(" ");
+    }
     if (phone != null) updates.phone = String(phone).trim();
     if (location != null) updates.location = String(location).trim();
 
