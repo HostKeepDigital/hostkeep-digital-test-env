@@ -2,9 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Download } from "lucide-react";
 import { format, eachDayOfInterval, parseISO, differenceInDays, addDays } from "date-fns";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { useState } from "react";
 import { jsPDF } from "jspdf";
 
 // UK Financial Year: 6 April → 5 April
@@ -29,7 +26,6 @@ function getNextFYRange(fyEnd) {
 const LOGO_URL = "https://drive.google.com/uc?export=view&id=1yazuu-6sWc7hEOpyTncZpt-P9Cd-UOt1";
 
 export default function ExportPricing({ pricingSettings, property, bookings = [] }) {
-  const [exportDetailed, setExportDetailed] = useState(false);
 
   const calculatePrice = (date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
@@ -245,72 +241,73 @@ export default function ExportPricing({ pricingSettings, property, bookings = []
     };
 
     const drawTableHeader = (columns) => {
-      doc.setFillColor(240, 253, 250);
-      doc.rect(margin - 2, y - 4, pageW - margin * 2 + 4, 8, 'F');
-      doc.setTextColor(13, 148, 136);
-      doc.setFontSize(8);
-      doc.setFont(undefined, 'bold');
-      columns.forEach(col => doc.text(col.label, col.x, y));
-      y += 7;
-      doc.setDrawColor(209, 250, 229);
-      doc.line(margin - 2, y - 2, pageW - margin + 2, y - 2);
-    };
+       y += 4; // Add spacing above the header
+       doc.setFillColor(240, 253, 250);
+       doc.rect(margin - 2, y - 4, pageW - margin * 2 + 4, 8, 'F');
+       doc.setTextColor(13, 148, 136);
+       doc.setFontSize(8);
+       doc.setFont(undefined, 'bold');
+       columns.forEach(col => doc.text(col.label, col.x, y));
+       y += 8;
+       doc.setDrawColor(209, 250, 229);
+       doc.line(margin - 2, y - 2, pageW - margin + 2, y - 2);
+     };
 
     const drawFinancialYearSummary = (dates) => {
-      // Calculate summary stats for the period
-      let totalRevenue = 0;
-      let bookedNights = 0;
-      let totalNights = dates.length;
+       // Calculate summary stats for the period
+       let totalRevenue = 0;
+       let bookedNights = 0;
+       let totalNights = dates.length;
 
-      dates.forEach(date => {
-        const dateStr = format(date, 'yyyy-MM-dd');
-        const price = calculatePrice(date);
-        const booked = isBooked(dateStr);
-        if (booked) {
-          totalRevenue += price;
-          bookedNights++;
-        }
-      });
+       dates.forEach(date => {
+         const dateStr = format(date, 'yyyy-MM-dd');
+         const price = calculatePrice(date);
+         const booked = isBooked(dateStr);
+         if (booked) {
+           totalRevenue += price;
+           bookedNights++;
+         }
+       });
 
-      const occupancy = totalNights > 0 ? ((bookedNights / totalNights) * 100).toFixed(1) : 0;
-      const avgRate = totalNights > 0 ? (dates.reduce((s, d) => s + calculatePrice(d), 0) / totalNights).toFixed(0) : 0;
+       const occupancy = totalNights > 0 ? ((bookedNights / totalNights) * 100).toFixed(1) : 0;
+       const avgRate = totalNights > 0 ? (dates.reduce((s, d) => s + calculatePrice(d), 0) / totalNights).toFixed(0) : 0;
 
-      checkPage();
-      doc.setFillColor(254, 252, 232); // amber-50
-      doc.setDrawColor(251, 191, 36);
-      doc.roundedRect(margin - 2, y - 2, pageW - margin * 2 + 4, 22, 2, 2, 'FD');
+       checkPage();
+       doc.setFillColor(13, 148, 136); // teal-600
+       doc.setDrawColor(13, 148, 136);
+       doc.rect(margin - 2, y - 2, pageW - margin * 2 + 4, 19, 'FD');
 
-      doc.setFontSize(8);
-      doc.setFont(undefined, 'bold');
-      doc.setTextColor(120, 53, 15);
-      doc.text("Period Summary", margin + 2, y + 5);
+       doc.setFontSize(8);
+       doc.setFont(undefined, 'bold');
+       doc.setTextColor(255, 255, 255);
+       doc.text("Period Summary", margin + 2, y + 4);
 
-      const summaryItems = [
-        { label: "Total Nights", value: String(totalNights) },
-        { label: "Booked Nights", value: String(bookedNights) },
-        { label: "Occupancy", value: `${occupancy}%` },
-        { label: "Confirmed Revenue", value: `£${totalRevenue.toLocaleString()}` },
-        { label: "Avg Nightly Rate", value: `£${avgRate}` },
-      ];
+       const summaryItems = [
+         { label: "Total Nights", value: String(totalNights) },
+         { label: "Booked Nights", value: String(bookedNights) },
+         { label: "Occupancy", value: `${occupancy}%` },
+         { label: "Confirmed Revenue", value: `£${totalRevenue.toLocaleString()}` },
+         { label: "Avg Nightly Rate", value: `£${avgRate}` },
+       ];
 
-      const itemW = (pageW - margin * 2 - 2) / summaryItems.length;
-      summaryItems.forEach((item, i) => {
-        const x = margin + 2 + i * itemW;
-        doc.setFontSize(7);
-        doc.setFont(undefined, 'normal');
-        doc.setTextColor(120, 53, 15);
-        doc.text(item.label, x, y + 12);
-        doc.setFontSize(9);
-        doc.setFont(undefined, 'bold');
-        doc.setTextColor(92, 48, 10);
-        doc.text(item.value, x, y + 19);
-      });
+       const itemW = (pageW - margin * 2 - 2) / summaryItems.length;
+       summaryItems.forEach((item, i) => {
+         const x = margin + 2 + i * itemW;
+         doc.setFontSize(6.5);
+         doc.setFont(undefined, 'normal');
+         doc.setTextColor(220, 252, 231); // teal-100
+         doc.text(item.label, x, y + 10);
+         doc.setFontSize(8);
+         doc.setFont(undefined, 'bold');
+         doc.setTextColor(255, 255, 255);
+         doc.text(item.value, x, y + 15);
+       });
 
-      y += 28;
-    };
+       y += 24;
+     };
 
     // ── Grouped export ────────────────────────────────────────────────────────
-    if (!detailed) {
+     if (true) {
       periods.forEach((period, periodIdx) => {
         const dates = eachDayOfInterval({ start: period.start, end: period.end });
         drawSectionHeading("Pricing Ranges", period.label);
@@ -388,8 +385,7 @@ export default function ExportPricing({ pricingSettings, property, bookings = []
         if (periodIdx < periods.length - 1) y += 8;
       });
 
-    // ── Detailed export ───────────────────────────────────────────────────────
-    } else {
+    // Detailed export removed — always use grouped view
       periods.forEach((period, periodIdx) => {
         const dates = eachDayOfInterval({ start: period.start, end: period.end });
         drawSectionHeading("Daily Pricing", period.label);
@@ -466,14 +462,13 @@ export default function ExportPricing({ pricingSettings, property, bookings = []
         });
 
         if (periodIdx < periods.length - 1) y += 8;
-      });
-    }
+        });
 
-    // Final footer
-    addFooter(pageNum, pageNum);
+        // Final footer
+        addFooter(pageNum, pageNum);
 
     const fyEndYear = getCurrentFYEnd(today).getFullYear();
-    doc.save(`hostkeep-pricing-${detailed ? 'detailed' : 'grouped'}-FY${fyEndYear}.pdf`);
+    doc.save(`hostkeep-pricing-FY${fyEndYear}.pdf`);
   };
 
   return (
@@ -485,30 +480,15 @@ export default function ExportPricing({ pricingSettings, property, bookings = []
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-          <div className="space-y-0.5">
-            <Label htmlFor="export-mode" className="text-sm font-medium">Detailed Export</Label>
-            <p className="text-xs text-gray-500">
-              {exportDetailed ? "1 row per day — full daily breakdown" : "Grouped ranges — consecutive same-rate periods"}
-            </p>
-          </div>
-          <Switch
-            id="export-mode"
-            checked={exportDetailed}
-            onCheckedChange={setExportDetailed}
-          />
-        </div>
+         <Button type="button" onClick={() => buildPDF(false)} className="w-full bg-teal-600 hover:bg-teal-700">
+           <Download className="w-4 h-4 mr-2" />
+           Export Pricing Report
+         </Button>
 
-        <Button type="button" onClick={() => buildPDF(exportDetailed)} className="w-full bg-teal-600 hover:bg-teal-700">
-          <Download className="w-4 h-4 mr-2" />
-          {exportDetailed ? "Export Detailed PDF" : "Export Grouped PDF"}
-        </Button>
-
-        <p className="text-xs text-gray-400">
-          Covers the current financial year (from today to 5 Apr) and the full following financial year.
-          Confirmed bookings are highlighted in the report.
-        </p>
-      </CardContent>
+         <p className="text-xs text-gray-500">
+           Download a grouped pricing calendar showing date ranges with consistent rates, booking status, and period summaries. Covers the current financial year (from tomorrow to 5 Apr).
+         </p>
+       </CardContent>
     </Card>
   );
 }
