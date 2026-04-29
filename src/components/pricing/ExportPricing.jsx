@@ -241,7 +241,6 @@ export default function ExportPricing({ pricingSettings, property, bookings = []
     };
 
     const drawTableHeader = (columns) => {
-       y += 4; // Add spacing above the header
        doc.setFillColor(240, 253, 250);
        doc.rect(margin - 2, y - 4, pageW - margin * 2 + 4, 8, 'F');
        doc.setTextColor(13, 148, 136);
@@ -249,8 +248,6 @@ export default function ExportPricing({ pricingSettings, property, bookings = []
        doc.setFont(undefined, 'bold');
        columns.forEach(col => doc.text(col.label, col.x, y));
        y += 8;
-       doc.setDrawColor(209, 250, 229);
-       doc.line(margin - 2, y - 2, pageW - margin + 2, y - 2);
      };
 
     const drawFinancialYearSummary = (dates) => {
@@ -285,8 +282,6 @@ export default function ExportPricing({ pricingSettings, property, bookings = []
        const summaryItems = [
          { label: "Total Nights", value: String(totalNights) },
          { label: "Booked Nights", value: String(bookedNights) },
-         { label: "Occupancy", value: `${occupancy}%` },
-         { label: "Confirmed Revenue", value: `£${totalRevenue.toLocaleString()}` },
          { label: "Avg Nightly Rate", value: `£${avgRate}` },
        ];
 
@@ -390,14 +385,14 @@ export default function ExportPricing({ pricingSettings, property, bookings = []
         periods.forEach((period) => {
           const dates = eachDayOfInterval({ start: period.start, end: period.end });
           const potentialRevenue = dates.reduce((sum, date) => sum + calculatePrice(date), 0);
-          const stripeFeeRate = 0.022; // 2.2%
+          const stripeFeeRate = 0.029; // 2.9% Stripe standard rate
           const stripeFeeFixed = 0.30; // £0.30 per transaction
           const estimatedStripeFee = Math.round((potentialRevenue * stripeFeeRate + stripeFeeFixed) * 100) / 100;
           const netAfterStripeFees = Math.round((potentialRevenue - estimatedStripeFee) * 100) / 100;
 
           checkPage();
           doc.setFillColor(15, 23, 42); // dark navy
-          doc.rect(margin - 2, y - 2, pageW - margin * 2 + 4, 48, 'F');
+          doc.rect(margin - 2, y - 2, pageW - margin * 2 + 4, 54, 'F');
 
           doc.setFontSize(9);
           doc.setFont(undefined, 'bold');
@@ -411,7 +406,7 @@ export default function ExportPricing({ pricingSettings, property, bookings = []
 
           const summaryLines = [
             { label: "Potential Revenue (All Nights)", value: `£${potentialRevenue.toLocaleString()}` },
-            { label: "Estimated Stripe Processing Fee", value: `£${estimatedStripeFee.toLocaleString()}` },
+            { label: "Estimated Stripe Processing Fee (2.9% + £0.30)", value: `–£${estimatedStripeFee.toLocaleString()}` },
             { label: "Your Net Income (After Stripe Fees)", value: `£${netAfterStripeFees.toLocaleString()}` },
           ];
 
@@ -426,11 +421,11 @@ export default function ExportPricing({ pricingSettings, property, bookings = []
             doc.text(line.value, pageW - margin - 4, y + idx * 6, { align: 'right' });
           });
 
-          y += 22;
-          doc.setFontSize(7);
+          y += 24;
+          doc.setFontSize(6.5);
           doc.setTextColor(148, 163, 184);
           doc.setFont(undefined, 'normal');
-          const disclaimer = "Note: Stripe fees (2.2% + £0.30) are required for secure payment processing and are not a HostKeep Digital commission.";
+          const disclaimer = "Stripe fees are required for secure payment processing and PCI compliance. These are payment gateway charges, not HostKeep Digital commission. All rates shown are in GBP and exclude VAT where applicable.";
           doc.text(disclaimer, margin + 2, y, { maxWidth: pageW - margin * 2 - 4 });
         });
 

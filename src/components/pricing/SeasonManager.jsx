@@ -127,7 +127,7 @@ export default function SeasonManager({ seasons = [], onUpdate }) {
 
     const futureHolidays = UK_SCHOOL_HOLIDAYS.filter(h => h.end >= today);
 
-    const dateOverrides = {};
+    const newSeasons = [...seasons];
     futureHolidays.forEach(holiday => {
       let start = new Date(holiday.start);
       let end = new Date(holiday.end);
@@ -137,22 +137,18 @@ export default function SeasonManager({ seasons = [], onUpdate }) {
         end = followingSunday(end);
       }
 
-      const msPerDay = 86400000;
-      const d = new Date(start);
-      while (d <= end) {
-        const dateStr = formatDate(d);
-        dateOverrides[dateStr] = {
-          rate: Math.round(baseRate * holiday.rate),
-          holiday: holiday.label
-        };
-        d.setTime(d.getTime() + msPerDay);
-      }
+      newSeasons.push({
+        id: Date.now().toString() + Math.random(),
+        name: holiday.label,
+        start_date: formatDate(start),
+        end_date: formatDate(end),
+        nightly_rate: Math.round(baseRate * holiday.rate),
+        weekend_modifier: 0
+      });
     });
 
-    // Trigger callback to update pricing settings with date overrides
-    if (onUpdate) {
-      onUpdate({ date_overrides: dateOverrides });
-    }
+    // Trigger callback to update seasons
+    onUpdate(newSeasons);
   };
 
   const hasAutofilled = false;
