@@ -125,7 +125,10 @@ export default function Layout({ children, currentPageName }) {
           <header className="hidden lg:flex fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 h-16 items-center px-4">
             <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
               <Link to={createPageUrl("Home")} onClick={(e) => handleNavClick(e, createPageUrl("Home"))} className="flex items-center gap-3">
-                <img src="https://drive.google.com/uc?export=view&id=1yazuu-6sWc7hEOpyTncZpt-P9Cd-UOt1" alt="HostKeep" className="h-8 w-auto" />
+                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center">
+                  <Home className="w-4 h-4 text-white" />
+                </div>
+                <span className="text-xl font-bold text-gray-900">HostKeep</span>
               </Link>
               <nav className="flex items-center gap-6">
                 <Link to={createPageUrl("HostDashboard")} className={`text-sm font-medium ${currentPageName === "HostDashboard" ? "text-teal-600" : "text-gray-600 hover:text-gray-900"}`}>Dashboard</Link>
