@@ -53,6 +53,8 @@ import LocationStep from "@/components/properties/LocationStep";
 import AmenitiesSelector from "@/components/properties/AmenitiesSelector";
 import PolicyPickerDialog from "@/components/properties/PolicyPickerDialog";
 import PublishGateModal from "@/components/properties/PublishGateModal";
+import DocumentUpload from "@/components/verification/DocumentUpload";
+import { useAuth } from "@/lib/AuthContext";
 
 import { AMENITY_GROUPS, AMENITY_MAP } from "@/data/amenities";
 
@@ -66,13 +68,14 @@ const PROPERTY_TYPES = [
 ];
 
 export default function EditProperty() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const propertyId = urlParams.get("id");
-  const defaultTab = urlParams.get("tab") || "basics";
+   const urlParams = new URLSearchParams(window.location.search);
+   const propertyId = urlParams.get("id");
+   const defaultTab = urlParams.get("tab") || "basics";
 
-  const queryClient = useQueryClient();
-  const navigate = useNavigate();
-  const setNavBlocker = useContext(NavigationContext);
+   const queryClient = useQueryClient();
+   const navigate = useNavigate();
+   const setNavBlocker = useContext(NavigationContext);
+   const { user } = useAuth();
 
   const [isUploading, setIsUploading] = useState(false);
   const [formData, setFormData] = useState(null);
@@ -193,7 +196,12 @@ export default function EditProperty() {
         smart_lock_enabled: property.smart_lock_enabled || false,
         smart_lock_code: property.smart_lock_code || "",
         smart_lock_send_hours: property.smart_lock_send_hours ?? null,
-      };
+
+        // ⭐ VERIFICATION DOCUMENT FIELDS
+        doc_government_id: null,
+        doc_selfie: null,
+        doc_proof_of_property: null,
+        };
 
       setFormData(initial);
       setOriginalData(initial);
@@ -242,6 +250,23 @@ export default function EditProperty() {
   }
   const hasChanges = changedFields.length > 0;
 
+  // Smart lock policy warning check
+  useEffect(() => {
+    if (!formData || !formData.smart_lock_enabled) return;
+    if (!policies || !formData.cancellation_policy_id) return;
+    const policy = policies.find(p => p.id === formData.cancellation_policy_id);
+    if (!policy) return;
+    const noRefundDays = policy.final_tier_refund_percentage === 0 && (policy.tier_2_deadline_days ?? 0) > 0
+      ? policy.tier_2_deadline_days
+      : policy.tier_1_deadline_days ?? 0;
+    const maxAllowedHours = Math.max(noRefundDays * 24 - 12, 0);
+    if (formData.smart_lock_send_hours && formData.smart_lock_send_hours > maxAllowedHours) {
+      setSmartLockPolicyWarning(`⚠️ Your current timing conflicts with your cancellation policy. Max allowed: ${maxAllowedHours} hours.`);
+    } else {
+      setSmartLockPolicyWarning(null);
+    }
+  }, [formData?.cancellation_policy_id, formData?.smart_lock_send_hours, formData?.smart_lock_enabled, policies]);
+
   // Warn on browser back/tab close when there are unsaved changes
   useEffect(() => {
     const handler = (e) => {
@@ -276,6 +301,8 @@ export default function EditProperty() {
   const [validationErrors, setValidationErrors] = useState({});
   const [pendingAction, setPendingAction] = useState(null);
   const [showPolicyPicker, setShowPolicyPicker] = useState(false);
+  const [titleError, setTitleError] = useState("");
+  const [smartLockPolicyWarning, setSmartLockPolicyWarning] = useState(null);
 
   const formatFieldName = (field) => {
     const map = {
@@ -828,7 +855,10 @@ export default function EditProperty() {
             <TabsTrigger value="booking-rules">
               <Calendar className="w-4 h-4 mr-2" /> Booking Rules
             </TabsTrigger>
-          </TabsList>
+            <TabsTrigger value="verification">
+              <FileText className="w-4 h-4 mr-2" /> Verification
+            </TabsTrigger>
+            </TabsList>
 
           {/* BASICS TAB */}
           <TabsContent value="basics">
@@ -842,9 +872,23 @@ export default function EditProperty() {
                   <Label>Property Title</Label>
                   <Input
                     value={formData.title}
-                    onChange={(e) => handleChange("title", e.target.value)}
-                    className="mt-1"
+                    onChange={(e) => {
+                      handleChange("title", e.target.value);
+                      const val = e.target.value;
+                      const invalidChars = val.replace(/[a-zA-Z0-9\s\-&!.]/g, "");
+                      if (invalidChars.length > 0) setTitleError(`Invalid characters: ${invalidChars.split("").join(" ")}`);
+                      else if (val.length > 0 && val.length < 16) setTitleError("Title must be at least 16 characters");
+                      else if (val.length > 50) setTitleError("Title must be maximum 50 characters");
+                      else setTitleError("");
+                    }}
+                    placeholder="Seaside Cottage!"
+                    maxLength={50}
+                    className={`mt-1 ${titleError ? "border-red-500" : ""}`}
                   />
+                  <div className="flex justify-between mt-1">
+                    <p className={`text-sm ${titleError ? "text-red-500" : "text-gray-400"}`}>{titleError || "16–50 characters"}</p>
+                    <span className="text-sm text-gray-400">{formData.title.length}/50</span>
+                  </div>
                 </div>
 
                 <div>
@@ -1047,6 +1091,7 @@ export default function EditProperty() {
                 onChange={(e) =>
                   handleChange("description", e.target.value)
                 }
+                placeholder="Describe your property..."
                 rows={6}
                 className="mt-1"
               />
@@ -1146,8 +1191,11 @@ export default function EditProperty() {
       {/* BOOKING RULES TAB */}
       <TabsContent value="booking-rules">
         <DayBasedBookingRules
-          value={formData.booking_rules}
-          onChange={(value) => handleChange("booking_rules", value)}
+          value={{ enabled: formData.day_based_restrictions_enabled, rules: formData.booking_rules }}
+          onChange={(data) => {
+            handleChange("day_based_restrictions_enabled", data.enabled);
+            handleChange("booking_rules", data.rules);
+          }}
         />
 
         {/* CANCELLATION POLICY */}
@@ -1245,6 +1293,8 @@ export default function EditProperty() {
                   onCheckedChange={(v) => {
                     if (!v) {
                       handleChange("smart_lock_send_hours", null);
+                      setSmartLockPolicyWarning(null);
+                      toast.info("Auto-send timing has been cleared.");
                     }
                     handleChange("smart_lock_enabled", v);
                   }}
@@ -1290,32 +1340,58 @@ export default function EditProperty() {
                   <p className="text-xs text-gray-500 mt-1">
                     Options unavailable due to your cancellation policy window are marked above.
                   </p>
-                </div>
-              )}
+                  {smartLockPolicyWarning && (
+                    <p className="text-xs text-red-500 mt-1 font-medium">{smartLockPolicyWarning}</p>
+                  )}
+                  </div>
+                  )}
             </div>
           </CardContent>
         </Card>
 
-        {/* VERIFICATION DOCUMENT - READ ONLY */}
-        {formData.verification_document && (
-          <Card className="mt-6 bg-gray-50 border-gray-200">
+        </TabsContent>
+
+        {/* VERIFICATION TAB */}
+        <TabsContent value="verification">
+          <Card>
             <CardHeader>
-              <CardTitle className="text-sm">Your Verification Document</CardTitle>
+              <CardTitle>Verification Documents</CardTitle>
+              <CardDescription>Upload or update your verification documents. Our team will review any new submissions within 24–48 hours. Your listing visibility will not be affected while documents are under review.</CardDescription>
             </CardHeader>
-            <CardContent>
-              <p className="text-xs text-gray-600 mb-3">Your uploaded verification proof (for host reference only)</p>
-              <a
-                href={formData.verification_document}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-teal-600 hover:text-teal-700 underline break-all"
-              >
-                View Document
-              </a>
+            <CardContent className="space-y-6">
+              <DocumentUpload
+                userId={user?.id}
+                documentType="government_id"
+                label="Government ID"
+                description="Passport, driving licence, or national ID card"
+                userName={user?.forename}
+                userEmail={user?.email}
+                localOnly
+                onUploadComplete={(type, url) => handleChange("doc_government_id", url)}
+              />
+              <DocumentUpload
+                userId={user?.id}
+                documentType="selfie"
+                label="Selfie holding your ID"
+                description="A clear photo of yourself holding your ID next to your face"
+                userName={user?.forename}
+                userEmail={user?.email}
+                localOnly
+                onUploadComplete={(type, url) => handleChange("doc_selfie", url)}
+              />
+              <DocumentUpload
+                userId={user?.id}
+                documentType="utility_bill"
+                label="Proof of Property"
+                description="Utility bill, council tax bill, or mortgage statement showing your name and property address"
+                userName={user?.forename}
+                userEmail={user?.email}
+                localOnly
+                onUploadComplete={(type, url) => handleChange("doc_proof_of_property", url)}
+              />
             </CardContent>
           </Card>
-        )}
-      </TabsContent>
+        </TabsContent>
     </Tabs>
   </div>
 </div>
