@@ -109,9 +109,13 @@ export default function ExportPricing({ pricingSettings, property, bookings = []
     const today = new Date();
     const fyEnd = getCurrentFYEnd(today);
 
-    // Only current financial year: today → end of current FY
+    // If FY has started (on or after April 6), start from tomorrow; otherwise today
+    const fyStartDate = new Date(today.getFullYear(), 3, 6); // April 6
+    const reportStart = today >= fyStartDate ? addDays(today, 1) : today;
+
+    // Only current financial year: reportStart → end of current FY
     const periods = [
-      { start: today, end: fyEnd, label: `Current Financial Year (to 5 Apr ${fyEnd.getFullYear()})` },
+      { start: reportStart, end: fyEnd, label: `Current Financial Year (to 5 Apr ${fyEnd.getFullYear()})` },
     ];
 
     const doc = new jsPDF();
