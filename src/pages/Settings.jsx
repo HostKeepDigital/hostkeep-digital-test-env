@@ -40,6 +40,7 @@ export default function Settings() {
   const [stripeStatusLoading, setStripeStatusLoading] = useState(true);
   const stripeCacheRef = useRef(null);
 
+  const [profileLoading, setProfileLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState(null);
 
@@ -67,16 +68,19 @@ export default function Settings() {
 
   useEffect(() => {
     if (!user?.email) return;
+    setProfileLoading(true);
     base44.functions.invoke("getUserProfile", { email: user.email })
       .then((res) => {
         const u = res.data?.profile;
-        if (!u) return;
-        setProfile({ forename: u.forename || "", middle_name: u.middle_name || "", surname: u.surname || "", phone: u.phone || "", location: u.location || "" });
-        if (u.notification_preferences && typeof u.notification_preferences === "object") {
-          setNotifications((prev) => ({ ...prev, ...u.notification_preferences }));
+        if (u) {
+          setProfile({ forename: u.forename || "", middle_name: u.middle_name || "", surname: u.surname || "", phone: u.phone || "", location: u.location || "" });
+          if (u.notification_preferences && typeof u.notification_preferences === "object") {
+            setNotifications((prev) => ({ ...prev, ...u.notification_preferences }));
+          }
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setProfileLoading(false));
     if (user?.id) {
       base44.entities.UserRole.filter({ user_id: user.id }).then(setUserRoles).catch(() => {});
     }
@@ -304,7 +308,12 @@ const handleDeleteAccount = async () => {
                 <CardDescription>Update your personal details</CardDescription>
               </CardHeader>
               <CardContent className="space-y-5">
-
+                {profileLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-6 h-6 animate-spin text-teal-600" />
+                  </div>
+                ) : (
+                <div className="space-y-5">
                 <div className="grid md:grid-cols-3 gap-4">
                   <div>
                     <Label>
@@ -409,6 +418,8 @@ const handleDeleteAccount = async () => {
                     "Save Changes"
                   )}
                 </Button>
+                </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
