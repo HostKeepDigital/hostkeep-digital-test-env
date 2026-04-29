@@ -266,6 +266,9 @@ export default function HostDashboard() {
   useEffect(() => {
     if (!selectedPropertyId && properties.length > 0) {
       setSelectedPropertyId(properties[0].id);
+    } else if (properties.length === 0) {
+      // Reset selected property when all properties are deleted
+      setSelectedPropertyId(null);
     }
   }, [properties, selectedPropertyId]);
 
@@ -281,16 +284,6 @@ export default function HostDashboard() {
       )}
 
       <div className="max-w-7xl mx-auto px-3 py-3 md:px-6 md:py-6">
-        {/* Awaiting Docs / Approved Banner */}
-        {(isAwaitingDocs || isApproved) && (
-          <div className="mb-6 p-4 rounded-lg border-l-4 border-green-500 bg-green-50">
-            <p className="text-sm text-green-800">
-              {isApproved
-                ? <><strong>Documents Accepted.</strong> Your property is now publicly visible on HostKeep.</>
-                : <><strong>Documents Submitted.</strong> Our team will review your documents within 24–48 hours. You can manage your listing now but it won't be publicly visible until approved.</>}
-            </p>
-          </div>
-        )}
 
         {/* Attempt 1 Banner */}
         {isAttempt1 && (
@@ -383,25 +376,36 @@ export default function HostDashboard() {
         )}
 
         {/* Subscription Banner */}
-        {(!subscription || subscription.status === "trial") && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-r from-teal-600 to-emerald-600 rounded-xl p-4 text-white mb-4"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h3 className="text-sm font-semibold">
-                  {subscription ? "Your trial ends soon" : "Start your hosting journey"}
-                </h3>
-                <p className="text-xs text-teal-100">Subscribe to list properties and start earning</p>
-              </div>
-              <Link to={createPageUrl("Subscription")} className="flex-shrink-0">
-                <Button size="sm" className="bg-white text-teal-700 hover:bg-teal-50 h-8 text-xs">View Plans</Button>
-              </Link>
-            </div>
-          </motion.div>
-        )}
+         {(!subscription || subscription.status === "trial") && (
+           <motion.div
+             initial={{ opacity: 0, y: -10 }}
+             animate={{ opacity: 1, y: 0 }}
+             className="bg-gradient-to-r from-teal-600 to-emerald-600 rounded-xl p-4 text-white mb-4"
+           >
+             <div className="flex items-center justify-between gap-3">
+               <div>
+                 <h3 className="text-sm font-semibold">
+                   {subscription ? "Your trial ends soon" : "Start your hosting journey"}
+                 </h3>
+                 <p className="text-xs text-teal-100">Subscribe to list properties and start earning</p>
+               </div>
+               <Link to={createPageUrl("Subscription")} className="flex-shrink-0">
+                 <Button size="sm" className="bg-white text-teal-700 hover:bg-teal-50 h-8 text-xs">View Plans</Button>
+               </Link>
+             </div>
+           </motion.div>
+         )}
+
+        {/* Awaiting Docs / Approved Banner — only show if property exists */}
+         {(isAwaitingDocs || isApproved) && properties.length > 0 && (
+           <div className="mb-6 p-4 rounded-lg border-l-4 border-green-500 bg-green-50">
+             <p className="text-sm text-green-800">
+               {isApproved
+                 ? <><strong>Documents Accepted.</strong> Your property is now publicly visible on HostKeep.</>
+                 : <><strong>Documents Submitted.</strong> Our team will review your documents within 24–48 hours. You can manage your listing now but it won't be publicly visible until approved.</>}
+             </p>
+           </div>
+         )}
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
