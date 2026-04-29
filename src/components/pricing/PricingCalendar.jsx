@@ -5,16 +5,23 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Sparkles } from "l
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-// UK School Holidays & Half-term Breaks (actual dates only - buffers added at render time)
+// UK School Holidays & Half-term Breaks — England (actual dates only - buffers added at render time)
+// Sources: eparenting.co.uk, skyparksecure.com, gov.uk — verified April 2026
 const UK_SCHOOL_HOLIDAYS_RAW = [
-  { label: "Christmas 2025", start: new Date(2025, 11, 15), end: new Date(2026, 0, 5), boost: 1.30, bankHoliday: false },
-  { label: "Half-term (Feb)", start: new Date(2026, 1, 16), end: new Date(2026, 1, 20), boost: 1.15, bankHoliday: false },
-  { label: "Easter", start: new Date(2026, 3, 6), end: new Date(2026, 3, 20), boost: 1.25, bankHoliday: false },
-  { label: "Half-term (May)", start: new Date(2026, 4, 25), end: new Date(2026, 4, 29), boost: 1.20, bankHoliday: true },
-  { label: "Summer", start: new Date(2026, 6, 15), end: new Date(2026, 8, 1), boost: 1.35, bankHoliday: false },
-  { label: "Half-term (Oct)", start: new Date(2026, 9, 19), end: new Date(2026, 9, 23), boost: 1.20, bankHoliday: false },
-  { label: "Halloween", start: new Date(2026, 10, 1), end: new Date(2026, 10, 1), boost: 1.15, bankHoliday: false },
-  { label: "Christmas 2026", start: new Date(2026, 11, 15), end: new Date(2027, 0, 5), boost: 1.30, bankHoliday: false },
+  // 2025-2026 Academic Year
+  { label: "Oct Half Term",   start: new Date(2025, 9, 27),  end: new Date(2025, 9, 31),  boost: 1.20, bankHoliday: false },
+  { label: "Christmas",       start: new Date(2025, 11, 22), end: new Date(2026, 0, 2),   boost: 1.30, bankHoliday: false },
+  { label: "Feb Half Term",   start: new Date(2026, 1, 16),  end: new Date(2026, 1, 20),  boost: 1.15, bankHoliday: false },
+  { label: "Easter",          start: new Date(2026, 2, 30),  end: new Date(2026, 3, 10),  boost: 1.25, bankHoliday: false },
+  { label: "May Half Term",   start: new Date(2026, 4, 25),  end: new Date(2026, 4, 29),  boost: 1.20, bankHoliday: true  },
+  { label: "Summer",          start: new Date(2026, 6, 21),  end: new Date(2026, 8, 1),   boost: 1.35, bankHoliday: false },
+  // 2026-2027 Academic Year
+  { label: "Oct Half Term",   start: new Date(2026, 9, 26),  end: new Date(2026, 9, 30),  boost: 1.20, bankHoliday: false },
+  { label: "Christmas",       start: new Date(2026, 11, 21), end: new Date(2027, 0, 1),   boost: 1.30, bankHoliday: false },
+  { label: "Feb Half Term",   start: new Date(2027, 1, 15),  end: new Date(2027, 1, 19),  boost: 1.15, bankHoliday: false },
+  { label: "Easter",          start: new Date(2027, 2, 26),  end: new Date(2027, 3, 9),   boost: 1.25, bankHoliday: false },
+  { label: "May Half Term",   start: new Date(2027, 4, 31),  end: new Date(2027, 5, 4),   boost: 1.20, bankHoliday: true  },
+  { label: "Summer",          start: new Date(2027, 6, 22),  end: new Date(2027, 8, 1),   boost: 1.35, bankHoliday: false },
 ];
 
 // Expand each holiday window to include the Sat/Sun before start and after end.
