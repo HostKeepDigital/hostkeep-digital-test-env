@@ -143,12 +143,18 @@ export default function SeasonManager({ seasons = [], onUpdate }) {
         start_date: formatDate(start),
         end_date: formatDate(end),
         nightly_rate: Math.round(baseRate * holiday.rate),
-        weekend_modifier: 0
+        weekend_modifier: 0,
+        is_autofilled: true
       });
     });
 
     // Trigger callback to update seasons
     onUpdate(newSeasons);
+  };
+
+  const handleRemoveAutofilled = () => {
+    const filtered = seasons.filter(s => !s.is_autofilled);
+    onUpdate(filtered);
   };
 
   const hasAutofilled = false;
@@ -170,6 +176,16 @@ export default function SeasonManager({ seasons = [], onUpdate }) {
               <Zap className="w-4 h-4 mr-2" />
               Autofill Holidays
             </Button>
+            {seasons.some(s => s.is_autofilled) && (
+              <Button
+                onClick={handleRemoveAutofilled}
+                variant="ghost"
+                size="sm"
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                Remove Autofilled
+              </Button>
+            )}
             <Button onClick={() => setShowForm(!showForm)} size="sm">
               <Plus className="w-4 h-4 mr-2" />
               Add Season
