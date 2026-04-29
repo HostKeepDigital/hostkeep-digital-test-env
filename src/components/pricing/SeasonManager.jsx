@@ -3,19 +3,28 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, Edit, Zap } from "lucide-react";
+import { Plus, Trash2, Edit, Zap, Info, ChevronDown, ChevronUp } from "lucide-react";
 import { format } from "date-fns";
 
-// UK School Holidays with ±3 day buffers
 const UK_SCHOOL_HOLIDAYS = [
-  { label: "Christmas 2025", start: new Date(2025, 11, 15), end: new Date(2026, 0, 5), rate: 1.30 },
-  { label: "Half-term (Feb)", start: new Date(2026, 1, 16), end: new Date(2026, 1, 20), rate: 1.15 },
-  { label: "Easter", start: new Date(2026, 3, 6), end: new Date(2026, 3, 20), rate: 1.25 },
-  { label: "Half-term (May)", start: new Date(2026, 4, 25), end: new Date(2026, 4, 29), rate: 1.20 },
-  { label: "Summer", start: new Date(2026, 6, 15), end: new Date(2026, 8, 1), rate: 1.35 },
-  { label: "Half-term (Oct)", start: new Date(2026, 9, 19), end: new Date(2026, 9, 23), rate: 1.20 },
-  { label: "Halloween", start: new Date(2026, 10, 1), end: new Date(2026, 10, 1), rate: 1.15 },
-  { label: "Christmas 2026", start: new Date(2026, 11, 15), end: new Date(2027, 0, 5), rate: 1.30 },
+  { label: "Christmas 2025", start: new Date(2025, 11, 22), end: new Date(2026, 0, 2), rate: 1.30 },
+  { label: "Half-term (Feb 2026)", start: new Date(2026, 1, 16), end: new Date(2026, 1, 20), rate: 1.15 },
+  { label: "Easter 2026", start: new Date(2026, 3, 6), end: new Date(2026, 3, 17), rate: 1.25 },
+  { label: "Half-term (May 2026)", start: new Date(2026, 4, 25), end: new Date(2026, 4, 29), rate: 1.20 },
+  { label: "Summer 2026", start: new Date(2026, 6, 20), end: new Date(2026, 8, 4), rate: 1.35 },
+  { label: "Half-term (Oct 2026)", start: new Date(2026, 9, 19), end: new Date(2026, 9, 23), rate: 1.20 },
+  { label: "Christmas 2026", start: new Date(2026, 11, 21), end: new Date(2027, 0, 2), rate: 1.30 },
+];
+
+const UK_BANK_HOLIDAYS = [
+  new Date(2026, 0, 1),
+  new Date(2026, 3, 3),
+  new Date(2026, 3, 6),
+  new Date(2026, 4, 4),
+  new Date(2026, 4, 25),
+  new Date(2026, 7, 31),
+  new Date(2026, 11, 25),
+  new Date(2026, 11, 28),
 ];
 
 const formatDate = (date) => date.toISOString().split('T')[0];
@@ -23,6 +32,7 @@ const formatDate = (date) => date.toISOString().split('T')[0];
 export default function SeasonManager({ seasons = [], onUpdate }) {
   const [editingSeason, setEditingSeason] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [showBoostInfo, setShowBoostInfo] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     start_date: "",
@@ -74,24 +84,74 @@ export default function SeasonManager({ seasons = [], onUpdate }) {
   };
 
   const handleAutofillHolidays = () => {
-    // Filter holidays from today onwards (up to 1 year from now)
     const today = new Date();
-    const oneYearFromNow = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate());
-    
     const baseRate = seasons.length > 0 ? seasons[0].nightly_rate : 100;
+
+    const isBankHoliday = (date) =>
+      UK_BANK_HOLIDAYS.some(bh =>
+        bh.getFullYear() === date.getFullYear() &&
+        bh.getMonth() === date.getMonth() &&
+        bh.getDate() === date.getDate()
+      );
+
+    const precedingSaturday = (date) => {
+      const d = new Date(date);
+      const day = d.getDay();
+      const daysBack = day === 6 ? 0 : day === 0 ? 1 : day + 1;
+      d.setDate(d.getDate() - daysBack);
+      return d;
+    };
+
+    const followingSunday = (date) => {
+      const d = new Date(date);
+      const day = d.getDay();
+      const daysForward = day === 0 ? 0 : 7 - day;
+      d.setDate(d.getDate() + daysForward);
+      const nextMonday = new Date(d);
+      nextMonday.setDate(nextMonday.getDate() + 1);
+      if (isBankHoliday(nextMonday)) return nextMonday;
+      return d;
+    };
+
+    const isFullWeek = (start, end) => {
+      const msPerDay = 86400000;
+      let weekdays = 0;
+      const d = new Date(start);
+      while (d <= end) {
+        const day = d.getDay();
+        if (day !== 0 && day !== 6) weekdays++;
+        d.setTime(d.getTime() + msPerDay);
+      }
+      return weekdays >= 5;
+    };
+
     const futureHolidays = UK_SCHOOL_HOLIDAYS.filter(h => h.end >= today);
-    
-    const newSeasons = futureHolidays.map(holiday => ({
-      id: `holiday-${holiday.label}-${Date.now()}`,
-      name: holiday.label,
-      start_date: formatDate(holiday.start),
-      end_date: formatDate(holiday.end),
-      nightly_rate: Math.round(baseRate * holiday.rate),
-      weekend_modifier: 0,
-      min_nights: 1
-    }));
-    onUpdate([...seasons, ...newSeasons]);
+
+    const newSeasons = futureHolidays.map(holiday => {
+      let start = new Date(holiday.start);
+      let end = new Date(holiday.end);
+
+      if (isFullWeek(start, end)) {
+        start = precedingSaturday(start);
+        end = followingSunday(end);
+      }
+
+      return {
+        id: `holiday-${holiday.label}-${Date.now()}-${Math.random()}`,
+        name: holiday.label,
+        start_date: formatDate(start),
+        end_date: formatDate(end),
+        nightly_rate: Math.round(baseRate * holiday.rate),
+        weekend_modifier: 0,
+        min_nights: 2,
+      };
+    });
+
+    const manualSeasons = seasons.filter(s => !UK_SCHOOL_HOLIDAYS.some(h => s.name === h.label));
+    onUpdate([...manualSeasons, ...newSeasons]);
   };
+
+  const hasAutofilled = seasons.some(s => s.id?.startsWith("holiday-"));
 
   return (
     <Card>
@@ -102,9 +162,19 @@ export default function SeasonManager({ seasons = [], onUpdate }) {
             <CardDescription>Define pricing for peak seasons, holidays, and special periods</CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            <Button onClick={handleAutofillHolidays} variant="outline" size="sm">
+            <Button
+              onClick={() => {
+                if (hasAutofilled) {
+                  onUpdate(seasons.filter(s => !s.id?.startsWith("holiday-")));
+                } else {
+                  handleAutofillHolidays();
+                }
+              }}
+              variant={hasAutofilled ? "destructive" : "outline"}
+              size="sm"
+            >
               <Zap className="w-4 h-4 mr-2" />
-              Autofill Holidays
+              {hasAutofilled ? "Remove Autofill Holidays" : "Autofill Holidays"}
             </Button>
             <Button onClick={() => setShowForm(!showForm)} size="sm">
               <Plus className="w-4 h-4 mr-2" />
@@ -114,6 +184,53 @@ export default function SeasonManager({ seasons = [], onUpdate }) {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Autofill price boost info panel */}
+        <div className="rounded-lg border border-teal-200 bg-teal-50">
+          <button
+            onClick={() => setShowBoostInfo(prev => !prev)}
+            className="w-full flex items-center justify-between px-4 py-3 text-left"
+          >
+            <div className="flex items-center gap-2">
+              <Info className="w-4 h-4 text-teal-600 flex-shrink-0" />
+              <span className="text-sm font-medium text-teal-800">How autofill pricing works</span>
+            </div>
+            {showBoostInfo
+              ? <ChevronUp className="w-4 h-4 text-teal-600" />
+              : <ChevronDown className="w-4 h-4 text-teal-600" />}
+          </button>
+          {showBoostInfo && (
+            <div className="px-4 pb-4 space-y-3">
+              <p className="text-xs text-teal-700">
+                When you press <strong>Autofill Holidays</strong>, HostKeep automatically creates seasonal pricing periods based on UK school holidays. Each period is priced as a multiplier of your base nightly rate.
+              </p>
+              <div className="space-y-1.5">
+                {[
+                  { label: "Summer holidays", boost: "35%", detail: "Late July to early September — peak demand period" },
+                  { label: "Christmas & New Year", boost: "30%", detail: "Mid-December to early January — both years" },
+                  { label: "Easter", boost: "25%", detail: "Good Friday through Easter Monday week" },
+                  { label: "May half-term", boost: "20%", detail: "Late May bank holiday week" },
+                  { label: "October half-term", boost: "20%", detail: "Third week of October" },
+                  { label: "February half-term", boost: "15%", detail: "Mid-February school break" },
+                ].map(({ label, boost, detail }) => (
+                  <div key={label} className="flex items-start justify-between gap-4 py-1.5 border-b border-teal-100 last:border-0">
+                    <div>
+                      <p className="text-xs font-medium text-teal-900">{label}</p>
+                      <p className="text-xs text-teal-600">{detail}</p>
+                    </div>
+                    <span className="text-xs font-semibold text-teal-700 whitespace-nowrap">+{boost}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-teal-600 pt-1">
+                Each holiday period is automatically extended to include the preceding weekend (Saturday–Sunday before) and the following weekend (Saturday–Sunday after), so guests arriving or departing around the holiday are captured at the correct rate. This only applies to full-week holidays. If a bank holiday falls on the Monday after a holiday week, that Monday is included too.
+              </p>
+              <p className="text-xs text-teal-600">
+                All rates are calculated from your base nightly rate. You can edit or delete any autofilled period after it has been created.
+              </p>
+            </div>
+          )}
+        </div>
+
         {showForm && (
           <div className="p-4 bg-gray-50 rounded-lg space-y-4">
             <div>
