@@ -66,29 +66,36 @@ export default function Settings() {
   });
 
   useEffect(() => {
-    if (!user?.email) return;
+  if (!user?.email) return;
 
-    base44.functions.invoke("getUserProfile", { email: user.email, user_id: user.id || null })
-      .then((res) => {
-        const u = res.data?.profile;
-        if (!u) return;
-        setProfile({
-          forename: u.forename || "",
-          middle_name: u.middle_name || "",
-          surname: u.surname || "",
-          phone: u.phone || "",
-          location: u.location || "",
-        });
-        if (u.notification_preferences && typeof u.notification_preferences === "object") {
-          setNotifications((prev) => ({ ...prev, ...u.notification_preferences }));
-        }
-      })
-      .catch(() => {});
+  // Load name fields directly from AuthContext — already populated by checkSession
+  setProfile((prev) => ({
+    ...prev,
+    forename: user.forename || "",
+    middle_name: user.middle_name || "",
+    surname: user.surname || "",
+  }));
 
-    if (user?.id) {
-      base44.entities.UserRole.filter({ user_id: user.id }).then(setUserRoles).catch(() => {});
-    }
-  }, [user?.email]);
+  // Load phone and location from User entity via getUserProfile
+  base44.functions.invoke("getUserProfile", { email: user.email, user_id: user.id || null })
+    .then((res) => {
+      const u = res.data?.profile;
+      if (!u) return;
+      setProfile((prev) => ({
+        ...prev,
+        phone: u.phone || "",
+        location: u.location || "",
+      }));
+      if (u.notification_preferences && typeof u.notification_preferences === "object") {
+        setNotifications((prev) => ({ ...prev, ...u.notification_preferences }));
+      }
+    })
+    .catch(() => {});
+
+  if (user?.id) {
+    base44.entities.UserRole.filter({ user_id: user.id }).then(setUserRoles).catch(() => {});
+  }
+}, [user?.email]);
 
   const hasPaymentsRole = userRoles.some(
     (r) =>
