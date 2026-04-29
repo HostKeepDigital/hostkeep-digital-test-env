@@ -22,11 +22,13 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: "session_expired" }, { status: 401 });
     }
 
-    if (!session.user_id) {
-      return Response.json({ success: false, error: "no_user_id" }, { status: 400 });
+    // Look up User by email (reliable — user_id on session may be FoundingMember ID)
+    const userRecords = await serviceRole.entities.User.filter({ email: session.email });
+    const userRecord = userRecords?.[0];
+    if (!userRecord) {
+      return Response.json({ success: false, error: "user_not_found" }, { status: 404 });
     }
 
-    // Unified: always write to User entity
     const updates = {};
     if (forename != null) updates.forename = String(forename).trim();
     if (middle_name != null) updates.middle_name = String(middle_name).trim();
@@ -38,7 +40,7 @@ Deno.serve(async (req) => {
     if (location != null) updates.location = String(location).trim();
 
     if (Object.keys(updates).length > 0) {
-      await serviceRole.entities.User.update(session.user_id, updates);
+      await serviceRole.entities.User.update(userRecord.id, updates);
     }
 
     return Response.json({ success: true });
