@@ -60,12 +60,10 @@ Deno.serve(async (req) => {
     }
 
     // Resolve real User entity ID by email
-    try {
-      const userRecords = await serviceRole.entities.User.filter({ email: normalisedEmail });
-      if (userRecords?.[0]) {
-        userId = userRecords[0].id;
-      }
-    } catch (_) {}
+    // Read user_id directly from credentials — set at signup
+    if (cred.user_id) {
+      userId = cred.user_id;
+    }
 
     // Fallback: use user_id stored on FoundingMember record
     if (!userId && members?.[0]?.user_id) {
