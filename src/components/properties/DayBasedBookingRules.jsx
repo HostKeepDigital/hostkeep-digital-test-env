@@ -127,7 +127,7 @@ useEffect(() => {
             </div>
           </div>
 
-          <div className="text-sm text-gray-600 bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+          <div className="text-sm text-gray-600 dark:text-gray-300 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-4">
             <p className="font-medium mb-1">How it works:</p>
             <ul className="list-disc list-inside space-y-1 text-xs">
               <li>Toggle each day on/off to control bookability</li>
@@ -181,7 +181,7 @@ useEffect(() => {
                       </div>
                     </div>
                     {rules[day].rule_type === "fixed_or_multiples" && (
-                      <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-2 py-1">
+                      <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded px-2 py-1">
                         Min/max days are not used when Fixed days & Multiples is selected — exact durations are controlled below.
                       </p>
                     )}
