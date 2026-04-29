@@ -45,13 +45,15 @@ Deno.serve(async (req) => {
     let surname = null;
     let is_founding_member = false;
     try {
-      if (session.user_id) {
-        const userRecord = await serviceRole.entities.User.get(session.user_id);
-        if (userRecord?.signup_postcode) signup_postcode = userRecord.signup_postcode;
-        if (userRecord?.forename) forename = userRecord.forename;
-        if (userRecord?.middle_name) middle_name = userRecord.middle_name;
-        if (userRecord?.surname) surname = userRecord.surname;
-        is_founding_member = userRecord?.is_founding_member || false;
+      // Filter by email — more reliable than .get() for custom User entity
+      const userRecords = await serviceRole.entities.User.filter({ email: session.email });
+      const userRecord = userRecords?.[0] || null;
+      if (userRecord) {
+        if (userRecord.signup_postcode) signup_postcode = userRecord.signup_postcode;
+        if (userRecord.forename) forename = userRecord.forename;
+        if (userRecord.middle_name) middle_name = userRecord.middle_name;
+        if (userRecord.surname) surname = userRecord.surname;
+        is_founding_member = userRecord.is_founding_member || false;
       }
     } catch (_) {}
 

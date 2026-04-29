@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 Deno.serve(async (req) => {
   try {
@@ -6,15 +6,24 @@ Deno.serve(async (req) => {
     const serviceRole = base44.asServiceRole;
     const { email, user_id } = await req.json();
 
-    let u = null;
-
-    if (user_id) {
-      try { u = await serviceRole.entities.User.get(user_id); } catch (_) {}
+    if (!email && !user_id) {
+      return Response.json({ success: false, error: "email or user_id required" }, { status: 400 });
     }
 
-    if (!u && email) {
+    let u = null;
+
+    // Always filter by email — more reliable than .get() for custom User entity
+    if (email) {
       const records = await serviceRole.entities.User.filter({ email: email.toLowerCase().trim() });
       u = records?.[0] || null;
+    }
+
+    // Fallback: try filter by id field if email lookup failed
+    if (!u && user_id) {
+      try {
+        const records = await serviceRole.entities.User.filter({ id: user_id });
+        u = records?.[0] || null;
+      } catch (_) {}
     }
 
     if (!u) return Response.json({ success: true, profile: null });

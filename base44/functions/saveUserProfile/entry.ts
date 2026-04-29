@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 Deno.serve(async (req) => {
   try {
@@ -10,6 +10,10 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: "forename and surname are required" }, { status: 400 });
     }
 
+    if (!email) {
+      return Response.json({ success: false, error: "email is required" }, { status: 400 });
+    }
+
     const updates = {
       forename,
       middle_name: middle_name || "",
@@ -19,19 +23,14 @@ Deno.serve(async (req) => {
       location: location || "",
     };
 
-    if (user_id) {
-      try {
-        await serviceRole.entities.User.update(user_id, updates);
-      } catch (_) {
-        await serviceRole.entities.User.create({ email, ...updates });
-      }
+    // Always look up by email — reliable for custom User entity
+    const existing = await serviceRole.entities.User.filter({ email: email.toLowerCase().trim() });
+
+    if (existing && existing.length > 0) {
+      await serviceRole.entities.User.update(existing[0].id, updates);
     } else {
-      const existing = await serviceRole.entities.User.filter({ email });
-      if (existing.length > 0) {
-        await serviceRole.entities.User.update(existing[0].id, updates);
-      } else {
-        await serviceRole.entities.User.create({ email, ...updates });
-      }
+      // Create new record if none found
+      await serviceRole.entities.User.create({ email: email.toLowerCase().trim(), ...updates });
     }
 
     return Response.json({ success: true });
