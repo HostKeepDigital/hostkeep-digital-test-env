@@ -178,11 +178,27 @@ export default function ExportPricing({ pricingSettings, property, bookings = []
       doc.line(0, 48, pageW, 48);
       doc.line(0, 70, pageW, 70);
 
+      const getMinStay = () => {
+        // Check if property has day-based booking rules with fixed values
+        if (property?.booking_rules && property.day_based_restrictions_enabled) {
+          let maxFixed = 0;
+          Object.values(property.booking_rules).forEach(rule => {
+            if (rule.enabled && rule.rule_type === 'fixed' && rule.fixed_values?.length > 0) {
+              maxFixed = Math.max(maxFixed, ...rule.fixed_values);
+            }
+          });
+          if (maxFixed > 1) {
+            return `${maxFixed} nights`;
+          }
+        }
+        return property?.minimum_stay ? `${property.minimum_stay} nights` : "—";
+      };
+
       const stats = [
         { label: "Base Rate", value: `£${pricingSettings?.base_rate || 0}/night` },
         { label: "Weekend Rate", value: pricingSettings?.weekend_rate ? `£${pricingSettings.weekend_rate}/night` : "—" },
         { label: "Cleaning Fee", value: property?.cleaning_fee ? `£${property.cleaning_fee}` : "—" },
-        { label: "Min Stay", value: property?.minimum_stay ? `${property.minimum_stay} nights` : "—" },
+        { label: "Min Stay", value: getMinStay() },
         { label: "Seasons", value: String(pricingSettings?.seasons?.length || 0) },
         { label: "Overrides", value: String(Object.keys(pricingSettings?.date_overrides || {}).length) },
       ];
