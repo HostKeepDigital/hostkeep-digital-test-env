@@ -489,20 +489,20 @@ export default function Subscription() {
             animate={{ opacity: 1, y: 0 }}
             className={`rounded-2xl p-5 mb-8 text-center border-2 ${
               upgradeParam === 'portfolio'
-                ? 'bg-amber-50 border-amber-300'
+                ? 'bg-amber-50 dark:bg-amber-950 border-amber-300 dark:border-amber-700'
                 : upgradeParam === 'multi'
-                ? 'bg-violet-50 border-violet-300'
-                : 'bg-teal-50 border-teal-300'
+                ? 'bg-violet-50 dark:bg-violet-950 border-violet-300 dark:border-violet-700'
+                : 'bg-teal-50 dark:bg-teal-950 border-teal-300 dark:border-teal-700'
             }`}
           >
-            <p className="text-lg font-bold text-gray-900 mb-1">
+            <p className="text-lg font-bold text-gray-900 dark:text-white mb-1">
               {upgradeParam === 'portfolio'
                 ? '🚀 Time to upgrade to Portfolio Host'
                 : upgradeParam === 'multi'
                 ? '🏘️ Time to upgrade to Multi Property Host'
                 : '🎉 Your property has been created!'}
             </p>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
               {upgradeParam === 'portfolio'
                 ? 'You have 6 or more properties. Please upgrade to Portfolio Host to continue.'
                 : upgradeParam === 'multi'
