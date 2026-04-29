@@ -133,11 +133,17 @@ Deno.serve(async (req) => {
 
     // Ensure User entity exists so setOnboardingPassword can find it
     const existingUsers = await base44.asServiceRole.entities.User.filter({ email });
-    if (!existingUsers?.[0]) {
-      await base44.asServiceRole.entities.User.create({
+    let userRecord = existingUsers?.[0];
+    if (!userRecord) {
+      userRecord = await base44.asServiceRole.entities.User.create({
         email,
         full_name: member.full_name || email,
         password: generateToken(),
+      });
+    }
+    if (userRecord?.id) {
+      await base44.asServiceRole.entities.FoundingMember.update(member_id, {
+        user_id: userRecord.id,
       });
     }
 
