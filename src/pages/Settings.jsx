@@ -83,6 +83,9 @@ export default function Settings() {
       if (!u) return;
       setProfile((prev) => ({
         ...prev,
+        forename: u.forename || prev.forename || "",
+        middle_name: u.middle_name || prev.middle_name || "",
+        surname: u.surname || prev.surname || "",
         phone: u.phone || "",
         location: u.location || "",
       }));
