@@ -1,29 +1,56 @@
 import { useState } from "react";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, addMonths, subMonths, startOfWeek, endOfWeek, isSameDay, parseISO, isWithinInterval } from "date-fns";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, addMonths, subMonths, startOfWeek, endOfWeek, isSameDay, parseISO, isWithinInterval, isBefore, isToday, startOfDay, addDays, subDays } from "date-fns";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-// UK School Holidays & Half-term Breaks (actual dates only - buffers added at application time)
-const UK_SCHOOL_HOLIDAYS = [
-  // Christmas 2025/2026
-  { label: "Christmas 2025", start: new Date(2025, 11, 15), end: new Date(2026, 0, 5), boost: 1.30 },
-  // Half-term February 2026
-  { label: "Half-term (Feb)", start: new Date(2026, 1, 16), end: new Date(2026, 1, 20), boost: 1.15 },
-  // Easter 2026
-  { label: "Easter", start: new Date(2026, 3, 6), end: new Date(2026, 3, 20), boost: 1.25 },
-  // Half-term May 2026
-  { label: "Half-term (May)", start: new Date(2026, 4, 25), end: new Date(2026, 4, 29), boost: 1.20 },
-  // Summer 2026
-  { label: "Summer", start: new Date(2026, 6, 15), end: new Date(2026, 8, 1), boost: 1.35 },
-  // Half-term October 2026
-  { label: "Half-term (Oct)", start: new Date(2026, 9, 19), end: new Date(2026, 9, 23), boost: 1.20 },
-  // Halloween 2026
-  { label: "Halloween", start: new Date(2026, 10, 1), end: new Date(2026, 10, 1), boost: 1.15 },
-  // Christmas 2026/2027
-  { label: "Christmas 2026", start: new Date(2026, 11, 15), end: new Date(2027, 0, 5), boost: 1.30 },
+// UK School Holidays & Half-term Breaks (actual dates only - buffers added at render time)
+const UK_SCHOOL_HOLIDAYS_RAW = [
+  { label: "Christmas 2025", start: new Date(2025, 11, 15), end: new Date(2026, 0, 5), boost: 1.30, bankHoliday: false },
+  { label: "Half-term (Feb)", start: new Date(2026, 1, 16), end: new Date(2026, 1, 20), boost: 1.15, bankHoliday: false },
+  { label: "Easter", start: new Date(2026, 3, 6), end: new Date(2026, 3, 20), boost: 1.25, bankHoliday: false },
+  { label: "Half-term (May)", start: new Date(2026, 4, 25), end: new Date(2026, 4, 29), boost: 1.20, bankHoliday: true },
+  { label: "Summer", start: new Date(2026, 6, 15), end: new Date(2026, 8, 1), boost: 1.35, bankHoliday: false },
+  { label: "Half-term (Oct)", start: new Date(2026, 9, 19), end: new Date(2026, 9, 23), boost: 1.20, bankHoliday: false },
+  { label: "Halloween", start: new Date(2026, 10, 1), end: new Date(2026, 10, 1), boost: 1.15, bankHoliday: false },
+  { label: "Christmas 2026", start: new Date(2026, 11, 15), end: new Date(2027, 0, 5), boost: 1.30, bankHoliday: false },
 ];
+
+// Expand each holiday window to include the Sat/Sun before start and after end.
+// For bank holiday weekends, also include the Monday after.
+function expandHolidayWindow(h) {
+  let start = new Date(h.start);
+  let end = new Date(h.end);
+
+  // Roll start back to the nearest Saturday (or earlier)
+  const startDay = start.getDay(); // 0=Sun,1=Mon,...,6=Sat
+  if (startDay !== 6) {
+    // days to go back to previous Saturday
+    const daysBack = startDay === 0 ? 1 : startDay + 1;
+    start = subDays(start, daysBack);
+  }
+
+  // Roll end forward to the nearest Sunday (or Monday for bank holidays)
+  const endDay = end.getDay();
+  if (h.bankHoliday) {
+    // extend to Monday
+    if (endDay !== 1) {
+      const daysForward = endDay === 0 ? 1 : (8 - endDay) % 7 + 1;
+      end = addDays(end, daysForward);
+    }
+  } else {
+    // extend to Sunday
+    if (endDay !== 0) {
+      const daysForward = 7 - endDay;
+      end = addDays(end, daysForward);
+    }
+  }
+
+  return { ...h, start, end };
+}
+
+const UK_SCHOOL_HOLIDAYS = UK_SCHOOL_HOLIDAYS_RAW.map(expandHolidayWindow);
 
 export default function PricingCalendar({ pricingSettings, onDateClick, selectedDates = [], onApplyHolidayPricing = null, currentMonth, onMonthChange }) {
   const [internalMonth, setInternalMonth] = useState(new Date());
@@ -161,23 +188,27 @@ export default function PricingCalendar({ pricingSettings, onDateClick, selected
             const price = calculatePrice(day);
             const isSelected = selectedDates.some(d => isSameDay(parseISO(d), day));
             const holiday = getHolidayOverride(day);
+            const isPast = isBefore(startOfDay(day), startOfDay(new Date()));
+            const isTodayDate = isToday(day);
             const colorClass = getPriceColor(day);
-            
+
             return (
               <button
                 key={day.toString()}
                 onClick={() => onDateClick?.(format(day, 'yyyy-MM-dd'))}
                 className={`
                   p-2 rounded-lg border text-xs transition-all
-                  ${!isSameMonth(day, activeMonth) ? 'opacity-30' : 'opacity-100'}
+                  ${!isSameMonth(day, activeMonth) ? 'opacity-20' : ''}
+                  ${isPast && !isTodayDate ? 'opacity-40 bg-gray-200 text-gray-400 border-gray-300 saturate-0' : ''}
+                  ${!isPast && !isTodayDate ? colorClass : ''}
+                  ${isTodayDate ? 'bg-teal-500 text-white border-teal-600 font-bold ring-2 ring-teal-400' : ''}
                   ${isSelected ? 'ring-2 ring-teal-500' : ''}
-                  ${colorClass}
                   hover:shadow-md hover:scale-105
                 `}
               >
                 <div className="font-semibold">{format(day, 'd')}</div>
                 <div className="font-bold">£{price}</div>
-                {holiday && (
+                {holiday && !isPast && (
                   <div className="text-xs font-semibold mt-0.5 truncate leading-tight">
                     {holiday.label}
                   </div>
@@ -209,6 +240,14 @@ export default function PricingCalendar({ pricingSettings, onDateClick, selected
             <div className="flex items-center gap-1.5">
               <div className="w-5 h-5 rounded bg-orange-100 border-2 border-orange-300"></div>
               <span>School Holiday</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-5 h-5 rounded bg-teal-500 border-2 border-teal-600"></div>
+              <span>Today</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-5 h-5 rounded bg-gray-200 border-2 border-gray-300 opacity-40"></div>
+              <span>Past Date</span>
             </div>
             </div>
           <div className="pt-2 border-t border-gray-200">
