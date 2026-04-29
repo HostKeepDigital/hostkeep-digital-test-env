@@ -59,7 +59,7 @@ export default function DayBasedBookingRules({ value, onChange }) {
     });
     return defaultRules;
   });
-  const [advanceNoticeDays, setAdvanceNoticeDays] = useState(value?.advance_notice_days ?? DEFAULT_ADVANCE_NOTICE);
+  const [advanceNoticeDays, setAdvanceNoticeDays] = useState(value?.advance_notice_days ?? "");
   const [errors, setErrors] = useState({});
 
 const isMounted = useRef(false);
@@ -112,11 +112,15 @@ useEffect(() => {
                 min="0"
                 max="90"
                 value={advanceNoticeDays}
-                onChange={(e) => setAdvanceNoticeDays(parseInt(e.target.value) || 0)}
-                className="h-9 w-28"
+                onChange={(e) => setAdvanceNoticeDays(e.target.value === "" ? "" : parseInt(e.target.value))}
+                placeholder="e.g. 2"
+                required
+                className={`h-9 w-28 ${advanceNoticeDays === "" ? "border-red-300" : ""}`}
               />
               <span className="text-sm text-gray-600">
-                {advanceNoticeDays === 0
+                {advanceNoticeDays === "" ? (
+                  <span className="text-red-500">Required — please enter a value (0 = same-day allowed)</span>
+                ) : advanceNoticeDays === 0
                   ? "Guests can book for any date including today."
                   : `Guests must book at least ${advanceNoticeDays} day${advanceNoticeDays !== 1 ? "s" : ""} in advance.`}
               </span>
@@ -171,7 +175,7 @@ useEffect(() => {
                           type="number"
                           min="1"
                           value={rules[day].max_days}
-                          onChange={(e) => updateDayRule(day, "max_days", parseInt(e.target.value) || 28)}
+                          onChange={(e) => updateDayRule(day, "max_days", parseInt(e.target.value) || 1)}
                           className="h-9"
                           disabled={rules[day].rule_type === "fixed_or_multiples"}
                         />
