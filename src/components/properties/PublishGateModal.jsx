@@ -106,16 +106,6 @@ export default function PublishGateModal({ open, onClose, foundingMember }) {
                       </a>
                     </p>
                   )}
-                  {!user?.documents_submitted_at && (
-                    <Link to={createPageUrl("HostVerification")} className="mt-3 inline-block">
-                      <Button
-                        size="sm"
-                        className="bg-red-600 hover:bg-red-700 text-white"
-                      >
-                        Complete Identity Verification
-                      </Button>
-                    </Link>
-                  )}
                 </div>
               </div>
             </div>
