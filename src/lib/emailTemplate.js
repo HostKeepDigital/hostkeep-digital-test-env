@@ -54,7 +54,7 @@ export function buildEmail({ heading, body, buttonText, buttonUrl }) {
               <p style="margin:0;">
                 <a href="https://facebook.com/HostKeepDigital" style="text-decoration:none;margin-right:12px;display:inline-block;">
                   <img
-                    src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Facebook_Logo_%282019%29.png/600px-Facebook_Logo_%282019%29.png"
+                    src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/svgs/brands/facebook.svg"
                     alt="Facebook"
                     width="32"
                     height="32"
@@ -62,7 +62,7 @@ export function buildEmail({ heading, body, buttonText, buttonUrl }) {
                 </a>
                 <a href="https://instagram.com/hostkeepdigital" style="text-decoration:none;display:inline-block;">
                   <img
-                    src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Instagram_icon.png/600px-Instagram_icon.png"
+                    src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/svgs/brands/instagram.svg"
                     alt="Instagram"
                     width="32"
                     height="32"
