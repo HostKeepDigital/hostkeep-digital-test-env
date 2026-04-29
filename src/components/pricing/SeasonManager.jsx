@@ -173,7 +173,7 @@ export default function SeasonManager({ seasons = [], onUpdate }) {
                 onClick={handleRemoveAutofilled}
                 variant="outline"
                 size="sm"
-                className="border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
+                className="border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700 min-w-[200px]"
               >
                 <Zap className="w-4 h-4 mr-2" />
                 Remove Autofilled Holidays
@@ -183,6 +183,7 @@ export default function SeasonManager({ seasons = [], onUpdate }) {
                 onClick={handleAutofillHolidays}
                 variant="outline"
                 size="sm"
+                className="min-w-[200px]"
               >
                 <Zap className="w-4 h-4 mr-2" />
                 Autofill Holidays
