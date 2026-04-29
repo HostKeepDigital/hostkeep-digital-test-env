@@ -26,6 +26,8 @@ const DEFAULT_DAY_RULE = {
   multiple_of: null
 };
 
+const DEFAULT_ADVANCE_NOTICE = 0;
+
 const parseMultipleOf = (str) => {
   if (!str || !str.trim()) return { values: null, error: null };
   
@@ -57,13 +59,14 @@ export default function DayBasedBookingRules({ value, onChange }) {
     });
     return defaultRules;
   });
+  const [advanceNoticeDays, setAdvanceNoticeDays] = useState(value?.advance_notice_days ?? DEFAULT_ADVANCE_NOTICE);
   const [errors, setErrors] = useState({});
 
 const isMounted = useRef(false);
 useEffect(() => {
   if (!isMounted.current) { isMounted.current = true; return; }
-  if (typeof onChange === "function") onChange({ enabled, rules });
-}, [enabled, rules]);
+  if (typeof onChange === "function") onChange({ enabled, rules, advance_notice_days: advanceNoticeDays });
+}, [enabled, rules, advanceNoticeDays]);
 
   const updateDayRule = (day, field, val) => {
     setRules(prev => ({
@@ -100,6 +103,26 @@ useEffect(() => {
 
       {enabled && (
         <CardContent className="space-y-4">
+          <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-2">
+            <Label className="text-sm font-semibold text-gray-800">Minimum Advance Notice</Label>
+            <p className="text-xs text-gray-500">How many days in advance must guests book? Set to 0 to allow same-day bookings.</p>
+            <div className="flex items-center gap-3">
+              <Input
+                type="number"
+                min="0"
+                max="90"
+                value={advanceNoticeDays}
+                onChange={(e) => setAdvanceNoticeDays(parseInt(e.target.value) || 0)}
+                className="h-9 w-28"
+              />
+              <span className="text-sm text-gray-600">
+                {advanceNoticeDays === 0
+                  ? "Guests can book for any date including today."
+                  : `Guests must book at least ${advanceNoticeDays} day${advanceNoticeDays !== 1 ? "s" : ""} in advance.`}
+              </span>
+            </div>
+          </div>
+
           <div className="text-sm text-gray-600 bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
             <p className="font-medium mb-1">How it works:</p>
             <ul className="list-disc list-inside space-y-1 text-xs">
@@ -131,7 +154,7 @@ useEffect(() => {
                 {rules[day].enabled && (
                   <div className="pl-4 space-y-3 border-l-2 border-gray-200">
                     <div className="grid grid-cols-2 gap-3">
-                      <div>
+                      <div className={rules[day].rule_type === "fixed_or_multiples" ? "opacity-40 pointer-events-none" : ""}>
                         <Label className="text-xs text-gray-600">Minimum Days</Label>
                         <Input
                           type="number"
@@ -139,9 +162,10 @@ useEffect(() => {
                           value={rules[day].min_days}
                           onChange={(e) => updateDayRule(day, "min_days", parseInt(e.target.value) || 1)}
                           className="h-9"
+                          disabled={rules[day].rule_type === "fixed_or_multiples"}
                         />
                       </div>
-                      <div>
+                      <div className={rules[day].rule_type === "fixed_or_multiples" ? "opacity-40 pointer-events-none" : ""}>
                         <Label className="text-xs text-gray-600">Maximum Days</Label>
                         <Input
                           type="number"
@@ -149,9 +173,15 @@ useEffect(() => {
                           value={rules[day].max_days}
                           onChange={(e) => updateDayRule(day, "max_days", parseInt(e.target.value) || 28)}
                           className="h-9"
+                          disabled={rules[day].rule_type === "fixed_or_multiples"}
                         />
                       </div>
                     </div>
+                    {rules[day].rule_type === "fixed_or_multiples" && (
+                      <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-2 py-1">
+                        Min/max days are not used when Fixed days & Multiples is selected — exact durations are controlled below.
+                      </p>
+                    )}
 
                     <div>
                       <Label className="text-xs text-gray-600">Allowed Duration Pattern</Label>
