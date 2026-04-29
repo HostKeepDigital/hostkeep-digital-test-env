@@ -168,14 +168,26 @@ export default function SeasonManager({ seasons = [], onUpdate }) {
             <CardDescription>Define pricing for peak seasons, holidays, and special periods</CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              onClick={seasons.some(s => s.is_autofilled) ? handleRemoveAutofilled : handleAutofillHolidays}
-              variant="outline"
-              size="sm"
-            >
-              <Zap className="w-4 h-4 mr-2" />
-              {seasons.some(s => s.is_autofilled) ? 'Remove Autofilled Holidays' : 'Autofill Holidays'}
-            </Button>
+            {seasons.some(s => s.is_autofilled) ? (
+              <Button
+                onClick={handleRemoveAutofilled}
+                variant="outline"
+                size="sm"
+                className="border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
+              >
+                <Zap className="w-4 h-4 mr-2" />
+                Remove Autofilled Holidays
+              </Button>
+            ) : (
+              <Button
+                onClick={handleAutofillHolidays}
+                variant="outline"
+                size="sm"
+              >
+                <Zap className="w-4 h-4 mr-2" />
+                Autofill Holidays
+              </Button>
+            )}
             <Button onClick={() => setShowForm(!showForm)} size="sm">
               <Plus className="w-4 h-4 mr-2" />
               Add Season
