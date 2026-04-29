@@ -212,7 +212,6 @@ export default function ExportPricing({ pricingSettings, property, bookings = []
       doc.setFontSize(7);
       doc.setTextColor(148, 163, 184);
       doc.setFont(undefined, 'normal');
-      doc.text("HostKeep Digital — Pricing Report. For internal use only.", margin, pageH - 4);
       doc.text(`Page ${pageNum}`, pageW - margin, pageH - 4, { align: 'right' });
     };
 
@@ -392,7 +391,7 @@ export default function ExportPricing({ pricingSettings, property, bookings = []
 
           checkPage();
           doc.setFillColor(15, 23, 42); // dark navy
-          doc.rect(margin - 2, y - 2, pageW - margin * 2 + 4, 54, 'F');
+          doc.rect(margin - 2, y - 2, pageW - margin * 2 + 4, 40, 'F');
 
           doc.setFontSize(9);
           doc.setFont(undefined, 'bold');
