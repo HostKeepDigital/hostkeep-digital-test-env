@@ -41,7 +41,11 @@ Deno.serve(async (req) => {
     }
     const stripePrice = prices.data[0];
 
+    // Get existing subscriptions for this user
+    const subs = await base44.asServiceRole.entities.Subscription.filter({ user_id });
+
     // Get or create Stripe customer
+    let customer_id;
     if (subs.length > 0 && subs[0].stripe_customer_id) {
       customer_id = subs[0].stripe_customer_id;
     } else {
