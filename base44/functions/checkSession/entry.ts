@@ -47,17 +47,24 @@ Deno.serve(async (req) => {
     let location = null;
     let is_founding_member = false;
     try {
-      // Filter by email — more reliable than .get() for custom User entity
       const userRecords = await serviceRole.entities.User.filter({ email: session.email });
       const userRecord = userRecords?.[0] || null;
       if (userRecord) {
         if (userRecord.signup_postcode) signup_postcode = userRecord.signup_postcode;
-        if (userRecord.forename) forename = userRecord.forename;
-        if (userRecord.middle_name) middle_name = userRecord.middle_name;
-        if (userRecord.surname) surname = userRecord.surname;
-        if (userRecord.phone) phone = userRecord.phone;
-        if (userRecord.location) location = userRecord.location;
         is_founding_member = userRecord.is_founding_member || false;
+      }
+    } catch (_) {}
+
+    // Load profile fields from UserProfile entity (source of truth for name/phone/location)
+    try {
+      const profiles = await serviceRole.entities.UserProfile.filter({ email: session.email });
+      const profile = profiles?.[0] || null;
+      if (profile) {
+        if (profile.forename) forename = profile.forename;
+        if (profile.middle_name) middle_name = profile.middle_name;
+        if (profile.surname) surname = profile.surname;
+        if (profile.phone) phone = profile.phone;
+        if (profile.location) location = profile.location;
       }
     } catch (_) {}
 
