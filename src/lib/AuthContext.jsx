@@ -50,6 +50,8 @@ export const AuthProvider = ({ children }) => {
         forename: data.forename || null,
         middle_name: data.middle_name || null,
         surname: data.surname || null,
+        phone: data.phone || null,
+        location: data.location || null,
         is_founding_member: data.is_founding_member || false,
       });
 

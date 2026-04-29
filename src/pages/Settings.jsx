@@ -32,7 +32,7 @@ function SaveBanner({ status }) {
 }
 
 export default function Settings() {
-  const { user } = useAuth();
+  const { user, validateSession } = useAuth();
 
   const [userRoles, setUserRoles] = useState([]);
   const [stripeStatus, setStripeStatus] = useState(null);
@@ -68,23 +68,14 @@ export default function Settings() {
   useEffect(() => {
     if (!user?.email) return;
 
-    // Load profile from checkSession (uses session_token — works with custom auth)
-    const token = localStorage.getItem("session_token");
-    if (token) {
-      base44.functions.invoke("checkSession", { session_token: token })
-        .then((res) => {
-          const d = res.data;
-          if (!d?.authenticated) return;
-          setProfile({
-            forename: d.forename || "",
-            middle_name: d.middle_name || "",
-            surname: d.surname || "",
-            phone: d.phone || "",
-            location: d.location || "",
-          });
-        })
-        .catch(() => {});
-    }
+    // Populate profile directly from AuthContext user (set by checkSession on login)
+    setProfile({
+      forename: user.forename || "",
+      middle_name: user.middle_name || "",
+      surname: user.surname || "",
+      phone: user.phone || "",
+      location: user.location || "",
+    });
 
     if (user?.id) {
       base44.entities.UserRole.filter({ user_id: user.id }).then(setUserRoles).catch(() => {});
@@ -162,6 +153,7 @@ export default function Settings() {
       });
       if (!res.data?.success) throw new Error(res.data?.error || "save_failed");
 
+      await validateSession(); // refresh AuthContext with updated values
       setSaveStatus("success");
       setTimeout(() => setSaveStatus(null), 4000);
     } catch (err) {
