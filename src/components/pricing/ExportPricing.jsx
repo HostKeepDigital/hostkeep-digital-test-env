@@ -386,6 +386,54 @@ export default function ExportPricing({ pricingSettings, property, bookings = []
         });
         }
 
+        // Final summary section with potential totals and Stripe fees
+        periods.forEach((period) => {
+          const dates = eachDayOfInterval({ start: period.start, end: period.end });
+          const potentialRevenue = dates.reduce((sum, date) => sum + calculatePrice(date), 0);
+          const stripeFeeRate = 0.022; // 2.2%
+          const stripeFeeFixed = 0.30; // £0.30 per transaction
+          const estimatedStripeFee = Math.round((potentialRevenue * stripeFeeRate + stripeFeeFixed) * 100) / 100;
+          const netAfterStripeFees = Math.round((potentialRevenue - estimatedStripeFee) * 100) / 100;
+
+          checkPage();
+          doc.setFillColor(15, 23, 42); // dark navy
+          doc.rect(margin - 2, y - 2, pageW - margin * 2 + 4, 48, 'F');
+
+          doc.setFontSize(9);
+          doc.setFont(undefined, 'bold');
+          doc.setTextColor(255, 255, 255);
+          doc.text("Financial Summary — All Nights Rented", margin + 2, y + 4);
+
+          y += 10;
+          doc.setFontSize(8);
+          doc.setTextColor(220, 252, 231); // teal-100
+          doc.setFont(undefined, 'normal');
+
+          const summaryLines = [
+            { label: "Potential Revenue (All Nights)", value: `£${potentialRevenue.toLocaleString()}` },
+            { label: "Estimated Stripe Processing Fee", value: `£${estimatedStripeFee.toLocaleString()}` },
+            { label: "Your Net Income (After Stripe Fees)", value: `£${netAfterStripeFees.toLocaleString()}` },
+          ];
+
+          summaryLines.forEach((line, idx) => {
+            const isFinal = idx === summaryLines.length - 1;
+            if (isFinal) {
+              doc.setFontSize(9);
+              doc.setFont(undefined, 'bold');
+              doc.setTextColor(255, 255, 255);
+            }
+            doc.text(line.label, margin + 4, y + idx * 6);
+            doc.text(line.value, pageW - margin - 4, y + idx * 6, { align: 'right' });
+          });
+
+          y += 22;
+          doc.setFontSize(7);
+          doc.setTextColor(148, 163, 184);
+          doc.setFont(undefined, 'normal');
+          const disclaimer = "Note: Stripe fees (2.2% + £0.30) are required for secure payment processing and are not a HostKeep Digital commission.";
+          doc.text(disclaimer, margin + 2, y, { maxWidth: pageW - margin * 2 - 4 });
+        });
+
         // Final footer
         addFooter(pageNum, pageNum);
 
