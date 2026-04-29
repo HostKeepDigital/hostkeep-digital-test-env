@@ -169,7 +169,7 @@ useEffect(() => {
                           disabled={rules[day].rule_type === "fixed_or_multiples"}
                         />
                       </div>
-                      <div className={rules[day].rule_type === "fixed_or_multiples" ? "opacity-40 pointer-events-none" : ""}>
+                      <div>
                         <Label className="text-xs text-gray-600">Maximum Days</Label>
                         <Input
                           type="number"
@@ -177,7 +177,6 @@ useEffect(() => {
                           value={rules[day].max_days}
                           onChange={(e) => updateDayRule(day, "max_days", parseInt(e.target.value) || 1)}
                           className="h-9"
-                          disabled={rules[day].rule_type === "fixed_or_multiples"}
                         />
                       </div>
                     </div>
