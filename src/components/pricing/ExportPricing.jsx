@@ -385,8 +385,8 @@ export default function ExportPricing({ pricingSettings, property, bookings = []
         periods.forEach((period) => {
           const dates = eachDayOfInterval({ start: period.start, end: period.end });
           const potentialRevenue = dates.reduce((sum, date) => sum + calculatePrice(date), 0);
-          const stripeFeeRate = 0.029; // 2.9% Stripe standard rate
-          const stripeFeeFixed = 0.30; // £0.30 per transaction
+          const stripeFeeRate = 0.015; // 1.5% Standard UK Cards
+          const stripeFeeFixed = 0.20; // £0.20 per transaction
           const estimatedStripeFee = Math.round((potentialRevenue * stripeFeeRate + stripeFeeFixed) * 100) / 100;
           const netAfterStripeFees = Math.round((potentialRevenue - estimatedStripeFee) * 100) / 100;
 
@@ -406,7 +406,7 @@ export default function ExportPricing({ pricingSettings, property, bookings = []
 
           const summaryLines = [
             { label: "Potential Revenue (All Nights)", value: `£${potentialRevenue.toLocaleString()}` },
-            { label: "Estimated Stripe Processing Fee (2.9% + £0.30)", value: `–£${estimatedStripeFee.toLocaleString()}` },
+            { label: "Estimated Stripe Processing Fee (1.5% + 20p)", value: `–£${estimatedStripeFee.toLocaleString()}` },
             { label: "Your Net Income (After Stripe Fees)", value: `£${netAfterStripeFees.toLocaleString()}` },
           ];
 
