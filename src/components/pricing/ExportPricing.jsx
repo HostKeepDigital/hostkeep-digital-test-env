@@ -384,13 +384,14 @@ export default function ExportPricing({ pricingSettings, property, bookings = []
 
         if (periodIdx < periods.length - 1) y += 8;
         });
+        }
 
         // Final footer
         addFooter(pageNum, pageNum);
 
         const fyEndYear = getCurrentFYEnd(today).getFullYear();
         doc.save(`hostkeep-pricing-FY${fyEndYear}.pdf`);
-        }
+        };
 
   return (
     <Card>
