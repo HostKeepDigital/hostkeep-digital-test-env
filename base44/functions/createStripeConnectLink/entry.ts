@@ -40,8 +40,8 @@ Deno.serve(async (req) => {
     }
 
     const origin = req.headers.get("origin") || "https://hostkeepdigital.co.uk";
-    const return_url = body.return_url || `${origin}/Subscription?stripe_connect_return=success`;
-    const refresh_url = body.refresh_url || `${origin}/Subscription?stripe_connect_return=refresh`;
+    const return_url = body.return_url || `${origin}/HostDashboard?stripe_connect_return=success`;
+    const refresh_url = body.refresh_url || `${origin}/HostDashboard?stripe_connect_return=refresh`;
 
     let accountId = userRole.stripe_connect_account_id;
 
