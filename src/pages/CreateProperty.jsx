@@ -307,15 +307,21 @@ export default function CreateProperty() {
 
   const createMutation = useMutation({
     mutationFn: async (data) => {
-      const subs = await base44.entities.Subscription.filter({ user_id: user.id, status: 'active' });
+      // Enforce subscription property limit before creating
+      const subs = await base44.entities.Subscription.filter({ user_id: user?.id, status: 'active' });
       const sub = subs?.[0];
       if (sub?.max_properties) {
-        const existing = await base44.entities.Property.filter({ owner_id: user.id });
+        const existing = await base44.entities.Property.filter({ owner_id: user?.id });
         const activeCount = existing.filter(p => p.status !== 'paused').length;
         if (activeCount >= sub.max_properties) {
-          throw new Error(`You've reached the property limit for your plan (${sub.max_properties}). Please upgrade to add more.`);
+          throw new Error(`You've reached the property limit on your current plan (${sub.max_properties} ${sub.max_properties === 1 ? 'property' : 'properties'}). Please upgrade to add more.`);
         }
       }
+
+      const property = await base44.entities.Property.create({
+        ...data,
+        owner_id: user?.id,
+      });
 
 await base44.entities.Property.create({
         ...data,
