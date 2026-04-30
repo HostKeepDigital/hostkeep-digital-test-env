@@ -32,19 +32,18 @@ Deno.serve(async (req) => {
       return Response.json({ error: "Session missing user_id" }, { status: 400 });
     }
 
-    const userRoles = await serviceRole.entities.UserRole.filter({ user_id });
-    const userRole = userRoles?.[0];
+    const users = await serviceRole.entities.User.filter({ id: user_id });
+    const user = users?.[0];
 
-    if (!userRole) {
-      return Response.json({ error: "User role not found" }, { status: 404 });
+    if (!user) {
+      return Response.json({ error: "User not found" }, { status: 404 });
     }
 
     const origin = req.headers.get("origin") || "https://hostkeepdigital.co.uk";
     const return_url = body.return_url || `${origin}/Subscription?stripe_connect_return=success`;
     const refresh_url = body.refresh_url || `${origin}/Subscription?stripe_connect_return=refresh`;
 
-    let accountId = userRole.stripe_connect_account_id;
-
+    let accountId = user.stripe_connect_account_id;
 
     if (!accountId) {
       const account = await stripe.accounts.create({
@@ -60,7 +59,7 @@ Deno.serve(async (req) => {
 
       accountId = account.id;
 
-      await serviceRole.entities.UserRole.update(userRole.id, {
+      await serviceRole.entities.User.update(user_id, {
         stripe_connect_account_id: accountId,
         stripe_connect_status: "pending",
       });
