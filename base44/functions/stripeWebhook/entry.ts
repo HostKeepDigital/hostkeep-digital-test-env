@@ -438,34 +438,28 @@ Deno.serve(async (req) => {
   }
 
   // account.updated — Stripe fires this when a Connect Express host completes onboarding.
-  // We now look up and update stripe_connect fields on UserRole (not User) to avoid
-  // the Base44 auth entity restriction.
+  // All stripe_connect fields are stored on User entity.
   if (event.type === 'account.updated') {
     const account = event.data.object;
     if (account.charges_enabled) {
       try {
-        const userRoles = await base44.asServiceRole.entities.UserRole.filter({ stripe_connect_account_id: account.id });
-        const userRole = userRoles?.[0];
-        if (userRole) {
-          // Update stripe status on UserRole
-          await base44.asServiceRole.entities.UserRole.update(userRole.id, {
+        const users = await base44.asServiceRole.entities.User.filter({ stripe_connect_account_id: account.id });
+        const user = users?.[0];
+        if (user) {
+          // Update stripe status on User
+          await base44.asServiceRole.entities.User.update(user.id, {
             stripe_connect_status: 'verified',
-          });
-
-          // Write stripe_connect_account_id to User so createBookingPaymentIntent can find it
-          await base44.asServiceRole.entities.User.update(userRole.user_id, {
-            stripe_connect_account_id: account.id,
             stripe_verified: true,
           });
 
           // Update FoundingMember stripe_verified flag
-          const members = await base44.asServiceRole.entities.FoundingMember.filter({ user_id: userRole.user_id });
+          const members = await base44.asServiceRole.entities.FoundingMember.filter({ user_id: user.id });
           if (members?.[0]) {
             await base44.asServiceRole.entities.FoundingMember.update(members[0].id, { stripe_verified: true });
           }
 
           // Check all approval gates
-          await base44.asServiceRole.functions.invoke('checkApprovalGates', { user_id: userRole.user_id });
+          await base44.asServiceRole.functions.invoke('checkApprovalGates', { user_id: user.id });
         }
       } catch (err) {
         console.error('account.updated handler error:', err);
