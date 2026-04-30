@@ -32,7 +32,8 @@ Deno.serve(async (req) => {
       return Response.json({ error: "Session missing user_id" }, { status: 400 });
     }
 
-    const user = await serviceRole.entities.User.get(user_id);
+    const users = await serviceRole.entities.User.filter({ email });
+    const user = users?.[0];
 
     if (!user) {
       return Response.json({ error: "User not found" }, { status: 404 });
