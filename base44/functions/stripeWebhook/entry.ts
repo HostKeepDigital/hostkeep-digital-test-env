@@ -442,7 +442,8 @@ Deno.serve(async (req) => {
     const account = event.data.object;
     if (account.charges_enabled) {
       try {
-        const users = await base44.asServiceRole.entities.User
+        const users = await base44.asServiceRole.entities.User.filter({ stripe_connect_account_id: account.id });
+        const user = users?.[0];
         if (user) {
           // Update stripe status on User
           await base44.asServiceRole.entities.User.update(user.id, {
