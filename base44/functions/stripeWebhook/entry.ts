@@ -104,8 +104,7 @@ async function handleSubscriptionDeactivated(base44, user_id) {
      }
 
      // Send subscription expired email
-     const users = await base44.asServiceRole.entities.User.filter({ id: user_id });
-     const user = users?.[0];
+     const users = await base44.asServiceRole.entities.User
      if (user?.email) {
        const html = buildEmail({
          heading: 'Your subscription has expired',
@@ -443,8 +442,7 @@ Deno.serve(async (req) => {
     const account = event.data.object;
     if (account.charges_enabled) {
       try {
-        const users = await base44.asServiceRole.entities.User.filter({ stripe_connect_account_id: account.id });
-        const user = users?.[0];
+        const users = await base44.asServiceRole.entities.User
         if (user) {
           // Update stripe status on User
           await base44.asServiceRole.entities.User.update(user.id, {
