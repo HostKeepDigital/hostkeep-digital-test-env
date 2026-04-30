@@ -447,6 +447,12 @@ Deno.serve(async (req) => {
             stripe_connect_status: 'verified',
           });
 
+          // Write stripe_connect_account_id to User so createBookingPaymentIntent can find it
+          await base44.asServiceRole.entities.User.update(userRole.user_id, {
+            stripe_connect_account_id: account.id,
+            stripe_verified: true,
+          });
+
           // Update FoundingMember stripe_verified flag
           const members = await base44.asServiceRole.entities.FoundingMember.filter({ user_id: userRole.user_id });
           if (members?.[0]) {
