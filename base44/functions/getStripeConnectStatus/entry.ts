@@ -25,11 +25,10 @@ Deno.serve(async (req) => {
       return Response.json({ status: "not_connected", error: "no_user_id" });
     }
 
-    const userRoles = await serviceRole.entities.UserRole.filter({ user_id });
-    const userRole = userRoles?.[0];
+    const user = await serviceRole.entities.User.get(user_id);
 
-    const stripeStatus = userRole?.stripe_connect_status;
-    const hasAccount = !!userRole?.stripe_connect_account_id;
+    const stripeStatus = user?.stripe_connect_status;
+    const hasAccount = !!user?.stripe_connect_account_id;
 
     let status = "not_connected";
     if (stripeStatus === "verified") status = "verified";
