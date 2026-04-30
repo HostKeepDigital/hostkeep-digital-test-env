@@ -21,20 +21,15 @@ export default function StripeStatusBanner({ user }) {
     setConnecting(true);
     const session_token = localStorage.getItem("session_token");
     try {
-      const res = await fetch('https://hostkeepdigital.co.uk/functions/createStripeConnectLink', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          session_token,
-          return_url: `${window.location.origin}/HostDashboard?stripe_connect_return=success`,
-          refresh_url: `${window.location.origin}/HostDashboard?stripe_connect_return=refresh`,
-        })
+      const res = await base44.functions.invoke("createStripeConnectLink", {
+        session_token,
+        return_url: `${window.location.origin}/HostDashboard?stripe_connect_return=success`,
+        refresh_url: `${window.location.origin}/HostDashboard?stripe_connect_return=refresh`,
       });
-      const data = await res.json();
-      if (data?.url) {
-        window.location.href = data.url;
+      if (res.data?.url) {
+        window.location.href = res.data.url;
       } else {
-        toast.error(data?.error || 'Failed to start Stripe onboarding');
+        toast.error(res.data?.error || 'Failed to start Stripe onboarding');
       }
     } catch (err) {
       toast.error('Failed to connect to Stripe.');
