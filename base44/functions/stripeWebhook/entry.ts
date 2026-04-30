@@ -71,6 +71,7 @@ async function sendEmail({ to, subject, html }) {
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
 const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
+const connectWebhookSecret = Deno.env.get('STRIPE_CONNECT_WEBHOOK_SECRET');
 
 const PLAN_DETAILS = {
   host_starter_monthly: { name: 'Host Starter', price: 29, max_properties: 1, role: 'host' },
@@ -143,8 +144,12 @@ Deno.serve(async (req) => {
   let event;
   try {
     event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
-  } catch (err) {
-    return Response.json({ error: `Webhook signature verification failed: ${err.message}` }, { status: 400 });
+  } catch {
+    try {
+      event = await stripe.webhooks.constructEventAsync(body, signature, connectWebhookSecret);
+    } catch (err) {
+      return Response.json({ error: `Webhook signature verification failed: ${err.message}` }, { status: 400 });
+    }
   }
 
   const base44 = createClientFromRequest(req);
