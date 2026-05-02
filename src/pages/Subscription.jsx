@@ -800,7 +800,17 @@ export default function Subscription() {
                               ) : (
                                 <Button
                                   className="w-full bg-[#1E3A5F] hover:bg-[#16304f] text-white"
-                                  onClick={() => setPendingPlan({ id: foundingId, name: plan.name, price: plan.price })}
+                                  onClick={() => {
+                                  const foundingPriceMap = {
+                                    founding_host_solo: 19,
+                                    founding_host_multi: 49,
+                                    founding_host_portfolio: 89,
+                                    cleaner_solo_monthly: 9.99,
+                                    cleaner_pro_monthly: 19.99,
+                                    cleaner_team_monthly: 39.99,
+                                  };
+                                  setPendingPlan({ id: foundingId, name: plan.name, price: foundingPriceMap[foundingId] || plan.price });
+                                }}
                                   disabled={checkoutLoading === foundingId}
                                 >
                                   {checkoutLoading === foundingId ? "Loading..." : "Choose Founding Rate"}
@@ -931,8 +941,8 @@ export default function Subscription() {
                   <CardTitle className="text-xl">Confirm Your Founding Plan</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-5">
-                  <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-xl p-4 text-center">
-                    <p className="text-sm text-amber-700 dark:text-amber-300 font-medium mb-1">You're selecting</p>
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
+                    <p className="text-sm text-amber-700 font-medium mb-1">You're selecting</p>
                     <p className="text-xl font-bold text-gray-900">{pendingPlan.name}</p>
                     <p className="text-2xl font-black text-amber-700 mt-1">£{pendingPlan.price}<span className="text-sm font-normal text-gray-500">/month</span></p>
                   </div>
