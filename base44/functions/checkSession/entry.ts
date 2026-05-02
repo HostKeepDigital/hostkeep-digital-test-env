@@ -39,6 +39,7 @@ Deno.serve(async (req) => {
     }
 
     // Load User record once for all profile fields
+    // Load User record by ID — fast direct lookup, no filter
     let signup_postcode = null;
     let forename = null;
     let middle_name = null;
@@ -46,15 +47,21 @@ Deno.serve(async (req) => {
     let phone = null;
     let location = null;
     let is_founding_member = false;
-    try {
-      const userRecords = await serviceRole.entities.User.filter({ email: session.email });
-      const userRecord = userRecords?.[0] || null;
-      if (userRecord) {
-        if (userRecord.signup_postcode) signup_postcode = userRecord.signup_postcode;
-        is_founding_member = userRecord.is_founding_member || false;
-      }
-    } catch (_) {}
-
+    if (session.user_id) {
+      try {
+        const userRecord = await serviceRole.entities.User.get(session.user_id);
+        if (userRecord) {
+          if (userRecord.signup_postcode) signup_postcode = userRecord.signup_postcode;
+          is_founding_member = userRecord.is_founding_member || false;
+          if (userRecord.forename) forename = userRecord.forename;
+          if (userRecord.middle_name) middle_name = userRecord.middle_name;
+          if (userRecord.surname) surname = userRecord.surname;
+          if (userRecord.phone) phone = userRecord.phone;
+          if (userRecord.location) location = userRecord.location;
+        }
+      } catch (_) {}
+    }
+    
     // Load profile fields from UserProfile entity (source of truth for name/phone/location)
     try {
       const profiles = await serviceRole.entities.UserProfile.filter({ email: session.email });
