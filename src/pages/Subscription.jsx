@@ -300,7 +300,7 @@ export default function Subscription() {
       (BETA_PLANS.includes(subscription.plan) && subscription.status === "active") ||
       subscription.is_founding_member === true
     )) ||
-    (foundingMemberRecord && ['approved', 'invited', 'password_protected'].includes(foundingMemberRecord.approval_status));
+    (foundingMemberRecord && !foundingMemberRecord.approval_status?.startsWith('banned_'));
 
   const isPending =
     userRoles &&
