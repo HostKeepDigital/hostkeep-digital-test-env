@@ -78,7 +78,7 @@ export default function PropertyListingCard({
   const hasStripe = criteria[6];
 
   // Gate check: approval approved + active subscription
-  const isApproved = foundingMemberData?.approval_status === "approved";
+  const isApproved = foundingMemberData?.documents_verified === true;
   const subscriptionActive = hasActiveSubscription;
   const gatesPass = isApproved && subscriptionActive;
 
@@ -144,10 +144,10 @@ export default function PropertyListingCard({
   let docIcon = null;
   let docColor = null;
 
-  if (approvalStatus === "approved") {
+  if (foundingMemberData?.documents_verified === true) {
     docStatus = "Documents Approved";
-    docIcon = <CheckCircle2 className="w-4 h-4 text-emerald-500" />;
-    docColor = "text-emerald-700";
+    docIcon = <CheckCircle2 className="w-4 h-4 text-teal-600" />;
+    docColor = "text-teal-700";
   } else if (approvalStatus === "awaiting_document_verification") {
     docStatus = "Documents Pending";
     docIcon = <Clock className="w-4 h-4 text-blue-500" />;
