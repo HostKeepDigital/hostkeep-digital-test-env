@@ -370,6 +370,7 @@ export default function AdminPanel() {
   const [guests,        setGuests       ] = useState([]);
   const [bookings,      setBookings     ] = useState([]);
   const [guestsLoading, setGuestsLoading] = useState(true);
+  const [guestSessions, setGuestSessions] = useState([]);
 
   const fetchMembers = async () => {
     setLoading(true);
@@ -409,7 +410,14 @@ export default function AdminPanel() {
     setGuestsLoading(false);
   };
 
-  useEffect(() => { fetchMembers(); fetchSubscriptions(); fetchPageViews(); fetchGuests(); }, []);
+  const fetchGuestSessions = async () => {
+    try {
+      const sessions = await base44.entities.UserSession.filter({ role: "guest" });
+      setGuestSessions(sessions || []);
+    } catch { setGuestSessions([]); }
+  };
+
+  useEffect(() => { fetchMembers(); fetchSubscriptions(); fetchPageViews(); fetchGuests(); fetchGuestSessions(); }, []);
 
   const setML = (id, val) => setActionLoading(p => ({ ...p, [id]: val }));
 
