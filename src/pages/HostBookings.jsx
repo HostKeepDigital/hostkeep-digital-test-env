@@ -4,12 +4,6 @@ import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -35,6 +29,7 @@ import {
 } from "date-fns";
 import { toast } from "sonner";
 import BookingCard from "@/components/bookings/BookingCard";
+import BookingFilterList from "@/components/bookings/BookingFilterList";
 import ReviewForm from "@/components/reviews/ReviewForm";
 import ReviewsDialog from "@/components/reviews/ReviewsDialog";
 import DepositReturnTimer from "@/components/bookings/DepositReturnTimer";
@@ -275,315 +270,30 @@ export default function HostBookings() {
           </div>
         </div>
 
-        <Tabs defaultValue="awaiting_decision" className="space-y-6">
-          {/* MOBILE TABS */}
-          <div className="md:hidden relative">
-            <p className="text-xs text-gray-400 mb-1 flex items-center gap-1 px-1">
-              Swipe to see more tabs →
-            </p>
-
-            <div className="overflow-x-auto -mx-4 px-4">
-              <TabsList className="bg-white border border-gray-100 w-max">
-                <TabsTrigger value="awaiting_decision" className="gap-1.5 text-xs whitespace-nowrap">
-                  <Clock className="w-3.5 h-3.5 shrink-0" />
-                  Decision
-                  {awaitingDecision.length > 0 && (
-                    <Badge className="bg-amber-500 text-[10px] px-1.5 py-0">
-                      {awaitingDecision.length}
-                    </Badge>
-                  )}
-                </TabsTrigger>
-
-                <TabsTrigger value="awaiting_payment" className="gap-1.5 text-xs whitespace-nowrap">
-                  <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                  Payment
-                  {awaitingPayment.length > 0 && (
-                    <Badge className="bg-orange-500 text-[10px] px-1.5 py-0">
-                      {awaitingPayment.length}
-                    </Badge>
-                  )}
-                </TabsTrigger>
-
-                <TabsTrigger value="confirmed" className="text-xs whitespace-nowrap">
-                  Confirmed ({confirmed.length})
-                </TabsTrigger>
-
-                <TabsTrigger value="checked_in" className="text-xs whitespace-nowrap">
-                  In-Stay ({checkedIn.length})
-                </TabsTrigger>
-
-                <TabsTrigger value="completed" className="text-xs whitespace-nowrap">
-                  Done ({completed.length})
-                </TabsTrigger>
-
-                <TabsTrigger value="cancelled" className="text-xs whitespace-nowrap">
-                  Cancelled ({cancelled.length})
-                </TabsTrigger>
-              </TabsList>
-            </div>
-          </div>
-
-          {/* DESKTOP TABS */}
-          <div className="hidden md:block">
-            <TabsList className="bg-white border border-gray-100">
-              <TabsTrigger value="awaiting_decision" className="gap-2">
-                <Clock className="w-4 h-4" />
-                Awaiting Decision
-                {awaitingDecision.length > 0 && (
-                  <Badge className="bg-amber-500">
-                    {awaitingDecision.length}
-                  </Badge>
-                )}
-              </TabsTrigger>
-
-              <TabsTrigger value="awaiting_payment" className="gap-2">
-                <AlertTriangle className="w-4 h-4" />
-                Awaiting Payment
-                {awaitingPayment.length > 0 && (
-                  <Badge className="bg-orange-500">
-                    {awaitingPayment.length}
-                  </Badge>
-                )}
-              </TabsTrigger>
-
-              <TabsTrigger value="confirmed">
-                Confirmed ({confirmed.length})
-              </TabsTrigger>
-
-              <TabsTrigger value="checked_in">
-                Checked In ({checkedIn.length})
-              </TabsTrigger>
-
-              <TabsTrigger value="completed">
-                Completed ({completed.length})
-              </TabsTrigger>
-
-              <TabsTrigger value="cancelled">
-                Cancelled ({cancelled.length})
-              </TabsTrigger>
-            </TabsList>
-          </div>
-
-          {/* AWAITING DECISION */}
-          <TabsContent value="awaiting_decision" className="space-y-4">
-            {awaitingDecision.length === 0 ? (
-              <div className="text-center py-16 bg-white rounded-xl border border-gray-100">
-                <Clock className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p className="text-gray-500">
-                  No booking requests awaiting your decision
-                </p>
-                <p className="text-sm text-gray-400 mt-2">
-                  First Come, First Served • 24-hour response window
-                </p>
-              </div>
-            ) : (
-              <>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                  <p className="text-sm text-blue-900">
-                    <strong>First Come, First Served:</strong> Requests are ordered by submission time. You have 24 hours to respond before they automatically expire.
-                  </p>
-                </div>
-
-                {awaitingDecision.map((booking) => (
-                  <BookingCard
-                    key={booking.id}
-                    booking={booking}
-                    property={getProperty(booking.property_id)}
-                    onAccept={handleAccept}
-                    onDecline={handleDecline}
-                    showCompetingBadge={checkCompetingRequests(booking)}
-                  />
-                ))}
-              </>
-            )}
-          </TabsContent>
-
-          {/* AWAITING PAYMENT */}
-          <TabsContent value="awaiting_payment" className="space-y-4">
-            {awaitingPayment.length === 0 ? (
-              <div className="text-center py-16 bg-white rounded-xl border border-gray-100">
-                <AlertTriangle className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p className="text-gray-500">No bookings awaiting payment</p>
-              </div>
-            ) : (
-              <>
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
-                  <p className="text-sm text-orange-900">
-                    <strong>Deposit Window:</strong> Guests have 48 hours to pay their deposit. Bookings auto-cancel if deposit is not received in time.
-                  </p>
-                </div>
-
-                {awaitingPayment.map((booking) => (
-                  <BookingCard
-                    key={booking.id}
-                    booking={booking}
-                    property={getProperty(booking.property_id)}
-                  />
-                ))}
-              </>
-            )}
-          </TabsContent>
-
-          {/* CONFIRMED */}
-          <TabsContent value="confirmed" className="space-y-4">
-            {confirmed.length === 0 ? (
-              <div className="text-center py-16 bg-white rounded-xl border border-gray-100">
-                <CheckCircle className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p className="text-gray-500">No confirmed upcoming bookings</p>
-              </div>
-            ) : (
-              confirmed.map((booking) => (
-                <BookingCard
-                  key={booking.id}
-                  booking={booking}
-                  property={getProperty(booking.property_id)}
-                  onCheckIn={handleCheckIn}
-                  onConfirmCheckin={handleConfirmCheckin}
-                />
-              ))
-            )}
-          </TabsContent>
-
-          {/* CHECKED IN */}
-          <TabsContent value="checked_in" className="space-y-4">
-            {checkedIn.length === 0 ? (
-              <div className="text-center py-16 bg-white rounded-xl border border-gray-100">
-                <User className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p className="text-gray-500">No guests currently staying</p>
-              </div>
-            ) : (
-              checkedIn.map((booking) => (
-                <BookingCard
-                  key={booking.id}
-                  booking={booking}
-                  property={getProperty(booking.property_id)}
-                  onComplete={handleComplete}
-                />
-              ))
-            )}
-          </TabsContent>
-
-          {/* COMPLETED */}
-          <TabsContent value="completed" className="space-y-4">
-            {completed.length === 0 ? (
-              <div className="text-center py-16 bg-white rounded-xl border border-gray-100">
-                <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p className="text-gray-500">No completed stays yet</p>
-              </div>
-            ) : (
-              completed.map((booking) => (
-                <motion.div key={booking.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                  <div className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
-                    <div className="p-6 space-y-4">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className="font-semibold text-gray-900 text-lg">
-                            {getProperty(booking.property_id)?.title || "Property"}
-                          </h3>
-                          <p className="text-sm text-gray-600 mt-1">
-                            {booking.guest_name} • {format(parseISO(booking.check_in), "MMM d")} – {format(parseISO(booking.check_out), "MMM d, yyyy")}
-                          </p>
-                        </div>
-                        <Badge>Completed</Badge>
-                      </div>
-
-                      {booking.booking_status === "completed" && booking.deposit_status === "held" && (
-                        <div className="space-y-3 pt-3 border-t border-gray-100">
-                          <DepositReturnTimer
-                            checkOutDate={booking.check_out}
-                            depositFrozen={booking.deposit_frozen}
-                          />
-
-                          {!booking.deposit_frozen && (
-                            <button
-                              onClick={() => setDamageClaimBooking(booking)}
-                              className="w-full px-4 py-3 border-2 border-red-200 text-red-600 font-semibold rounded-lg hover:bg-red-50 transition-colors text-sm"
-                            >
-                              Raise a Damage Claim
-                            </button>
-                          )}
-
-                          {booking.deposit_frozen && (
-                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                              <p className="text-sm text-amber-900 font-medium">
-                                Damage claim submitted — under review
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      <div className="flex flex-wrap items-center gap-2 pt-2">
-                        {booking.guest_id && (
-                          <ReviewsDialog
-                            revieweeId={booking.guest_id}
-                            reviewType="host_to_guest"
-                            isPrivilegedViewer={true}
-                            emptyMessage="No reviews for this guest yet."
-                          />
-                        )}
-
-                        {hasReviewedGuest(booking.id) ? (
-                          <span className="inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium bg-gray-100 text-gray-500 border border-gray-200">
-                            Reviewed ✓
-                          </span>
-                        ) : canReviewGuest(booking) ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setReviewBooking(booking)}
-                          >
-                            Review Guest
-                          </Button>
-                        ) : (
-                          <span className="text-xs text-gray-400">Review window closed</span>
-                        )}
-
-                        {completedJobsForBooking(booking.id).map((job) =>
-                          hasReviewedCleaner(job.id) ? (
-                            <span
-                              key={job.id}
-                              className="inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium bg-gray-100 text-gray-500 border border-gray-200"
-                            >
-                              Cleaner Reviewed ✓
-                            </span>
-                          ) : (
-                            <Button
-                              key={job.id}
-                              size="sm"
-                              onClick={() => setReviewCleanerJob(job)}
-                              className="bg-[#0d9488] hover:bg-[#0f766e] text-white"
-                            >
-                              Review Cleaner
-                            </Button>
-                          )
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))
-            )}
-          </TabsContent>
-
-          {/* CANCELLED */}
-          <TabsContent value="cancelled" className="space-y-4">
-            {cancelled.length === 0 ? (
-              <div className="text-center py-16 bg-white rounded-xl border border-gray-100">
-                <XCircle className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p className="text-gray-500">No cancelled bookings</p>
-              </div>
-            ) : (
-              cancelled.map((booking) => (
-                <BookingCard
-                  key={booking.id}
-                  booking={booking}
-                  property={getProperty(booking.property_id)}
-                />
-              ))
-            )}
-          </TabsContent>
-        </Tabs>
+        <BookingFilterList
+          bookings={bookings}
+          isLoading={isLoading}
+          awaitingDecision={awaitingDecision}
+          awaitingPayment={awaitingPayment}
+          confirmed={confirmed}
+          checkedIn={checkedIn}
+          completed={completed}
+          cancelled={cancelled}
+          getProperty={getProperty}
+          handleAccept={handleAccept}
+          handleDecline={handleDecline}
+          handleCheckIn={handleCheckIn}
+          handleConfirmCheckin={handleConfirmCheckin}
+          handleComplete={handleComplete}
+          checkCompetingRequests={checkCompetingRequests}
+          hasReviewedGuest={hasReviewedGuest}
+          canReviewGuest={canReviewGuest}
+          hasReviewedCleaner={hasReviewedCleaner}
+          completedJobsForBooking={completedJobsForBooking}
+          setReviewBooking={setReviewBooking}
+          setReviewCleanerJob={setReviewCleanerJob}
+          setDamageClaimBooking={setDamageClaimBooking}
+        />
 
         {/* REVIEW GUEST DIALOG */}
         {reviewBooking && (
