@@ -370,7 +370,7 @@ export default function Subscription() {
   const handleStripeConnect = async () => {
   setStripeConnecting(true);
   try {
-    const res = await fetch('https://hostkeepdigital.co.uk/functions/createStripeConnectLink', {
+    const res = await fetch('/api/apps/698eee4108bd1d9467648326/functions/createStripeConnectLink', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
