@@ -411,26 +411,14 @@ await base44.entities.Property.create({
         const isBeta = sub && BETA_PLANS.includes(sub.plan) && sub.status === 'active';
         const hasActiveSub = sub && sub.status === 'active' && !isBeta;
 
-        // No subscription at all — check if they're a founding member first
+         // No subscription — allow through, gates will prevent publishing
         if (!sub || sub.status !== 'active') {
-          const foundingRecords = await base44.entities.FoundingMember.filter({ email: user?.email });
-          const isFounding = foundingRecords?.[0] && !foundingRecords[0].approval_status?.startsWith('banned_');
-          if (!isFounding) {
-            window.location.href = '/Subscription?tab=host&reason=new_property';
-            return;
-          }
-          // Founding member without subscription yet — allow them through
           return;
         }
 
-        // Beta user: must have chosen a next_subscription
+        // Beta user without chosen plan — allow through, gates will prevent publishing
         if (isBeta && !sub.next_subscription) {
-          const foundingRecords = await base44.entities.FoundingMember.filter({ email: user?.email });
-          const isFounding = foundingRecords?.[0] && !foundingRecords[0].approval_status?.startsWith('banned_');
-          if (!isFounding) {
-            window.location.href = '/Subscription?tab=host&reason=new_property';
-            return;
-          }
+          return;
         }
 
         // Beta user: check their chosen founding plan capacity
