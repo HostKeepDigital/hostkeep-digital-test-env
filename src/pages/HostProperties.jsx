@@ -105,9 +105,6 @@ export default function HostProperties() {
   });
 
   const isFoundingMember = foundingMemberData?.is_founding_member === true;
-  const stripeVerified = foundingMemberData?.stripe_verified === true;
-  const subscriptionActive = !!subscription && subscription.status === "active";
-  const allGatesPassed = isApproved && stripeVerified && subscriptionActive;
   const approvalStatus = foundingMemberData?.approval_status;
   const hasRejectedDocs = verificationDocs.some(d => d.verification_status === "rejected");
   const isApproved = foundingMemberData?.documents_verified === true;
@@ -116,6 +113,9 @@ export default function HostProperties() {
   const isAttempt1 = approvalStatus === "documentation_failed_attempt_1";
   const isAttempt2 = approvalStatus === "documentation_failed_attempt_2";
   const isBanned = approvalStatus?.startsWith("banned_");
+  const stripeVerified = foundingMemberData?.stripe_verified === true;
+  const subscriptionActive = !!subscription && subscription.status === "active";
+  const allGatesPassed = isApproved && stripeVerified && subscriptionActive;
 
   const [stripeConnected, setStripeConnected] = useState(false);
 
