@@ -398,16 +398,18 @@ export default function AdminPanel() {
     setViewsLoading(false);
   };
 
+  const [guestReviews, setGuestReviews] = useState([]);
+
   const fetchGuests = async () => {
     setGuestsLoading(true);
     try {
-      const [g, b] = await Promise.all([
+      const [g, gr] = await Promise.all([
         base44.entities.Guest.list("-created_date", 1000),
-        base44.entities.Booking.list("-created_date", 2000),
+        base44.entities.Review.filter({ review_type: "host_to_guest" }),
       ]);
       setGuests(g || []);
-      setBookings(b || []);
-    } catch { setGuests([]); setBookings([]); }
+      setGuestReviews(gr || []);
+    } catch { setGuests([]); setGuestReviews([]); }
     setGuestsLoading(false);
   };
 
