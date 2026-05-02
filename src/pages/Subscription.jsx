@@ -331,6 +331,21 @@ export default function Subscription() {
   const [stripeStatus, setStripeStatus] = useState(null); // null=loading, 'connected'|'pending'|'not_connected'
   const [stripeStatusLoading, setStripeStatusLoading] = useState(false);
 
+  // Lock scroll when modals are open
+  useEffect(() => {
+    if (pendingPlan || showStripePrompt || showCancelDialog) {
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    };
+  }, [pendingPlan, showStripePrompt, showCancelDialog]);
+
   // Load Stripe Connect status on mount for beta host users
   useEffect(() => {
     if (!user?.id) return;
@@ -933,12 +948,13 @@ export default function Subscription() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            >
+              className="fixed z-50 flex items-center justify-center p-4 w-full"
+              style={{ top: window.innerHeight / 2 + window.scrollY - 200, left: 0, right: 0 }}
+              >
               <Card className="max-w-md w-full relative">
                 <button
                   onClick={() => setPendingPlan(null)}
-                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-400"
                 >
                   <X className="w-5 h-5" />
                 </button>
