@@ -166,7 +166,10 @@ export default function Settings() {
     setNotifications(updated);
     // Persist immediately
     if (user?.id) {
-      base44.entities.User.update(user.id, { notification_preferences: updated }).catch(() => {});
+      base44.functions.invoke("saveUserProfile", {
+        email: user.email,
+        notification_preferences: updated,
+      }).catch(() => {});
     }
   };
 
