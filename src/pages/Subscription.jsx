@@ -72,6 +72,7 @@ const HOST_PLANS = [
     price: 59,
     icon: Crown,
     color: "violet",
+    popular: true,
     max_properties: 5,
     features: HOST_FEATURES,
   },
@@ -122,6 +123,7 @@ const CLEANER_PLANS = [
     price: 19.99,
     icon: Crown,
     color: "violet",
+    popular: true,
     features: CLEANER_SHARED_FEATURES,
   },
   {
@@ -300,7 +302,7 @@ export default function Subscription() {
       (BETA_PLANS.includes(subscription.plan) && subscription.status === "active") ||
       subscription.is_founding_member === true
     )) ||
-    (foundingMemberRecord && !foundingMemberRecord.approval_status?.startsWith('banned_'));
+    (foundingMemberRecord && ['approved', 'invited', 'password_protected'].includes(foundingMemberRecord.approval_status));
 
   const isPending =
     userRoles &&
@@ -368,26 +370,29 @@ export default function Subscription() {
   };
 
   const handleStripeConnect = async () => {
-  setStripeConnecting(true);
-  try {
-    const res = await fetch('/api/apps/698eee4108bd1d9467648326/functions/createStripeConnectLink', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        session_token: localStorage.getItem('session_token'),
-        return_url: `${window.location.origin}/Subscription?stripe_connect_return=success`,
-        refresh_url: `${window.location.origin}/Subscription?stripe_connect_return=refresh`,
-      })
-    });
-    const data = await res.json();
-    if (data?.url) {
-      window.location.href = data.url;
+    setStripeConnecting(true);
+    try {
+      const res = await fetch('/api/apps/698eee4108bd1d9467648326/functions/createStripeConnectLink', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_token: localStorage.getItem('session_token'),
+          return_url: `${window.location.origin}/Subscription?stripe_connect_return=success`,
+          refresh_url: `${window.location.origin}/Subscription?stripe_connect_return=refresh`,
+        }),
+      });
+      const data = await res.json();
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        toast.error(data?.error || 'Failed to start Stripe setup. Please try again.');
+      }
+    } catch {
+      toast.error('Failed to connect to Stripe. Please try again.');
+    } finally {
+      setStripeConnecting(false);
     }
-    setStripeConnecting(false);
-  } catch {
-    setStripeConnecting(false);
-  }
-};
+  };
 
   const handleSubscribe = async (planId) => {
     if (!user) {
@@ -642,7 +647,84 @@ export default function Subscription() {
             <p className="text-sm text-gray-600 dark:text-gray-300">All features unlocked for all founding members during beta.</p>
           </div>
 
+          {/* Founding Pricing Cards with selection for beta users */}
+          {activeTab === "host" && (
+            <div className="mb-10">
+              {isBetaUser && (
+                <div className="text-center mb-6">
+                  <h2 className="text-xl font-bold text-gray-900 mb-1">🔒 Your Exclusive Founding Member Rates</h2>
+                  <p className="text-sm text-gray-500 max-w-lg mx-auto">These prices are locked in for life — only available to founding members. Choose the plan that fits your portfolio. You won't be charged until beta ends.</p>
+                </div>
+              )}
+              <div className="grid md:grid-cols-3 gap-4">
+                {[
+                  { id: 'founding_host_solo', name: 'Solo Host Founding', price: 19, standard: 29 },
+                  { id: 'founding_host_multi', name: 'Multi Host Founding', price: 49, standard: 59 },
+                  { id: 'founding_host_portfolio', name: 'Portfolio Host Founding', price: 89, standard: 99 },
+                ].map((plan) => (
+                  <div key={plan.id} className={`rounded-2xl border-2 p-5 text-center transition-all ${subscription?.next_subscription === plan.id ? 'border-amber-500 bg-amber-50' : 'border-amber-200 bg-white'}`}>
+                    <Badge className="bg-amber-500 text-white mb-2">Founding</Badge>
+                    <p className="text-sm font-semibold text-gray-900 mb-1">{plan.name}</p>
+                    <p className="text-4xl font-black text-gray-900 mb-3">£{plan.price}</p>
+                    <p className="text-xs text-gray-500 mb-4">Locked in for founding members<br /><strong>Standard: £{plan.standard}/mo</strong></p>
+                    {isBetaUser ? (
+                      <Button
+                        onClick={() => setPendingPlan(plan)}
+                        disabled={subscription?.next_subscription === plan.id || !stripeConnected}
+                        title={!stripeConnected ? 'Set up your payment account first' : ''}
+                        className={`w-full ${
+                          subscription?.next_subscription === plan.id
+                            ? 'bg-amber-600 hover:bg-amber-700'
+                            : 'bg-gray-600 hover:bg-gray-700'
+                        }`}
+                      >
+                        {subscription?.next_subscription === plan.id ? 'Selected for Beta Exit' : 'Choose This Plan'}
+                      </Button>
+                    ) : (
+                      <div className="text-xs text-gray-500">Choose your plan below</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {/* Founding Pricing Cards (for cleaner plans) */}
+          {activeTab === "cleaner" && isBetaUser && (
+            <div className="mb-10">
+              <div className="text-center mb-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-1">🔒 Your Exclusive Founding Member Rate</h2>
+                <p className="text-sm text-gray-500 max-w-lg mx-auto">This price is locked in for life — only available to founding members. You won't be charged until beta ends.</p>
+              </div>
+              <div className="rounded-2xl border-2 border-amber-200 bg-white p-5 text-center max-w-sm mx-auto">
+                <Badge className="bg-amber-500 text-white mb-2">Founding</Badge>
+                <p className="text-sm font-semibold text-gray-900 mb-1">Cleaner Solo Founding</p>
+                <p className="text-4xl font-black text-gray-900 mb-3">£19</p>
+                <p className="text-xs text-gray-500 mb-4">Locked in for founding members<br /><strong>Standard: £19.99/mo</strong></p>
+                <Button
+                  onClick={() => setPendingPlan({ id: 'founding_cleaner_solo', name: 'Cleaner Solo Founding', price: 19 })}
+                  disabled={subscription?.next_subscription === 'founding_cleaner_solo' || !stripeConnected}
+                  className={`w-full ${
+                    subscription?.next_subscription === 'founding_cleaner_solo'
+                      ? 'bg-blue-600 hover:bg-blue-700'
+                      : 'bg-gray-600 hover:bg-gray-700'
+                  }`}
+                >
+                  {subscription?.next_subscription === 'founding_cleaner_solo' ? (
+                    'Selected for Beta Exit'
+                  ) : (
+                    'Choose This Plan'
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Plan cards */}
+          {isBetaUser && (
+            <div className="text-center mb-4">
+              <p className="text-sm text-gray-400 uppercase tracking-wide font-semibold">Standard pricing for reference — your founding rates are above</p>
+            </div>
+          )}
           <div className="grid md:grid-cols-3 gap-6">
             {(activeTab === "host" ? HOST_PLANS : CLEANER_PLANS).map(
               (plan, idx) => {
@@ -717,32 +799,12 @@ export default function Subscription() {
                         <CardTitle className="text-xl">
                           {plan.name}
                         </CardTitle>
-                        {isBetaUser && (() => {
-                          const foundingPrices = {
-                            host_starter_monthly: 19,
-                            host_growth_monthly: 49,
-                            host_pro_monthly: 89,
-                            cleaner_solo_monthly: 19,
-                            cleaner_pro_monthly: 19,
-                            cleaner_team_monthly: 19,
-                          };
-                          const foundingPrice = foundingPrices[plan.id];
-                          return (
-                            <div className="mt-2 flex items-center justify-center gap-2">
-                              <span className="text-4xl font-bold text-gray-900">£{foundingPrice}</span>
-                              <div className="text-left">
-                                <span className="block text-xs text-amber-600 font-semibold">Founding rate</span>
-                                <span className="block text-xs text-gray-400 line-through">£{plan.price}/mo</span>
-                              </div>
-                            </div>
-                          );
-                        })()}
-                        {!isBetaUser && (
-                          <div className="mt-2">
-                            <span className="text-4xl font-bold text-gray-900">£{plan.price}</span>
-                            <span className="text-gray-500">/month</span>
-                          </div>
-                        )}
+                        <div className="mt-2">
+                          <span className="text-4xl font-bold text-gray-900">
+                            £{plan.price}
+                          </span>
+                          <span className="text-gray-500">/month</span>
+                        </div>
                         {isBetaUser && activeTab === "cleaner" && (
                           <Badge className="bg-amber-100 text-amber-800 border border-amber-300 mt-2">
                             First 3 months free
@@ -784,34 +846,15 @@ export default function Subscription() {
                       </CardContent>
 
                       <CardFooter>
-                        {isBetaUser ? (() => {
-                          const foundingMap = {
-                            host_starter_monthly: { id: 'founding_host_solo', price: 19 },
-                            host_growth_monthly:  { id: 'founding_host_multi', price: 49 },
-                            host_pro_monthly:     { id: 'founding_host_portfolio', price: 89 },
-                            cleaner_solo_monthly: { id: 'founding_cleaner_solo', price: 19 },
-                            cleaner_pro_monthly:  { id: 'founding_cleaner_solo', price: 19 },
-                            cleaner_team_monthly: { id: 'founding_cleaner_solo', price: 19 },
-                          };
-                          const founding = foundingMap[plan.id];
-                          const isSelected = subscription?.next_subscription === founding?.id;
-                          return (
-                            <div className="w-full space-y-2">
-                              <div className="w-full rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-center">
-                                <span className="text-xs text-amber-700 font-medium">Founding rate — </span>
-                                <span className="text-sm font-bold text-amber-800">£{founding?.price}/mo</span>
-                                <span className="text-xs text-amber-600 ml-1">(save £{plan.price - (founding?.price || 0)}/mo)</span>
-                              </div>
-                              <Button
-                                onClick={() => founding && setPendingPlan({ id: founding.id, name: plan.name, price: founding.price })}
-                                disabled={isSelected || !stripeConnected}
-                                className={`w-full ${isSelected ? 'bg-amber-600 hover:bg-amber-700' : 'bg-[#1E3A5F] hover:bg-[#16304f]'} text-white`}
-                              >
-                                {isSelected ? '✓ Founding Rate Selected' : 'Choose Founding Rate'}
-                              </Button>
-                            </div>
-                          );
-                        })() : isCurrentPlan ? (
+                        {isBetaUser ? (
+                          <Button
+                            variant="outline"
+                            className="w-full"
+                            disabled
+                          >
+                            {activeTab === "cleaner" ? "Claimed — 3 months free" : "Locked in at founding rate"}
+                          </Button>
+                        ) : isCurrentPlan ? (
                           <Button
                             variant="outline"
                             className="w-full"
