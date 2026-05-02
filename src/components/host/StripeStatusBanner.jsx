@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, CheckCircle, Clock, Loader2, ExternalLink } from "lucide-react";
-import { Link } from "react-router-dom";
 import { toast } from "sonner";
+
+const APP_ID = "698eee4108bd1d9467648326";
+const CONNECT_URL = `/api/apps/${APP_ID}/functions/createStripeConnectLink`;
+const STATUS_URL = `/api/apps/${APP_ID}/functions/getStripeConnectStatus`;
 
 export default function StripeStatusBanner({ user }) {
   const [status, setStatus] = useState(null);
@@ -12,28 +14,37 @@ export default function StripeStatusBanner({ user }) {
   useEffect(() => {
     if (!user?.id) return;
     const session_token = localStorage.getItem("session_token");
-    base44.functions.invoke('getStripeConnectStatus', { session_token })
-      .then(res => setStatus(res.data?.status || 'not_connected'))
-      .catch(() => setStatus('not_connected'));
+    fetch(STATUS_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_token }),
+    })
+      .then(r => r.json())
+      .then(d => setStatus(d.status || "not_connected"))
+      .catch(() => setStatus("not_connected"));
   }, [user?.id]);
 
   const handleConnect = async () => {
     setConnecting(true);
-    const session_token = localStorage.getItem("session_token");
     try {
-      const res = await base44.functions.invoke("createStripeConnectLink", {
-        session_token,
-        return_url: `${window.location.origin}/HostDashboard?stripe_connect_return=success`,
-        refresh_url: `${window.location.origin}/HostDashboard?stripe_connect_return=refresh`,
+      const res = await fetch(CONNECT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          session_token: localStorage.getItem("session_token"),
+          return_url: `${window.location.origin}/HostDashboard?stripe_connect_return=success`,
+          refresh_url: `${window.location.origin}/HostDashboard?stripe_connect_return=refresh`,
+        }),
       });
-      if (res.data?.url) {
-        window.location.href = res.data.url;
+      const data = await res.json();
+      if (data?.url) {
+        window.location.href = data.url;
       } else {
-        toast.error(res.data?.error || 'Failed to start Stripe onboarding');
+        toast.error(data?.error || "Failed to start Stripe onboarding");
+        setConnecting(false);
       }
-    } catch (err) {
-      toast.error('Failed to connect to Stripe.');
-    } finally {
+    } catch {
+      toast.error("Failed to connect to Stripe. Please try again.");
       setConnecting(false);
     }
   };
@@ -47,7 +58,7 @@ export default function StripeStatusBanner({ user }) {
     );
   }
 
-  if (status === 'verified') {
+  if (status === "verified") {
     return (
       <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-100 rounded-xl px-4 py-2.5 mb-6">
         <CheckCircle className="w-4 h-4 text-green-600" />
@@ -56,13 +67,13 @@ export default function StripeStatusBanner({ user }) {
     );
   }
 
-  if (status === 'pending_verification') {
+  if (status === "pending_verification") {
     return (
       <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
         <Clock className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
         <div>
-          <p className="font-semibold text-amber-900">Stripe is verifying your account — this usually takes 1–2 business days</p>
-          <p className="text-sm text-amber-700 mt-0.5">You'll be notified once your account is approved and you can start accepting bookings.</p>
+          <p className="font-semibold text-amber-900">Stripe is verifying your account</p>
+          <p className="text-sm text-amber-700 mt-0.5">This usually takes a few minutes to a few hours. You can continue setting up your property in the meantime.</p>
         </div>
       </div>
     );
@@ -73,11 +84,8 @@ export default function StripeStatusBanner({ user }) {
       <div className="flex items-start gap-3">
         <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
         <div>
-          <p className="font-semibold text-yellow-900">You need to connect your bank account before you can receive payments.</p>
-          <p className="text-sm text-yellow-700 mt-0.5">
-            This takes about 5 minutes.{" "}
-            <Link to="/HowPaymentsWork" className="underline">Learn how payments work →</Link>
-          </p>
+          <p className="font-semibold text-yellow-900">Connect your bank account to receive guest payments</p>
+          <p className="text-sm text-yellow-700 mt-0.5">Takes around 5 minutes via Stripe's secure onboarding.</p>
         </div>
       </div>
       <Button
@@ -87,7 +95,7 @@ export default function StripeStatusBanner({ user }) {
         size="sm"
       >
         {connecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
-        Connect with Stripe
+        {connecting ? "Redirecting..." : "Connect Bank Account"}
       </Button>
     </div>
   );
