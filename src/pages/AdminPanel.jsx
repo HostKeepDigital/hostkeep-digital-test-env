@@ -660,7 +660,7 @@ const handleDeleteMember = async (member) => {
 
 const DOC_LABELS = { government_id: "Government ID", selfie: "Selfie with ID", utility_bill: "Proof of Property" };
 
-const handleSubmitDocDecision = async (member, decisions) => {
+  const handleSubmitDocDecision = async (member, decisions) => {
   // 1. Update each VerificationDocuments record to the decided status
   if (member.user_id) {
     const allDocs = await base44.entities.VerificationDocuments.filter({ user_id: member.user_id });
