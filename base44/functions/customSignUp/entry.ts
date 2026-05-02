@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const serviceRole = base44.asServiceRole;
 
-    const { email, password, forename, middle_name, surname } = await req.json();
+    const { email, password, forename, middle_name, surname, ref_code } = await req.json();
 
     if (!email || !password || !forename || !surname) {
       return Response.json(
@@ -60,6 +60,20 @@ Deno.serve(async (req) => {
     } catch (err) {
       console.error('Failed to create UserCredentials:', err.message);
       throw err;
+    }
+
+    // Link referee to referral record if a ref_code was provided
+    if (ref_code) {
+      try {
+        const normCode = ref_code.trim().toUpperCase();
+        const refs = await serviceRole.entities.Referral.filter({ ref_code: normCode });
+        if (refs.length > 0) {
+          await serviceRole.entities.Referral.update(refs[0].id, {
+            referee_email: normalisedEmail,
+            referee_name: [forename, surname].filter(Boolean).join(" "),
+          });
+        }
+      } catch (_) {}
     }
 
     // Create guest UserRole
