@@ -72,7 +72,6 @@ const HOST_PLANS = [
     price: 59,
     icon: Crown,
     color: "violet",
-    popular: true,
     max_properties: 5,
     features: HOST_FEATURES,
   },
@@ -123,7 +122,6 @@ const CLEANER_PLANS = [
     price: 19.99,
     icon: Crown,
     color: "violet",
-    popular: true,
     features: CLEANER_SHARED_FEATURES,
   },
   {
@@ -720,11 +718,7 @@ export default function Subscription() {
           )}
 
           {/* Plan cards */}
-          {isBetaUser && (
-            <div className="text-center mb-4">
-              <p className="text-sm text-gray-400 uppercase tracking-wide font-semibold">Standard pricing for reference — your founding rates are above</p>
-            </div>
-          )}
+
           <div className="grid md:grid-cols-3 gap-6">
             {(activeTab === "host" ? HOST_PLANS : CLEANER_PLANS).map(
               (plan, idx) => {
@@ -741,25 +735,16 @@ export default function Subscription() {
                     transition={{ delay: idx * 0.1 }}
                   >
                     <Card
-                      className={`relative h-full flex flex-col ${
-                        plan.popular
-                          ? "border-2 border-violet-500 shadow-lg"
-                          : "border border-gray-200"
-                      } ${
+                      className={`relative h-full flex flex-col border ${
                         isCurrentPlan
                           ? `ring-2 ${
                               activeTab === "cleaner"
                                 ? "ring-blue-500"
                                 : "ring-teal-500"
-                            }`
-                          : ""
+                            } border-gray-200`
+                          : "border-gray-200"
                       }`}
                     >
-                      {plan.popular && (
-                        <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-violet-500">
-                          Most Popular
-                        </Badge>
-                      )}
                       {isCurrentPlan && (
                         <Badge
                           className={`absolute -top-3 right-4 ${
@@ -799,17 +784,37 @@ export default function Subscription() {
                         <CardTitle className="text-xl">
                           {plan.name}
                         </CardTitle>
-                        <div className="mt-2">
-                          <span className="text-4xl font-bold text-gray-900">
-                            £{plan.price}
-                          </span>
-                          <span className="text-gray-500">/month</span>
-                        </div>
-                        {isBetaUser && activeTab === "cleaner" && (
-                          <Badge className="bg-amber-100 text-amber-800 border border-amber-300 mt-2">
-                            First 3 months free
-                          </Badge>
-                        )}
+                        {(() => {
+                          const foundingPrices = {
+                            host_starter_monthly: 19,
+                            host_growth_monthly: 49,
+                            host_pro_monthly: 89,
+                            cleaner_solo_monthly: 9.99,
+                            cleaner_pro_monthly: 19.99,
+                            cleaner_team_monthly: 39.99,
+                          };
+                          const foundingPrice = foundingPrices[plan.id];
+                          if (isBetaUser && foundingPrice && foundingPrice < plan.price) {
+                            return (
+                              <div className="mt-2">
+                                <div className="flex items-end justify-center gap-2">
+                                  <span className="text-4xl font-bold text-gray-900">£{foundingPrice}</span>
+                                  <div className="text-left pb-1">
+                                    <span className="block text-xs font-semibold text-amber-600">Founding rate</span>
+                                    <span className="block text-xs text-gray-400 line-through">£{plan.price}/mo</span>
+                                  </div>
+                                </div>
+                                <p className="text-xs text-amber-700 font-medium mt-1">Locked in for life · save £{(plan.price - foundingPrice).toFixed(0)}/mo</p>
+                              </div>
+                            );
+                          }
+                          return (
+                            <div className="mt-2">
+                              <span className="text-4xl font-bold text-gray-900">£{plan.price}</span>
+                              <span className="text-gray-500">/month</span>
+                            </div>
+                          );
+                        })()}
                         {plan.max_properties != null && (
                           <CardDescription className="mt-2 font-semibold text-gray-700">
                             {plan.max_properties === 999
@@ -846,15 +851,35 @@ export default function Subscription() {
                       </CardContent>
 
                       <CardFooter>
-                        {isBetaUser ? (
-                          <Button
-                            variant="outline"
-                            className="w-full"
-                            disabled
-                          >
-                            {activeTab === "cleaner" ? "Claimed — 3 months free" : "Locked in at founding rate"}
-                          </Button>
-                        ) : isCurrentPlan ? (
+                        {isBetaUser ? (() => {
+                          const foundingIds = {
+                            host_starter_monthly: "founding_host_solo",
+                            host_growth_monthly: "founding_host_multi",
+                            host_pro_monthly: "founding_host_portfolio",
+                            cleaner_solo_monthly: "cleaner_solo_monthly",
+                            cleaner_pro_monthly: "cleaner_pro_monthly",
+                            cleaner_team_monthly: "cleaner_team_monthly",
+                          };
+                          const foundingId = foundingIds[plan.id];
+                          const isSelected = subscription?.plan === foundingId && subscription?.status === "active";
+                          return (
+                            <div className="w-full space-y-2">
+                              {isSelected ? (
+                                <Button variant="outline" className="w-full" disabled>
+                                  ✓ Current Plan
+                                </Button>
+                              ) : (
+                                <Button
+                                  className="w-full bg-[#1E3A5F] hover:bg-[#16304f] text-white"
+                                  onClick={() => setPendingPlan({ id: foundingId, name: plan.name, price: plan.price })}
+                                  disabled={checkoutLoading === foundingId}
+                                >
+                                  {checkoutLoading === foundingId ? "Loading..." : "Choose Founding Rate"}
+                                </Button>
+                              )}
+                            </div>
+                          );
+                        })() : isCurrentPlan ? (
                           <Button
                             variant="outline"
                             className="w-full"
