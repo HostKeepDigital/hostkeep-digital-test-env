@@ -808,7 +808,17 @@ export default function Subscription() {
                               ) : (
                                 <Button
                                   className="w-full bg-[#1E3A5F] hover:bg-[#16304f] text-white"
-                                  onClick={() => setPendingPlan({ id: foundingId, name: plan.name, price: plan.price })}
+                                  onClick={() => {
+                                    const foundingPriceMap = {
+                                      founding_host_solo: 19,
+                                      founding_host_multi: 49,
+                                      founding_host_portfolio: 89,
+                                      cleaner_solo_monthly: 9.99,
+                                      cleaner_pro_monthly: 19.99,
+                                      cleaner_team_monthly: 39.99,
+                                    };
+                                    setPendingPlan({ id: foundingId, name: plan.name, price: foundingPriceMap[foundingId] || plan.price });
+                                  }}
                                   disabled={checkoutLoading === foundingId}
                                 >
                                   {checkoutLoading === foundingId ? "Loading..." : "Choose Founding Rate"}
