@@ -32,6 +32,7 @@ import {
   FileCheck,
   Clock,
   XCircle,
+  Star,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -41,8 +42,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { format, isAfter, parseISO } from "date-fns";
 import PublishGateModal from "./PublishGateModal";
-
-const FOUNDER_BADGE = "https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/HostFounderBadge.png";
 
 export default function PropertyListingCard({
   property,
@@ -189,11 +188,10 @@ export default function PropertyListingCard({
         </Badge>
 
         {isFoundingMember && (
-          <img
-            src={FOUNDER_BADGE}
-            alt="Founding Member"
-            className="absolute bottom-4 right-4 h-10 w-auto drop-shadow-md"
-          />
+          <div className="absolute bottom-4 right-4 flex items-center gap-1.5 bg-amber-400 text-amber-900 px-2.5 py-1 rounded-full shadow-md">
+            <Star className="w-3.5 h-3.5 fill-amber-900" />
+            <span className="text-xs font-bold tracking-wide">Founding Member</span>
+          </div>
         )}
 
         <div className="absolute bottom-5 left-5 right-5 text-white">
