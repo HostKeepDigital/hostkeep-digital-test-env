@@ -17,7 +17,7 @@ export default function StatsCard({ title, value, subtitle, icon: Icon, trend, c
     >
       <div className="flex items-start justify-between">
         <div className="space-y-1">
-          <p className="text-sm font-medium text-gray-500 tracking-wide uppercase">{title}</p>
+          <p className="text-xs font-medium text-gray-500 tracking-wide uppercase">{title}</p>
           <p className="text-3xl font-semibold text-gray-900 tracking-tight">{value}</p>
           {subtitle && (
             <p className="text-sm text-gray-500">{subtitle}</p>
