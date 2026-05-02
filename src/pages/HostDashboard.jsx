@@ -506,19 +506,19 @@ export default function HostDashboard() {
                     <Link
                       key={property.id}
                       to={createPageUrl("HostProperties")}
-                      className="flex items-center gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors border border-gray-100"
+                      className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors border border-gray-100"
                     >
                       <img
                         src={property.photos?.[0] || "https://lh3.googleusercontent.com/d/1Vr07gcaaC19XEmxcvTbq-DTn8PZKn-_a"}
                         alt={property.title}
-                        className="w-20 h-20 rounded-xl object-cover flex-shrink-0"
+                        className="w-14 h-14 rounded-lg object-cover flex-shrink-0"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-gray-900 truncate text-base">{property.title}</p>
-                        <p className="text-sm text-gray-500 mt-0.5">£{property.nightly_rate}/night</p>
+                        <p className="font-semibold text-gray-900 truncate text-sm">{property.title}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">£{property.nightly_rate}/night</p>
                         <p className="text-xs text-gray-400 mt-0.5">{property.town || property.postcode_area || ""}</p>
                       </div>
-                      <Badge variant={property.status === "published" ? "default" : "secondary"} className="text-sm px-2 py-1">
+                      <Badge variant={property.status === "published" ? "default" : "secondary"} className="text-xs px-2 py-0.5 flex-shrink-0">
                         {property.status}
                       </Badge>
                     </Link>
