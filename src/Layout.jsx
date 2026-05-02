@@ -19,7 +19,6 @@ import {
 import { useState, useEffect, useRef, createContext } from "react";
 export const NavigationContext = createContext(null);
 
-export const NavigationContext = createContext(null);
 
 import { Button } from "@/components/ui/button";
 import {
