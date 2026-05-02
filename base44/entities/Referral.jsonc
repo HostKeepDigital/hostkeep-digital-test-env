@@ -1,0 +1,49 @@
+{
+  "name": "Referral",
+  "type": "object",
+  "properties": {
+    "referrer_user_id": {
+      "type": "string",
+      "description": "The host who shared the referral link"
+    },
+    "referrer_email": {
+      "type": "string",
+      "description": "Email of the referring host"
+    },
+    "referee_email": {
+      "type": "string",
+      "description": "Email of the person who signed up"
+    },
+    "referee_user_id": {
+      "type": "string",
+      "description": "Set when the referee's account is confirmed"
+    },
+    "ref_code": {
+      "type": "string",
+      "description": "The unique referral code"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "subscription_activated",
+        "reward_applied"
+      ],
+      "default": "pending",
+      "description": "Current status of the referral"
+    },
+    "referee_name": {
+      "type": "string",
+      "description": "Display name of the person who signed up"
+    },
+    "reward_applied_at": {
+      "type": "string",
+      "format": "date",
+      "description": "Date when the reward was applied"
+    }
+  },
+  "required": [
+    "referrer_user_id",
+    "ref_code"
+  ]
+}
