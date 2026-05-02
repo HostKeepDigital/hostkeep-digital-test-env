@@ -104,7 +104,22 @@ async function handleSubscriptionDeactivated(base44, user_id) {
      }
 
      // Send subscription expired email
-     const users = await base44.asServiceRole.entities.User
+     // Call checkApprovalGates so admin gate flips back to red
+     try {
+       await base44.asServiceRole.functions.invoke('checkApprovalGates', { user_id });
+     } catch (_) {}
+
+     // Update Subscription record status
+     try {
+       const subs = await base44.asServiceRole.entities.Subscription.filter({ user_id });
+       if (subs?.[0]) {
+         await base44.asServiceRole.entities.Subscription.update(subs[0].id, { status: 'expired' });
+       }
+     } catch (_) {}
+
+     // Send subscription expired email
+     const userRecords = await base44.asServiceRole.entities.User.filter({ id: user_id });
+     const user = userRecords?.[0];
      if (user?.email) {
        const html = buildEmail({
          heading: 'Your subscription has expired',
