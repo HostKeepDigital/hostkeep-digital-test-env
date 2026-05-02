@@ -18,10 +18,10 @@ Deno.serve(async (req) => {
       return Response.json({ error: "Missing session token" }, { status: 401 });
     }
 
-    const sessionCheck = await serviceRole.functions.invoke("checkSession", { session_token });
-    const session = sessionCheck?.data;
+    const sessions = await serviceRole.entities.UserSession.filter({ session_token });
+    const session = sessions?.[0];
 
-    if (!session?.authenticated) {
+    if (!session || new Date(session.expires_at) < new Date()) {
       return Response.json({ error: "Invalid or expired session" }, { status: 401 });
     }
 
@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
     const email = session.email;
 
     if (!user_id) {
-      return Response.json({ error: "Session missing user_id" }, { status: 400 });
+      return Response.json({ error: "Session missing user_id — please log out and back in" }, { status: 400 });
     }
 
     const users = await serviceRole.entities.User.filter({ email });
