@@ -55,6 +55,7 @@ import BookingBarCalendar from "@/components/BookingBarCalendar";
 import HostPerformancePanel from "@/components/dashboard/HostPerformancePanel";
 import PricingReportCard from "@/components/dashboard/PricingReportCard";
 import ExportPricing from "@/components/pricing/ExportPricing";
+import FinancialSummary from "@/components/dashboard/FinancialSummary";
 
 export default function HostDashboard() {
   const { user } = useAuth();
@@ -139,6 +140,13 @@ export default function HostDashboard() {
       });
       return subs.find(s => s.status !== 'pending') ?? null;
     },
+    enabled: !!user?.id,
+  });
+
+  // Load cleaning jobs
+  const { data: cleaningJobs = [] } = useQuery({
+    queryKey: ["host-cleaning-jobs-all", user?.id],
+    queryFn: () => base44.entities.CleaningJob.filter({ host_id: user?.id }),
     enabled: !!user?.id,
   });
 
@@ -620,6 +628,14 @@ export default function HostDashboard() {
 
             {/* Pricing Report Download */}
             <PricingReportCard properties={properties} bookings={bookings} />
+
+            {/* Financial Summary */}
+            <FinancialSummary
+              bookings={bookings}
+              cleaningJobs={cleaningJobs}
+              subscription={subscription}
+              properties={properties}
+            />
 
             {/* Performance / Reviews */}
             <HostPerformancePanel userId={user?.id} />
