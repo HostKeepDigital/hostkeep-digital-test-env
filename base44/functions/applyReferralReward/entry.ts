@@ -52,9 +52,27 @@ Deno.serve(async (req) => {
         });
       }
 
+      // Also credit the referee one month free
+      if (referee_user_id) {
+        const refereeSubs = await sr.entities.Subscription.filter({ user_id: referee_user_id });
+        const refereeSub = refereeSubs.find(s => s.status === "active" && s.stripe_subscription_id);
+        if (refereeSub?.stripe_subscription_id) {
+          const refereeSubObj = await stripe.subscriptions.retrieve(refereeSub.stripe_subscription_id);
+          const refereeAmount = refereeSub.price_monthly ? Math.round(refereeSub.price_monthly * 100) : 0;
+          if (refereeAmount > 0) {
+            await stripe.customerBalanceTransactions.create(refereeSubObj.customer, {
+              amount: -refereeAmount,
+              currency: "gbp",
+              description: "Referral welcome reward — your second month is on us",
+            });
+          }
+        }
+      }
+
       await sr.entities.Referral.update(referral.id, {
-        status: "reward_applied",
-        reward_applied_at: new Date().toISOString().split("T")[0],
+        referee_user_id: referee_user_id || referral.referee_user_id,
+        status: "completed",
+        completed_at: new Date().toISOString().split("T")[0],
       });
 
       // Email the referee confirming their free month
