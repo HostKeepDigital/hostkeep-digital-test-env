@@ -83,12 +83,12 @@ export default function HostDashboard() {
       }).catch(() => {});
     base44.entities.Referral.filter({ referrer_user_id: user.id })
       .then(data => {
-        setReferrals(data.filter(r => r.referee_email && r.referee_email !== ""));
+        setReferrals(data.filter(r => r.referee_email && r.referee_email !== "").sort((a,b) => new Date(b.created_date) - new Date(a.created_date)));
         setRefLoading(false);
       }).catch(() => setRefLoading(false));
   }, [user?.id]);
 
-  const referralUrl = refCode ? `https://hostkeepdigital.co.uk/founding?ref=${refCode}` : null;
+  const referralUrl = refCode ? `https://hostkeepdigital.co.uk/FoundingHost?ref=${refCode}` : null;
 
   // Handle Stripe Connect return from Stripe onboarding
   useEffect(() => {
@@ -811,23 +811,25 @@ export default function HostDashboard() {
                 <thead>
                   <tr className="bg-white/10 text-white/60 text-xs uppercase tracking-wide">
                     <th className="text-left px-4 py-3">Name</th>
-                    <th className="text-left px-4 py-3">Status</th>
-                    <th className="text-left px-4 py-3">Join date</th>
+                    <th className="text-left px-4 py-3">Referral Status</th>
+                    <th className="text-left px-4 py-3">Join Date</th>
+                    <th className="text-left px-4 py-3">Completed Date</th>
                   </tr>
                 </thead>
                 <tbody>
                   {referrals.map((r, i) => (
                     <tr key={r.id} className={i % 2 === 0 ? "bg-white/5" : ""}>
-                      <td className="px-4 py-3 text-white">{r.referee_name || r.referee_email}</td>
+                      <td className="px-4 py-3 text-white font-medium">{r.referee_name || r.referee_email}</td>
                       <td className="px-4 py-3">
-                        {r.status === "reward_applied"
-                          ? <span className="text-teal-400 font-medium">Reward applied ✓</span>
-                          : r.status === "subscription_activated"
-                          ? <span className="text-teal-300">Subscription activated</span>
-                          : <span className="text-white/50">Signed up — awaiting subscription</span>}
+                        {r.status === "completed"
+                          ? <span className="text-teal-400 font-semibold">✓ Completed</span>
+                          : <span className="text-amber-400">Pending subscription</span>}
                       </td>
                       <td className="px-4 py-3 text-white/60">
                         {r.created_date ? new Date(r.created_date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : "—"}
+                      </td>
+                      <td className="px-4 py-3 text-white/60">
+                        {r.completed_at ? new Date(r.completed_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : "—"}
                       </td>
                     </tr>
                   ))}
