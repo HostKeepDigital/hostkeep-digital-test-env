@@ -8,6 +8,7 @@ const VALID_PLANS = new Set([
   'cleaner_solo_monthly', 'cleaner_pro_monthly', 'cleaner_team_monthly',
   'founding_host_solo', 'founding_host_multi', 'founding_host_portfolio',
   'founding_cleaner_solo',
+  'beta_host_access', 'beta_cleaner_access',
 ]);
 
 Deno.serve(async (req) => {
