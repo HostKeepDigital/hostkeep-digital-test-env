@@ -432,13 +432,7 @@ export default function HostDashboard() {
            );
          })()}
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-          <StatsCard title="This Month" value={`£${monthlyEarnings.toFixed(0)}`} icon={PoundSterling} color="emerald" />
-          <StatsCard title="Total Earnings" value={`£${totalEarnings.toFixed(0)}`} icon={TrendingUp} color="teal" />
-          <StatsCard title="Properties" value={publishedProperties} subtitle={`${properties.length} total`} icon={Home} color="violet" />
-          <StatsCard title="Upcoming" value={confirmedBookings.length} subtitle="bookings" icon={Calendar} color="amber" />
-        </div>
+
 
         <div className="grid md:grid-cols-3 gap-4">
           {/* Main Content */}
