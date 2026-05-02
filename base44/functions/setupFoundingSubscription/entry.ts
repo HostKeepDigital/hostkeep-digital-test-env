@@ -96,5 +96,18 @@ Deno.serve(async (req) => {
     await base44.asServiceRole.functions.invoke('checkApprovalGates', { user_id });
   } catch (_) {}
 
+  // Apply referral reward if this founding member was referred
+  try {
+    const refs = await base44.asServiceRole.entities.Referral.filter({ referee_email: foundingMember.email.toLowerCase() });
+    const pendingRef = refs.find(r => r.status === "pending");
+    if (pendingRef) {
+      await base44.asServiceRole.functions.invoke("applyReferralReward", {
+        referee_user_id: user_id,
+        referee_email: foundingMember.email,
+        referee_name: foundingMember.full_name,
+      });
+    }
+  } catch (_) {}
+
   return Response.json({ success: true, stripe_customer_id: stripeCustomerId });
 });
