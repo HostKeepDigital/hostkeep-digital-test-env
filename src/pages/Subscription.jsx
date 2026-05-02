@@ -239,8 +239,7 @@ export default function Subscription() {
             user_id: session.user_id,
           });
           const active = subs.find(
-            (s) =>
-              s.status === "active" && !BETA_PLANS.includes(s.plan),
+            (s) => s.status === "active",
           );
 
           if (active) {
