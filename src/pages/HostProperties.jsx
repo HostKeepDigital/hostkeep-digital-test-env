@@ -110,8 +110,6 @@ export default function HostProperties() {
   const allGatesPassed = isApproved && stripeVerified && subscriptionActive;
   const approvalStatus = foundingMemberData?.approval_status;
   const hasRejectedDocs = verificationDocs.some(d => d.verification_status === "rejected");
-  const isFirstSubmission = approvalStatus === "awaiting_document_verification" && !hasRejectedDocs;
-  const isResubmissionUnderReview = approvalStatus === "awaiting_document_verification" && hasRejectedDocs;
   const isApproved = foundingMemberData?.documents_verified === true;
   const isFirstSubmission = approvalStatus === "awaiting_document_verification" && !hasRejectedDocs && !isApproved;
   const isResubmissionUnderReview = approvalStatus === "awaiting_document_verification" && hasRejectedDocs && !isApproved;
