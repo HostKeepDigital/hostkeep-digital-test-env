@@ -4,7 +4,8 @@ import { buildEmail } from "@/lib/emailTemplate";
 import {
   Shield, Check, X, RefreshCw, TrendingUp, Users, PoundSterling,
   XCircle, BarChart2, FileText, AlertTriangle, Ban, Star,
-  CheckCircle, Clock, MapPin, Globe, Settings
+  CheckCircle, Clock, MapPin, Globe, Settings,
+  Eye, UserPlus, LogIn, Percent, ShoppingBag, Calendar
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -1059,7 +1060,62 @@ const handleDocBan = async (member) => {
               <div className="w-6 h-6 border-2 border-gray-200 border-t-teal-600 rounded-full animate-spin" />
             </div>
           ) : (() => {
-            // Build per-guest booking summary
+
+            // ── TRAFFIC FUNNEL ──────────────────────────────────────────────
+            const now = new Date();
+            const last30 = new Date(now - 30 * 24 * 60 * 60 * 1000);
+            const last7  = new Date(now - 7  * 24 * 60 * 60 * 1000);
+
+            const uniqueVisitorsAll  = new Set(pageViews.map(v => v.visitor_id)).size;
+            const uniqueVisitors30   = new Set(pageViews.filter(v => new Date(v.timestamp) >= last30).map(v => v.visitor_id)).size;
+
+            const signupsAll  = guests.length;
+            const signups30   = guests.filter(g => g.created_date && new Date(g.created_date) >= last30).length;
+            const signups7    = guests.filter(g => g.created_date && new Date(g.created_date) >= last7).length;
+
+            const guestsWithBookings = new Set(bookings.map(b => b.guest_email).filter(Boolean)).size;
+            const conversionRate = signupsAll > 0 ? ((guestsWithBookings / signupsAll) * 100).toFixed(1) : "0.0";
+            const signupRate = uniqueVisitors30 > 0 ? ((signups30 / uniqueVisitors30) * 100).toFixed(1) : "0.0";
+
+            // ── SIGNIN TREND (last 30 days, by day) ────────────────────────
+            const signinsByDay = {};
+            guestSessions.forEach(s => {
+              if (!s.created_date) return;
+              const d = new Date(s.created_date);
+              if (d < last30) return;
+              const key = d.toISOString().split("T")[0];
+              signinsByDay[key] = (signinsByDay[key] || 0) + 1;
+            });
+
+            const signupsByDay = {};
+            guests.forEach(g => {
+              if (!g.created_date) return;
+              const d = new Date(g.created_date);
+              if (d < last30) return;
+              const key = d.toISOString().split("T")[0];
+              signupsByDay[key] = (signupsByDay[key] || 0) + 1;
+            });
+
+            const dayLabels = [];
+            for (let i = 29; i >= 0; i--) {
+              const d = new Date(now - i * 24 * 60 * 60 * 1000);
+              dayLabels.push(d.toISOString().split("T")[0]);
+            }
+
+            const maxSignins = Math.max(...dayLabels.map(d => signinsByDay[d] || 0), 1);
+            const maxSignups = Math.max(...dayLabels.map(d => signupsByDay[d] || 0), 1);
+
+            // ── GUEST LIST ─────────────────────────────────────────────────
+            const guestList = [...guests].sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+            const guestBookingMap = bookings.reduce((acc, b) => {
+              if (b.guest_email) acc[b.guest_email] = (acc[b.guest_email] || 0) + 1;
+              return acc;
+            }, {});
+
+            const uniqueSigninEmails = new Set(guestSessions.map(s => s.email));
+            const last7signin = new Set(guestSessions.filter(s => new Date(s.created_date) >= last7).map(s => s.email));
+
+            // ── BOOKING ACTIVITY (existing) ────────────────────────────────
             const bookingsByGuest = bookings.reduce((acc, b) => {
               const key = b.guest_email || b.guest_id || "unknown";
               if (!acc[key]) acc[key] = { name: b.guest_name, email: b.guest_email, count: 0, totalSpend: 0, lastBooking: null, statuses: {} };
@@ -1079,6 +1135,119 @@ const handleDocBan = async (member) => {
 
             return (
               <>
+                {/* ── SECTION 1: Traffic Funnel ── */}
+                <div>
+                  <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">Traffic & Conversion Funnel</h2>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    <MetricCard icon={Eye}         label="Unique Visitors (all time)" value={uniqueVisitorsAll}    color="navy" />
+                    <MetricCard icon={UserPlus}    label="Guest Signups (all time)"   value={signupsAll}           color="teal" />
+                    <MetricCard icon={ShoppingBag} label="Guests Who Booked"          value={guestsWithBookings}   color="green" />
+                    <MetricCard icon={TrendingUp}  label="Booking Conversion"         value={`${conversionRate}%`} color="purple" />
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <MetricCard icon={Calendar}  label="Signups (last 30 days)"  value={signups30}          color="teal" />
+                    <MetricCard icon={Calendar}  label="Signups (last 7 days)"   value={signups7}           color="teal" />
+                    <MetricCard icon={LogIn}     label="Active Guests (last 7d)" value={last7signin.size}   color="navy" />
+                    <MetricCard icon={Percent}   label="Visitor → Signup (30d)"  value={`${signupRate}%`}   color="purple" />
+                  </div>
+                </div>
+
+                {/* ── SECTION 2: Signup & Signin Trends ── */}
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="bg-white rounded-xl border border-gray-100 p-5">
+                    <h3 className="text-sm font-semibold text-gray-700 mb-1">New Signups — Last 30 Days</h3>
+                    <p className="text-xs text-gray-400 mb-4">{signups30} new guests registered</p>
+                    <div className="flex items-end gap-px h-24">
+                      {dayLabels.map((d, i) => {
+                        const count = signupsByDay[d] || 0;
+                        const height = Math.max(2, (count / maxSignups) * 100);
+                        return (
+                          <div key={i} className="flex-1 flex flex-col items-center justify-end group relative">
+                            <div className="w-full bg-teal-500 rounded-t hover:bg-teal-600 transition-colors" style={{ height: `${height}%` }} />
+                            <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap z-10">
+                              {d.slice(5)} · {count}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-xl border border-gray-100 p-5">
+                    <h3 className="text-sm font-semibold text-gray-700 mb-1">Sign-in Activity — Last 30 Days</h3>
+                    <p className="text-xs text-gray-400 mb-4">{uniqueSigninEmails.size} unique guests ever signed in</p>
+                    <div className="flex items-end gap-px h-24">
+                      {dayLabels.map((d, i) => {
+                        const count = signinsByDay[d] || 0;
+                        const height = Math.max(2, (count / maxSignins) * 100);
+                        return (
+                          <div key={i} className="flex-1 flex flex-col items-center justify-end group relative">
+                            <div className="w-full bg-[#1E3A5F] rounded-t hover:bg-[#16304f] transition-colors" style={{ height: `${height}%` }} />
+                            <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap z-10">
+                              {d.slice(5)} · {count}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── SECTION 3: Guest Signup List ── */}
+                <div className="bg-white rounded-xl border border-gray-100 p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Guest Signups</h2>
+                    <span className="text-xs text-gray-400">{guestList.length} total registered guests</span>
+                  </div>
+                  <div className="max-h-[400px] overflow-y-auto">
+                    <table className="w-full text-sm">
+                      <thead className="sticky top-0 bg-white">
+                        <tr className="border-b border-gray-100">
+                          {["Name", "Email", "Signed Up", "Bookings", "Last Sign-in", "Status"].map(h => (
+                            <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {guestList.map((g, i) => {
+                          const bookingCount = guestBookingMap[g.email] || 0;
+                          const lastSession = guestSessions.filter(s => s.email === g.email).sort((a,b) => new Date(b.created_date) - new Date(a.created_date))[0];
+                          const isRecent = g.created_date && new Date(g.created_date) >= last7;
+                          return (
+                            <tr key={i} className="hover:bg-gray-50">
+                              <td className="px-4 py-3 font-medium text-gray-900">
+                                {[g.forename, g.surname].filter(Boolean).join(" ") || g.full_name || "—"}
+                              </td>
+                              <td className="px-4 py-3 text-gray-500 text-xs">{g.email || "—"}</td>
+                              <td className="px-4 py-3 text-gray-500 text-xs">
+                                {g.created_date ? new Date(g.created_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                                {isRecent && <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full bg-teal-100 text-teal-700 font-semibold">New</span>}
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${bookingCount > 0 ? "bg-teal-100 text-teal-700" : "bg-gray-100 text-gray-500"}`}>
+                                  {bookingCount > 0 ? `${bookingCount} booking${bookingCount > 1 ? "s" : ""}` : "No bookings"}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-gray-400 text-xs">
+                                {lastSession?.created_date ? new Date(lastSession.created_date).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "Never"}
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${bookingCount > 1 ? "bg-purple-100 text-purple-700" : bookingCount === 1 ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-500"}`}>
+                                  {bookingCount > 1 ? "Repeat" : bookingCount === 1 ? "Booked" : "Browsing"}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                        {guestList.length === 0 && (
+                          <tr><td colSpan={6} className="px-4 py-10 text-center text-gray-300 text-sm">No guest signups yet</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* ── SECTION 4: Booking Activity (existing) ── */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <MetricCard icon={Users}        label="Total Guests"       value={guests.length || guestRows.length} color="navy" />
                   <MetricCard icon={BarChart2}    label="Total Bookings"     value={totalBookings}      color="teal" />
