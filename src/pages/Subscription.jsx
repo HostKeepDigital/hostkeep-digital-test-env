@@ -953,10 +953,11 @@ export default function Subscription() {
                     <p className="text-sm text-amber-700 font-medium mb-1">You're selecting</p>
                     <p className="text-xl font-bold text-gray-900">{pendingPlan.name}</p>
                     <p className="text-2xl font-black text-amber-700 mt-1">£{pendingPlan.price}<span className="text-sm font-normal text-gray-500">/month</span></p>
-                  </div>
-                  <p className="text-sm text-gray-600 text-center leading-relaxed">
-                    Once beta is complete, this will be the subscription plan you move to. Your founding price is <strong>locked in for life</strong>. The exact start date will be confirmed by the HostKeep team.
-                  </p>
+                    <p className="text-xs text-green-700 font-semibold mt-1">£0 during beta — charges begin at this rate when beta ends</p>
+                    </div>
+                    <p className="text-sm text-gray-600 text-center leading-relaxed">
+                      During beta your access is completely free. Once beta is complete, you will be charged <strong>£{pendingPlan.price}/month</strong> — your founding rate locked in for life. You will not be charged until beta ends.
+                    </p>
                   <div className="space-y-2 pt-1">
                     <Button
                       className="w-full bg-teal-600 hover:bg-teal-700"
