@@ -168,6 +168,12 @@ export default function DocMemberTable({
         const canSubmit = allDecided(m.id, m.user_id);
         const isSubmitting = !!submitting[m.id];
         const isSubmitted = !!submitted[m.id];
+        // Only show submit button when there are actually pending docs needing a decision
+        const hasAnythingToDecide = DOC_TYPES.some(({ key }) => {
+          const attempts = getDocsByType(m.user_id, key);
+          const latest = attempts[attempts.length - 1];
+          return !latest || latest.verification_status === "pending";
+        });
 
         return (
           <div key={m.id} className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
@@ -201,7 +207,7 @@ export default function DocMemberTable({
                 </div>
 
                 {/* Submit Decision / Submitted state */}
-                {showDecisionButtons && canSubmit && (
+                {showDecisionButtons && hasAnythingToDecide && canSubmit && (
                   isSubmitted ? (
                     <div className="w-full text-center py-1.5 text-xs font-medium text-green-700 bg-green-50 rounded border border-green-200">
                       Decision submitted ✓
@@ -253,7 +259,7 @@ export default function DocMemberTable({
                     />
                   ))}
                 </div>
-                {showDecisionButtons && !canSubmit && (
+                {showDecisionButtons && hasAnythingToDecide && !canSubmit && (
                   <p className="text-xs text-gray-400 mt-2 italic">
                     Pass or Fail all pending documents to submit a decision.
                   </p>
