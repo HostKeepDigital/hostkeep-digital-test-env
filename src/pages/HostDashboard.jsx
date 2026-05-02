@@ -415,15 +415,22 @@ export default function HostDashboard() {
          )}
 
         {/* Awaiting Docs / Approved Banner — only show if property exists */}
-         {(isAwaitingDocs || isApproved) && properties.length > 0 && (
-           <div className="mb-6 p-4 rounded-lg border-l-4 border-green-500 bg-green-50">
-             <p className="text-sm text-green-800">
-               {isApproved
-                 ? <><strong>Documents Accepted.</strong> Your property is now publicly visible on HostKeep.</>
-                 : <><strong>Documents Submitted.</strong> Our team will review your documents within 24–48 hours. You can manage your listing now but it won't be publicly visible until approved.</>}
-             </p>
-           </div>
-         )}
+         {(isAwaitingDocs || isApproved) && properties.length > 0 && (() => {
+           const stripeVerified = foundingMember?.stripe_verified === true;
+           const subscriptionActive = !!subscription && subscription.status === "active";
+           const allGatesPassed = isApproved && stripeVerified && subscriptionActive;
+           return (
+             <div className="mb-6 p-4 rounded-lg border-l-4 border-green-500 bg-green-50">
+               <p className="text-sm text-green-800">
+                 {allGatesPassed
+                   ? <><strong>You're all set!</strong> Your documents are approved, subscription is active and Stripe is connected. You can now publish your property.</>
+                   : isApproved
+                   ? <><strong>Documents Accepted.</strong> To publish your property you also need:{!subscriptionActive && <span className="block mt-1">• An active HostKeep subscription</span>}{!stripeVerified && <span className="block">• A connected Stripe account to receive payments</span>}</>
+                   : <><strong>Documents Submitted.</strong> Our team will review your documents within 24–48 hours. You can manage your listing now but it won't be publicly visible until approved.</>}
+               </p>
+             </div>
+           );
+         })()}
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
