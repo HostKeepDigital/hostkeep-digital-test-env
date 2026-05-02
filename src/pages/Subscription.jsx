@@ -300,7 +300,7 @@ export default function Subscription() {
       (BETA_PLANS.includes(subscription.plan) && subscription.status === "active") ||
       subscription.is_founding_member === true
     )) ||
-    (foundingMemberRecord && !foundingMemberRecord.approval_status?.startsWith('banned_'));
+    (foundingMemberRecord && ['approved', 'invited', 'password_protected'].includes(foundingMemberRecord.approval_status));
 
   const isPending =
     userRoles &&
@@ -331,21 +331,6 @@ export default function Subscription() {
   const [stripeStatus, setStripeStatus] = useState(null); // null=loading, 'connected'|'pending'|'not_connected'
   const [stripeStatusLoading, setStripeStatusLoading] = useState(false);
 
-  // Lock scroll when modals are open
-  useEffect(() => {
-    if (pendingPlan || showStripePrompt || showCancelDialog) {
-      document.documentElement.style.overflow = 'hidden';
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-    };
-  }, [pendingPlan, showStripePrompt, showCancelDialog]);
-
   // Load Stripe Connect status on mount for beta host users
   useEffect(() => {
     if (!user?.id) return;
@@ -364,25 +349,32 @@ export default function Subscription() {
     setNextSubscriptionLoading(true);
     try {
       const session_token = localStorage.getItem("session_token");
-      const res = await fetch('/api/apps/698eee4108bd1d9467648326/functions/setupFoundingSubscription', {
+      const betaPlanKey = activeTab === 'cleaner' ? 'beta_cleaner_access' : 'beta_host_access';
+
+      // Store the chosen founding plan against the user
+      const setupRes = await fetch('/api/apps/698eee4108bd1d9467648326/functions/setupFoundingSubscription', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ next_plan: planId, session_token }),
       });
-      const data = await res.json();
-      if (data?.error) {
-        toast.error(data.error);
+      const setupData = await setupRes.json();
+      if (setupData?.error) {
+        toast.error(setupData.error);
         return;
       }
-      // If Stripe needs a card for the £0 subscription, redirect to checkout
-      if (data?.requires_payment_method && data?.client_secret) {
-        window.location.href = `https://checkout.stripe.com/pay/${data.client_secret}`;
-        return;
+
+      // Redirect to Stripe Checkout for the £0 beta plan to capture card details
+      const checkoutRes = await fetch('/api/apps/698eee4108bd1d9467648326/functions/createCheckoutSession', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: betaPlanKey, user_id: user.id, session_token }),
+      });
+      const checkoutData = await checkoutRes.json();
+      if (checkoutData?.url) {
+        window.location.href = checkoutData.url;
+      } else {
+        toast.error(checkoutData?.error || "Failed to open Stripe checkout. Please try again.");
       }
-      queryClient.invalidateQueries({ queryKey: ["subscription"] });
-      setPendingPlan(null);
-      toast.success("Founding plan confirmed! Your rate is locked in for life.");
-      navigate(createPageUrl("HostDashboard"));
     } catch (error) {
       toast.error("Failed to set subscription. Please try again.");
     } finally {
@@ -824,16 +816,16 @@ export default function Subscription() {
                                 <Button
                                   className="w-full bg-[#1E3A5F] hover:bg-[#16304f] text-white"
                                   onClick={() => {
-                                    const foundingPriceMap = {
-                                      founding_host_solo: 19,
-                                      founding_host_multi: 49,
-                                      founding_host_portfolio: 89,
-                                      cleaner_solo_monthly: 9.99,
-                                      cleaner_pro_monthly: 19.99,
-                                      cleaner_team_monthly: 39.99,
-                                    };
-                                    setPendingPlan({ id: foundingId, name: plan.name, price: foundingPriceMap[foundingId] || plan.price });
-                                  }}
+                                  const foundingPriceMap = {
+                                    founding_host_solo: 19,
+                                    founding_host_multi: 49,
+                                    founding_host_portfolio: 89,
+                                    cleaner_solo_monthly: 9.99,
+                                    cleaner_pro_monthly: 19.99,
+                                    cleaner_team_monthly: 39.99,
+                                  };
+                                  setPendingPlan({ id: foundingId, name: plan.name, price: foundingPriceMap[foundingId] || plan.price });
+                                }}
                                   disabled={checkoutLoading === foundingId}
                                 >
                                   {checkoutLoading === foundingId ? "Loading..." : "Choose Founding Rate"}
@@ -948,12 +940,12 @@ export default function Subscription() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 flex items-center justify-center p-4"
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
             >
               <Card className="max-w-md w-full relative">
                 <button
                   onClick={() => setPendingPlan(null)}
-                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-400"
+                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -964,15 +956,15 @@ export default function Subscription() {
                   <CardTitle className="text-xl">Confirm Your Founding Plan</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-5">
-                  <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-xl p-4 text-center">
-                    <p className="text-sm text-amber-700 dark:text-amber-300 font-medium mb-1">You're selecting</p>
-                    <p className="text-xl font-bold text-gray-900 dark:text-white">{pendingPlan.name}</p>
-                    <p className="text-2xl font-black text-amber-700 dark:text-amber-300 mt-1">£{pendingPlan.price}<span className="text-sm font-normal text-gray-500 dark:text-gray-400">/month</span></p>
-                    <p className="text-xs text-green-700 dark:text-green-300 font-semibold mt-1">£0 during beta — charges begin at this rate when beta ends</p>
-                    </div>
-                    <p className="text-sm text-gray-600 text-center leading-relaxed">
-                      During beta your access is completely free. Once beta is complete, you will be charged <strong>£{pendingPlan.price}/month</strong> — your founding rate locked in for life. You will not be charged until beta ends.
-                    </p>
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
+                    <p className="text-sm text-amber-700 font-medium mb-1">You're selecting</p>
+                    <p className="text-xl font-bold text-gray-900">{pendingPlan.name}</p>
+                    <p className="text-2xl font-black text-amber-700 mt-1">£{pendingPlan.price}<span className="text-sm font-normal text-gray-500">/month</span></p>
+                    <p className="text-xs text-green-700 font-semibold mt-1">£0 during beta — charges begin at this rate when beta ends</p>
+                  </div>
+                  <p className="text-sm text-gray-600 text-center leading-relaxed">
+                    During beta your access is completely free. Once beta is complete, you will be charged <strong>£{pendingPlan.price}/month</strong> — your founding rate locked in for life. You will not be charged until beta ends.
+                  </p>
                   <div className="space-y-2 pt-1">
                     <Button
                       className="w-full bg-teal-600 hover:bg-teal-700"
