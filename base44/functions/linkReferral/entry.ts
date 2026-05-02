@@ -28,6 +28,24 @@ Deno.serve(async (req) => {
       status: "pending",
     });
 
+    // Email the referee explaining the referral reward and what happens next
+    try {
+      await base44.functions.invoke("sendEmail", {
+        to: normEmail,
+        subject: "You've been referred to HostKeep — here's what to expect",
+        html: `<p>Hi ${referee_name || "there"},</p>
+<p>You signed up to HostKeep using a referral link from one of our existing hosts. Here is what happens next:</p>
+<p><strong>Once you activate a paid subscription:</strong></p>
+<ul>
+<li>Your <strong>second month is completely free</strong> — Stripe will automatically apply a credit to your account so you are not charged until month three.</li>
+<li>The host who referred you will also receive <strong>one free month</strong> added to their subscription as a thank you.</li>
+</ul>
+<p>Your referral status is currently <strong>Pending</strong> — it will update to <strong>Completed</strong> automatically once your subscription is activated. No action is needed from you at this point.</p>
+<p>If you have any questions, just get in touch at <a href="mailto:hello@hostkeepdigital.co.uk">hello@hostkeepdigital.co.uk</a>.</p>
+<p><a href="https://hostkeepdigital.co.uk/HostDashboard">Go to your dashboard →</a></p>`,
+      });
+    } catch (_) {}
+
     return Response.json({ success: true });
   } catch (e) {
     console.error("linkReferral error:", e);
