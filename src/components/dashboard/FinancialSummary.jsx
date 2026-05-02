@@ -107,7 +107,21 @@ export default function FinancialSummary({ bookings, cleaningJobs, subscription,
     URL.revokeObjectURL(url);
   };
 
-  const yearOptions = [currentYear - 1, currentYear, currentYear + 1];
+  // Earliest year the host has any data — derived from subscription start or earliest booking
+  const signUpYear = (() => {
+    const dates = [];
+    if (subscription?.start_date) dates.push(new Date(subscription.start_date).getFullYear());
+    if (subscription?.created_date) dates.push(new Date(subscription.created_date).getFullYear());
+    bookings.forEach(b => { if (b.check_in) dates.push(new Date(b.check_in).getFullYear()); });
+    return dates.length > 0 ? Math.min(...dates) : currentYear;
+  })();
+
+  // For tax year mode, the "year" label is the April end year, so earliest selectable = signUpYear
+  // Generate years from signUpYear up to currentYear + 1
+  const yearOptions = Array.from(
+    { length: currentYear + 1 - signUpYear + 1 },
+    (_, i) => signUpYear + i
+  );
 
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 md:p-6">
