@@ -113,6 +113,17 @@ Deno.serve(async (req) => {
       role = "guest";
     }
 
+    // Block banned guests
+    if (role === "guest") {
+      const guestRecords = await serviceRole.entities.Guest.filter({ email: normalisedEmail });
+      if (guestRecords?.[0]?.status === "blacklisted") {
+        return Response.json(
+          { success: false, error: "account_suspended", message: "Your account has been suspended. Please contact hello@hostkeepdigital.co.uk if you believe this is an error." },
+          { status: 403 }
+        );
+      }
+    }
+
     // Block unverified guest accounts from signing in
     if (role === "guest" && !adminEmails.includes(normalisedEmail)) {
       if (cred.email_verified !== true) {
