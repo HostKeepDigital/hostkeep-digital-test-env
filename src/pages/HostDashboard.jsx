@@ -138,8 +138,8 @@ export default function HostDashboard() {
 
   const approvalStatus = foundingMember?.approval_status;
   const isBanned = approvalStatus?.startsWith("banned_");
-  const isAwaitingDocs = approvalStatus === "awaiting_document_verification";
-  const isApproved = approvalStatus === "approved";
+  const isApproved = foundingMember?.documents_verified === true;
+  const isAwaitingDocs = approvalStatus === "awaiting_document_verification" && !isApproved;
   const isAttempt1 = approvalStatus === "documentation_failed_attempt_1";
   const isAttempt2 = approvalStatus === "documentation_failed_attempt_2";
 
