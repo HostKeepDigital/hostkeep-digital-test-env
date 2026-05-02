@@ -23,8 +23,8 @@ export default function StatsCard({ title, value, subtitle, icon: Icon, trend, c
             <p className="text-sm text-gray-500">{subtitle}</p>
           )}
         </div>
-        <div className={`p-3 rounded-xl ${colorClasses[color]}`}>
-          <Icon className="w-6 h-6" />
+        <div className={`p-2 rounded-xl ${colorClasses[color]}`}>
+          <Icon className="w-5 h-5" />
         </div>
       </div>
       {trend && (
