@@ -125,9 +125,14 @@ export default function PublishGateModal({ open, onClose, foundingMember }) {
                     onClick={async () => {
                       try {
                         const session_token = localStorage.getItem("session_token");
-                        const res = await base44.functions.invoke("createStripeConnectLink", { session_token });
-                        if (res.data?.url) {
-                          window.location.href = res.data.url;
+                        const res = await fetch('/api/apps/698eee4108bd1d9467648326/functions/createStripeConnectLink', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ session_token }),
+                        });
+                        const data = await res.json();
+                        if (data?.url) {
+                          window.location.href = data.url;
                         }
                       } catch (e) {
                         console.error("Failed to get Stripe link:", e);
