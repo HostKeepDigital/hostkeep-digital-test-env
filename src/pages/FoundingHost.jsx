@@ -146,6 +146,14 @@ export default function FoundingHost() {
   return (
     <div className="min-h-screen bg-white">
 
+      {refCode && (
+        <div className="bg-teal-600 text-white text-center py-4 px-6">
+          <p className="text-sm font-medium">
+            🎉 You've been referred by a HostKeep host! Sign up today and get your <strong>first two months for the price of one</strong> when you activate your subscription.
+          </p>
+        </div>
+      )}
+
       {/* HERO */}
       <section className="relative overflow-hidden bg-[#1E3A5F]">
         <img src={HERO_IMG} alt="Holiday home" className="absolute inset-0 w-full h-full object-cover opacity-25" />
