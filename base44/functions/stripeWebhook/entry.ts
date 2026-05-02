@@ -92,10 +92,24 @@ async function handleSubscriptionDeactivated(base44, user_id) {
      await base44.asServiceRole.entities.User.update(user_id, { subscription_active: false });
 
      // Mark FoundingMember subscription_active = false
+     // Mark FoundingMember subscription_active = false
      const members = await base44.asServiceRole.entities.FoundingMember.filter({ user_id });
      if (members?.[0]) {
        await base44.asServiceRole.entities.FoundingMember.update(members[0].id, { subscription_active: false });
      }
+
+     // Flip admin gate back to red
+     try {
+       await base44.asServiceRole.functions.invoke('checkApprovalGates', { user_id });
+     } catch (_) {}
+
+     // Mark Subscription record as expired
+     try {
+       const subs = await base44.asServiceRole.entities.Subscription.filter({ user_id });
+       if (subs?.[0]) {
+         await base44.asServiceRole.entities.Subscription.update(subs[0].id, { status: 'expired' });
+       }
+     } catch (_) {}
 
      // Unpublish all published properties
      const properties = await base44.asServiceRole.entities.Property.filter({ owner_id: user_id, status: 'published' });
