@@ -296,7 +296,7 @@ export default function ReviewsDialog({
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
+        <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-xl max-h-[80vh] flex flex-col p-0 overflow-hidden">
           <DialogHeader className="px-6 pt-6 pb-3 border-b border-gray-100">
             <DialogTitle className="text-lg font-bold text-gray-900">Reviews</DialogTitle>
           </DialogHeader>
