@@ -105,11 +105,16 @@ export default function HostProperties() {
   });
 
   const isFoundingMember = foundingMemberData?.is_founding_member === true;
+  const stripeVerified = foundingMemberData?.stripe_verified === true;
+  const subscriptionActive = !!subscription && subscription.status === "active";
+  const allGatesPassed = isApproved && stripeVerified && subscriptionActive;
   const approvalStatus = foundingMemberData?.approval_status;
   const hasRejectedDocs = verificationDocs.some(d => d.verification_status === "rejected");
   const isFirstSubmission = approvalStatus === "awaiting_document_verification" && !hasRejectedDocs;
   const isResubmissionUnderReview = approvalStatus === "awaiting_document_verification" && hasRejectedDocs;
-  const isApproved = approvalStatus === "approved";
+  const isApproved = foundingMemberData?.documents_verified === true;
+  const isFirstSubmission = approvalStatus === "awaiting_document_verification" && !hasRejectedDocs && !isApproved;
+  const isResubmissionUnderReview = approvalStatus === "awaiting_document_verification" && hasRejectedDocs && !isApproved;
   const isAttempt1 = approvalStatus === "documentation_failed_attempt_1";
   const isAttempt2 = approvalStatus === "documentation_failed_attempt_2";
   const isBanned = approvalStatus?.startsWith("banned_");
@@ -178,9 +183,20 @@ export default function HostProperties() {
             <p className="text-sm text-green-800"><strong>Documents Submitted.</strong> Our team will review your documents within 24–48 hours. Your listing won't be publicly visible until approved.</p>
           </div>
         )}
-        {isApproved && properties.length > 0 && (
+        {isApproved && !allGatesPassed && (
           <div className="mb-6 p-4 rounded-lg border-l-4 border-green-500 bg-green-50">
-            <p className="text-sm text-green-800"><strong>Documents Accepted.</strong> Your property is now publicly visible on HostKeep.</p>
+            <p className="text-sm text-green-800">
+              <strong>Documents Accepted.</strong> To publish your property you also need:
+              {!subscriptionActive && <span className="block mt-1">• An active HostKeep subscription</span>}
+              {!stripeVerified && <span className="block">• A connected Stripe account to receive payments</span>}
+            </p>
+          </div>
+        )}
+        {allGatesPassed && (
+          <div className="mb-6 p-4 rounded-lg border-l-4 border-green-500 bg-green-50">
+            <p className="text-sm text-green-800">
+              <strong>You're all set!</strong> Your documents are approved, subscription is active and Stripe is connected. You can now publish your property.
+            </p>
           </div>
         )}
         {isAttempt1 && properties.length > 0 && (
