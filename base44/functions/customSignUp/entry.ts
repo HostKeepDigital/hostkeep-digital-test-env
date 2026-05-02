@@ -44,6 +44,7 @@ Deno.serve(async (req) => {
         forename,
         middle_name: middle_name || null,
         surname,
+        full_name: [forename, middle_name, surname].filter(Boolean).join(" "),
       });
     } catch (err) {
       console.error('Failed to create User:', err.message);
