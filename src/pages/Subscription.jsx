@@ -331,6 +331,21 @@ export default function Subscription() {
   const [stripeStatus, setStripeStatus] = useState(null); // null=loading, 'connected'|'pending'|'not_connected'
   const [stripeStatusLoading, setStripeStatusLoading] = useState(false);
 
+  // Lock scroll when modals are open
+  useEffect(() => {
+    if (pendingPlan || showStripePrompt || showCancelDialog) {
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    };
+  }, [pendingPlan, showStripePrompt, showCancelDialog]);
+
   // Load Stripe Connect status on mount for beta host users
   useEffect(() => {
     if (!user?.id) return;
@@ -962,7 +977,7 @@ export default function Subscription() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 flex items-center justify-center p-4"
             >
               <Card className="max-w-md w-full relative">
                 <button
@@ -1029,7 +1044,7 @@ export default function Subscription() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 flex items-center justify-center p-4"
             >
               <Card className="max-w-md w-full relative">
                 <CardHeader className="text-center pb-4">
@@ -1103,7 +1118,7 @@ export default function Subscription() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 flex items-center justify-center p-4"
             >
               <Card className="max-w-lg w-full relative">
                 <button
