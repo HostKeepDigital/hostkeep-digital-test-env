@@ -281,12 +281,7 @@ export default function Layout({ children, currentPageName }) {
                 onClick={(e) => handleNavClick(e, createPageUrl("Home"))}
                 className="flex items-center gap-3"
               >
-                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center">
-                  <Home className="w-4 h-4 text-white" />
-                </div>
-                <span className="text-xl font-bold text-gray-900 hidden sm:block">
-                  HostKeep
-                </span>
+                <img src="https://drive.google.com/uc?export=view&id=1yazuu-6sWc7hEOpyTncZpt-P9Cd-UOt1" alt="HostKeep" className="h-7 w-auto" />
               </Link>
 
               <nav className="hidden md:flex items-center gap-6">
