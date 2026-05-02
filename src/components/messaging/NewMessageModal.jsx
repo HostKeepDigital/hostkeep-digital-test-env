@@ -138,17 +138,17 @@ export default function NewMessageModal({ isOpen, onClose, hostId }) {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] overflow-hidden"
+          className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-100">
+          <div className="flex items-center justify-between p-4 border-b border-gray-100">
             {view !== "selector" && hasGuests && hasCleaners && (
               <Button variant="ghost" size="icon" onClick={handleBack}>
                 <ArrowLeft className="w-5 h-5" />
               </Button>
             )}
-            <h2 className="text-xl font-semibold text-gray-900 flex-1">
+            <h2 className="text-base font-semibold text-gray-900 flex-1">
               {view === "selector" && "Who would you like to message?"}
               {view === "guests" && "Select a Guest"}
               {view === "cleaners" && "Select a Cleaner"}
@@ -159,19 +159,19 @@ export default function NewMessageModal({ isOpen, onClose, hostId }) {
           </div>
 
           {/* Content */}
-          <div className="overflow-y-auto max-h-[calc(80vh-88px)]">
+          <div className="overflow-y-auto max-h-[calc(85vh-72px)]">
             {view === "selector" && (
-              <div className="p-6 grid gap-4">
+              <div className="p-4 grid gap-3">
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setView("guests")}
-                  className="flex flex-col items-center gap-3 p-8 rounded-xl border-2 border-gray-200 hover:border-teal-500 hover:bg-teal-50 transition-all group"
+                  className="flex flex-col items-center gap-2 p-5 rounded-xl border-2 border-gray-200 hover:border-teal-500 hover:bg-teal-50 transition-all group"
                 >
-                  <div className="w-16 h-16 rounded-full bg-teal-100 group-hover:bg-teal-200 flex items-center justify-center transition-colors">
-                    <Users className="w-8 h-8 text-teal-600" />
+                  <div className="w-12 h-12 rounded-full bg-teal-100 group-hover:bg-teal-200 flex items-center justify-center transition-colors">
+                    <Users className="w-6 h-6 text-teal-600" />
                   </div>
-                  <span className="text-lg font-semibold text-gray-900">Guest</span>
+                  <span className="text-base font-semibold text-gray-900">Guest</span>
                   {allGuests.length > 0 && (
                     <Badge variant="secondary" className="bg-gray-100">
                       {allGuests.length} available
@@ -183,12 +183,12 @@ export default function NewMessageModal({ isOpen, onClose, hostId }) {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setView("cleaners")}
-                  className="flex flex-col items-center gap-3 p-8 rounded-xl border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-all group"
+                  className="flex flex-col items-center gap-2 p-5 rounded-xl border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-all group"
                 >
-                  <div className="w-16 h-16 rounded-full bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center transition-colors">
-                    <Sparkles className="w-8 h-8 text-blue-600" />
+                  <div className="w-12 h-12 rounded-full bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center transition-colors">
+                    <Sparkles className="w-6 h-6 text-blue-600" />
                   </div>
-                  <span className="text-lg font-semibold text-gray-900">Cleaner</span>
+                  <span className="text-base font-semibold text-gray-900">Cleaner</span>
                   {cleaningJobs.length > 0 && (
                     <Badge variant="secondary" className="bg-gray-100">
                       {cleaningJobs.length} scheduled
