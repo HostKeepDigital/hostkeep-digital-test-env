@@ -300,7 +300,7 @@ export default function Subscription() {
       (BETA_PLANS.includes(subscription.plan) && subscription.status === "active") ||
       subscription.is_founding_member === true
     )) ||
-    (foundingMemberRecord && !foundingMemberRecord.approval_status?.startsWith('banned_'));
+    (foundingMemberRecord && ['approved', 'invited', 'password_protected'].includes(foundingMemberRecord.approval_status));
 
   const isPending =
     userRoles &&
@@ -349,16 +349,24 @@ export default function Subscription() {
     setNextSubscriptionLoading(true);
     try {
       const session_token = localStorage.getItem("session_token");
-      const res = await base44.functions.invoke('setupFoundingSubscription', {
-        next_plan: planId,
-        session_token,
+      const res = await fetch('/api/apps/698eee4108bd1d9467648326/functions/setupFoundingSubscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ next_plan: planId, session_token }),
       });
-      if (res.data?.error) {
-        toast.error(res.data.error);
+      const data = await res.json();
+      if (data?.error) {
+        toast.error(data.error);
+        return;
+      }
+      // If Stripe needs a card for the £0 subscription, redirect to checkout
+      if (data?.requires_payment_method && data?.client_secret) {
+        window.location.href = `https://checkout.stripe.com/pay/${data.client_secret}`;
         return;
       }
       queryClient.invalidateQueries({ queryKey: ["subscription"] });
       setPendingPlan(null);
+      toast.success("Founding plan confirmed! Your rate is locked in for life.");
       navigate(createPageUrl("HostDashboard"));
     } catch (error) {
       toast.error("Failed to set subscription. Please try again.");
@@ -800,17 +808,7 @@ export default function Subscription() {
                               ) : (
                                 <Button
                                   className="w-full bg-[#1E3A5F] hover:bg-[#16304f] text-white"
-                                  onClick={() => {
-                                  const foundingPriceMap = {
-                                    founding_host_solo: 19,
-                                    founding_host_multi: 49,
-                                    founding_host_portfolio: 89,
-                                    cleaner_solo_monthly: 9.99,
-                                    cleaner_pro_monthly: 19.99,
-                                    cleaner_team_monthly: 39.99,
-                                  };
-                                  setPendingPlan({ id: foundingId, name: plan.name, price: foundingPriceMap[foundingId] || plan.price });
-                                }}
+                                  onClick={() => setPendingPlan({ id: foundingId, name: plan.name, price: plan.price })}
                                   disabled={checkoutLoading === foundingId}
                                 >
                                   {checkoutLoading === foundingId ? "Loading..." : "Choose Founding Rate"}
