@@ -213,6 +213,20 @@ Deno.serve(async (req) => {
         }
       } catch (_) {}
 
+      // Apply referral reward if this user was referred
+      try {
+        const userEmail = session.customer_details?.email;
+        if (userEmail) {
+          const refs = await base44.asServiceRole.entities.Referral.filter({ referee_email: userEmail.toLowerCase().trim() });
+          if (refs.length > 0 && refs[0].status === "pending") {
+            await base44.asServiceRole.functions.invoke("applyReferralReward", {
+              referee_user_id: user_id || null,
+              referee_email: userEmail,
+            });
+          }
+        }
+      } catch (_) {}
+
       // Send subscription confirmation email to host
       const hostEmail = session.customer_details?.email;
       const hostName = session.customer_details?.name || 'there';
@@ -427,6 +441,21 @@ Deno.serve(async (req) => {
            }
            await base44.asServiceRole.entities.User.update(user_id, { subscription_active: true });
            await base44.asServiceRole.functions.invoke('checkApprovalGates', { user_id });
+
+           // Apply referral reward if this user was referred
+           try {
+             const users = await base44.asServiceRole.entities.User.filter({ id: user_id });
+             const userEmail = users?.[0]?.email;
+             if (userEmail) {
+               const refs = await base44.asServiceRole.entities.Referral.filter({ referee_email: userEmail.toLowerCase().trim() });
+               if (refs.length > 0 && refs[0].status === "pending") {
+                 await base44.asServiceRole.functions.invoke("applyReferralReward", {
+                   referee_user_id: user_id,
+                   referee_email: userEmail,
+                 });
+               }
+             }
+           } catch (_) {}
          } else if (subscription.status === 'canceled' || subscription.status === 'past_due') {
            await handleSubscriptionDeactivated(base44, user_id);
          }
