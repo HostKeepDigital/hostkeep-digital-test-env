@@ -723,6 +723,7 @@ const DOC_LABELS = { government_id: "Government ID", selfie: "Selfie with ID", u
     toast.success(`${member.full_name} — decision submitted, member notified`);
   }
   fetchMembers();
+  queryClient.invalidateQueries(["all-verification-docs"]);
 };
 
 const handleDocBan = async (member) => {
