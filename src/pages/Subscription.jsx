@@ -805,12 +805,33 @@ export default function Subscription() {
                             cleaner_team_monthly: "cleaner_team_monthly",
                           };
                           const foundingId = foundingIds[plan.id];
-                          const isSelected = subscription?.plan === foundingId && subscription?.status === "active";
+                          const isSelected = subscription?.next_subscription === foundingId ||
+                            (subscription?.plan === foundingId && subscription?.status === "active");
+                          const hasAnyPlan = !!subscription?.next_subscription || 
+                            (BETA_PLANS.includes(subscription?.plan) && subscription?.status === "active");
                           return (
                             <div className="w-full space-y-2">
                               {isSelected ? (
-                                <Button variant="outline" className="w-full" disabled>
-                                  ✓ Current Plan
+                                <Button variant="outline" className="w-full border-teal-500 text-teal-700 bg-teal-50" disabled>
+                                  ✓ Selected Plan
+                                </Button>
+                              ) : hasAnyPlan ? (
+                                <Button
+                                  className="w-full bg-amber-600 hover:bg-amber-700 text-white"
+                                  onClick={() => {
+                                    const foundingPriceMap = {
+                                      founding_host_solo: 19,
+                                      founding_host_multi: 49,
+                                      founding_host_portfolio: 89,
+                                      cleaner_solo_monthly: 9.99,
+                                      cleaner_pro_monthly: 19.99,
+                                      cleaner_team_monthly: 39.99,
+                                    };
+                                    setPendingPlan({ id: foundingId, name: plan.name, price: foundingPriceMap[foundingId] || plan.price });
+                                  }}
+                                  disabled={checkoutLoading === foundingId}
+                                >
+                                  Upgrade to this Plan
                                 </Button>
                               ) : (
                                 <Button
