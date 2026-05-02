@@ -249,6 +249,7 @@ export default function Subscription() {
             setActivatedPlanName(displayName);
             setPaymentActivating(false);
             queryClient.invalidateQueries({ queryKey: ["subscription"] });
+            setTimeout(() => navigate(createPageUrl("HostDashboard")), 2500);
           }
         } catch {
           // swallow and retry until attempts exhausted
