@@ -27,6 +27,7 @@ import {
   CheckCircle,
   X,
   AlertCircle,
+  Info,
   Wifi,
   Car,
   Wind,
@@ -658,6 +659,15 @@ export default function PropertyDetails() {
     );
 
     return (
+      <div>
+      {isWithin56Days && (
+        <div className="flex items-start gap-2.5 p-3 rounded-lg border border-teal-200 bg-teal-50 mb-3">
+          <Info className="w-4 h-4 text-teal-600 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-teal-800">
+            <strong>Full payment required.</strong> Your check-in date is less than 56 days away, so the full amount is due today to secure this booking.
+          </p>
+        </div>
+      )}
       <div className="space-y-2 py-3 border-t border-gray-100">
         {priceBreakdown.map((item, idx) => (
           <div key={idx} className="flex justify-between text-sm text-gray-600">
@@ -718,6 +728,7 @@ export default function PropertyDetails() {
             <span>£{total.toFixed(2)}</span>
           </div>
         )}
+      </div>
       </div>
     );
   };
