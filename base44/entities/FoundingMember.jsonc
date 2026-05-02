@@ -87,6 +87,10 @@
       "type": "boolean",
       "default": false,
       "description": "Member has an active HostKeep subscription"
+    },
+    "ref_code": {
+      "type": "string",
+      "description": "Referral code used when signing up, if any"
     }
   },
   "required": [
