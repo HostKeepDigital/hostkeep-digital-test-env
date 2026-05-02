@@ -769,67 +769,67 @@ export default function HostDashboard() {
           </div>
         </div>
         {/* Referral Section */}
-        <div className="mt-10 rounded-2xl bg-[#1E3A5F] text-white p-8">
-          <h2 className="text-2xl font-bold mb-2">Refer your fellow hosts</h2>
-          <p className="text-white/80 mb-1">
+        <div className="mt-6 rounded-2xl bg-[#1E3A5F] text-white p-4 md:p-8">
+          <h2 className="text-xl md:text-2xl font-bold mb-2">Refer your fellow hosts</h2>
+          <p className="text-white/80 text-sm mb-1">
             Share your unique link. When a host signs up and activates their subscription:
           </p>
-          <ul className="text-white/80 text-sm mb-6 list-disc list-inside space-y-1">
-            <li><strong className="text-teal-300">You</strong> get one month added free to your current subscription</li>
-            <li><strong className="text-teal-300">They</strong> get two months for the price of one on their first payment</li>
+          <ul className="text-white/80 text-sm mb-4 list-disc list-inside space-y-1">
+            <li><strong className="text-teal-300">You</strong> get one month free</li>
+            <li><strong className="text-teal-300">They</strong> get two months for the price of one</li>
           </ul>
 
           {referralUrl ? (
-            <div className="mb-8">
+            <div className="mb-5">
               <label className="text-xs text-white/60 uppercase tracking-widest mb-1 block">Your referral link</label>
               <div className="flex gap-2">
                 <input
                   readOnly
                   value={referralUrl}
-                  className="flex-1 bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none"
+                  className="flex-1 min-w-0 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-xs text-white focus:outline-none"
                 />
                 <button
                   onClick={() => { navigator.clipboard.writeText(referralUrl); toast.success("Link copied!"); }}
-                  className="px-4 py-2.5 bg-teal-500 hover:bg-teal-400 text-white rounded-lg text-sm font-medium transition-colors"
+                  className="flex-shrink-0 px-3 py-2 bg-teal-500 hover:bg-teal-400 text-white rounded-lg text-sm font-medium transition-colors"
                 >
                   Copy
                 </button>
               </div>
             </div>
           ) : (
-            <div className="h-12 w-full bg-white/10 rounded-lg animate-pulse mb-8" />
+            <div className="h-10 w-full bg-white/10 rounded-lg animate-pulse mb-5" />
           )}
 
-          <h3 className="text-lg font-semibold mb-3">Your referrals</h3>
+          <h3 className="text-base font-semibold mb-3">Your referrals</h3>
           {refLoading ? (
             <div className="h-10 bg-white/10 rounded-lg animate-pulse" />
           ) : referrals.length === 0 ? (
             <p className="text-white/50 text-sm">No referrals yet — share your link to get started.</p>
           ) : (
-            <div className="rounded-xl overflow-hidden border border-white/10">
-              <table className="w-full text-sm">
+            <div className="rounded-xl overflow-x-auto border border-white/10">
+              <table className="w-full text-xs min-w-[480px]">
                 <thead>
-                  <tr className="bg-white/10 text-white/60 text-xs uppercase tracking-wide">
-                    <th className="text-left px-4 py-3">Name</th>
-                    <th className="text-left px-4 py-3">Referral Status</th>
-                    <th className="text-left px-4 py-3">Join Date</th>
-                    <th className="text-left px-4 py-3">Completed Date</th>
+                  <tr className="bg-white/10 text-white/60 uppercase tracking-wide">
+                    <th className="text-left px-3 py-2">Name</th>
+                    <th className="text-left px-3 py-2">Status</th>
+                    <th className="text-left px-3 py-2">Joined</th>
+                    <th className="text-left px-3 py-2">Completed</th>
                   </tr>
                 </thead>
                 <tbody>
                   {referrals.map((r, i) => (
                     <tr key={r.id} className={i % 2 === 0 ? "bg-white/5" : ""}>
-                      <td className="px-4 py-3 text-white font-medium">{r.referee_name || r.referee_email}</td>
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-2.5 text-white font-medium truncate max-w-[120px]">{r.referee_name || r.referee_email}</td>
+                      <td className="px-3 py-2.5">
                         {r.status === "completed"
                           ? <span className="text-teal-400 font-semibold">✓ Completed</span>
-                          : <span className="text-amber-400">Pending subscription</span>}
+                          : <span className="text-amber-400">Pending</span>}
                       </td>
-                      <td className="px-4 py-3 text-white/60">
-                        {r.created_date ? new Date(r.created_date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : "—"}
+                      <td className="px-3 py-2.5 text-white/60">
+                        {r.created_date ? new Date(r.created_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—"}
                       </td>
-                      <td className="px-4 py-3 text-white/60">
-                        {r.completed_at ? new Date(r.completed_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : "—"}
+                      <td className="px-3 py-2.5 text-white/60">
+                        {r.completed_at ? new Date(r.completed_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—"}
                       </td>
                     </tr>
                   ))}
