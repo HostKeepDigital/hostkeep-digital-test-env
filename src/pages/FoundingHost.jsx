@@ -50,6 +50,7 @@ export default function FoundingHost() {
   const [submitting,   setSubmitting  ] = useState(false);
   const [cornwallWarn, setCornwallWarn] = useState(false);
   const isGuest = isAuthenticated && roles?.some(r => r.role === 'guest' && r.approval_status === 'approved');
+  const [refCode, setRefCode] = useState("");
   const [form, setForm] = useState({ forename: '', middle_name: '', surname: '', email: '', postcode: '' });
 
   useEffect(() => {
@@ -64,6 +65,12 @@ export default function FoundingHost() {
   }, [isGuest, user]);
   const [errors, setErrors] = useState({});
   const [duplicateInfo, setDuplicateInfo] = useState(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get("ref");
+    if (ref) setRefCode(ref.toUpperCase());
+  }, []);
 
   useEffect(() => {
     base44.functions.invoke("getFoundingCounts", {})
@@ -100,6 +107,7 @@ export default function FoundingHost() {
         full_name: fullName(), email: form.email.toLowerCase().trim(),
         postcode: form.postcode.toUpperCase().trim(), role: "host",
         is_existing_guest: isGuest,
+        ...(refCode ? { ref_code: refCode } : {}),
       });
      if (result?.data?.error === "duplicate_email") {
         const s = result?.data?.status;

@@ -52,9 +52,16 @@ export default function FoundingCleaner() {
   const [loading,      setLoading     ] = useState(true);
   const [submitting,   setSubmitting  ] = useState(false);
   const [cornwallWarn, setCornwallWarn] = useState(false);
+  const [refCode, setRefCode] = useState("");
   const [form, setForm] = useState({ forename: "", middle_name: "", surname: "", email: "", postcode: "" });
   const [errors, setErrors] = useState({});
   const [duplicateInfo, setDuplicateInfo] = useState(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get("ref");
+    if (ref) setRefCode(ref.toUpperCase());
+  }, []);
 
   useEffect(() => {
     base44.functions.invoke("getFoundingCounts", {})
@@ -88,6 +95,7 @@ export default function FoundingCleaner() {
       const result = await base44.functions.invoke("registerFoundingMember", {
         full_name: fullName(), email: form.email.toLowerCase().trim(),
         postcode: form.postcode.toUpperCase().trim(), role: "cleaner",
+        ...(refCode ? { ref_code: refCode } : {}),
       });
       if (result?.data?.error === "duplicate_email") {
         const s = result?.data?.status;
