@@ -687,15 +687,9 @@ export default function EditProperty() {
                   <button
                     onClick={async () => {
                       const session_token = localStorage.getItem("session_token");
-                      const res = await fetch('/api/apps/698eee4108bd1d9467648326/functions/createStripeConnectLink', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ session_token }),
-                      });
-                      const data = await res.json();
-                      if (data?.url) {
-                        window.location.href = data.url;
-                      }}}
+                      const res = await base44.functions.invoke("createStripeConnectLink", { session_token });
+                      if (res.data?.url) window.location.href = res.data.url;
+                    }}
                     className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white hover:bg-amber-50 text-amber-800 border border-amber-300 text-sm font-medium rounded-lg transition-colors"
                   >
                     Connect Existing Stripe Account

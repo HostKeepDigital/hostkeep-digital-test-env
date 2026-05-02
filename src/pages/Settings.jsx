@@ -149,7 +149,7 @@ export default function Settings() {
         phone: profile.phone.trim(),
         location: profile.location.trim(),
       });
-      if (!res.data?.success) throw new Error(data?.error || "save_failed");
+      if (!res.data?.success) throw new Error(res.data?.error || "save_failed");
       updateUser({ forename: profile.forename.trim(), middle_name: profile.middle_name.trim(), surname: profile.surname.trim(), phone: profile.phone.trim(), location: profile.location.trim() });
       setSaveStatus("success");
       setTimeout(() => setSaveStatus(null), 4000);
@@ -257,16 +257,11 @@ const handleDeleteAccount = async () => {
 
   const handleStripeConnect = async () => {
     setStripeLoading(true);
-    const res = await fetch('/api/apps/698eee4108bd1d9467648326/functions/createStripeConnectLink', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ session_token: localStorage.getItem('session_token') }),
-    });
-    const data = await res.json();
-        const url = data?.url;
-        if (url) window.location.href = url;
-        setStripeLoading(false);
-      };
+    const res = await base44.functions.invoke("createStripeConnectLink", { session_token: localStorage.getItem('session_token') });
+    const url = res.data?.url;
+    if (url) window.location.href = url;
+    setStripeLoading(false);
+  };
 
   const stripeState =
     !stripeStatus || stripeStatus === "not_connected"
