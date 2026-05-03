@@ -350,10 +350,13 @@ export default function Subscription() {
   useEffect(() => {
     if (!user?.id) return;
     setStripeStatusLoading(true);
-    base44.functions.invoke('getStripeConnectStatus', {
-      session_token: localStorage.getItem('session_token')
+    fetch('/api/apps/698eee4108bd1d9467648326/functions/getStripeConnectStatus', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_token: localStorage.getItem('session_token') }),
     })
-      .then(res => setStripeStatus(res.data?.status || 'not_connected'))
+      .then(r => r.json())
+      .then(data => setStripeStatus(data?.status || 'not_connected'))
       .catch(() => setStripeStatus('not_connected'))
       .finally(() => setStripeStatusLoading(false));
   }, [user?.id]);
