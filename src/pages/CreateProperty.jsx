@@ -545,6 +545,9 @@ export default function CreateProperty() {
       case 6:
         return !!formData.cancellation_policy_id;
       case 7:
+        if (hasApprovedIdDocs) {
+          return formData.doc_proof_of_property !== null;
+        }
         return formData.doc_government_id !== null && formData.doc_selfie !== null && formData.doc_proof_of_property !== null;
       default:
         return true;
