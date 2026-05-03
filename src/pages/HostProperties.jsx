@@ -122,7 +122,11 @@ export default function HostProperties() {
   useEffect(() => {
     if (!user?.id) return;
     const session_token = localStorage.getItem("session_token");
-    base44.functions.invoke("getStripeConnectStatus", { session_token })
+    fetch('/api/apps/698eee4108bd1d9467648326/functions/getStripeConnectStatus', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_token }),
+    }).then(r => r.json())
       .then(res => setStripeConnected(res.data?.status === "verified"))
       .catch(() => setStripeConnected(false));
   }, [user?.id]);
