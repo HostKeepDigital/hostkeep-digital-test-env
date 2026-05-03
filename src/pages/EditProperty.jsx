@@ -59,12 +59,13 @@ import { useAuth } from "@/lib/AuthContext";
 import { AMENITY_GROUPS, AMENITY_MAP } from "@/data/amenities";
 
 const PROPERTY_TYPES = [
-  { value: "house", label: "House" },
   { value: "apartment", label: "Apartment" },
-  { value: "villa", label: "Villa" },
-  { value: "cabin", label: "Cabin" },
-  { value: "cottage", label: "Cottage" },
   { value: "bungalow", label: "Bungalow" },
+  { value: "cabin", label: "Cabin" },
+  { value: "caravan", label: "Caravan" },
+  { value: "chalet", label: "Chalet" },
+  { value: "house", label: "House" },
+  { value: "lodges", label: "Lodges" },
 ];
 
 export default function EditProperty() {
