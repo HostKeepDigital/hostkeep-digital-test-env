@@ -106,7 +106,13 @@ export default function Settings() {
     }
     setStripeStatusLoading(true);
     try {
-      const res = await base44.functions.invoke("getStripeConnectStatus", {});
+      const res = await fetch('/api/apps/698eee4108bd1d9467648326/functions/getStripeConnectStatus', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_token: localStorage.getItem('session_token') }),
+      });
+      const resData = await res.json();
+      const resDataWrapped = { data: resData };
       const status = res.data?.status || "not_connected";
       stripeCacheRef.current = status;
       setStripeStatus(status);
@@ -257,7 +263,12 @@ const handleDeleteAccount = async () => {
 
   const handleStripeConnect = async () => {
     setStripeLoading(true);
-    const res = await base44.functions.invoke("createStripeConnectLink", { session_token: localStorage.getItem('session_token') });
+    const _clRes = await fetch('/api/apps/698eee4108bd1d9467648326/functions/createStripeConnectLink', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_token: localStorage.getItem('session_token') }),
+    });
+    const res = { data: await _clRes.json() };
     const url = res.data?.url;
     if (url) window.location.href = url;
     setStripeLoading(false);
