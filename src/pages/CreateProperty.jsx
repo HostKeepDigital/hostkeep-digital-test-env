@@ -1144,26 +1144,36 @@ export default function CreateProperty() {
                 </CardHeader>
 
                 <CardContent className="space-y-6">
-                  <DocumentUpload
-                    userId={user?.id}
-                    documentType="government_id"
-                    label="Government ID"
-                    description="Passport, driving licence, or national ID card"
-                    userName={user?.full_name}
-                    userEmail={user?.email}
-                    localOnly
-                    onUploadComplete={(type, url) => handleChange("doc_government_id", url)}
-                  />
-                  <DocumentUpload
-                    userId={user?.id}
-                    documentType="selfie"
-                    label="Selfie holding your ID"
-                    description="A clear photo of yourself holding your ID next to your face"
-                    userName={user?.full_name}
-                    userEmail={user?.email}
-                    localOnly
-                    onUploadComplete={(type, url) => handleChange("doc_selfie", url)}
-                  />
+                  {!hasApprovedIdDocs && (
+                    <>
+                      <DocumentUpload
+                        userId={user?.id}
+                        documentType="government_id"
+                        label="Government ID"
+                        description="Passport, driving licence, or national ID card"
+                        userName={user?.forename}
+                        userEmail={user?.email}
+                        localOnly
+                        onUploadComplete={(type, url) => handleChange("doc_government_id", url)}
+                      />
+                      <DocumentUpload
+                        userId={user?.id}
+                        documentType="selfie"
+                        label="Selfie holding your ID"
+                        description="A clear photo of yourself holding your ID next to your face"
+                        userName={user?.forename}
+                        userEmail={user?.email}
+                        localOnly
+                        onUploadComplete={(type, url) => handleChange("doc_selfie", url)}
+                      />
+                    </>
+                  )}
+                  {hasApprovedIdDocs && (
+                    <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                      <p className="text-sm text-green-800">Your Government ID and Selfie are already verified from your previous property — only Proof of Property is required for this listing.</p>
+                    </div>
+                  )}
                   <DocumentUpload
                     userId={user?.id}
                     documentType="utility_bill"
