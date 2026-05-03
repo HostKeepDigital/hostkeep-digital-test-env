@@ -81,6 +81,7 @@ export default function NewMessageModal({ isOpen, onClose, hostId }) {
   // Determine what to show on open
   useEffect(() => {
     if (isOpen) {
+      document.body.style.overflow = "hidden";
       const guestsExist = allGuests.length > 0;
       const cleanersExist = cleaningJobs.length > 0;
       
@@ -95,7 +96,10 @@ export default function NewMessageModal({ isOpen, onClose, hostId }) {
       } else {
         setView("selector");
       }
+    } else {
+      document.body.style.overflow = "";
     }
+    return () => { document.body.style.overflow = ""; };
   }, [isOpen, allGuests.length, cleaningJobs.length]);
 
   const handleClose = () => {
