@@ -103,7 +103,11 @@ export default function EditProperty() {
   // Fetch stripe status and subscription on mount
   useEffect(() => {
     const session_token = localStorage.getItem("session_token");
-    base44.functions.invoke("getStripeConnectStatus", { session_token })
+    fetch('/api/apps/698eee4108bd1d9467648326/functions/getStripeConnectStatus', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_token }),
+    }).then(r => r.json())
       .then(res => setStripeStatus(res.data?.status || "not_connected"))
       .catch(() => setStripeStatus("not_connected"));
   }, []);
@@ -687,8 +691,13 @@ export default function EditProperty() {
                   <button
                     onClick={async () => {
                       const session_token = localStorage.getItem("session_token");
-                      const res = await base44.functions.invoke("createStripeConnectLink", { session_token });
-                      if (res.data?.url) window.location.href = res.data.url;
+                      const _r = await fetch('/api/apps/698eee4108bd1d9467648326/functions/createStripeConnectLink', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ session_token }),
+                      });
+                      const _d = await _r.json();
+                      if (_d?.url) window.location.href = _d.url;
                     }}
                     className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white hover:bg-amber-50 text-amber-800 border border-amber-300 text-sm font-medium rounded-lg transition-colors"
                   >
