@@ -323,11 +323,6 @@ export default function CreateProperty() {
         owner_id: user?.id,
       });
 
-await base44.entities.Property.create({
-        ...data,
-        owner_id: user?.id,
-      });
-
       if (user?.id) {
         try {
           const roles = await getUserRoles(user.id);
