@@ -18,6 +18,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: "Missing session token" }, { status: 401 });
     }
 
+    // Validate session directly — no nested function invocations
     const sessions = await serviceRole.entities.UserSession.filter({ session_token });
     const session = sessions?.[0];
 
@@ -32,12 +33,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: "Session missing user_id — please log out and back in" }, { status: 400 });
     }
 
-    const users = await serviceRole.entities.User.filter({ email });
-    const user = users?.[0];
-
-    if (!user) {
-      return Response.json({ error: "User not found" }, { status: 404 });
-    }
+    // Look up user by ID directly — reliable, no email filter needed
+    let user = null;
+    try {
+      user = await serviceRole.entities.User.get(user_id);
+    } catch (_) {}
 
     const origin = req.headers.get("origin") || "https://hostkeepdigital.co.uk";
     const return_url = body.return_url || `${origin}/HostDashboard?stripe_connect_return=success`;
