@@ -183,6 +183,18 @@ export default function CreateProperty() {
   });
 
   const [titleError, setTitleError] = useState("");
+  const [hasApprovedIdDocs, setHasApprovedIdDocs] = useState(false);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    base44.entities.VerificationDocuments.filter({ user_id: user.id })
+      .then(docs => {
+        const hasGovId = docs.some(d => d.document_type === "government_id" && d.verification_status === "approved");
+        const hasSelfie = docs.some(d => d.document_type === "selfie" && d.verification_status === "approved");
+        setHasApprovedIdDocs(hasGovId && hasSelfie);
+      })
+      .catch(() => {});
+  }, [user?.id]);
   const [locationData, setLocationData] = useState({});
   const [uploadedFileIdentifiers, setUploadedFileIdentifiers] = useState([]);
   const [smartLockPolicyWarning, setSmartLockPolicyWarning] = useState(null);
