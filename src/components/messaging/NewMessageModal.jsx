@@ -166,7 +166,7 @@ export default function NewMessageModal({ isOpen, onClose, hostId }) {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setView("guests")}
-                  className="flex flex-col items-center gap-2 p-5 rounded-xl border-2 border-gray-200 hover:border-teal-500 hover:bg-teal-50 transition-all group"
+                  className="flex flex-col items-center gap-2 p-5 rounded-xl border-2 border-gray-200 hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/30 dark:border-gray-600 transition-all group"
                 >
                   <div className="w-12 h-12 rounded-full bg-teal-100 group-hover:bg-teal-200 flex items-center justify-center transition-colors">
                     <Users className="w-6 h-6 text-teal-600" />
@@ -183,7 +183,7 @@ export default function NewMessageModal({ isOpen, onClose, hostId }) {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setView("cleaners")}
-                  className="flex flex-col items-center gap-2 p-5 rounded-xl border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-all group"
+                  className="flex flex-col items-center gap-2 p-5 rounded-xl border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 dark:border-gray-600 transition-all group"
                 >
                   <div className="w-12 h-12 rounded-full bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center transition-colors">
                     <Sparkles className="w-6 h-6 text-blue-600" />
