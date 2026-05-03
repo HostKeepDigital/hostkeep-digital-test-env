@@ -406,12 +406,12 @@ export default function CreateProperty() {
         const isBeta = sub && BETA_PLANS.includes(sub.plan) && sub.status === 'active';
         const hasActiveSub = sub && sub.status === 'active' && !isBeta;
 
-         // No subscription — allow through, gates will prevent publishing
+        // No subscription — allow through, gates prevent publishing
         if (!sub || sub.status !== 'active') {
           return;
         }
 
-        // Beta user without chosen plan — allow through, gates will prevent publishing
+        // Beta user without chosen plan — allow through, gates prevent publishing
         if (isBeta && !sub.next_subscription) {
           return;
         }
