@@ -124,14 +124,31 @@ const TESTS = [
   },
   {
     id: "stripe_connect_status",
+    label: "getStripeConnectStatus returns a valid status value",
     claudeHint: "Check base44/functions/getStripeConnectStatus/entry.ts — UserSession.filter or User.get may be failing.",
-    label: "getStripeConnectStatus returns a status",
     run: async (ctx) => {
       if (!ctx.adminToken) return { pass: false, detail: "No session token" };
       const res = await callFn("getStripeConnectStatus", { session_token: ctx.adminToken });
+      const validStatuses = ["verified", "pending_verification", "not_connected"];
       return {
-        pass: typeof res.status !== "undefined",
-        detail: `status=${res.status}`,
+        pass: validStatuses.includes(res.status),
+        detail: `status=${res.status} (expected one of: ${validStatuses.join(", ")})`,
+      };
+    },
+  },
+  {
+    id: "stripe_connect_link",
+    label: "createStripeConnectLink — Stripe returns a valid onboarding URL",
+    claudeHint: "Check base44/functions/createStripeConnectLink/entry.ts — STRIPE_SECRET_KEY may be missing, or User.get(user_id) is failing. The function must return a url starting with https://connect.stripe.com",
+    run: async (ctx) => {
+      if (!ctx.adminToken) return { pass: false, detail: "No session token" };
+      const res = await callFn("createStripeConnectLink", { session_token: ctx.adminToken });
+      const isStripeUrl = typeof res.url === "string" && res.url.startsWith("https://connect.stripe.com");
+      return {
+        pass: isStripeUrl,
+        detail: isStripeUrl
+          ? `url=${res.url.slice(0, 60)}...`
+          : `error=${res.error || "no url returned"} raw=${JSON.stringify(res).slice(0, 100)}`,
       };
     },
   },
