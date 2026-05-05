@@ -6,6 +6,8 @@ Deno.serve(async (req) => {
   try {
     const { email } = await req.json();
     if (!email) return Response.json({ exists: false });
+    const normEmail = email.toLowerCase().trim();
+    const creds = await serviceRole.entities.UserCredentials.filter({ email: normEmail });
 
     const normalisedEmail = email.toLowerCase().trim();
 
