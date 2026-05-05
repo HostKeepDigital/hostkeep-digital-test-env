@@ -139,7 +139,7 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
     }
   };
 
-  const canSave = () => postcodeData && inArea && formData.location?.street;
+  const canSave = () => postcodeData && (inArea || !isFirstProperty) && formData.location?.street;
 
   // Show spinner while auto-verifying
   if (!isReady) {
