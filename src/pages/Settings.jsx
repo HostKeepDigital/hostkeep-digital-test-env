@@ -69,9 +69,13 @@ export default function Settings() {
   useEffect(() => {
     if (!user?.email) return;
     setProfileLoading(true);
-    base44.functions.invoke("getUserProfile", { email: user.email })
+    fetch('/api/apps/698eee4108bd1d9467648326/functions/getUserProfile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_token: localStorage.getItem('session_token'), email: user.email }),
+    }).then(r => r.json())
       .then((res) => {
-        const u = res.data?.profile;
+        const u = res?.profile;
         if (u) {
           setProfile({ forename: u.forename || "", middle_name: u.middle_name || "", surname: u.surname || "", phone: u.phone || "", location: u.location || "" });
           if (u.notification_preferences && typeof u.notification_preferences === "object") {
@@ -147,15 +151,21 @@ export default function Settings() {
     if (!profile.forename.trim() || !profile.surname.trim()) { setSaveStatus("error"); return; }
     setSaving(true);
     try {
-      const res = await base44.functions.invoke("saveUserProfile", {
-        email: user.email,
-        forename: profile.forename.trim(),
-        middle_name: profile.middle_name.trim(),
-        surname: profile.surname.trim(),
-        phone: profile.phone.trim(),
-        location: profile.location.trim(),
+      const res = await fetch('/api/apps/698eee4108bd1d9467648326/functions/saveUserProfile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_token: localStorage.getItem('session_token'),
+          email: user.email,
+          forename: profile.forename.trim(),
+          middle_name: profile.middle_name.trim(),
+          surname: profile.surname.trim(),
+          phone: profile.phone.trim(),
+          location: profile.location.trim(),
+        }),
       });
-      if (!res.data?.success) throw new Error(res.data?.error || "save_failed");
+      const data = await res.json();
+      if (!data?.success) throw new Error(data?.error || "save_failed");
       updateUser({ forename: profile.forename.trim(), middle_name: profile.middle_name.trim(), surname: profile.surname.trim(), phone: profile.phone.trim(), location: profile.location.trim() });
       setSaveStatus("success");
       setTimeout(() => setSaveStatus(null), 4000);
