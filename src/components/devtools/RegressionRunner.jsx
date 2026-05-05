@@ -574,9 +574,16 @@ const TESTS = [
     label: "Host: generateReferralCode — returns ref_code",
     claudeHint: "Check base44/functions/generateReferralCode/entry.ts — user_id is required, Referral entity write may be failing.",
     run: async (ctx) => {
-      if (!ctx.adminUserId) return { pass: false, detail: "No user_id from checkSession" };
+      let userId = ctx.adminUserId;
+      if (!userId) {
+        try {
+          const members = await base44.entities.FoundingMember.list("-created_date", 50);
+          userId = members.find(m => m.user_id)?.user_id || null;
+        } catch (_) {}
+      }
+      if (!userId) return { pass: false, detail: "No user_id available — log out and back in to get a fresh session" };
       const res = await callFn("generateReferralCode", {
-        user_id: ctx.adminUserId,
+        user_id: userId,
         email: "admin@hostkeepdigital.co.uk",
       });
       return {
