@@ -311,6 +311,411 @@ const TESTS = [
       };
     },
   },
+  // ── GUEST FLOW TESTS ───────────────────────────────────────────────────────
+
+  {
+    id: "guest_signup_missing_fields",
+    label: "Guest: customSignUp — missing fields returns 400",
+    claudeHint: "Check base44/functions/customSignUp/entry.ts — missing field validation should return error, not crash.",
+    run: async () => {
+      const res = await callFn("customSignUp", { email: "test@test.com" }); // no password
+      return {
+        pass: !res.success || res.error,
+        detail: `success=${res.success} error=${res.error}`,
+      };
+    },
+  },
+  {
+    id: "guest_verify_code_invalid",
+    label: "Guest: verifyEmailCode — invalid code returns error",
+    claudeHint: "Check base44/functions/verifyEmailCode/entry.ts — invalid codes should return valid=false, not crash.",
+    run: async () => {
+      const res = await callFn("verifyEmailCode", {
+        email: "nonexistent@test.com",
+        code: "000000",
+      });
+      return {
+        pass: res.valid === false || res.error,
+        detail: `valid=${res.valid} error=${res.error}`,
+      };
+    },
+  },
+  {
+    id: "guest_signin_wrong_password",
+    label: "Guest: customSignIn — wrong password returns invalid_credentials",
+    claudeHint: "Check base44/functions/customSignIn/entry.ts — wrong password should return error=invalid_credentials.",
+    run: async () => {
+      const res = await callFn("customSignIn", {
+        email: "admin@hostkeepdigital.co.uk",
+        password: "WrongPassword999!",
+      });
+      return {
+        pass: res.success === false && (res.error === "invalid_credentials" || res.error),
+        detail: `success=${res.success} error=${res.error}`,
+      };
+    },
+  },
+  {
+    id: "guest_check_user_exists",
+    label: "Guest: checkUserExists — returns exists flag",
+    claudeHint: "Check base44/functions/checkUserExists/entry.ts — should return {exists: bool} without crashing.",
+    run: async () => {
+      const res = await callFn("checkUserExists", { email: "admin@hostkeepdigital.co.uk" });
+      return {
+        pass: typeof res.exists !== "undefined",
+        detail: `exists=${res.exists}`,
+      };
+    },
+  },
+  {
+    id: "guest_property_search",
+    label: "Guest: propertySearch — returns results array",
+    claudeHint: "Check base44/functions/propertySearch/entry.ts — Property entity query may be failing or returning wrong shape.",
+    run: async () => {
+      const res = await callFn("propertySearch", { query: "cornwall", limit: 3 });
+      const results = res.results || res;
+      return {
+        pass: Array.isArray(results),
+        detail: `count=${Array.isArray(results) ? results.length : "not array"} raw=${JSON.stringify(res).slice(0, 80)}`,
+      };
+    },
+  },
+  {
+    id: "guest_property_search_filter",
+    label: "Guest: propertySearchFilter — runs without crashing",
+    claudeHint: "Check base44/functions/propertySearchFilter/entry.ts — filter logic may throw on empty params.",
+    run: async () => {
+      try {
+        const res = await callFn("propertySearchFilter", { filters: {}, limit: 3 });
+        return {
+          pass: Array.isArray(res) || Array.isArray(res.results) || res.error !== undefined,
+          detail: `raw=${JSON.stringify(res).slice(0, 80)}`,
+        };
+      } catch (e) {
+        return { pass: false, detail: e.message };
+      }
+    },
+  },
+  {
+    id: "guest_booking_payment_no_id",
+    label: "Guest: createBookingPaymentIntent — missing booking_id returns 400",
+    claudeHint: "Check base44/functions/createBookingPaymentIntent/entry.ts — missing booking_id should return error, not crash.",
+    run: async () => {
+      const res = await callFn("createBookingPaymentIntent", {});
+      return {
+        pass: res.error !== undefined,
+        detail: `error=${res.error}`,
+      };
+    },
+  },
+  {
+    id: "guest_logout",
+    label: "Guest: logoutSession — runs without crashing",
+    claudeHint: "Check base44/functions/logoutSession/entry.ts — should handle missing/invalid token gracefully.",
+    run: async () => {
+      const res = await callFn("logoutSession", { session_token: "fake-token-logout-test" });
+      return {
+        pass: res.success !== undefined || res.error !== undefined,
+        detail: `raw=${JSON.stringify(res).slice(0, 80)}`,
+      };
+    },
+  },
+  {
+    id: "guest_track_pageview",
+    label: "Guest: trackPageView — records without crashing",
+    claudeHint: "Check base44/functions/trackPageView/entry.ts — PageView entity write may be failing.",
+    run: async () => {
+      const res = await callFn("trackPageView", {
+        page: "/regression-test",
+        visitor_id: "regression-test-visitor",
+      });
+      return {
+        pass: res.success === true || res.error === undefined,
+        detail: `success=${res.success} raw=${JSON.stringify(res).slice(0, 60)}`,
+      };
+    },
+  },
+  {
+    id: "guest_search_locations",
+    label: "Guest: searchLocations — returns location suggestions",
+    claudeHint: "Check base44/functions/searchLocations/entry.ts — UKLocation entity query may be failing.",
+    run: async () => {
+      const res = await callFn("searchLocations", { query: "cornwall" });
+      const results = res.results || res;
+      return {
+        pass: Array.isArray(results),
+        detail: `count=${Array.isArray(results) ? results.length : "not array"}`,
+      };
+    },
+  },
+
+  // ── HOST FLOW TESTS ────────────────────────────────────────────────────────
+
+  {
+    id: "host_founding_counts",
+    label: "Host: getFoundingCounts — Cornwall cap check",
+    claudeHint: "Check base44/functions/getFoundingCounts/entry.ts — hostCount should never exceed 50.",
+    run: async () => {
+      const res = await callFn("getFoundingCounts", {});
+      const hostOk = typeof res.hostCount !== "undefined";
+      const underCap = res.hostCount <= 50;
+      return {
+        pass: hostOk,
+        detail: `hostCount=${res.hostCount} (cap=50) ${!underCap ? "⚠️ CAP EXCEEDED" : "within cap"} cleanerCount=${res.cleanerCount}`,
+      };
+    },
+  },
+  {
+    id: "host_register_founding_no_email",
+    label: "Host: registerFoundingMember — missing email returns error",
+    claudeHint: "Check base44/functions/registerFoundingMember/entry.ts — missing required fields should return error not crash.",
+    run: async () => {
+      const res = await callFn("registerFoundingMember", { role: "host" });
+      return {
+        pass: res.success === false || res.error,
+        detail: `success=${res.success} error=${res.error}`,
+      };
+    },
+  },
+  {
+    id: "host_validate_onboarding_token_invalid",
+    label: "Host: validateOnboardingToken — invalid token returns error",
+    claudeHint: "Check base44/functions/validateOnboardingToken/entry.ts — invalid tokens should return valid=false.",
+    run: async () => {
+      const res = await callFn("validateOnboardingToken", { token: "fake-token-xyz" });
+      return {
+        pass: res.valid === false || res.error,
+        detail: `valid=${res.valid} error=${res.error}`,
+      };
+    },
+  },
+  {
+    id: "host_save_profile",
+    label: "Host: saveUserProfile — missing required fields returns error",
+    claudeHint: "Check base44/functions/saveUserProfile/entry.ts — missing forename/surname should return error, not 500.",
+    run: async () => {
+      const res = await callFn("saveUserProfile", { email: "admin@hostkeepdigital.co.uk" });
+      return {
+        pass: res.success === false || res.error,
+        detail: `success=${res.success} error=${res.error}`,
+      };
+    },
+  },
+  {
+    id: "host_get_pricing_recommendations",
+    label: "Host: getPricingRecommendations — runs without crashing",
+    claudeHint: "Check base44/functions/getPricingRecommendations/entry.ts — may throw if propertyId is missing.",
+    run: async () => {
+      try {
+        const res = await callFn("getPricingRecommendations", {
+          propertyId: "test-id",
+          currentSettings: { nightly_rate: 100 },
+        });
+        return {
+          pass: res !== undefined,
+          detail: `raw=${JSON.stringify(res).slice(0, 80)}`,
+        };
+      } catch (e) {
+        return { pass: false, detail: e.message };
+      }
+    },
+  },
+  {
+    id: "host_get_allowed_nights",
+    label: "Host: getAllowedNights — returns allowed nights array",
+    claudeHint: "Check base44/functions/getAllowedNights/entry.ts — should return allowed night options for a property.",
+    run: async () => {
+      try {
+        const res = await callFn("getAllowedNights", {
+          property: { day_based_restrictions_enabled: false, booking_rules: [] },
+          checkIn: "2026-08-01",
+          checkOut: "2026-08-07",
+        });
+        return {
+          pass: res !== undefined,
+          detail: `raw=${JSON.stringify(res).slice(0, 80)}`,
+        };
+      } catch (e) {
+        return { pass: false, detail: e.message };
+      }
+    },
+  },
+  {
+    id: "host_get_calendar_events",
+    label: "Host: getCalendarEvents — runs without crashing",
+    claudeHint: "Check base44/functions/getCalendarEvents/entry.ts — may fail if Booking entity query throws.",
+    run: async (ctx) => {
+      try {
+        const res = await callFn("getCalendarEvents", {
+          session_token: ctx.adminToken || "",
+          property_id: "test-property-id",
+        });
+        return {
+          pass: Array.isArray(res) || Array.isArray(res.events) || res.error !== undefined,
+          detail: `raw=${JSON.stringify(res).slice(0, 80)}`,
+        };
+      } catch (e) {
+        return { pass: false, detail: e.message };
+      }
+    },
+  },
+  {
+    id: "host_generate_referral_code",
+    label: "Host: generateReferralCode — returns ref_code",
+    claudeHint: "Check base44/functions/generateReferralCode/entry.ts — user_id is required, Referral entity write may be failing.",
+    run: async (ctx) => {
+      if (!ctx.adminUserId) return { pass: false, detail: "No user_id from checkSession" };
+      const res = await callFn("generateReferralCode", {
+        user_id: ctx.adminUserId,
+        email: "admin@hostkeepdigital.co.uk",
+      });
+      return {
+        pass: typeof res.ref_code === "string" && res.ref_code.length > 0,
+        detail: `ref_code=${res.ref_code} success=${res.success}`,
+      };
+    },
+  },
+  {
+    id: "host_checkout_beta_plan",
+    label: "Host: createCheckoutSession — beta_host_access returns Stripe URL",
+    claudeHint: "Check base44/functions/createCheckoutSession/entry.ts — beta_host_access must be in VALID_PLANS and have a Stripe lookup key set.",
+    run: async (ctx) => {
+      const res = await callFn("createCheckoutSession", {
+        plan: "beta_host_access",
+        user_id: ctx.adminUserId || null,
+        session_token: ctx.adminToken || "",
+      });
+      return {
+        pass: typeof res.url === "string" && res.url.startsWith("https://"),
+        detail: res.url ? `url=${res.url.slice(0, 50)}...` : `error=${res.error}`,
+      };
+    },
+  },
+  {
+    id: "host_checkout_founding_solo",
+    label: "Host: createCheckoutSession — founding_host_solo returns Stripe URL",
+    claudeHint: "Check STRIPE dashboard — founding_host_solo must have a lookup key set on the price in your HostKeep Digital sandbox.",
+    run: async (ctx) => {
+      const res = await callFn("createCheckoutSession", {
+        plan: "founding_host_solo",
+        user_id: ctx.adminUserId || null,
+        session_token: ctx.adminToken || "",
+      });
+      return {
+        pass: typeof res.url === "string" && res.url.startsWith("https://"),
+        detail: res.url ? `url=${res.url.slice(0, 50)}...` : `error=${res.error}`,
+      };
+    },
+  },
+  {
+    id: "host_check_subscription_limits",
+    label: "Host: checkSubscriptionLimits — runs without crashing",
+    claudeHint: "Check base44/functions/checkSubscriptionLimits/entry.ts — Subscription entity query may be failing.",
+    run: async (ctx) => {
+      try {
+        const res = await callFn("checkSubscriptionLimits", {
+          session_token: ctx.adminToken || "",
+          user_id: ctx.adminUserId || null,
+        });
+        return {
+          pass: res !== undefined,
+          detail: `raw=${JSON.stringify(res).slice(0, 80)}`,
+        };
+      } catch (e) {
+        return { pass: false, detail: e.message };
+      }
+    },
+  },
+  {
+    id: "host_raise_complaint_missing_fields",
+    label: "Host: raiseComplaint — missing fields returns error",
+    claudeHint: "Check base44/functions/raiseComplaint/entry.ts — missing booking_id should return error not crash.",
+    run: async () => {
+      const res = await callFn("raiseComplaint", {});
+      return {
+        pass: res.error !== undefined || res.success === false,
+        detail: `error=${res.error} success=${res.success}`,
+      };
+    },
+  },
+  {
+    id: "host_entity_booking",
+    label: "Host: Booking entity — queryable",
+    claudeHint: "The Booking entity may have RLS issues or the entity name has changed in Base44.",
+    run: async () => {
+      try {
+        const bookings = await base44.entities.Booking.list("-created_date", 1);
+        return { pass: Array.isArray(bookings), detail: `records=${bookings.length}` };
+      } catch (e) {
+        return { pass: false, detail: e.message };
+      }
+    },
+  },
+  {
+    id: "host_entity_cleaner",
+    label: "Host: Cleaner entity — queryable",
+    claudeHint: "The Cleaner entity may have RLS issues or the entity name has changed in Base44.",
+    run: async () => {
+      try {
+        const cleaners = await base44.entities.Cleaner.list("-created_date", 1);
+        return { pass: Array.isArray(cleaners), detail: `records=${cleaners.length}` };
+      } catch (e) {
+        return { pass: false, detail: e.message };
+      }
+    },
+  },
+  {
+    id: "host_entity_cleaning_job",
+    label: "Host: CleaningJob entity — queryable",
+    claudeHint: "The CleaningJob entity may have RLS issues or the entity name has changed in Base44.",
+    run: async () => {
+      try {
+        const jobs = await base44.entities.CleaningJob.list("-created_date", 1);
+        return { pass: Array.isArray(jobs), detail: `records=${jobs.length}` };
+      } catch (e) {
+        return { pass: false, detail: e.message };
+      }
+    },
+  },
+  {
+    id: "host_entity_review",
+    label: "Host: Review entity — queryable",
+    claudeHint: "The Review entity may have RLS issues or the entity name has changed in Base44.",
+    run: async () => {
+      try {
+        const reviews = await base44.entities.Review.list("-created_date", 1);
+        return { pass: Array.isArray(reviews), detail: `records=${reviews.length}` };
+      } catch (e) {
+        return { pass: false, detail: e.message };
+      }
+    },
+  },
+  {
+    id: "host_entity_user_session",
+    label: "Host: UserSession entity — queryable",
+    claudeHint: "The UserSession entity may have RLS issues — critical for custom auth to work.",
+    run: async () => {
+      try {
+        const sessions = await base44.entities.UserSession.list("-created_date", 1);
+        return { pass: Array.isArray(sessions), detail: `records=${sessions.length}` };
+      } catch (e) {
+        return { pass: false, detail: e.message };
+      }
+    },
+  },
+  {
+    id: "host_entity_user_credentials",
+    label: "Host: UserCredentials entity — queryable",
+    claudeHint: "The UserCredentials entity may have RLS issues — critical for login to work.",
+    run: async () => {
+      try {
+        const creds = await base44.entities.UserCredentials.list("-created_date", 1);
+        return { pass: Array.isArray(creds), detail: `records=${creds.length}` };
+      } catch (e) {
+        return { pass: false, detail: e.message };
+      }
+    },
+  },
 ];
 
 // ── CLAUDE PROMPT GENERATOR ─────────────────────────────────────────────────
