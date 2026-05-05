@@ -1040,6 +1040,7 @@ const handleDocBan = async (member) => {
             { id:"onboarding",     label:"Onboarding",         Icon:Users         },
             { id:"complaints",    label:"Complaints",        Icon:AlertTriangle },
             { id:"guests",        label:"Guests & Bookings",  Icon:BarChart2     },
+            { id:"cleanerwaitlist", label:"Cleaner Waitlist",  Icon:Users         },
             { id:"crm",           label:"CRM & Revenue",     Icon:TrendingUp    },
             { id:"smartpricing",  label:"Smart Pricing",     Icon:TrendingUp    },
             { id:"sectors",       label:"UK Sectors",        Icon:Globe         },
