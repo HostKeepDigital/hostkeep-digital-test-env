@@ -22,7 +22,13 @@ Deno.serve(async (req) => {
     const booking = data;
     const eventType = event?.type;
 
-    const notify = async (user_id, type, title, body, link, email_to) => {
+    // Look up host email so they receive email notifications too
+    let hostEmail = null;
+    if (booking.host_id) {
+      try {
+        const hostUser = await serviceRole.entities.User.get(booking.host_id);
+        hostEmail = hostUser?.email || null;
+      } catch (_) {}
       await serviceRole.functions.invoke("sendNotification", {
         user_id, type, title, body, link, email_to,
       });
