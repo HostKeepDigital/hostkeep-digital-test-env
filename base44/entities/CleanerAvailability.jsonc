@@ -44,42 +44,17 @@
     "date"
   ],
   "rls": {
-    "create": {
-      "$or": [
-        {
-          "data.cleaner_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
-    },
-    "read": {},
+    "create": true,
+    "read": true,
     "update": {
-      "$or": [
-        {
-          "data.cleaner_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "user_condition": {
+        "role": "admin"
+      }
     },
     "delete": {
-      "$or": [
-        {
-          "data.cleaner_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "user_condition": {
+        "role": "admin"
+      }
     }
   }
 }
