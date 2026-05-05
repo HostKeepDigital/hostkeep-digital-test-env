@@ -248,11 +248,15 @@ const TESTS = [
     label: "Profile: saveUserProfile → getUserProfile — write actually persists",
     claudeHint: "Check base44/functions/saveUserProfile/entry.ts — save may return success=true but not write to UserProfile entity. Also check getUserProfile reads from UserProfile first, then falls back to User.",
     run: async () => {
+      // Use a throwaway test email — never write to the real admin account
+      const testEmail = "regression-test-profile@hostkeepdigital-test.invalid";
       const marker = `RegTest_${Date.now()}`;
-      const saveRes = await callFn("saveUserProfile", { email: ADMIN_EMAIL, forename: marker, middle_name: "", surname: "Clarke", phone: "", location: "" });
+      const saveRes = await callFn("saveUserProfile", { email: testEmail, forename: marker, middle_name: "", surname: "RegressionTest", phone: "", location: "" });
       if (!saveRes.success) return { pass: false, detail: `Save failed: ${saveRes.error}` };
-      const readRes = await callFn("getUserProfile", { email: ADMIN_EMAIL });
+      const readRes = await callFn("getUserProfile", { email: testEmail });
       const readName = readRes.profile?.forename;
+      // Clean up — overwrite with empty to avoid accumulating test data
+      await callFn("saveUserProfile", { email: testEmail, forename: "deleted", middle_name: "", surname: "deleted", phone: "", location: "" }).catch(() => {});
       return { pass: readRes.success === true && readName === marker, detail: `wrote=${marker} read=${readName}` };
     },
   },
