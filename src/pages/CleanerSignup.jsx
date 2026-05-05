@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import {
   Star, Upload, DollarSign, Calendar,
   Award, CheckCircle, Sparkles,
-  Clock, AlertCircle, Target, TrendingUp
+  Clock, AlertCircle, Target, TrendingUp, Loader2
 } from "lucide-react";
 import { toast } from "sonner";
 import { createPageUrl } from "@/utils";
@@ -25,11 +25,16 @@ export default function CleanerSignup() {
   const { user, isAuthenticated } = useAuth();
 
   const [loading, setLoading] = useState(false);
+  const [capacityResult, setCapacityResult] = useState(null);
+  const [postcodeChecking, setPostcodeChecking] = useState(false);
+  const [showWaitlist, setShowWaitlist] = useState(false);
 
   const [formData, setFormData] = useState({
     display_name: "",
     service_area_city: "",
     service_area_postcode: "",
+    service_area_lat: null,
+    service_area_lng: null,
     experience_level: "intermediate",
     bio: "",
     profile_photo: "",
@@ -58,6 +63,45 @@ export default function CleanerSignup() {
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handlePostcodeLookup = async () => {
+    const raw = formData.service_area_postcode.trim().toUpperCase();
+    if (!raw) return;
+    setPostcodeChecking(true);
+    try {
+      const session_token = localStorage.getItem("session_token");
+      const { data } = await base44.functions.invoke("postcodeGeolookupV2", {
+        postcode: raw,
+        session_token,
+      });
+      if (data.success) {
+        handleChange("service_area_lat", data.latitude);
+        handleChange("service_area_lng", data.longitude);
+        handleChange("service_area_city", data.district || data.county || raw);
+        // Run capacity check
+        const res = await fetch('/api/apps/698eee4108bd1d9467648326/functions/checkCleanerCapacity', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            lat: data.latitude,
+            lng: data.longitude,
+            radius_miles: formData.travel_radius,
+            is_team: formData.is_team,
+            team_size: formData.team_size,
+          }),
+        });
+        const capacity = await res.json();
+        setCapacityResult(capacity);
+        if (!capacity.has_capacity) setShowWaitlist(true);
+      } else {
+        toast.error("Invalid postcode — please check and try again.");
+      }
+    } catch {
+      toast.error("Postcode lookup failed. Please try again.");
+    } finally {
+      setPostcodeChecking(false);
+    }
   };
 
   const handleNestedChange = (parent, field, value) => {
@@ -111,6 +155,44 @@ export default function CleanerSignup() {
         return;
       }
 
+      // 1. Check capacity if not already checked
+      if (!capacityResult) {
+        toast.error("Please verify your postcode and check area capacity first.");
+        setLoading(false);
+        return;
+      }
+
+      // 2. No capacity — join waitlist instead
+      if (!capacityResult.has_capacity) {
+        const score =
+          (formData.display_name ? 20 : 0) +
+          (formData.bio.length > 100 ? 20 : 0) +
+          (formData.profile_photo ? 20 : 0) +
+          (formData.base_price ? 20 : 0) +
+          (formData.work_photos.length > 0 ? 20 : 0);
+
+        await base44.entities.CleanerWaitlist.create({
+          user_id: user.id,
+          email: user.email,
+          name: formData.display_name,
+          postcode: formData.service_area_postcode,
+          lat: formData.service_area_lat,
+          lng: formData.service_area_lng,
+          travel_radius: formData.travel_radius,
+          is_team: formData.is_team,
+          team_size: formData.team_size,
+          subscription_plan: formData.subscription_plan,
+          status: "waiting",
+          priority_score: score,
+          profile_completeness: score,
+          form_data: formData,
+        });
+        toast.success("You're on the waitlist! We'll notify you as soon as a slot opens in your area.");
+        navigate(createPageUrl("CleanerDashboard"));
+        return;
+      }
+
+      // 3. Has capacity — Create Cleaner profile
       const cleaner = await base44.entities.Cleaner.create({
         user_id: user.id,
         business_name: formData.display_name,
@@ -282,26 +364,37 @@ export default function CleanerSignup() {
               </div>
 
               {/* LOCATION */}
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <Label>Location / Service Area *</Label>
-                  <div className="flex gap-2 mt-1">
-                    <Input
-                      value={formData.service_area_city}
-                      onChange={(e) => handleChange("service_area_city", e.target.value)}
-                      placeholder="City"
-                      required
-                      className="flex-1"
-                    />
-                    <Input
-                      value={formData.service_area_postcode}
-                      onChange={(e) => handleChange("service_area_postcode", e.target.value)}
-                      placeholder="Postcode"
-                      required
-                      className="w-32"
-                    />
-                  </div>
+              <div>
+                <Label>Your Postcode *</Label>
+                <div className="flex gap-2 mt-1">
+                  <Input
+                    value={formData.service_area_postcode}
+                    onChange={(e) => {
+                      handleChange("service_area_postcode", e.target.value.toUpperCase());
+                      setCapacityResult(null);
+                      setShowWaitlist(false);
+                    }}
+                    placeholder="e.g. TR13 8JB"
+                    required
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    onClick={handlePostcodeLookup}
+                    disabled={!formData.service_area_postcode.trim() || postcodeChecking}
+                    className="bg-teal-600 hover:bg-teal-700"
+                  >
+                    {postcodeChecking ? <Loader2 className="w-4 h-4 animate-spin" /> : "Check Area"}
+                  </Button>
                 </div>
+                {capacityResult && (
+                  <div className={`mt-2 p-3 rounded-lg text-sm flex items-start gap-2 ${capacityResult.has_capacity ? "bg-green-50 border border-green-200 text-green-800" : "bg-amber-50 border border-amber-200 text-amber-800"}`}>
+                    {capacityResult.has_capacity
+                      ? <><CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" /> Great news — your area has capacity for new cleaners. {capacityResult.property_count} active properties found within {formData.travel_radius} miles.</>
+                      : <><AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" /> {capacityResult.message}</>
+                    }
+                  </div>
+                )}
               </div>
 
               {/* BIO */}
@@ -837,9 +930,12 @@ export default function CleanerSignup() {
   <Button
     type="submit"
     disabled={loading}
-    className="bg-blue-600 hover:bg-blue-700 text-lg px-10 py-6 h-auto"
+    className={`text-lg px-10 py-6 h-auto ${showWaitlist ? "bg-amber-600 hover:bg-amber-700" : "bg-blue-600 hover:bg-blue-700"}`}
   >
-    {loading ? "Creating Profile..." : "Create My Cleaner Profile"}
+    {loading
+      ? showWaitlist ? "Joining Waitlist..." : "Creating Profile..."
+      : showWaitlist ? "Join Priority Waitlist" : "Create My Cleaner Profile"
+    }
   </Button>
 </div>
 
