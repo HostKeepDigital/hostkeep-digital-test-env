@@ -51,7 +51,9 @@ export default function CleanerSignup() {
     auto_accept_radius: false,
     max_jobs_per_day: 3,
     travel_radius: 10,
-    subscription_plan: "basic"
+    subscription_plan: "cleaner_solo_monthly",
+    is_team: false,
+    team_size: 2,
   });
 
   const handleChange = (field, value) => {
