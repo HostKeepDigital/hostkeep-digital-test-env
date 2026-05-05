@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
           "New Booking Request",
           `${booking.guest_name || "A guest"} has requested to book your property from ${booking.check_in} to ${booking.check_out}.`,
           "/HostBookings",
-          null
+          hostEmail
         );
       }
     }
@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
             "Booking Confirmed ✅",
             `You confirmed the booking for ${booking.guest_name || "a guest"} (${booking.check_in} to ${booking.check_out}). Total: £${booking.total_amount?.toFixed(2) || "0.00"}.`,
             "/HostBookings",
-            null
+            hostEmail
           );
         }
 
