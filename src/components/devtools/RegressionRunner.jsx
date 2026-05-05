@@ -380,7 +380,7 @@ const TESTS = [
     claudeHint: "Check base44/functions/propertySearch/entry.ts — Property entity query may be failing or returning wrong shape.",
     run: async () => {
       const res = await callFn("propertySearch", { query: "cornwall", limit: 3 });
-      const results = res.results || res;
+      const results = res.results || res.data || res;
       return {
         pass: Array.isArray(results),
         detail: `count=${Array.isArray(results) ? results.length : "not array"} raw=${JSON.stringify(res).slice(0, 80)}`,
