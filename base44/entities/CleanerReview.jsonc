@@ -53,5 +53,44 @@
     "cleaner_id",
     "host_id",
     "rating"
-  ]
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "data.host_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {},
+    "update": {
+      "$or": [
+        {
+          "data.host_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.host_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
 }
