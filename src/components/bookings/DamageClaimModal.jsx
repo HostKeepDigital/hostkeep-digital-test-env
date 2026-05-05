@@ -75,6 +75,7 @@ export default function DamageClaimModal({ isOpen, onClose, booking, onSuccess }
     try {
       const categoryLabel = DAMAGE_CATEGORIES.find((c) => c.id === category)?.label || category;
       await base44.functions.invoke("raiseComplaint", {
+        session_token: localStorage.getItem("session_token"),
         booking_id: booking.id,
         raised_by: "host",
         raised_by_user_id: booking.host_id,
