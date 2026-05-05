@@ -76,6 +76,10 @@ Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
   const { email } = await req.json();
 
+  if (!email || typeof email !== "string" || !email.includes("@")) {
+    return Response.json({ success: false, error: "email is required" }, { status: 400 });
+  }
+
   // Always return success to prevent email enumeration
   if (!email) {
     return Response.json({ success: true });
