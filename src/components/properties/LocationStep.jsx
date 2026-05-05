@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle2, AlertCircle, MapPin, Lock, XCircle } from "lucide-react";
 import { toast } from "sonner";
 
-// HostKeep launch area — Cornwall & Devon postcode areas only
+// Cornwall-only during beta for first property
 const ALLOWED_AREAS = ["TR", "PL", "EX"];
 
 function getAreaLabel(postcodeArea) {
@@ -31,8 +31,15 @@ function buildPostcodeData(fd) {
   };
 }
 
-export default function LocationStep({ formData, onFormChange, onLocationChange, signupPostcode, isBeta, isFirstProperty = true }) {
-  // If in beta with no saved postcode, we MUST wait for signupPostcode to arrive and auto-verify
+export default function LocationStep({
+  formData,
+  onFormChange,
+  onLocationChange,
+  signupPostcode,
+  isBeta,
+  isFirstProperty = true,
+  betaActive = true,
+}) {
   const expectAutoVerify = !!(isBeta && !formData.postcode);
 
   const [isReady, setIsReady] = useState(!expectAutoVerify);
@@ -44,10 +51,8 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
   const didAutoLookup = useRef(false);
   const timeoutRef = useRef(null);
 
-  // Derive in-area state directly from postcodeData
   const inArea = postcodeData ? ALLOWED_AREAS.includes(postcodeData.postcode_area) : null;
 
-  // Sync when formData.postcode arrives asynchronously (e.g. after DB load)
   useEffect(() => {
     if (formData.postcode && !postcodeData) {
       setPostcodeInput(formData.postcode);
@@ -55,21 +60,18 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
     }
   }, [formData.postcode]);
 
-  // Safety: if expectAutoVerify but signupPostcode never arrives after 5s, release the spinner
   useEffect(() => {
     if (!expectAutoVerify || isReady) return;
     const t = setTimeout(() => setIsReady(true), 5000);
     return () => clearTimeout(t);
   }, [expectAutoVerify]);
 
-  // Auto-verify from signupPostcode as soon as it arrives
   useEffect(() => {
     if (!signupPostcode || formData.postcode || postcodeData || didAutoLookup.current) return;
     didAutoLookup.current = true;
     const upper = signupPostcode.toUpperCase();
     setPostcodeInput(upper);
 
-    // Safety timeout — if lookup takes > 8s, show the form anyway so user isn't stuck
     timeoutRef.current = setTimeout(() => {
       setPostcodeError("Postcode verification timed out. Please verify manually.");
       setPostcodeLoading(false);
@@ -81,7 +83,6 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
     return () => clearTimeout(timeoutRef.current);
   }, [signupPostcode]);
 
-  // Mark ready once lookup completes (success or error)
   useEffect(() => {
     if (isReady) return;
     if (didAutoLookup.current && !postcodeLoading && (postcodeData || postcodeError)) {
@@ -124,13 +125,17 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
       onFormChange("longitude", data.longitude);
 
       const allowed = ALLOWED_AREAS.includes(data.postcode_area);
-      if (allowed) {
+      if (allowed && onLocationChange) {
+        onLocationChange({ lat: data.latitude, lng: data.longitude, county: data.county, district: data.district, country: data.country });
+        toast.success(`Postcode verified — ${getAreaLabel(data.postcode_area) || data.county || data.district}`);
+      } else if (!allowed && betaActive && isFirstProperty) {
+        toast.error("This postcode is outside the beta launch area.");
+      } else if (!allowed && (!betaActive || !isFirstProperty)) {
+        // Non-Cornwall but allowed — fire onLocationChange so address section shows
         if (onLocationChange) {
           onLocationChange({ lat: data.latitude, lng: data.longitude, county: data.county, district: data.district, country: data.country });
         }
-        toast.success(`Postcode verified — ${getAreaLabel(data.postcode_area) || data.county || data.district}`);
-      } else {
-        toast.error("Postcode is outside the current launch area.");
+        toast.success(`Postcode verified — ${data.county || data.district || data.country}`);
       }
     } catch (error) {
       setPostcodeError("Postcode lookup failed. Please try again.");
@@ -139,9 +144,13 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
     }
   };
 
-  const canSave = () => postcodeData && (inArea || !isFirstProperty) && formData.location?.street;
+  const canSave = () => {
+    if (!betaActive) return !!(postcodeData && formData.location?.street);
+    return !!(postcodeData && (inArea || !isFirstProperty) && formData.location?.street);
+  };
 
-  // Show spinner while auto-verifying
+  const showAddressSection = postcodeData && (!betaActive || inArea || !isFirstProperty);
+
   if (!isReady) {
     return (
       <Card>
@@ -160,8 +169,11 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
       <CardHeader>
         <CardTitle>Property Location</CardTitle>
         <CardDescription>
-          Enter your postcode for accurate location data. HostKeep is currently available in{" "}
-          <strong>Cornwall and Devon</strong> only.
+          {betaActive
+            ? isFirstProperty
+              ? "Your first property must be in Cornwall during beta. Enter your postcode to verify."
+              : "Enter your property postcode. Properties outside Cornwall will be saved as draft until beta ends."
+            : "Enter your property postcode anywhere in the UK."}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -207,7 +219,7 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
         </div>
 
         {/* IN-AREA: Verified successfully */}
-        {postcodeData && (inArea || !isFirstProperty) && (
+        {postcodeData && inArea && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-3">
             <h4 className="font-semibold text-green-900 flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4" />
@@ -235,16 +247,26 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
           </div>
         )}
 
-        {/* OUT-OF-AREA */}
-        {/* First property outside Cornwall — hard stop */}
-        {postcodeData && !inArea && isFirstProperty && (
+        {/* Non-Cornwall verified (second property or post-beta) */}
+        {postcodeData && !inArea && (!betaActive || !isFirstProperty) && (
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 space-y-1">
+            <h4 className="font-semibold text-gray-800 flex items-center gap-2 text-sm">
+              <CheckCircle2 className="w-4 h-4 text-gray-500" />
+              Postcode Verified — {postcodeData.county || postcodeData.district || postcodeData.country}
+            </h4>
+            <p className="text-xs text-gray-500 font-mono">{postcodeData.postcode} · {postcodeData.latitude?.toFixed(5)}, {postcodeData.longitude?.toFixed(5)}</p>
+          </div>
+        )}
+
+        {/* First property outside Cornwall — hard stop (beta only) */}
+        {betaActive && postcodeData && !inArea && isFirstProperty && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 space-y-3">
             <h4 className="font-semibold text-red-900 flex items-center gap-2">
               <XCircle className="w-4 h-4 text-red-600" /> Outside Beta Area
             </h4>
             <p className="text-sm text-red-800 leading-relaxed">
               <strong>{postcodeData.postcode}</strong> is in{" "}
-              {postcodeData.county || postcodeData.district || postcodeData.country}. During beta, your first property must be located in <strong>Cornwall</strong> (postcode areas TR, PL, EX).
+              {postcodeData.county || postcodeData.district || postcodeData.country}. During beta, your first property must be in <strong>Cornwall</strong> (postcode areas TR, PL, EX).
             </p>
             <p className="text-sm text-red-700">
               We're expanding across the UK in 2026. You'll be notified when HostKeep launches in your area.
@@ -252,7 +274,7 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
           </div>
         )}
 
-        {/* Second+ property outside Cornwall — soft warning (beta only) */}
+        {/* Second+ property outside Cornwall — soft warning, allow proceed (beta only) */}
         {betaActive && postcodeData && !inArea && !isFirstProperty && (
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 space-y-3">
             <h4 className="font-semibold text-amber-900 flex items-center gap-2">
@@ -263,13 +285,24 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
               {postcodeData.county || postcodeData.district || postcodeData.country}. This property cannot be published during beta but you can complete the full setup now.
             </p>
             <p className="text-sm text-amber-700">
-              When HostKeep launches nationally, this property will be ready to publish. We'll notify you when your area goes live. Note that cleaner availability may be limited at launch.
+              When HostKeep launches nationally this property will be ready to publish. We'll notify you when your area goes live.
             </p>
           </div>
         )}
 
-        {/* STREET ADDRESS */}
-        {postcodeData && (inArea || !isFirstProperty) && (
+        {/* Post-beta — soft cleaner availability warning for non-Cornwall areas */}
+        {!betaActive && postcodeData && !inArea && (
+          <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-blue-800">
+              Cleaner availability may be limited in{" "}
+              {postcodeData.county || postcodeData.district || "this area"} during early UK rollout. You can still list and take bookings — we'll notify you as CleanKeep expands to your area.
+            </p>
+          </div>
+        )}
+
+        {/* STREET ADDRESS — shown when postcode is valid and allowed to proceed */}
+        {showAddressSection && (
           <div className="space-y-4 pt-2 border-t">
             <h4 className="font-semibold text-gray-900 flex items-center gap-2">
               <MapPin className="w-4 h-4 text-gray-500" /> Address Details
@@ -280,7 +313,7 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
                 value={formData.location?.street || ""}
                 onChange={(e) => onFormChange("location", { ...formData.location, street: e.target.value })}
                 placeholder="123 High Street"
-                className={`mt-1 ${postcodeData && inArea && !formData.location?.street ? "border-amber-400" : ""}`}
+                className={`mt-1 ${showAddressSection && !formData.location?.street ? "border-amber-400" : ""}`}
               />
               {!formData.location?.street && (
                 <p className="text-xs text-amber-600 mt-1">Street address is required to continue.</p>
@@ -320,8 +353,8 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
               <span>
                 {!postcodeData
                   ? "Verify your postcode to continue."
-                  : !inArea
-                  ? "Postcode is outside the current launch area. Properties can only be listed in Cornwall and Devon."
+                  : betaActive && !inArea && isFirstProperty
+                  ? "Your first property must be in Cornwall during beta."
                   : "Street address is required to continue."}
               </span>
             </div>
