@@ -451,7 +451,7 @@ export default function AdminPanel() {
     } catch { setGuestSessions([]); }
   };
 
-  useEffect(() => { fetchMembers(); fetchSubscriptions(); fetchPageViews(); fetchGuests(); fetchGuestSessions(); }, []);
+  useEffect(() => { fetchMembers(); fetchSubscriptions(); fetchPageViews(); fetchGuests(); fetchCleanerWaitlist(); }, []);
 
   const setML = (id, val) => setActionLoading(p => ({ ...p, [id]: val }));
 
@@ -1341,6 +1341,94 @@ const handleDocBan = async (member) => {
       )}
 
       {/* ── COMPLAINTS ───────────────────────────────────────────────────── */}
+      {activeTab === "cleanerwaitlist" && (
+        <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">Cleaner Waitlist</h2>
+              <p className="text-sm text-gray-500 mt-0.5">Ranked by profile completeness, distance to active hosts, and signup priority.</p>
+            </div>
+            <button onClick={fetchCleanerWaitlist} className="text-sm text-teal-600 hover:text-teal-700 font-medium">Refresh</button>
+          </div>
+
+          {waitlistLoading ? (
+            <div className="flex justify-center py-12"><div className="w-6 h-6 border-2 border-teal-200 border-t-teal-600 rounded-full animate-spin" /></div>
+          ) : cleanerWaitlist.length === 0 ? (
+            <div className="text-center py-12 text-gray-400 text-sm">No cleaners on the waitlist yet.</div>
+          ) : (
+            <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-100">
+                    {["Rank", "Name", "Email", "Postcode", "Plan", "Team", "Score", "Status", "Action"].map(h => (
+                      <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {cleanerWaitlist.map((entry, i) => {
+                    const isExpired = entry.status === "invited" && entry.invitation_expires_at && new Date(entry.invitation_expires_at) < new Date();
+                    const statusColour = {
+                      waiting: "bg-gray-100 text-gray-600",
+                      invited: isExpired ? "bg-red-100 text-red-600" : "bg-blue-100 text-blue-700",
+                      activated: "bg-teal-100 text-teal-700",
+                      expired: "bg-red-100 text-red-600",
+                    }[entry.status] || "bg-gray-100 text-gray-500";
+
+                    return (
+                      <tr key={entry.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-3 font-bold text-gray-400">#{i + 1}</td>
+                        <td className="px-4 py-3 font-medium text-gray-900">{entry.name || "—"}</td>
+                        <td className="px-4 py-3 text-gray-500 text-xs">{entry.email}</td>
+                        <td className="px-4 py-3 text-gray-500">{entry.postcode || "—"}</td>
+                        <td className="px-4 py-3 text-gray-500 text-xs">{entry.subscription_plan?.replace(/_/g, " ") || "—"}</td>
+                        <td className="px-4 py-3">
+                          {entry.is_team ? (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">{entry.team_size} members</span>
+                          ) : (
+                            <span className="text-xs text-gray-400">Solo</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                              <div className="h-full bg-teal-500 rounded-full" style={{ width: `${entry.priority_score || 0}%` }} />
+                            </div>
+                            <span className="text-xs text-gray-500">{entry.priority_score || 0}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColour}`}>
+                            {isExpired ? "Expired" : entry.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          {entry.status === "waiting" && (
+                            <button
+                              onClick={() => handleInviteCleaner(entry)}
+                              disabled={invitingId === entry.id}
+                              className="text-xs px-3 py-1.5 rounded border border-teal-300 text-teal-700 hover:bg-teal-50 font-medium disabled:opacity-50"
+                            >
+                              {invitingId === entry.id ? "Sending..." : "Invite"}
+                            </button>
+                          )}
+                          {(entry.status === "invited" && !isExpired) && (
+                            <span className="text-xs text-blue-500">Awaiting activation</span>
+                          )}
+                          {(entry.status === "activated") && (
+                            <span className="text-xs text-teal-600">✓ Active</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
       {activeTab === "complaints" && (
         <div className="max-w-7xl mx-auto px-6 py-8">
           <ComplaintsTab />
