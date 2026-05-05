@@ -1,0 +1,135 @@
+{
+  "name": "CleanerWaitlist",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "User ID if account exists"
+    },
+    "email": {
+      "type": "string",
+      "description": "Email address of the applicant"
+    },
+    "name": {
+      "type": "string",
+      "description": "Full name of the applicant"
+    },
+    "postcode": {
+      "type": "string",
+      "description": "Postcode of the applicant's service area"
+    },
+    "lat": {
+      "type": "number",
+      "description": "Latitude of the service area"
+    },
+    "lng": {
+      "type": "number",
+      "description": "Longitude of the service area"
+    },
+    "travel_radius": {
+      "type": "number",
+      "description": "How far the cleaner is willing to travel in miles"
+    },
+    "is_team": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this is a cleaning team or business"
+    },
+    "team_size": {
+      "type": "number",
+      "description": "Number of staff members in the team"
+    },
+    "subscription_plan": {
+      "type": "string",
+      "description": "Chosen subscription plan"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "waiting",
+        "invited",
+        "activated",
+        "expired"
+      ],
+      "default": "waiting",
+      "description": "Current waitlist status"
+    },
+    "priority_score": {
+      "type": "number",
+      "default": 0,
+      "description": "Priority score for invite ordering"
+    },
+    "invited_at": {
+      "type": "string",
+      "format": "date",
+      "description": "Date when the applicant was invited"
+    },
+    "invitation_expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the invitation expires"
+    },
+    "profile_completeness": {
+      "type": "number",
+      "default": 0,
+      "description": "Percentage of profile completed (0-100)"
+    },
+    "form_data": {
+      "type": "object",
+      "description": "Full signup form data stored for when they activate"
+    }
+  },
+  "required": [
+    "email"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
