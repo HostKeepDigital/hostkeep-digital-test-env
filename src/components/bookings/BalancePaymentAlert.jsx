@@ -179,6 +179,7 @@ function PaymentForm({ booking, property, balanceOwed, onClose, onSuccess }) {
 
     try {
       const intentRes = await base44.functions.invoke("createBookingPaymentIntent", {
+        session_token: localStorage.getItem("session_token"),
         booking_id: booking.id,
         amount: balanceOwed,
         type: "balance",
