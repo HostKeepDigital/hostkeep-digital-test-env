@@ -243,8 +243,7 @@ const TESTS = [
     label: "Subscription entity — queryable by admin",
     run: async () => {
       try {
-        const subs = await base44.asServiceRole?.entities?.Subscription?.list("-created_date", 1) ||
-          await base44.entities.Subscription.list("-created_date", 1);
+        const subs = await base44.entities.Subscription.list("-created_date", 1);
         return { pass: Array.isArray(subs), detail: `records=${subs.length}` };
       } catch (e) {
         return { pass: false, detail: e.message };
