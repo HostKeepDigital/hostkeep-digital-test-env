@@ -184,9 +184,22 @@ const TESTS = [
     claudeHint: "Check base44/functions/checkApprovalGates/entry.ts — FoundingMember entity query or gate logic may be throwing.",
     label: "checkApprovalGates — runs without crashing",
     run: async (ctx) => {
-      if (!ctx.adminUserId) return { pass: false, detail: "No user_id" };
+      // Fall back to querying a real FoundingMember for a valid user_id
+      const userId = ctx.adminUserId;
+      if (!userId) {
+        // Try to get any real user_id from FoundingMember table
+        try {
+          const members = await base44.entities.FoundingMember.filter({ approval_status: "approved" });
+          const testUserId = members?.[0]?.user_id;
+          if (!testUserId) return { pass: false, detail: "No approved founding member with user_id found to test against" };
+          const res = await callFn("checkApprovalGates", { user_id: testUserId });
+          return { pass: true, detail: `ran with fallback user_id gates=${JSON.stringify(res.gates || res).slice(0, 80)}` };
+        } catch (e) {
+          return { pass: false, detail: `fallback failed: ${e.message}` };
+        }
+      }
       try {
-        const res = await callFn("checkApprovalGates", { user_id: ctx.adminUserId });
+        const res = await callFn("checkApprovalGates", { user_id: userId });
         return {
           pass: true,
           detail: `gates=${JSON.stringify(res.gates || res)}`,
