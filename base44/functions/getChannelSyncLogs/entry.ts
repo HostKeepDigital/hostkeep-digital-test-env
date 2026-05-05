@@ -2,10 +2,20 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.23";
 
 Deno.serve(async (req) => {
   try {
+    const body = await req.json().catch(() => ({}));
+    const { session_token } = body;
+    if (!session_token) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const base44 = createClientFromRequest(req);
+    const sessions = await base44.asServiceRole.entities.UserSession.filter({ session_token });
+    const session = sessions?.[0];
+    if (!session || new Date(session.expires_at) < new Date()) {
+      return Response.json({ error: "Invalid or expired session" }, { status: 401 });
+    }
     const serviceRole = base44.asServiceRole;
 
-    const { channelListingId } = await req.json();
+    const { channelListingId } = body;
 
     if (!channelListingId) {
       return Response.json(
