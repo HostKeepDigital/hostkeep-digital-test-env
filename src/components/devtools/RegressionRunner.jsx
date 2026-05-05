@@ -510,15 +510,19 @@ const TESTS = [
   },
   {
     id: "host_get_allowed_nights", group: "Host",
-    label: "Host: getAllowedNights — runs without crashing",
-    claudeHint: "Check base44/functions/getAllowedNights/entry.ts — if returning HTML it is not deployed in Base44.",
+    label: "Host: getAllowedNights utility — returns array of allowed night values",
+    claudeHint: "getAllowedNights is a frontend utility function not a backend endpoint. Check src/utils/getAllowedNights.js or wherever it is imported from — the export function may have been changed or removed.",
     run: async () => {
       try {
-        const res = await callFn("getAllowedNights", { property: { day_based_restrictions_enabled: false, booking_rules: [] }, checkIn: "2026-08-01", checkOut: "2026-08-07" });
-        return { pass: res !== undefined, detail: `raw=${JSON.stringify(res).slice(0, 80)}` };
+        // getAllowedNights is a JS utility, not a backend function — test it directly
+        const { getAllowedNights } = await import("/src/base44/functions/getAllowedNights/entry.ts");
+        const result = getAllowedNights({ day_based_restrictions_enabled: false, booking_rules: [] });
+        return {
+          pass: Array.isArray(result) && result.length === 28,
+          detail: `returned ${result?.length} allowed night values (expected 28)`,
+        };
       } catch (e) {
-        if (e.message?.includes("non-JSON")) return { pass: false, detail: "Function not deployed in Base44 yet" };
-        return { pass: false, detail: e.message };
+        return { pass: false, detail: `Import failed: ${e.message} — function may have been moved or renamed` };
       }
     },
   },
