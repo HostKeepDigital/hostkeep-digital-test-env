@@ -78,7 +78,7 @@ export default function HostDashboard() {
 
   useEffect(() => {
     if (!user?.id) return;
-    base44.functions.invoke("generateReferralCode", { user_id: user.id, email: user.email })
+   base44.functions.invoke("generateReferralCode", { user_id: user.id, email: user.email, session_token: localStorage.getItem("session_token") })
       .then(res => {
         if (res.data?.ref_code) setRefCode(res.data.ref_code);
       }).catch(() => {});
