@@ -37,11 +37,7 @@
     "role"
   ],
   "rls": {
-    "create": {
-      "user_condition": {
-        "role": "admin"
-      }
-    },
+    "create": true,
     "read": {
       "$or": [
         {
