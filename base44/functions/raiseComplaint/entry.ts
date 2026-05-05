@@ -150,7 +150,7 @@ Deno.serve(async (req) => {
       }
 
       // Email admin
-      const adminEmail = Deno.env.get('ADMIN_EMAIL') || 'admin@hostkeep.co.uk';
+      const adminEmail = Deno.env.get('ADMIN_EMAIL') || 'hello@hostkeepdigital.co.uk';
       await base44.functions.invoke('sendEmail', {
         to: adminEmail,
         subject: `New Complaint - Booking ${booking_id}`,
