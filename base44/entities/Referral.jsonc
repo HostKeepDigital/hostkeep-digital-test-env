@@ -26,8 +26,7 @@
       "type": "string",
       "enum": [
         "pending",
-        "subscription_activated",
-        "reward_applied"
+        "completed"
       ],
       "default": "pending",
       "description": "Current status of the referral"
@@ -36,14 +35,63 @@
       "type": "string",
       "description": "Display name of the person who signed up"
     },
-    "reward_applied_at": {
+    "completed_at": {
       "type": "string",
       "format": "date",
-      "description": "Date when the reward was applied"
+      "description": "Date when the referral was completed and rewards applied"
     }
   },
   "required": [
     "referrer_user_id",
     "ref_code"
-  ]
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "data.referrer_user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.referrer_user_id": "{{user.id}}"
+        },
+        {
+          "data.referee_user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.referrer_user_id": "{{user.id}}"
+        },
+        {
+          "data.referee_user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
 }
