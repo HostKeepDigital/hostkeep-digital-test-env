@@ -98,7 +98,7 @@ export default function ComplaintModal({ isOpen, onClose, booking }) {
         requested_amount: requestedAmount ? parseFloat(requestedAmount) : undefined,
       };
 
-      await base44.functions.invoke('raiseComplaint', payload);
+      await base44.functions.invoke('raiseComplaint', { ...payload, session_token: localStorage.getItem('session_token') });
       setSubmitted(true);
 
       setTimeout(() => {
