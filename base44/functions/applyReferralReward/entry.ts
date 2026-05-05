@@ -28,6 +28,12 @@ Deno.serve(async (req) => {
     }
 
     // Find the referral record for this referee
+
+    if (!referee_email) {
+      return Response.json({ success: false, error: "referee_email is required" }, { status: 400 });
+    }
+
+    // Find the referral record for this referee
     const refs = await sr.entities.Referral.filter({ referee_email: referee_email?.toLowerCase().trim() });
     const referral = refs.find(r => r.status === "pending" && r.ref_code);
     if (!referral) return Response.json({ success: false, error: "no pending referral found" });
