@@ -538,7 +538,7 @@ const handleBan = async (member) => {
    if (reason === null) return;
    setML(member.id, "ban");
    try {
-     const res = await base44.functions.invoke("banFoundingMember", { member_id: member.id, ban_reason: reason || "Admin action", session_token: getSessionToken() });
+     const res = await base44.functions.invoke("banFoundingMember", { member_id: member.id, ban_reason: reason || "Admin action", session_token: localStorage.getItem("session_token") });
      const promoted = res.data?.promoted;
      if (promoted) {
        toast.success(`${member.full_name} banned. Waitlist member ${promoted.full_name} has been invited.`);
