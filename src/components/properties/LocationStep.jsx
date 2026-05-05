@@ -255,7 +255,7 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
         )}
 
         {/* STREET ADDRESS */}
-        {postcodeData && inArea && (
+        {postcodeData && (inArea || !isFirstProperty) && (
           <div className="space-y-4 pt-2 border-t">
             <h4 className="font-semibold text-gray-900 flex items-center gap-2">
               <MapPin className="w-4 h-4 text-gray-500" /> Address Details
