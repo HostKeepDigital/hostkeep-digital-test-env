@@ -207,7 +207,7 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
         </div>
 
         {/* IN-AREA: Verified successfully */}
-        {postcodeData && inArea && (
+        {postcodeData && (inArea || !isFirstProperty) && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-3">
             <h4 className="font-semibold text-green-900 flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4" />
