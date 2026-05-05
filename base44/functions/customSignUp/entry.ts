@@ -22,6 +22,19 @@ Deno.serve(async (req) => {
       );
     }
 
+    if (forename.length > 100 || surname.length > 100) {
+      return Response.json({ success: false, error: "Name fields cannot exceed 100 characters" }, { status: 400 });
+    }
+    if ((middle_name || "").length > 100) {
+      return Response.json({ success: false, error: "Middle name cannot exceed 100 characters" }, { status: 400 });
+    }
+    if (password.length > 128) {
+      return Response.json({ success: false, error: "Password cannot exceed 128 characters" }, { status: 400 });
+    }
+    if (password.length < 8) {
+      return Response.json({ success: false, error: "Password must be at least 8 characters" }, { status: 400 });
+    }
+
     const normalisedEmail = email.toLowerCase().trim();
     // Check if credentials already exist
     const existing = await serviceRole.entities.UserCredentials.filter({ email: normalisedEmail });
