@@ -184,6 +184,14 @@ export default function CreateProperty() {
 
   const [titleError, setTitleError] = useState("");
   const [hasApprovedIdDocs, setHasApprovedIdDocs] = useState(false);
+  const [isFirstProperty, setIsFirstProperty] = useState(true);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    base44.entities.Property.filter({ owner_id: user.id })
+      .then(props => setIsFirstProperty((props || []).length === 0))
+      .catch(() => {});
+  }, [user?.id]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -845,6 +853,7 @@ export default function CreateProperty() {
               onLocationChange={setLocationData}
               signupPostcode={foundingPostcode}
               isBeta={isBeta}
+              isFirstProperty={isFirstProperty}
             />
             )}
 
