@@ -230,7 +230,7 @@ const TESTS = [
     label: "Profile: getUserProfile — returns profile for known email",
     claudeHint: "Check base44/functions/getUserProfile/entry.ts — UserProfile entity filter or User.get fallback may be failing.",
     run: async (ctx) => {
-      const res = await callFn("getUserProfile", { email: ADMIN_EMAIL, user_id: ctx.adminUserId || null });
+      const res = await callFn("getUserProfile", { email: ADMIN_EMAIL, user_id: ctx.adminUserId || null, session_token: ctx.adminToken || "" });
       return { pass: res.success === true, detail: res.success ? `keys=${Object.keys(res.profile || {}).join(",")}` : res.error };
     },
   },
