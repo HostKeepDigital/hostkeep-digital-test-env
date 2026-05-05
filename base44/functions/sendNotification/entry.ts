@@ -36,10 +36,17 @@ const PREF_MAP = {
 
 Deno.serve(async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
+    const reqBody = await req.json().catch(() => ({}));
+    const { session_token, user_id, type, title, body, link, email_to, force_email } = reqBody;
+    if (!session_token) return Response.json({ error: "Unauthorized" }, { status: 401 });
+    const base44client = createClientFromRequest(req);
+    const sessions = await base44client.asServiceRole.entities.UserSession.filter({ session_token });
+    const session = sessions?.[0];
+    if (!session || new Date(session.expires_at) < new Date()) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const base44 = base44client;
     const serviceRole = base44.asServiceRole;
-
-    const { user_id, type, title, body, link, email_to, force_email } = await req.json();
 
     if (!user_id || !type || !title || !body) {
       return Response.json({ success: false, error: "missing_fields" }, { status: 400 });
