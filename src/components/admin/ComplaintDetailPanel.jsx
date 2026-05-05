@@ -113,6 +113,7 @@ export default function ComplaintDetailPanel({
     setLoading(true);
     try {
       await base44.functions.invoke("resolveComplaint", {
+        session_token: localStorage.getItem("session_token"),
         complaint_id: complaint.id,
         status: "resolved",
         admin_resolution: resolution,
