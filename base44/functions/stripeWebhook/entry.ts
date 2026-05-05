@@ -182,6 +182,19 @@ Deno.serve(async (req) => {
 
   const base44 = createClientFromRequest(req);
 
+  // Idempotency — reject duplicate webhook events (replay attack prevention)
+  try {
+    const existing = await base44.asServiceRole.entities.AdminAlert.filter({ description: event.id });
+    if (existing?.length > 0) {
+      return Response.json({ received: true, duplicate: true });
+    }
+    await base44.asServiceRole.entities.AdminAlert.create({
+      alert_type: "processed_webhook",
+      description: event.id,
+      created_by: "stripe_webhook",
+    });
+  } catch (_) {}
+
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     const { user_id, plan } = session.metadata || {};
