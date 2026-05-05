@@ -1,8 +1,14 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.25";
 
 Deno.serve(async (req) => {
+  const body = await req.json().catch(() => ({}));
+  const LOCK = Deno.env.get("LOCK_ACCESS_TOKEN");
+  if (LOCK && body?.lock_token !== LOCK) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const base44 = createClientFromRequest(req);
-  const { event, data } = await req.json();
+  const { event, data } = body;
 
   // Only fire on create
   if (event?.type !== "create") {

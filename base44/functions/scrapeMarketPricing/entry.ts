@@ -9,9 +9,15 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.23";
 
 Deno.serve(async (req) => {
   try {
+    const body = await req.json().catch(() => ({}));
+    const LOCK = Deno.env.get("LOCK_ACCESS_TOKEN");
+    if (LOCK && body?.lock_token !== LOCK) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const base44 = createClientFromRequest(req);
 
-    const { postcode_area, town, county, property_type, bedrooms, guest_capacity } = await req.json();
+    const { postcode_area, town, county, property_type, bedrooms, guest_capacity } = body;
 
     if (!postcode_area || !property_type) {
       return Response.json({ error: "postcode_area and property_type are required" }, { status: 400 });

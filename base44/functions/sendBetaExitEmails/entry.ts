@@ -2,6 +2,12 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 Deno.serve(async (req) => {
   try {
+    const body = await req.json().catch(() => ({}));
+    const LOCK = Deno.env.get("LOCK_ACCESS_TOKEN");
+    if (LOCK && body?.lock_token !== LOCK) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
 
@@ -9,7 +15,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    const { beta_end_date } = await req.json();
+    const { beta_end_date } = body;
 
     if (!beta_end_date) {
       return Response.json({ error: 'beta_end_date required' }, { status: 400 });

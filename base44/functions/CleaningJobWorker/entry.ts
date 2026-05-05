@@ -2,12 +2,13 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 Deno.serve(async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    
-    if (!user) {
+    const body = await req.json().catch(() => ({}));
+    const LOCK = Deno.env.get("LOCK_ACCESS_TOKEN");
+    if (LOCK && body?.lock_token !== LOCK) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const base44 = createClientFromRequest(req);
 
     const now = new Date();
     const updates = [];

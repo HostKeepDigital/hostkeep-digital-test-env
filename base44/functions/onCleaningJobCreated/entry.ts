@@ -52,9 +52,15 @@ function calculateCleanerPrice(cleaner, { bedrooms = 1, scheduledDate, bookingDa
 
 Deno.serve(async (req) => {
   try {
+    const body = await req.json().catch(() => ({}));
+    const LOCK = Deno.env.get("LOCK_ACCESS_TOKEN");
+    if (LOCK && body?.lock_token !== LOCK) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const base44 = createClientFromRequest(req);
     const serviceRole = base44.asServiceRole;
-    const payload = await req.json();
+    const payload = body;
 
     const { event, data } = payload;
     if (!data) return Response.json({ ok: true });
