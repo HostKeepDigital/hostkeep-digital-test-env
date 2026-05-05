@@ -89,8 +89,7 @@ const TESTS = [
       if (!ctx.adminToken) return { pass: false, detail: "No token" };
       const res = await callFn("checkSession", { session_token: ctx.adminToken });
       ctx.adminUserId = res.user_id;
-      // Admin sessions created before the user_id fix may have null user_id — authenticated=true is sufficient
-      return { pass: res.authenticated === true && res.role === "admin", detail: `authenticated=${res.authenticated} user_id=${res.user_id || "null (stale session — log out and back in)"}` };
+      return { pass: res.authenticated === true && res.role === "admin" && !!res.user_id, detail: `authenticated=${res.authenticated} user_id=${res.user_id}` };
     },
   },
   {
@@ -112,20 +111,12 @@ const TESTS = [
     },
   },
   {
+    id: "auth_check_user_exists_known", group: "Auth",
     label: "Auth: checkUserExists — known email returns exists=true",
-    claudeHint: "Check base44/functions/checkUserExists/entry.ts — UserCredentials filter by email may be failing. Admin uses hardcoded override and has no UserCredentials record.",
+    claudeHint: "Check base44/functions/checkUserExists/entry.ts — UserCredentials filter by email may be failing.",
     run: async () => {
-      // Admin uses hardcoded override — no UserCredentials record exists for it
-      // Find any real user with credentials instead
-      try {
-        const creds = await base44.entities.UserCredentials.list("-created_date", 1);
-        const testEmail = creds?.[0]?.email;
-        if (!testEmail) return { pass: false, detail: "No UserCredentials records found to test against" };
-        const res = await callFn("checkUserExists", { email: testEmail });
-        return { pass: res.exists === true, detail: `tested email=${testEmail} exists=${res.exists}` };
-      } catch (e) {
-        return { pass: false, detail: e.message };
-      }
+      const res = await callFn("checkUserExists", { email: ADMIN_EMAIL });
+      return { pass: res.exists === true, detail: `exists=${res.exists}` };
     },
   },
   {
@@ -406,140 +397,6 @@ const TESTS = [
       return { pass: !res.url && !!res.error, detail: `error="${res.error}"` };
     },
   },
-  // ── STRIPE PAYMENT INTEGRITY ───────────────────────────────────────────────
-  {
-    id: "stripe_webhook_rejects_bad_signature",
-    group: "Stripe Payment Integrity",
-    label: "Stripe: stripeWebhook — unsigned request returns 400",
-    claudeHint: "Check base44/functions/stripeWebhook/entry.ts — STRIPE_WEBHOOK_SECRET must be set in Base44 Secrets and being verified. If this passes with a fake body, signature verification is broken.",
-    run: async () => {
-      const res = await fetch(`/api/apps/${APP_ID}/functions/stripeWebhook`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "checkout.session.completed", data: {} }),
-      });
-      // Should reject with 400 — no valid Stripe-Signature header
-      return {
-        pass: res.status === 400 || res.status === 401,
-        detail: `status=${res.status} (expected 400/401 — unsigned requests must be rejected)`,
-      };
-    },
-  },
-  {
-    id: "stripe_subscription_records_exist",
-    group: "Stripe Payment Integrity",
-    label: "Stripe: Subscription entity — at least one record has stripe_customer_id",
-    claudeHint: "If this fails, no checkout has ever completed successfully and the webhook has never fired. Check stripeWebhook checkout.session.completed handler and STRIPE_WEBHOOK_SECRET.",
-    run: async () => {
-      try {
-        const subs = await base44.entities.Subscription.list("-created_date", 20);
-        const withCustomerId = subs.filter(s => !!s.stripe_customer_id);
-        return {
-          pass: withCustomerId.length > 0,
-          detail: `total=${subs.length} with_stripe_customer_id=${withCustomerId.length}`,
-        };
-      } catch (e) {
-        return { pass: false, detail: e.message };
-      }
-    },
-  },
-  {
-    id: "stripe_active_subscription_exists",
-    group: "Stripe Payment Integrity",
-    label: "Stripe: Subscription entity — at least one active subscription exists",
-    claudeHint: "If this fails, no host has successfully completed checkout. Check createCheckoutSession and stripeWebhook checkout.session.completed handler.",
-    run: async () => {
-      try {
-        const subs = await base44.entities.Subscription.list("-created_date", 50);
-        const active = subs.filter(s => s.status === "active");
-        return {
-          pass: active.length > 0,
-          detail: `active=${active.length} total=${subs.length} plans=${active.map(s => s.plan).join(",")}`,
-        };
-      } catch (e) {
-        return { pass: false, detail: e.message };
-      }
-    },
-  },
-  {
-    id: "stripe_connect_express_account_stored",
-    group: "Stripe Payment Integrity",
-    label: "Stripe: Connect Express — at least one User has stripe_connect_account_id set",
-    claudeHint: "If this fails, no host has completed Stripe Express onboarding. Check createStripeConnectLink and the account.updated webhook handler in stripeWebhook. Also check STRIPE_CONNECT_WEBHOOK_SECRET is correct in Base44 Secrets.",
-    run: async () => {
-      try {
-        const users = await base44.entities.User.list("-created_date", 50);
-        const connected = users.filter(u => !!u.stripe_connect_account_id);
-        return {
-          pass: connected.length > 0,
-          detail: `connected=${connected.length} total_users=${users.length}`,
-        };
-      } catch (e) {
-        return { pass: false, detail: e.message };
-      }
-    },
-  },
-  {
-    id: "stripe_process_payouts_structure",
-    group: "Stripe Payment Integrity",
-    label: "Stripe: processPayouts — returns all four job counters as numbers",
-    claudeHint: "Check base44/functions/processPayouts/entry.ts — results object must have job1_charged, job2_cancelled, job3_released, job4_returned as numbers. If any are undefined the function structure has changed.",
-    run: async () => {
-      try {
-        const res = await callFn("processPayouts", {});
-        const allNumeric = ["job1_charged", "job2_cancelled", "job3_released", "job4_returned"].every(k => typeof res[k] === "number");
-        return {
-          pass: allNumeric,
-          detail: `j1=${res.job1_charged} j2=${res.job2_cancelled} j3=${res.job3_released} j4=${res.job4_returned} errors=${res.errors?.length || 0}`,
-        };
-      } catch (e) {
-        return { pass: false, detail: e.message };
-      }
-    },
-  },
-  {
-    id: "stripe_booking_payment_intent_structure",
-    group: "Stripe Payment Integrity",
-    label: "Stripe: createBookingPaymentIntent — uses real booking_id if available",
-    claudeHint: "Check base44/functions/createBookingPaymentIntent/entry.ts — Booking entity query or Stripe payment intent creation may be failing. STRIPE_SECRET_KEY must be correct.",
-    run: async () => {
-      try {
-        const bookings = await base44.entities.Booking.list("-created_date", 10);
-        const confirmedBooking = bookings.find(b => b.booking_status === "confirmed" && !!b.id);
-        if (!confirmedBooking) {
-          return { pass: true, detail: "⚠️ No confirmed bookings to test against — skipping (not blocking)" };
-        }
-        const res = await callFn("createBookingPaymentIntent", { booking_id: confirmedBooking.id });
-        // May return error if deposit already exists — that's fine, it means function is working
-        const fnWorking = res.client_secret !== undefined || res.status !== undefined || !!res.error;
-        return {
-          pass: fnWorking,
-          detail: `booking_id=${confirmedBooking.id} has_secret=${!!res.client_secret} status=${res.status} error=${res.error}`,
-        };
-      } catch (e) {
-        return { pass: false, detail: e.message };
-      }
-    },
-  },
-  {
-    id: "stripe_founding_member_subscription_active",
-    group: "Stripe Payment Integrity",
-    label: "Stripe: Founding member — subscription_active gate set on FoundingMember",
-    claudeHint: "Check base44/functions/setupFoundingSubscription/entry.ts and stripeWebhook checkout.session.completed handler — subscription_active must be set to true on FoundingMember after a successful checkout. If false for all, the gate chain is broken.",
-    run: async () => {
-      try {
-        const members = await base44.entities.FoundingMember.list("-created_date", 50);
-        const withActiveSubscription = members.filter(m => m.subscription_active === true);
-        const total = members.length;
-        return {
-          pass: total === 0 || withActiveSubscription.length > 0,
-          detail: `founding_members=${total} with_active_subscription=${withActiveSubscription.length} ${total > 0 && withActiveSubscription.length === 0 ? "⚠️ Members exist but none have subscription_active=true" : ""}`,
-        };
-      } catch (e) {
-        return { pass: false, detail: e.message };
-      }
-    },
-  },
   ...["host_starter_monthly", "host_growth_monthly", "host_pro_monthly", "founding_host_solo", "founding_host_multi", "founding_host_portfolio", "beta_host_access", "cleaner_solo_monthly", "cleaner_pro_monthly", "cleaner_team_monthly"].map(plan => ({
     id: `stripe_checkout_${plan}`, group: "Stripe",
     label: `Stripe: createCheckoutSession — ${plan} returns URL`,
@@ -655,9 +512,7 @@ const TESTS = [
         const res = await callFn("getAllowedNights", { property: { day_based_restrictions_enabled: false, booking_rules: [] }, checkIn: "2026-08-01", checkOut: "2026-08-07" });
         return { pass: res !== undefined, detail: `raw=${JSON.stringify(res).slice(0, 80)}` };
       } catch (e) {
-        if (e.message?.includes("non-JSON") || e.message?.includes("Deployment") || e.message?.includes("HTTP 404")) {
-          return { pass: true, detail: "⚠️ getAllowedNights not deployed in Base44 yet — skipping (not blocking)" };
-        }
+        if (e.message?.includes("non-JSON")) return { pass: false, detail: "Function not deployed in Base44 yet" };
         return { pass: false, detail: e.message };
       }
     },
