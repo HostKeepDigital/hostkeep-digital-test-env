@@ -252,8 +252,8 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
           </div>
         )}
 
-        {/* Second+ property outside Cornwall — soft warning, allow proceed */}
-        {postcodeData && !inArea && !isFirstProperty && (
+        {/* Second+ property outside Cornwall — soft warning (beta only) */}
+        {betaActive && postcodeData && !inArea && !isFirstProperty && (
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 space-y-3">
             <h4 className="font-semibold text-amber-900 flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-amber-600" /> Outside Current Beta Area
