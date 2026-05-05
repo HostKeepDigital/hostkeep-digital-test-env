@@ -112,12 +112,20 @@ const TESTS = [
     },
   },
   {
-    id: "auth_check_user_exists_known", group: "Auth",
     label: "Auth: checkUserExists — known email returns exists=true",
-    claudeHint: "Check base44/functions/checkUserExists/entry.ts — UserCredentials filter by email may be failing.",
+    claudeHint: "Check base44/functions/checkUserExists/entry.ts — UserCredentials filter by email may be failing. Admin uses hardcoded override and has no UserCredentials record.",
     run: async () => {
-      const res = await callFn("checkUserExists", { email: ADMIN_EMAIL });
-      return { pass: res.exists === true, detail: `exists=${res.exists}` };
+      // Admin uses hardcoded override — no UserCredentials record exists for it
+      // Find any real user with credentials instead
+      try {
+        const creds = await base44.entities.UserCredentials.list("-created_date", 1);
+        const testEmail = creds?.[0]?.email;
+        if (!testEmail) return { pass: false, detail: "No UserCredentials records found to test against" };
+        const res = await callFn("checkUserExists", { email: testEmail });
+        return { pass: res.exists === true, detail: `tested email=${testEmail} exists=${res.exists}` };
+      } catch (e) {
+        return { pass: false, detail: e.message };
+      }
     },
   },
   {
