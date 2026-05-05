@@ -55,10 +55,14 @@
     "rating"
   ],
   "rls": {
-    "create": {
+    "create": true,
+    "read": {
       "$or": [
         {
-          "data.host_id": "{{user.id}}"
+          "data.visible": true
+        },
+        {
+          "created_by": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -67,11 +71,10 @@
         }
       ]
     },
-    "read": {},
     "update": {
       "$or": [
         {
-          "data.host_id": "{{user.id}}"
+          "created_by": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -81,16 +84,9 @@
       ]
     },
     "delete": {
-      "$or": [
-        {
-          "data.host_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "user_condition": {
+        "role": "admin"
+      }
     }
   }
 }
