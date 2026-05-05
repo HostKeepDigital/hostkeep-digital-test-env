@@ -20,6 +20,8 @@ import { useNavigate } from "react-router-dom";
 import { addUserRole, getUserRoles, hasRole } from "@/components/utils/roleHelpers";
 import { useAuth } from "@/lib/AuthContext";
 
+const BETA_ACTIVE = true; // Set to false when beta ends to remove capacity gating
+
 export default function CleanerSignup() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
@@ -92,8 +94,8 @@ export default function CleanerSignup() {
           }),
         });
         const capacity = await res.json();
-        setCapacityResult(capacity);
-        if (!capacity.has_capacity) setShowWaitlist(true);
+       setCapacityResult(capacity);
+        if (BETA_ACTIVE && !capacity.has_capacity) setShowWaitlist(true);
       } else {
         toast.error("Invalid postcode — please check and try again.");
       }
@@ -162,8 +164,8 @@ export default function CleanerSignup() {
         return;
       }
 
-      // 2. No capacity — join waitlist instead
-      if (!capacityResult.has_capacity) {
+       // 2. No capacity — join waitlist during beta only
+        if (BETA_ACTIVE && !capacityResult.has_capacity) {
         const score =
           (formData.display_name ? 20 : 0) +
           (formData.bio.length > 100 ? 20 : 0) +
@@ -388,11 +390,20 @@ export default function CleanerSignup() {
                   </Button>
                 </div>
                 {capacityResult && (
-                  <div className={`mt-2 p-3 rounded-lg text-sm flex items-start gap-2 ${capacityResult.has_capacity ? "bg-green-50 border border-green-200 text-green-800" : "bg-amber-50 border border-amber-200 text-amber-800"}`}>
-                    {capacityResult.has_capacity
-                      ? <><CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" /> Great news — your area has capacity for new cleaners. {capacityResult.property_count} active properties found within {formData.travel_radius} miles.</>
-                      : <><AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" /> {capacityResult.message}</>
-                    }
+                  <div className={`mt-2 p-3 rounded-lg text-sm flex items-start gap-2 ${
+                    capacityResult.has_capacity
+                      ? "bg-green-50 border border-green-200 text-green-800"
+                      : BETA_ACTIVE
+                      ? "bg-amber-50 border border-amber-200 text-amber-800"
+                      : "bg-blue-50 border border-blue-100 text-blue-800"
+                  }`}>
+                    {capacityResult.has_capacity ? (
+                      <><CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" /> Great news — your area has capacity for new cleaners. {capacityResult.property_count} active properties found within {formData.travel_radius} miles.</>
+                    ) : BETA_ACTIVE ? (
+                      <><AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" /> {capacityResult.message}</>
+                    ) : (
+                      <><AlertCircle className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" /> Host demand may be limited in your area during early UK rollout. You can still sign up — we'll notify you as more hosts join nearby.</>
+                    )}
                   </div>
                 )}
               </div>
