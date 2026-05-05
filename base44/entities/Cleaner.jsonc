@@ -180,6 +180,15 @@
                   "label": {
                     "type": "string",
                     "description": "Display label e.g. Same day"
+                  },
+                  "is_team": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether this is a cleaning team or business rather than a solo cleaner"
+                  },
+                  "team_size": {
+                    "type": "number",
+                    "description": "Number of staff members in the team (Team plan only)"
                   }
                 }
               }
