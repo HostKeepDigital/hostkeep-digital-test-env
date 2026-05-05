@@ -510,7 +510,7 @@ const handleDelete = async (member) => {
  if (!window.confirm(`Delete ${member.full_name}? This will remove their account and all credentials. This cannot be undone.`)) return;
  setML(member.id, "delete");
  try {
-   await base44.functions.invoke("deleteAccount", { admin_delete_email: member.email });
+   await base44.functions.invoke("deleteAccount", { admin_delete_email: member.email, session_token: localStorage.getItem("session_token") });
    toast.success("Account fully deleted");
  } catch (e) {
    toast.error("Delete failed");
