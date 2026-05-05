@@ -189,9 +189,10 @@ const TESTS = [
       if (!userId) {
         // Try to get any real user_id from FoundingMember table
         try {
-          const members = await base44.entities.FoundingMember.filter({ approval_status: "approved" });
-          const testUserId = members?.[0]?.user_id;
-          if (!testUserId) return { pass: false, detail: "No approved founding member with user_id found to test against" };
+          const members = await base44.entities.FoundingMember.list("-created_date", 50);
+          const withUserId = members.filter(m => m.user_id);
+          const testUserId = withUserId?.[0]?.user_id;
+          if (!testUserId) return { pass: false, detail: "No founding member with user_id found — run through host onboarding first" };
           const res = await callFn("checkApprovalGates", { user_id: testUserId });
           return { pass: true, detail: `ran with fallback user_id gates=${JSON.stringify(res.gates || res).slice(0, 80)}` };
         } catch (e) {
