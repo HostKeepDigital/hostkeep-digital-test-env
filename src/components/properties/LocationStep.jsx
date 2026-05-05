@@ -31,7 +31,7 @@ function buildPostcodeData(fd) {
   };
 }
 
-export default function LocationStep({ formData, onFormChange, onLocationChange, signupPostcode, isBeta }) {
+export default function LocationStep({ formData, onFormChange, onLocationChange, signupPostcode, isBeta, isFirstProperty = true }) {
   // If in beta with no saved postcode, we MUST wait for signupPostcode to arrive and auto-verify
   const expectAutoVerify = !!(isBeta && !formData.postcode);
 
