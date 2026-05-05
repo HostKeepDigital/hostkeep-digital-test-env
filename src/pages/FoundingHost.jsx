@@ -328,39 +328,6 @@ export default function FoundingHost() {
       </section>
 
       {/* APPLICATION FORM */}
-      {/* FOUNDING PLAN TIERS */}
-      <section className="max-w-4xl mx-auto px-4 py-12">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-gray-900">Choose your founding plan</h2>
-          <p className="text-gray-500 text-sm mt-1">All plans include every feature. Plans only differ by number of properties. Your rate is locked for life.</p>
-        </div>
-        <div className="grid md:grid-cols-3 gap-4 mb-8">
-          {FOUNDING_PLANS.map(plan => (
-            <div key={plan.id} className="bg-white rounded-2xl border-2 border-[#1E3A5F]/20 p-5 text-center hover:border-teal-400 transition-colors">
-              <p className="font-bold text-gray-900 text-lg mb-1">{plan.name}</p>
-              <p className="text-3xl font-black text-[#1E3A5F] mb-0.5">£{plan.price}<span className="text-sm font-normal text-gray-400">/mo</span></p>
-              <p className="text-xs text-gray-400 line-through mb-2">Standard £{plan.standard}/mo</p>
-              <span className="inline-block bg-teal-50 text-teal-700 text-xs font-semibold px-3 py-1 rounded-full border border-teal-200">{plan.limit}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Multi-property Cornwall notice */}
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl px-6 py-5 flex items-start gap-4">
-          <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="font-semibold text-amber-900 mb-1">Hosting multiple properties? Read this first.</p>
-            <p className="text-sm text-amber-800 leading-relaxed">
-              During beta, HostKeep is live in <strong>Cornwall only</strong>. If you have properties across the UK, please register using your <strong>Cornwall property first</strong> — this is your primary property for the beta period.
-            </p>
-            <p className="text-sm text-amber-700 mt-2">
-              Once registered, you can add your other properties from your dashboard. Properties outside Cornwall will be set up and ready to publish when we expand nationally — we'll notify you when each area goes live.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* APPLICATION FORM */}
       <section ref={formRef} className="max-w-2xl mx-auto px-4 py-16">
         <div className="text-center mb-8">
           <h2 className="text-2xl font-bold text-gray-900">Apply for a founding host spot</h2>
