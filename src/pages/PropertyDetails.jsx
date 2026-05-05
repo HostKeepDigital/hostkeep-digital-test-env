@@ -175,6 +175,20 @@ export default function PropertyDetails() {
   const hostStripeVerified = host?.stripe_connect_status === "verified";
   const bookingBlocked = property?.status === "published" && host && !hostStripeVerified;
 
+  const { data: hostFoundingMember } = useQuery({
+    queryKey: ["host-founding-member", property?.owner_id],
+    queryFn: async () => {
+      if (!property?.owner_id) return null;
+      try {
+        const members = await base44.entities.FoundingMember.filter({ user_id: property.owner_id });
+        return members?.[0] || null;
+      } catch { return null; }
+    },
+    enabled: !!property?.owner_id,
+  });
+
+  const isFoundingHost = !!hostFoundingMember && !hostFoundingMember.approval_status?.startsWith("banned_");
+
   const { data: propertyBookings = [] } = useQuery({
     queryKey: ["property-bookings", propertyId],
     queryFn: async () => {
@@ -1209,6 +1223,16 @@ export default function PropertyDetails() {
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800 flex items-start gap-2">
                     <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
                     <span>This host hasn't verified their payment method yet. Booking is temporarily unavailable.</span>
+                  </div>
+                )}
+
+                {isFoundingHost && (
+                  <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 mt-3">
+                    <Star className="w-4 h-4 fill-amber-500 text-amber-500 flex-shrink-0" />
+                    <div>
+                      <span className="text-sm font-semibold text-amber-900">Founding Member Host</span>
+                      <span className="text-xs text-amber-700 ml-2">Verified by HostKeep Digital</span>
+                    </div>
                   </div>
                 )}
 
