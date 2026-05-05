@@ -73,10 +73,10 @@ const TESTS = [
     label: "getBetaSettings returns beta_active flag",
     run: async () => {
       const res = await callFn("getBetaSettings", {});
-      const value = res.beta_active ?? res.data?.beta_active ?? res.settings?.beta_active;
+      const value = res.beta_open ?? res.beta_active ?? res.data?.beta_active;
       return {
         pass: typeof value !== "undefined",
-        detail: `beta_active=${value} raw=${JSON.stringify(res).slice(0, 100)}`,
+        detail: `beta_open=${value} raw=${JSON.stringify(res).slice(0, 100)}`,
       };
     },
   },
