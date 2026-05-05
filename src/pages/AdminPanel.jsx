@@ -462,7 +462,7 @@ export default function AdminPanel() {
   const handleApprove = async (member) => {
     setML(member.id, "approve");
     try {
-      await base44.functions.invoke("promoteUserToInvited", { member_id: member.id, session_token: getSessionToken() });
+      await base44.functions.invoke("promoteUserToInvited", { member_id: member.id, session_token: localStorage.getItem("session_token") });
       toast.success(`${member.full_name} approved — invite email sent`);
     } catch (e) {
       toast.error("Approval failed");
