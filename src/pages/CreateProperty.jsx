@@ -854,6 +854,7 @@ export default function CreateProperty() {
               signupPostcode={foundingPostcode}
               isBeta={isBeta}
               isFirstProperty={isFirstProperty}
+              betaActive={true}
             />
             )}
 
