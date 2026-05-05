@@ -543,6 +543,9 @@ const TESTS = [
           detail: `raw=${JSON.stringify(res).slice(0, 80)}`,
         };
       } catch (e) {
+        if (e.message?.includes("not valid JSON") || e.message?.includes("Deployment")) {
+          return { pass: false, detail: "Function not deployed — getAllowedNights does not exist in Base44 yet" };
+        }
         return { pass: false, detail: e.message };
       }
     },
