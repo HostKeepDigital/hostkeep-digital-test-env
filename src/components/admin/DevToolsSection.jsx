@@ -10,6 +10,7 @@
 
 import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import RegressionRunner from "@/components/devtools/RegressionRunner";
 
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
 const APP_ID        = '698eee4108bd1d9467648326';
@@ -814,6 +815,8 @@ export default function DevToolsSection({ members, user }) {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+
+      <RegressionRunner />
 
       <div className="bg-[#1E3A5F] rounded-2xl px-6 py-5 text-white">
         <h2 className="text-lg font-bold mb-1">HostKeep Test Suite</h2>
