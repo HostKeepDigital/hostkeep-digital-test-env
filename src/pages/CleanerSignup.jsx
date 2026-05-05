@@ -785,54 +785,48 @@ export default function CleanerSignup() {
   </CardHeader>
 
   <CardContent className="space-y-4">
-    {/* BASIC */}
-    <label
-      className={`flex items-start gap-4 p-4 border-2 rounded-lg cursor-pointer transition-all ${
-        formData.subscription_plan === "basic"
-          ? "border-blue-500 bg-blue-50"
-          : "border-gray-200 hover:border-gray-300"
-      }`}
-    >
-      <input
-        type="radio"
-        name="subscription_plan"
-        value="basic"
-        checked={formData.subscription_plan === "basic"}
-        onChange={(e) => handleChange("subscription_plan", e.target.value)}
-        className="mt-1"
-      />
+    {/* SOLO BASIC */}
+    <label className={`flex items-start gap-4 p-4 border-2 rounded-lg cursor-pointer transition-all ${formData.subscription_plan === "cleaner_solo_monthly" ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-gray-300"}`}>
+      <input type="radio" name="subscription_plan" value="cleaner_solo_monthly" checked={formData.subscription_plan === "cleaner_solo_monthly"} onChange={(e) => { handleChange("subscription_plan", e.target.value); handleChange("is_team", false); }} className="mt-1" />
       <div>
         <div className="font-semibold text-lg">Solo Basic — £9.99/mo</div>
-        <p className="text-sm text-gray-600">
-          Perfect for new cleaners starting out
-        </p>
+        <p className="text-sm text-gray-600">Profile listing, job management, host messaging, availability calendar, email notifications, portfolio showcase.</p>
       </div>
     </label>
 
-    {/* PRO */}
-    <label
-      className={`flex items-start gap-4 p-4 border-2 rounded-lg cursor-pointer transition-all ${
-        formData.subscription_plan === "pro"
-          ? "border-amber-500 bg-amber-50"
-          : "border-gray-200 hover:border-gray-300"
-      }`}
-    >
-      <input
-        type="radio"
-        name="subscription_plan"
-        value="pro"
-        checked={formData.subscription_plan === "pro"}
-        onChange={(e) => handleChange("subscription_plan", e.target.value)}
-        className="mt-1"
-      />
+    {/* SOLO PRO */}
+    <label className={`flex items-start gap-4 p-4 border-2 rounded-lg cursor-pointer transition-all ${formData.subscription_plan === "cleaner_pro_monthly" ? "border-amber-500 bg-amber-50" : "border-gray-200 hover:border-gray-300"}`}>
+      <input type="radio" name="subscription_plan" value="cleaner_pro_monthly" checked={formData.subscription_plan === "cleaner_pro_monthly"} onChange={(e) => { handleChange("subscription_plan", e.target.value); handleChange("is_team", false); }} className="mt-1" />
       <div>
         <div className="font-semibold text-lg flex items-center gap-2">
           Solo Pro — £19.99/mo
           <Badge className="bg-amber-500">Popular</Badge>
         </div>
-        <p className="text-sm text-gray-600">
-          Priority placement, analytics, repeat client tools
-        </p>
+        <p className="text-sm text-gray-600">Everything in Basic plus priority placement, auto-accept jobs, repeat client management, earnings analytics and Verified Cleaner badge.</p>
+      </div>
+    </label>
+
+    {/* TEAM */}
+    <label className={`flex items-start gap-4 p-4 border-2 rounded-lg cursor-pointer transition-all ${formData.subscription_plan === "cleaner_team_monthly" ? "border-purple-500 bg-purple-50" : "border-gray-200 hover:border-gray-300"}`}>
+      <input type="radio" name="subscription_plan" value="cleaner_team_monthly" checked={formData.subscription_plan === "cleaner_team_monthly"} onChange={(e) => { handleChange("subscription_plan", e.target.value); handleChange("is_team", true); }} className="mt-1" />
+      <div className="flex-1">
+        <div className="font-semibold text-lg flex items-center gap-2">
+          Team — £39.99/mo
+          <Badge className="bg-purple-500">For Businesses</Badge>
+        </div>
+        <p className="text-sm text-gray-600">Everything in Solo Pro plus team management, multiple staff profiles and team scheduling.</p>
+        {formData.subscription_plan === "cleaner_team_monthly" && (
+          <div className="mt-3">
+            <label className="text-sm font-medium text-gray-700">Number of team members</label>
+            <select
+              value={formData.team_size}
+              onChange={(e) => handleChange("team_size", parseInt(e.target.value))}
+              className="mt-1 block w-32 border border-gray-300 rounded-md px-3 py-1.5 text-sm"
+            >
+              {[2,3,4,5,6,7,8,9,10].map(n => <option key={n} value={n}>{n} members</option>)}
+            </select>
+          </div>
+        )}
       </div>
     </label>
   </CardContent>
