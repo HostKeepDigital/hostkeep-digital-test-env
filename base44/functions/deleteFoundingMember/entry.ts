@@ -3,12 +3,19 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user || user.role !== 'admin') {
-      return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
-    }
+    const body = await req.json().catch(() => ({}));
+    const { session_token, member_id, user_id } = body;
 
-    const { member_id, user_id } = await req.json();
+    if (!session_token) return Response.json({ error: "Unauthorized" }, { status: 401 });
+    const base44client = createClientFromRequest(req);
+    const sessions = await base44client.asServiceRole.entities.UserSession.filter({ session_token });
+    const session = sessions?.[0];
+    if (!session || new Date(session.expires_at) < new Date()) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (session.role !== "admin") {
+      return Response.json({ error: "Forbidden — admin only" }, { status: 403 });
+    }
     if (!member_id || !user_id) {
       return Response.json({ error: 'Missing member_id or user_id' }, { status: 400 });
     }

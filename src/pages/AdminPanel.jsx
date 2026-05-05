@@ -457,10 +457,12 @@ export default function AdminPanel() {
 
   // ── ONBOARDING HANDLERS ───────────────────────────────────────────────────
 
+  const getSessionToken = () => localStorage.getItem("session_token") || "";
+
   const handleApprove = async (member) => {
     setML(member.id, "approve");
     try {
-      await base44.functions.invoke("promoteUserToInvited", { member_id: member.id });
+      await base44.functions.invoke("promoteUserToInvited", { member_id: member.id, session_token: getSessionToken() });
       toast.success(`${member.full_name} approved — invite email sent`);
     } catch (e) {
       toast.error("Approval failed");
@@ -536,7 +538,7 @@ const handleBan = async (member) => {
    if (reason === null) return;
    setML(member.id, "ban");
    try {
-     const res = await base44.functions.invoke("banFoundingMember", { member_id: member.id, ban_reason: reason || "Admin action" });
+     const res = await base44.functions.invoke("banFoundingMember", { member_id: member.id, ban_reason: reason || "Admin action", session_token: getSessionToken() });
      const promoted = res.data?.promoted;
      if (promoted) {
        toast.success(`${member.full_name} banned. Waitlist member ${promoted.full_name} has been invited.`);
@@ -662,35 +664,7 @@ const handleDeleteMember = async (member) => {
   if (!window.confirm(`Permanently delete ${member.full_name} and all associated records? This cannot be undone.`)) return;
   setML(member.id, "delete");
   try {
-    const userId = member.user_id;
-
-    // Delete verification documents
-    if (userId) {
-      const docs = await base44.entities.VerificationDocuments.filter({ user_id: userId });
-      for (const doc of docs) await base44.entities.VerificationDocuments.delete(doc.id);
-    }
-
-    // Delete properties and their bookings/jobs
-    if (userId) {
-      const props = await base44.entities.Property.filter({ owner_id: userId });
-      for (const prop of props) {
-        const [jobs, bookings] = await Promise.all([
-          base44.entities.CleaningJob.filter({ property_id: prop.id }),
-          base44.entities.Booking.filter({ property_id: prop.id }),
-        ]);
-        for (const job of jobs) await base44.entities.CleaningJob.delete(job.id);
-        for (const booking of bookings) await base44.entities.Booking.delete(booking.id);
-        await base44.entities.Property.delete(prop.id);
-      }
-
-      // Delete messages
-      const messages = await base44.entities.Message.filter({ sender_id: userId });
-      for (const msg of messages) await base44.entities.Message.delete(msg.id);
-    }
-
-    // Delete the FoundingMember record
-    await base44.entities.FoundingMember.delete(member.id);
-
+    await base44.functions.invoke("deleteFoundingMember", { member_id: member.id, user_id: member.user_id, session_token: getSessionToken() });
     toast.success(`${member.full_name} and all associated records deleted`);
   } catch (e) {
     toast.error("Delete failed: " + e.message);
