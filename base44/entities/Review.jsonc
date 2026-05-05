@@ -142,7 +142,9 @@
     "rating"
   ],
   "rls": {
-    "create": true,
+    "create": {
+      "data.reviewer_id": "{{user.id}}"
+    },
     "read": {
       "$or": [
         {
@@ -167,9 +169,6 @@
           "data.reviewer_id": "{{user.id}}"
         },
         {
-          "data.reviewee_id": "{{user.id}}"
-        },
-        {
           "user_condition": {
             "role": "admin"
           }
@@ -177,9 +176,16 @@
       ]
     },
     "delete": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "$or": [
+        {
+          "data.reviewer_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     }
   }
 }
