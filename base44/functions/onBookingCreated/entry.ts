@@ -114,6 +114,35 @@ Deno.serve(async (req) => {
             null
           );
         }
+        // Notify guest to pay deposit
+        if (status === "awaiting_payment" && booking.guest_id) {
+          await notify(booking.guest_id, "payment_due", "Complete Your Booking — Deposit Required",
+            `Your booking for ${booking.check_in} to ${booking.check_out} is reserved. Please pay your deposit to confirm.`,
+            "/MyTrips", booking.guest_email);
+        }
+
+        // Notify both parties on check-in
+        if (status === "checked_in") {
+          if (booking.guest_id) {
+            await notify(booking.guest_id, "booking_checked_in", "Welcome! Enjoy Your Stay 🏡",
+              `Your stay from ${booking.check_in} to ${booking.check_out} has started. Have a wonderful time!`,
+              "/MyTrips", booking.guest_email);
+          }
+        }
+
+        // Notify both parties on completion
+        if (status === "completed") {
+          if (booking.guest_id) {
+            await notify(booking.guest_id, "booking_completed", "Stay Complete — Leave a Review",
+              `Your stay has ended. We hope you had a great time! Leave a review to help future guests.`,
+              "/MyTrips", booking.guest_email);
+          }
+          if (booking.host_id) {
+            await notify(booking.host_id, "booking_completed", "Stay Completed — Payout Processing",
+              `${booking.guest_name || "Your guest"}'s stay is complete. Your payout will be processed within 24 hours.`,
+              "/HostBookings", hostEmail);
+          }
+        }
       }
     }
 
