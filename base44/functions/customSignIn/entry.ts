@@ -41,6 +41,8 @@ Deno.serve(async (req) => {
     const incomingHash = await hashPassword(password, salt);
 
     if (incomingHash !== cred.password_hash) {
+      // Artificial delay on failed attempts — slows brute force attacks
+      await new Promise(r => setTimeout(r, 500));
       return Response.json(
         { success: false, error: "invalid_credentials" },
         { status: 401 }
