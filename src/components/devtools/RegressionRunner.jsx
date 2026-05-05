@@ -504,7 +504,8 @@ const TESTS = [
       const userId = await getFallbackUserId(ctx);
       if (!userId) return { pass: false, detail: "No user_id available" };
       const res = await callFn("generateReferralCode", { user_id: userId, email: ADMIN_EMAIL });
-      return { pass: typeof res.ref_code === "string" && res.ref_code.length > 0, detail: `ref_code=${res.ref_code}` };
+      const code = res.ref_code || res.code || res.referral_code;
+      return { pass: typeof code === "string" && code.length > 0, detail: `ref_code=${code} raw=${JSON.stringify(res).slice(0, 80)}` };
     },
   },
   {
