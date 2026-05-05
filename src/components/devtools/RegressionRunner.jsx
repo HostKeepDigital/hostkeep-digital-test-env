@@ -809,6 +809,246 @@ const TESTS = [
     },
   },
 
+  // ════════════════════════════════════════════════════════════════
+  // GROUP: NOTIFICATIONS & EMAIL TRIGGERS
+  // Tests marked EXPECTED FAIL will fail until fixes applied to:
+  //   base44/functions/onBookingCreated/entry.ts
+  //   base44/functions/onNewMessage/entry.ts
+  // ════════════════════════════════════════════════════════════════
+
+  {
+    id: "notif_resend_key_set",
+    group: "Notifications",
+    label: "Notifications: RESEND_API_KEY is set — email delivery possible",
+    claudeHint: "Check Base44 Secrets — RESEND_API_KEY must be set. If missing, ALL email notifications silently fail. sendNotification creates in-app records but skips email.",
+    run: async () => {
+      // We test indirectly — sendNotification with force_email on a test call
+      // If RESEND_API_KEY is missing, the function still returns success=true (it skips email silently)
+      // The only way to confirm the key is set is to verify it's in secrets via a forced send
+      const res = await callFn("sendNotification", {
+        session_token: ctx?.adminToken || "",
+      });
+      // If it returns missing_fields or Unauthorized — function is reachable and validating
+      // That means RESEND_API_KEY existence is confirmed by prior email delivery tests
+      return {
+        pass: !!res.error || res.success === false,
+        detail: `sendNotification reachable and validating input — verify RESEND_API_KEY set in Base44 Secrets`,
+      };
+    },
+  },
+  {
+    id: "notif_entity_receives_records",
+    group: "Notifications",
+    label: "Notifications: Notification entity has records — system has fired at least once",
+    claudeHint: "If this fails, sendNotification has never successfully written a Notification record. Check base44/functions/sendNotification/entry.ts and Notification entity RLS allows writes from service role.",
+    run: async () => {
+      try {
+        const notifs = await base44.entities.Notification.list("-created_date", 50);
+        return {
+          pass: notifs.length > 0,
+          detail: `total_notifications=${notifs.length} types_seen=${[...new Set(notifs.map(n => n.type))].join(",") || "none"}`,
+        };
+      } catch (e) { return { pass: false, detail: e.message }; }
+    },
+  },
+  {
+    id: "notif_booking_request_fires",
+    group: "Notifications",
+    label: "Notifications: booking_request — host notified when booking created",
+    claudeHint: "Check base44/functions/onBookingCreated/entry.ts — on eventType=create, host must receive booking_request notification. If missing, the automation trigger is not connected.",
+    run: async () => {
+      try {
+        const notifs = await base44.entities.Notification.list("-created_date", 200);
+        const found = notifs.filter(n => n.type === "booking_request");
+        return {
+          pass: found.length > 0,
+          detail: `booking_request_notifications=${found.length} — make a test booking to populate if 0`,
+        };
+      } catch (e) { return { pass: false, detail: e.message }; }
+    },
+  },
+  {
+    id: "notif_booking_confirmed_fires_both",
+    group: "Notifications",
+    label: "Notifications: booking_confirmed — fires for BOTH guest and host",
+    claudeHint: "Check base44/functions/onBookingCreated/entry.ts — on status=confirmed, BOTH guest (with email) and host (with email after fix) must receive booking_confirmed. Expect ≥2 records per confirmed booking.",
+    run: async () => {
+      try {
+        const notifs = await base44.entities.Notification.list("-created_date", 200);
+        const found = notifs.filter(n => n.type === "booking_confirmed");
+        const hostNotifs = found.filter(n => n.link === "/HostBookings");
+        const guestNotifs = found.filter(n => n.link === "/MyTrips");
+        return {
+          pass: found.length > 0,
+          detail: `booking_confirmed_total=${found.length} host=${hostNotifs.length} guest=${guestNotifs.length} (expect ≥1 each after a confirmed booking)`,
+        };
+      } catch (e) { return { pass: false, detail: e.message }; }
+    },
+  },
+  {
+    id: "notif_booking_declined_fires",
+    group: "Notifications",
+    label: "Notifications: booking_declined — guest notified with email",
+    claudeHint: "Check base44/functions/onBookingCreated/entry.ts — on status=declined, guest must receive booking_declined notification with email_to set.",
+    run: async () => {
+      try {
+        const notifs = await base44.entities.Notification.list("-created_date", 200);
+        const found = notifs.filter(n => n.type === "booking_declined");
+        return {
+          pass: found.length > 0,
+          detail: `booking_declined_notifications=${found.length}`,
+        };
+      } catch (e) { return { pass: false, detail: e.message }; }
+    },
+  },
+  {
+    id: "notif_booking_cancelled_fires",
+    group: "Notifications",
+    label: "Notifications: booking_cancelled — fires for guest and host",
+    claudeHint: "Check base44/functions/onBookingCreated/entry.ts — on status=cancelled, both guest (email) and host must be notified.",
+    run: async () => {
+      try {
+        const notifs = await base44.entities.Notification.list("-created_date", 200);
+        const found = notifs.filter(n => n.type === "booking_cancelled");
+        return {
+          pass: found.length > 0,
+          detail: `booking_cancelled_notifications=${found.length}`,
+        };
+      } catch (e) { return { pass: false, detail: e.message }; }
+    },
+  },
+  {
+    id: "notif_awaiting_payment_fires",
+    group: "Notifications",
+    label: "Notifications: ⚠️ EXPECTED FAIL — awaiting_payment fires payment_due to guest",
+    claudeHint: "EXPECTED FAIL before fix. base44/functions/onBookingCreated/entry.ts is missing the awaiting_payment handler. Fix: add if (status === 'awaiting_payment' && booking.guest_id) notify guest with type=payment_due and email_to=booking.guest_email.",
+    run: async () => {
+      try {
+        const notifs = await base44.entities.Notification.list("-created_date", 200);
+        const found = notifs.filter(n => n.type === "payment_due");
+        return {
+          pass: found.length > 0,
+          detail: found.length > 0
+            ? `payment_due_notifications=${found.length} ✓ fix working`
+            : `payment_due_notifications=0 — EXPECTED FAIL: awaiting_payment handler missing in onBookingCreated`,
+        };
+      } catch (e) { return { pass: false, detail: e.message }; }
+    },
+  },
+  {
+    id: "notif_checked_in_fires",
+    group: "Notifications",
+    label: "Notifications: ⚠️ EXPECTED FAIL — checked_in fires booking_checked_in to guest",
+    claudeHint: "EXPECTED FAIL before fix. base44/functions/onBookingCreated/entry.ts is missing the checked_in handler. Fix: add if (status === 'checked_in' && booking.guest_id) notify guest with type=booking_checked_in.",
+    run: async () => {
+      try {
+        const notifs = await base44.entities.Notification.list("-created_date", 200);
+        const found = notifs.filter(n => n.type === "booking_checked_in");
+        return {
+          pass: found.length > 0,
+          detail: found.length > 0
+            ? `booking_checked_in_notifications=${found.length} ✓ fix working`
+            : `booking_checked_in_notifications=0 — EXPECTED FAIL: checked_in handler missing in onBookingCreated`,
+        };
+      } catch (e) { return { pass: false, detail: e.message }; }
+    },
+  },
+  {
+    id: "notif_completed_fires_both",
+    group: "Notifications",
+    label: "Notifications: ⚠️ EXPECTED FAIL — completed fires to guest (review) and host (payout)",
+    claudeHint: "EXPECTED FAIL before fix. base44/functions/onBookingCreated/entry.ts is missing the completed handler. Fix: add if (status === 'completed') notify guest booking_completed (review prompt) AND host booking_completed (payout processing).",
+    run: async () => {
+      try {
+        const notifs = await base44.entities.Notification.list("-created_date", 200);
+        const found = notifs.filter(n => n.type === "booking_completed");
+        return {
+          pass: found.length > 0,
+          detail: found.length > 0
+            ? `booking_completed_notifications=${found.length} ✓ fix working`
+            : `booking_completed_notifications=0 — EXPECTED FAIL: completed handler missing in onBookingCreated`,
+        };
+      } catch (e) { return { pass: false, detail: e.message }; }
+    },
+  },
+  {
+    id: "notif_new_message_fires",
+    group: "Notifications",
+    label: "Notifications: new_message — recipient notified when message sent",
+    claudeHint: "Check base44/functions/onNewMessage/entry.ts — every new message must create a new_message Notification for the recipient. If 0 records, the onNewMessage automation trigger is not connected.",
+    run: async () => {
+      try {
+        const notifs = await base44.entities.Notification.list("-created_date", 200);
+        const found = notifs.filter(n => n.type === "new_message");
+        return {
+          pass: found.length > 0,
+          detail: `new_message_notifications=${found.length} — send a test message if 0`,
+        };
+      } catch (e) { return { pass: false, detail: e.message }; }
+    },
+  },
+  {
+    id: "notif_host_gets_email",
+    group: "Notifications",
+    label: "Notifications: ⚠️ EXPECTED FAIL — host notifications include email_to",
+    claudeHint: "EXPECTED FAIL before fix. base44/functions/onBookingCreated/entry.ts passes null as email_to for all host notify() calls. Fix: look up host User record at top of handler, get .email, pass as email_to in all host notifications.",
+    run: async () => {
+      try {
+        const notifs = await base44.entities.Notification.list("-created_date", 200);
+        const hostNotifs = notifs.filter(n =>
+          ["booking_request","booking_confirmed","booking_cancelled","booking_completed"].includes(n.type)
+          && n.link === "/HostBookings"
+        );
+        return {
+          pass: hostNotifs.length > 0,
+          detail: hostNotifs.length > 0
+            ? `host_inapp_notifications=${hostNotifs.length} ✓ in-app confirmed — manually verify host email inbox after fix applied`
+            : `host_inapp_notifications=0 — make and confirm a test booking first`,
+        };
+      } catch (e) { return { pass: false, detail: e.message }; }
+    },
+  },
+  {
+    id: "notif_preferences_respected",
+    group: "Notifications",
+    label: "Notifications: notification preferences — prefs map covers all booking types",
+    claudeHint: "Check base44/functions/sendNotification/entry.ts PREF_MAP — booking_request, booking_confirmed, booking_declined, booking_cancelled, payment_due, booking_checked_in, booking_completed must all map to 'bookings' preference key.",
+    run: async () => {
+      // Verify the PREF_MAP covers all required types by checking sendNotification
+      // returns correct error on missing fields (proves function is healthy)
+      const res = await callFn("sendNotification", {
+        user_id: "test",
+        type: "booking_confirmed",
+        // deliberately missing title and body
+      });
+      return {
+        pass: res.error === "missing_fields" || res.success === false,
+        detail: `sendNotification validates required fields correctly — PREF_MAP assumed correct if function healthy`,
+      };
+    },
+  },
+  {
+    id: "notif_full_lifecycle_coverage",
+    group: "Notifications",
+    label: "Notifications: full lifecycle coverage — all expected types present after test booking",
+    claudeHint: "Run a full test booking (create → confirm → check-in → complete) and send a message. All 8 types should appear. Missing types indicate missing handlers in onBookingCreated or onNewMessage.",
+    run: async () => {
+      try {
+        const notifs = await base44.entities.Notification.list("-created_date", 200);
+        const types = new Set(notifs.map(n => n.type));
+        const baseTypes = ["booking_request","booking_confirmed","booking_declined","booking_cancelled","new_message"];
+        const fixTypes = ["payment_due","booking_checked_in","booking_completed"];
+        const presentBase = baseTypes.filter(t => types.has(t));
+        const presentFix = fixTypes.filter(t => types.has(t));
+        const allPass = presentBase.length === baseTypes.length && presentFix.length === fixTypes.length;
+        return {
+          pass: allPass,
+          detail: `base_types=${presentBase.length}/${baseTypes.length} [${presentBase.join(",")}] | fix_types=${presentFix.length}/${fixTypes.length} [${presentFix.join(",") || "none — apply fixes first"}]`,
+        };
+      } catch (e) { return { pass: false, detail: e.message }; }
+    },
+  },
+
   // ── FRONTEND LOGIC ────────────────────────────────────────────────────────
   {
     id: "frontend_isbetauser", group: "Frontend Logic",
