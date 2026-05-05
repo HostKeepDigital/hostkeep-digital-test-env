@@ -36,14 +36,12 @@
   ],
   "rls": {
     "create": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "created_by": "{{user.email}}"
     },
     "read": {
       "$or": [
         {
-          "data.guest_id": "{{user.id}}"
+          "created_by": "{{user.email}}"
         },
         {
           "user_condition": {
