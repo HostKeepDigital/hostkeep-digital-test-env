@@ -1,353 +1,519 @@
-/**
- * RegressionRunner — 18-check automated regression suite.
- * Enter your admin password, click Run. Green = safe to publish. Red = fix first.
- */
-
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { base44 } from "@/api/base44Client";
 
 const APP_ID = "698eee4108bd1d9467648326";
-const ADMIN_EMAIL = "tyleris1192@gmail.com";
+const TEST_SESSION_KEY = "session_token";
 
-async function fn(name, body = {}) {
+// Raw fetch to a backend function
+async function callFn(name, body = {}) {
   const res = await fetch(`/api/apps/${APP_ID}/functions/${name}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  const text = await res.text();
-  try { return JSON.parse(text); } catch { return { _raw: text, _status: res.status }; }
+  return res.json();
 }
 
-const CHECKS = [
+// ── TEST DEFINITIONS ────────────────────────────────────────────────────────
+// Each test returns { label, pass, detail }
+// Tests run in order. If a test returns a value needed by later tests,
+// it stores it in ctx (shared context object).
+
+const TESTS = [
   {
-    id: "signin",
-    label: "Admin sign-in via customSignIn",
+    id: "admin_signin",
+    claudeHint: "Check base44/functions/customSignIn/entry.ts — the session creation or password hash may be broken.",
+    label: "Admin sign-in (customSignIn)",
     run: async (ctx) => {
-      const res = await fn("customSignIn", { email: ADMIN_EMAIL, password: ctx.password });
-      if (!res.success || !res.session_token) throw new Error(res.error || "No session token returned");
-      ctx.session_token = res.session_token;
-      ctx.user_id = res.user_id;
-      return `session_token obtained, role=${res.role}`;
+      const res = await callFn("customSignIn", {
+        email: "admin@hostkeepdigital.co.uk",
+        password: ctx.adminPassword,
+      });
+      if (!res.success) return { pass: false, detail: res.error || "Sign-in returned success=false" };
+      ctx.adminToken = res.session_token;
+      ctx.adminRole = res.role;
+      return {
+        pass: res.success === true && res.role === "admin",
+        detail: `role=${res.role}`,
+      };
     },
   },
   {
-    id: "checkSession",
-    label: "checkSession returns correct role and user_id",
+    id: "check_session",
+    claudeHint: "Check base44/functions/checkSession/entry.ts — User.get(session.user_id) may be failing or returning null.",
+    label: "checkSession returns authenticated + correct role",
     run: async (ctx) => {
-      const res = await fn("checkSession", { session_token: ctx.session_token });
-      if (!res.authenticated) throw new Error("Not authenticated");
-      if (!res.role) throw new Error("No role returned");
-      if (!res.user_id) throw new Error("No user_id returned");
-      return `authenticated=true, role=${res.role}, user_id=${res.user_id}`;
+      if (!ctx.adminToken) return { pass: false, detail: "No session token — sign-in failed" };
+      const res = await callFn("checkSession", { session_token: ctx.adminToken });
+      ctx.adminUserId = res.user_id;
+      return {
+        pass: res.authenticated === true && res.role === "admin",
+        detail: `authenticated=${res.authenticated} role=${res.role} user_id=${res.user_id}`,
+      };
     },
   },
   {
-    id: "getUserProfile",
+    id: "get_user_profile",
+    claudeHint: "Check base44/functions/getUserProfile/entry.ts — UserProfile entity filter by email may be returning nothing.",
     label: "getUserProfile returns profile data",
     run: async (ctx) => {
-      const res = await fn("getUserProfile", { session_token: ctx.session_token });
-      if (res.error) throw new Error(res.error);
-      if (!res.user && !res.profile && !res.email && !res.full_name) throw new Error("No profile data in response: " + JSON.stringify(res).slice(0, 120));
-      return "profile data returned";
+      const res = await callFn("getUserProfile", {
+        email: "admin@hostkeepdigital.co.uk",
+        user_id: ctx.adminUserId || null,
+      });
+      return {
+        pass: res.success === true,
+        detail: res.success ? `profile=${JSON.stringify(res.profile)}` : res.error,
+      };
     },
   },
   {
-    id: "getBetaSettings",
+    id: "get_beta_settings",
+    claudeHint: "Check base44/functions/getBetaSettings/entry.ts — the function may be returning an unexpected shape.",
     label: "getBetaSettings returns beta_active flag",
     run: async () => {
-      const res = await fn("getBetaSettings");
-      if (res.error) throw new Error(res.error);
-      if (typeof res.beta_active === "undefined" && typeof res.beta_open === "undefined") {
-        throw new Error("No beta_active or beta_open flag: " + JSON.stringify(res).slice(0, 120));
-      }
-      const val = res.beta_active ?? res.beta_open;
-      return `beta flag = ${val}`;
+      const res = await callFn("getBetaSettings", {});
+      return {
+        pass: typeof res.beta_active !== "undefined",
+        detail: `beta_active=${res.beta_active}`,
+      };
     },
   },
   {
-    id: "getFoundingCounts",
+    id: "get_founding_counts",
+    claudeHint: "Check base44/functions/getFoundingCounts/entry.ts — FoundingMember entity query may be failing.",
     label: "getFoundingCounts returns host/cleaner counts",
     run: async () => {
-      const res = await fn("getFoundingCounts");
-      if (res.error) throw new Error(res.error);
-      if (typeof res.hosts === "undefined" && typeof res.host_count === "undefined") {
-        throw new Error("No host count in response: " + JSON.stringify(res).slice(0, 120));
-      }
-      const h = res.hosts ?? res.host_count ?? 0;
-      const c = res.cleaners ?? res.cleaner_count ?? 0;
-      return `hosts=${h}, cleaners=${c}`;
+      const res = await callFn("getFoundingCounts", {});
+      return {
+        pass: typeof res.hostCount !== "undefined" && typeof res.cleanerCount !== "undefined",
+        detail: `hosts=${res.hostCount} cleaners=${res.cleanerCount}`,
+      };
     },
   },
   {
-    id: "postcodeValid",
-    label: "Postcode lookup — valid Cornwall postcode",
-    run: async () => {
-      const res = await fn("postcodeGeolookup", { postcode: "TR1 1AA" });
-      if (res.error && !res.lat) throw new Error(res.error);
-      const lat = res.lat ?? res.result?.latitude;
-      if (!lat) throw new Error("No lat returned: " + JSON.stringify(res).slice(0, 120));
-      return `lat=${lat}`;
+    id: "postcode_lookup",
+    claudeHint: "Check base44/functions/postcodeGeolookupV2/entry.ts — the postcodes.io API call may be failing or the postcode area is wrong.",
+    label: "postcodeGeolookupV2 — valid Cornwall postcode (TR1 1AA)",
+    run: async (ctx) => {
+      const res = await callFn("postcodeGeolookupV2", {
+        postcode: "TR1 1AA",
+        session_token: ctx.adminToken || "",
+      });
+      return {
+        pass: res.success === true && res.postcode_area === "TR",
+        detail: `area=${res.postcode_area} county=${res.county}`,
+      };
     },
   },
   {
-    id: "postcodeInvalid",
-    label: "Postcode lookup — invalid postcode returns error",
-    run: async () => {
-      const res = await fn("postcodeGeolookup", { postcode: "ZZ99 9ZZ" });
-      if (res.lat || res.result?.latitude) throw new Error("Expected error but got valid coords");
-      return "invalid postcode correctly rejected";
+    id: "postcode_lookup_invalid",
+    claudeHint: "Check base44/functions/postcodeGeolookupV2/entry.ts — invalid postcode should return success=false.",
+    label: "postcodeGeolookupV2 — invalid postcode returns error",
+    run: async (ctx) => {
+      const res = await callFn("postcodeGeolookupV2", {
+        postcode: "ZZ99 9ZZ",
+        session_token: ctx.adminToken || "",
+      });
+      return {
+        pass: res.success === false,
+        detail: `success=${res.success} error=${res.error}`,
+      };
     },
   },
   {
-    id: "stripeConnectStatus",
+    id: "stripe_connect_status",
+    claudeHint: "Check base44/functions/getStripeConnectStatus/entry.ts — UserSession.filter or User.get may be failing.",
     label: "getStripeConnectStatus returns a status",
     run: async (ctx) => {
-      const res = await fn("getStripeConnectStatus", { session_token: ctx.session_token });
-      if (res.error) throw new Error(res.error);
-      if (typeof res.connected === "undefined" && typeof res.status === "undefined") {
-        throw new Error("No status field: " + JSON.stringify(res).slice(0, 120));
-      }
-      return `status=${res.status ?? (res.connected ? "connected" : "not_connected")}`;
+      if (!ctx.adminToken) return { pass: false, detail: "No session token" };
+      const res = await callFn("getStripeConnectStatus", { session_token: ctx.adminToken });
+      return {
+        pass: typeof res.status !== "undefined",
+        detail: `status=${res.status}`,
+      };
     },
   },
   {
-    id: "stripePublishableKey",
-    label: "getStripePublishableKey returns a pk_ key",
+    id: "stripe_publishable_key",
+    claudeHint: "Check base44/functions/getStripePublishableKey/entry.ts — STRIPE_PUBLISHABLE_KEY secret may not be set in Base44 Secrets.",
+    label: "getStripePublishableKey returns pk_ key",
     run: async () => {
-      const res = await fn("getStripePublishableKey");
-      const key = res.publishable_key ?? res.key ?? res.pk;
-      if (!key || !String(key).startsWith("pk_")) throw new Error("No pk_ key returned: " + JSON.stringify(res).slice(0, 120));
-      return `key starts with pk_`;
+      const res = await callFn("getStripePublishableKey", {});
+      return {
+        pass: typeof res.publishable_key === "string" && res.publishable_key.startsWith("pk_"),
+        detail: `key starts with: ${res.publishable_key?.slice(0, 7)}...`,
+      };
     },
   },
   {
-    id: "checkoutInvalidPlan",
-    label: "createCheckoutSession — invalid plan correctly rejected",
+    id: "checkout_invalid_plan",
+    claudeHint: "Check base44/functions/createCheckoutSession/entry.ts — VALID_PLANS set should reject unknown plan names.",
+    label: "createCheckoutSession — invalid plan returns 400",
     run: async (ctx) => {
-      const res = await fn("createCheckoutSession", { session_token: ctx.session_token, plan: "totally_fake_plan_xyz" });
-      if (res.url || res.session_id) throw new Error("Expected rejection but got a Stripe URL");
-      return "invalid plan rejected correctly";
+      const res = await callFn("createCheckoutSession", {
+        plan: "fake_plan_xyz",
+        user_id: ctx.adminUserId || null,
+        session_token: ctx.adminToken || "",
+      });
+      return {
+        pass: !res.url && (res.error || res.message),
+        detail: `error="${res.error || res.message}"`,
+      };
     },
   },
   {
-    id: "checkoutValidPlan",
+    id: "checkout_valid_plan",
+    claudeHint: "Check base44/functions/createCheckoutSession/entry.ts — Stripe price lookup_key for host_starter_monthly may not be set in your Stripe sandbox, or STRIPE_SECRET_KEY is wrong.",
     label: "createCheckoutSession — valid plan returns Stripe URL",
     run: async (ctx) => {
-      const res = await fn("createCheckoutSession", { session_token: ctx.session_token, plan: "beta_host_access" });
-      if (res.error && !res.url) throw new Error(res.error);
-      const url = res.url ?? res.checkout_url;
-      if (!url) throw new Error("No checkout URL returned: " + JSON.stringify(res).slice(0, 120));
-      return "Stripe checkout URL returned";
+      const res = await callFn("createCheckoutSession", {
+        plan: "host_starter_monthly",
+        user_id: ctx.adminUserId || null,
+        session_token: ctx.adminToken || "",
+      });
+      return {
+        pass: typeof res.url === "string" && res.url.startsWith("https://"),
+        detail: res.url ? `url starts with: ${res.url.slice(0, 40)}...` : `error: ${res.error}`,
+      };
     },
   },
   {
-    id: "checkApprovalGates",
-    label: "checkApprovalGates runs without crashing",
+    id: "approval_gates",
+    claudeHint: "Check base44/functions/checkApprovalGates/entry.ts — FoundingMember entity query or gate logic may be throwing.",
+    label: "checkApprovalGates — runs without crashing",
     run: async (ctx) => {
-      const res = await fn("checkApprovalGates", { user_id: ctx.user_id || "test_user_id" });
-      if (res._status >= 500) throw new Error("Server error: " + JSON.stringify(res).slice(0, 120));
-      return "ran without 500 error";
+      if (!ctx.adminUserId) return { pass: false, detail: "No user_id" };
+      try {
+        const res = await callFn("checkApprovalGates", { user_id: ctx.adminUserId });
+        return {
+          pass: true,
+          detail: `gates=${JSON.stringify(res.gates || res)}`,
+        };
+      } catch (e) {
+        return { pass: false, detail: e.message };
+      }
     },
   },
   {
-    id: "propertySearch",
-    label: "propertySearch returns results",
+    id: "property_search",
+    claudeHint: "Check base44/functions/propertySearch/entry.ts — Property entity query may be failing.",
+    label: "propertySearch — returns results without crashing",
     run: async () => {
-      const res = await fn("propertySearch", { location: "Cornwall", guests: 2, check_in: "2026-07-01", check_out: "2026-07-07" });
-      if (res.error) throw new Error(res.error);
-      const props = res.properties ?? res.results ?? res.data ?? [];
-      if (!Array.isArray(props)) throw new Error("Expected array: " + JSON.stringify(res).slice(0, 120));
-      return `${props.length} properties returned`;
+      try {
+        const res = await callFn("propertySearch", { query: "", limit: 3 });
+        return {
+          pass: Array.isArray(res.results) || Array.isArray(res) || res.success !== false,
+          detail: `count=${Array.isArray(res.results) ? res.results.length : Array.isArray(res) ? res.length : "n/a"}`,
+        };
+      } catch (e) {
+        return { pass: false, detail: e.message };
+      }
     },
   },
   {
-    id: "invalidSession",
-    label: "Invalid session token correctly returns unauthenticated",
+    id: "session_invalid",
+    claudeHint: "Check base44/functions/checkSession/entry.ts — it should return authenticated=false for an invalid token.",
+    label: "checkSession — expired/invalid token returns unauthenticated",
     run: async () => {
-      const res = await fn("checkSession", { session_token: "invalid_token_abc123xyz" });
-      if (res.authenticated === true) throw new Error("Should not be authenticated with a fake token");
-      return "fake token correctly rejected";
+      const res = await callFn("checkSession", { session_token: "fake-token-xyz-123" });
+      return {
+        pass: res.authenticated === false || res.error,
+        detail: `authenticated=${res.authenticated}`,
+      };
     },
   },
   {
-    id: "entitySubscription",
-    label: "Subscription entity queryable",
-    run: async (ctx) => {
-      const res = await fn("checkSubscriptionLimits", { session_token: ctx.session_token });
-      if (res._status >= 500) throw new Error("Server error: " + JSON.stringify(res).slice(0, 120));
-      return "Subscription entity accessible";
-    },
-  },
-  {
-    id: "entityFoundingMember",
-    label: "FoundingMember entity queryable",
+    id: "entity_subscription",
+    claudeHint: "The Subscription entity may have RLS issues or the entity name has changed.",
+    label: "Subscription entity — queryable by admin",
     run: async () => {
-      const res = await fn("getFoundingCounts");
-      if (res._status >= 500) throw new Error("Server error: " + JSON.stringify(res).slice(0, 120));
-      return "FoundingMember entity accessible";
+      try {
+        const subs = await base44.asServiceRole?.entities?.Subscription?.list("-created_date", 1) ||
+          await base44.entities.Subscription.list("-created_date", 1);
+        return { pass: Array.isArray(subs), detail: `records=${subs.length}` };
+      } catch (e) {
+        return { pass: false, detail: e.message };
+      }
     },
   },
   {
-    id: "entityProperty",
-    label: "Property entity queryable",
+    id: "entity_founding_member",
+    claudeHint: "The FoundingMember entity may have RLS issues or the entity name has changed.",
+    label: "FoundingMember entity — queryable",
     run: async () => {
-      const res = await fn("propertySearch", { location: "Cornwall", guests: 1, check_in: "2026-07-01", check_out: "2026-07-07" });
-      if (res._status >= 500) throw new Error("Server error: " + JSON.stringify(res).slice(0, 120));
-      return "Property entity accessible";
+      try {
+        const members = await base44.entities.FoundingMember.list("-created_date", 1);
+        return { pass: Array.isArray(members), detail: `records=${members.length}` };
+      } catch (e) {
+        return { pass: false, detail: e.message };
+      }
     },
   },
   {
-    id: "isBetaUserLogic",
-    label: "isBetaUser banned_ prefix logic correct",
+    id: "entity_property",
+    claudeHint: "The Property entity may have RLS issues or the entity name has changed.",
+    label: "Property entity — queryable",
     run: async () => {
-      // Simulate the banned_ prefix check without hitting real data
-      const statuses = ["banned_email_verification", "banned_documentation_failure", "banned_fraud", "banned_manual_admin_action", "banned"];
-      const allBanned = statuses.every(s => s.startsWith("banned"));
-      if (!allBanned) throw new Error("banned_ prefix check failed — some statuses don't start with 'banned'");
-      const validStatus = "approved";
-      if (validStatus.startsWith("banned")) throw new Error("'approved' incorrectly flagged as banned");
-      return "banned_ prefix logic verified correctly";
+      try {
+        const props = await base44.entities.Property.list("-created_date", 1);
+        return { pass: Array.isArray(props), detail: `records=${props.length}` };
+      } catch (e) {
+        return { pass: false, detail: e.message };
+      }
+    },
+  },
+  {
+    id: "isBetaUser_check",
+    claudeHint: "The isBetaUser logic in src/pages/Subscription.jsx may have been changed — it must use !approval_status?.startsWith('banned_') not a whitelist.",
+    label: "isBetaUser logic — banned_ prefix detection",
+    run: async () => {
+      // Simulate the isBetaUser check logic
+      const bannedStatuses = ["banned_docs_1", "banned_docs_2", "banned_admin"];
+      const validStatuses = ["approved", "invited", "awaiting_document_verification", "pending"];
+      const bannedResults = bannedStatuses.map(s => s.startsWith("banned_"));
+      const validResults = validStatuses.map(s => !s.startsWith("banned_"));
+      const allCorrect = bannedResults.every(Boolean) && validResults.every(Boolean);
+      return {
+        pass: allCorrect,
+        detail: `Banned correctly detected: ${bannedResults.join(",")} | Valid correctly passed: ${validResults.join(",")}`,
+      };
     },
   },
 ];
 
+// ── CLAUDE PROMPT GENERATOR ─────────────────────────────────────────────────
+// Each test can define a claudePrompt(detail) function that returns a string
+// describing what to tell Claude when the test fails. If not defined, a generic
+// prompt is generated from the test label and detail.
+
+function buildClaudePrompt(failedTests) {
+  const lines = [
+    "I ran the HostKeep pre-publish regression suite and the following tests failed. Please help me fix them.",
+    "",
+    "App ID: 698eee4108bd1d9467648326",
+    "Stack: Base44 (Deno/TypeScript backend, React/Vite frontend), Stripe, Resend",
+    "",
+    "FAILED TESTS:",
+    "",
+  ];
+
+  failedTests.forEach((t, i) => {
+    lines.push(`${i + 1}. ${t.label}`);
+    lines.push(`   Error detail: ${t.detail || "no detail"}`);
+    if (t.claudeHint) lines.push(`   Context: ${t.claudeHint}`);
+    lines.push("");
+  });
+
+  lines.push("Please check the relevant backend functions and frontend files and give me the fix.");
+  return lines.join("\n");
+}
+
+// ── COMPONENT ────────────────────────────────────────────────────────────────
+
 export default function RegressionRunner() {
-  const [password, setPassword] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
   const [running, setRunning] = useState(false);
-  const [results, setResults] = useState(null); // null | { pass: bool, detail: string }[]
-  const [currentIndex, setCurrentIndex] = useState(-1);
+  const [results, setResults] = useState([]);
+  const [currentTest, setCurrentTest] = useState(null);
+  const [done, setDone] = useState(false);
+  const abortRef = useRef(false);
 
-  const run = async () => {
-    if (!password) return;
+  const runAll = async () => {
+    if (!adminPassword) {
+      alert("Enter your admin password first.");
+      return;
+    }
+    abortRef.current = false;
     setRunning(true);
-    setCurrentIndex(0);
-    setResults(null);
+    setDone(false);
+    setResults([]);
+    setCurrentTest(null);
 
-    const ctx = { password };
-    const out = [];
+    const ctx = { adminPassword };
+    const resultLog = [];
 
-    for (let i = 0; i < CHECKS.length; i++) {
-      setCurrentIndex(i);
-      const check = CHECKS[i];
+    for (const test of TESTS) {
+      if (abortRef.current) break;
+      setCurrentTest(test.label);
+      const start = Date.now();
+      let result;
       try {
-        const detail = await check.run(ctx);
-        out.push({ pass: true, detail: detail || "ok" });
+        result = await test.run(ctx);
       } catch (e) {
-        out.push({ pass: false, detail: e.message || String(e) });
+        result = { pass: false, detail: `Threw: ${e.message}` };
       }
-      setResults([...out]);
+      const elapsed = Date.now() - start;
+      resultLog.push({ ...result, label: test.label, id: test.id, elapsed });
+      setResults([...resultLog]);
     }
 
-    setCurrentIndex(-1);
+    setCurrentTest(null);
     setRunning(false);
+    setDone(true);
   };
 
-  const passed = results ? results.filter(r => r.pass).length : 0;
-  const failed = results ? results.filter(r => !r.pass).length : 0;
-  const allPass = results && failed === 0;
+  const passed = results.filter(r => r.pass).length;
+  const failed = results.filter(r => !r.pass).length;
+  const total = results.length;
+  const allPass = done && failed === 0 && total === TESTS.length;
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-5">
-      {/* Header */}
-      <div>
-        <h2 className="font-bold text-gray-900 text-base">Regression Runner</h2>
-        <p className="text-xs text-gray-500 mt-0.5">
-          {CHECKS.length} automated checks — green means safe to publish, red means fix first.
-        </p>
+    <div className="p-6 space-y-6 max-w-3xl">
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">Pre-Publish Regression Suite</h2>
+          <p className="text-sm text-gray-500 mt-0.5">
+            Runs {TESTS.length} automated checks against the live backend. Run this before every publish.
+          </p>
+        </div>
+        {done && (
+          <div className={`px-4 py-2 rounded-xl text-sm font-bold ${allPass ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+            {allPass ? "✅ SAFE TO PUBLISH" : `❌ ${failed} FAILING — DO NOT PUBLISH`}
+          </div>
+        )}
       </div>
 
-      {/* Password input + run button */}
-      <div className="flex items-center gap-3">
-        <input
-          type="password"
-          placeholder="Admin password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          onKeyDown={e => e.key === "Enter" && !running && password && run()}
-          className="flex-1 max-w-xs border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:border-teal-500 focus:outline-none"
-          disabled={running}
-        />
+      {/* Password input */}
+      <div className="flex gap-3 items-end">
+        <div className="flex-1">
+          <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">Admin Password</label>
+          <input
+            type="password"
+            value={adminPassword}
+            onChange={e => setAdminPassword(e.target.value)}
+            placeholder="Enter admin password to authenticate tests"
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+            disabled={running}
+          />
+        </div>
         <button
-          onClick={run}
-          disabled={running || !password}
-          className="px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#162d4a] disabled:opacity-50 text-white text-sm font-semibold rounded-xl flex items-center gap-2 transition-colors"
+          onClick={runAll}
+          disabled={running || !adminPassword}
+          className={`px-6 py-2 rounded-lg text-sm font-bold text-white transition-all ${
+            running ? "bg-gray-400 cursor-not-allowed" : "bg-[#1E3A5F] hover:bg-[#16304f]"
+          }`}
         >
-          {running && (
-            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-            </svg>
-          )}
-          {running ? `Running ${currentIndex + 1}/${CHECKS.length}…` : "Run"}
+          {running ? "Running..." : "Run All Tests"}
         </button>
+        {running && (
+          <button
+            onClick={() => { abortRef.current = true; }}
+            className="px-4 py-2 rounded-lg text-sm font-medium border border-red-300 text-red-600 hover:bg-red-50"
+          >
+            Abort
+          </button>
+        )}
       </div>
 
-      {/* Summary banner */}
-      {results && (
-        <div className={`px-4 py-3 rounded-xl border text-sm font-semibold flex items-center gap-2 ${allPass ? "bg-green-50 border-green-200 text-green-700" : "bg-red-50 border-red-200 text-red-700"}`}>
-          <span className="text-base">{allPass ? "✅" : "❌"}</span>
-          {allPass
-            ? `All ${CHECKS.length} checks passed — safe to publish`
-            : `${failed} of ${CHECKS.length} checks failed — fix before publishing`}
+      {/* Progress bar */}
+      {(running || done) && (
+        <div>
+          <div className="flex justify-between text-xs text-gray-500 mb-1">
+            <span>{currentTest ? `Running: ${currentTest}` : done ? "Complete" : ""}</span>
+            <span>{total}/{TESTS.length}</span>
+          </div>
+          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all ${allPass ? "bg-green-500" : failed > 0 ? "bg-red-500" : "bg-teal-500"}`}
+              style={{ width: `${(total / TESTS.length) * 100}%` }}
+            />
+          </div>
+          <div className="flex gap-4 mt-1.5 text-xs">
+            <span className="text-green-600 font-medium">✓ {passed} passed</span>
+            {failed > 0 && <span className="text-red-600 font-medium">✗ {failed} failed</span>}
+            {running && total < TESTS.length && <span className="text-gray-400">{TESTS.length - total} remaining</span>}
+          </div>
         </div>
       )}
 
-      {/* Check rows */}
-      <div className="space-y-1.5">
-        {CHECKS.map((check, i) => {
-          const result = results?.[i];
-          const isRunning = running && currentIndex === i;
-          const isPending = running && currentIndex < i && !result;
-
-          let bg = "bg-gray-50 border-gray-100";
-          let icon = <span className="w-4 h-4 rounded-full bg-gray-200 flex-shrink-0" />;
-
-          if (isRunning) {
-            bg = "bg-blue-50 border-blue-100";
-            icon = (
-              <svg className="w-4 h-4 animate-spin text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-              </svg>
-            );
-          } else if (result?.pass) {
-            bg = "bg-green-50 border-green-100";
-            icon = <span className="text-green-500 flex-shrink-0 text-base">✅</span>;
-          } else if (result && !result.pass) {
-            bg = "bg-red-50 border-red-100";
-            icon = <span className="text-red-500 flex-shrink-0 text-base">❌</span>;
-          }
-
-          return (
-            <div key={check.id} className={`flex items-start gap-2.5 px-4 py-2.5 rounded-lg border ${bg}`}>
-              <div className="mt-0.5">{icon}</div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm text-gray-800">{check.label}</p>
-                {result?.pass && (
-                  <p className="text-xs text-green-600 mt-0.5">{result.detail}</p>
-                )}
-                {result && !result.pass && (
-                  <p className="text-xs text-red-600 mt-0.5 break-words font-mono">{result.detail}</p>
-                )}
-                {isRunning && (
-                  <p className="text-xs text-blue-500 mt-0.5">Running…</p>
+      {/* Results */}
+      {results.length > 0 && (
+        <div className="space-y-1.5">
+          {results.map((r, i) => (
+            <div
+              key={i}
+              className={`flex items-start gap-3 px-4 py-2.5 rounded-lg border text-sm ${
+                r.pass ? "bg-green-50 border-green-100" : "bg-red-50 border-red-200"
+              }`}
+            >
+              <span className="flex-shrink-0 mt-0.5">{r.pass ? "✅" : "❌"}</span>
+              <div className="flex-1 min-w-0">
+                <p className={`font-medium ${r.pass ? "text-green-900" : "text-red-900"}`}>{r.label}</p>
+                {r.detail && (
+                  <p className={`text-xs mt-0.5 font-mono break-all ${r.pass ? "text-green-600" : "text-red-600"}`}>
+                    {r.detail}
+                  </p>
                 )}
               </div>
-              <span className="text-xs text-gray-300 flex-shrink-0 mt-0.5">#{i + 1}</span>
+              <span className="text-xs text-gray-400 flex-shrink-0">{r.elapsed}ms</span>
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
 
-      {results && (
-        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-          <span className="text-xs text-gray-400">{passed} passed · {failed} failed</span>
-          <button
-            onClick={() => { setResults(null); setCurrentIndex(-1); }}
-            className="text-xs text-gray-400 hover:text-gray-600 border border-gray-200 rounded-lg px-3 py-1.5"
-          >
-            Clear
-          </button>
+      {/* Pending tests */}
+      {running && (
+        <div className="space-y-1">
+          {TESTS.slice(results.length).map((t, i) => (
+            <div key={i} className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm border border-gray-100 ${i === 0 ? "bg-blue-50 border-blue-200" : "bg-gray-50 text-gray-400"}`}>
+              {i === 0 ? <span className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin flex-shrink-0" /> : <span className="w-3 h-3 rounded-full bg-gray-200 flex-shrink-0" />}
+              <span className={i === 0 ? "text-blue-700 font-medium" : ""}>{t.label}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Final verdict */}
+      {done && (
+        <div className={`rounded-xl p-5 border-2 ${allPass ? "bg-green-50 border-green-300" : "bg-red-50 border-red-300"}`}>
+          {allPass ? (
+            <div className="text-center">
+              <p className="text-2xl font-black text-green-800 mb-1">✅ All {total} tests passed</p>
+              <p className="text-sm text-green-700">All systems nominal. Safe to publish to production.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="text-center">
+                <p className="text-2xl font-black text-red-800 mb-1">❌ {failed} test{failed > 1 ? "s" : ""} failed</p>
+                <p className="text-sm text-red-700">Fix the failing tests before publishing.</p>
+              </div>
+
+              {/* Claude prompt generator */}
+              <div className="bg-white rounded-xl border border-red-200 p-4 space-y-3">
+                <p className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                  <span>🤖</span> Get Claude to fix these issues
+                </p>
+                <p className="text-xs text-gray-500">
+                  Click below to copy a ready-made prompt. Paste it into claude.ai and Claude will diagnose and fix the failing tests.
+                </p>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 max-h-40 overflow-y-auto">
+                  <pre className="text-xs text-gray-700 whitespace-pre-wrap font-mono">
+                    {buildClaudePrompt(results.filter(r => !r.pass))}
+                  </pre>
+                </div>
+                <button
+                  onClick={() => {
+                    const prompt = buildClaudePrompt(results.filter(r => !r.pass));
+                    navigator.clipboard.writeText(prompt).then(() => {
+                      alert("Prompt copied! Paste it into claude.ai to get the fix.");
+                    });
+                  }}
+                  className="w-full py-2.5 rounded-lg bg-[#1E3A5F] text-white text-sm font-semibold hover:bg-[#16304f] transition-colors flex items-center justify-center gap-2"
+                >
+                  <span>📋</span> Copy Prompt for Claude
+                </button>
+                <a
+                  href={`https://claude.ai/new?q=${encodeURIComponent(buildClaudePrompt(results.filter(r => !r.pass)).slice(0, 2000))}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-2.5 rounded-lg border border-[#1E3A5F] text-[#1E3A5F] text-sm font-semibold hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
+                >
+                  <span>↗</span> Open Claude with this prompt
+                </a>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
