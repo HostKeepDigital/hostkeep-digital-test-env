@@ -106,6 +106,9 @@
     "delete": {
       "$or": [
         {
+          "data.host_id": "{{user.id}}"
+        },
+        {
           "user_condition": {
             "role": "admin"
           }
