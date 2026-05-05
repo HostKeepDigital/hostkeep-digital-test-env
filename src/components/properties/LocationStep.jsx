@@ -236,20 +236,34 @@ export default function LocationStep({ formData, onFormChange, onLocationChange,
         )}
 
         {/* OUT-OF-AREA */}
-        {postcodeData && !inArea && (
+        {/* First property outside Cornwall — hard stop */}
+        {postcodeData && !inArea && isFirstProperty && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 space-y-3">
+            <h4 className="font-semibold text-red-900 flex items-center gap-2">
+              <XCircle className="w-4 h-4 text-red-600" /> Outside Beta Area
+            </h4>
+            <p className="text-sm text-red-800 leading-relaxed">
+              <strong>{postcodeData.postcode}</strong> is in{" "}
+              {postcodeData.county || postcodeData.district || postcodeData.country}. During beta, your first property must be located in <strong>Cornwall</strong> (postcode areas TR, PL, EX).
+            </p>
+            <p className="text-sm text-red-700">
+              We're expanding across the UK in 2026. You'll be notified when HostKeep launches in your area.
+            </p>
+          </div>
+        )}
+
+        {/* Second+ property outside Cornwall — soft warning, allow proceed */}
+        {postcodeData && !inArea && !isFirstProperty && (
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 space-y-3">
             <h4 className="font-semibold text-amber-900 flex items-center gap-2">
-              <XCircle className="w-4 h-4 text-amber-600" /> Outside Launch Area
+              <AlertCircle className="w-4 h-4 text-amber-600" /> Outside Current Beta Area
             </h4>
             <p className="text-sm text-amber-800 leading-relaxed">
               <strong>{postcodeData.postcode}</strong> is in{" "}
-              {postcodeData.county || postcodeData.district || postcodeData.country}, which isn't in our current launch region. HostKeep is currently available in{" "}
-              <strong>Cornwall and Devon</strong> only (postcode areas TR, PL, EX).
+              {postcodeData.county || postcodeData.district || postcodeData.country}. This property cannot be published during beta but you can complete the full setup now.
             </p>
             <p className="text-sm text-amber-700">
-              We're expanding across the UK throughout 2026 and 2027.{" "}
-              <a href="/foundinghost" className="underline font-medium hover:text-amber-900">Apply as a Founding Host</a>
-              {" "}to help shape the future of HostKeep and get early access.
+              When HostKeep launches nationally, this property will be ready to publish. We'll notify you when your area goes live. Note that cleaner availability may be limited at launch.
             </p>
           </div>
         )}
