@@ -3,6 +3,17 @@ import { differenceInHours } from 'npm:date-fns@3.6.0';
 
 Deno.serve(async (req) => {
   try {
+    const body = await req.json().catch(() => ({}));
+    const { session_token } = body;
+
+    if (!session_token) return Response.json({ error: "Unauthorized" }, { status: 401 });
+    const base44client = createClientFromRequest(req);
+    const sessions = await base44client.asServiceRole.entities.UserSession.filter({ session_token });
+    const session = sessions?.[0];
+    if (!session || new Date(session.expires_at) < new Date()) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
 
@@ -10,7 +21,6 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await req.json();
     const {
       booking_id,
       raised_by,

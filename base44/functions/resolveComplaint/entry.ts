@@ -5,6 +5,17 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
 
 Deno.serve(async (req) => {
   try {
+    const body = await req.json().catch(() => ({}));
+    const { session_token, complaint_id, admin_resolution, admin_resolution_amount, admin_notes } = body;
+
+    if (!session_token) return Response.json({ error: "Unauthorized" }, { status: 401 });
+    const base44client = createClientFromRequest(req);
+    const sessions = await base44client.asServiceRole.entities.UserSession.filter({ session_token });
+    const session = sessions?.[0];
+    if (!session || new Date(session.expires_at) < new Date()) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
 
@@ -15,9 +26,6 @@ Deno.serve(async (req) => {
     if (user.role !== 'admin') {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
-
-    const body = await req.json();
-    const { complaint_id, admin_resolution, admin_resolution_amount, admin_notes } = body;
 
     // Load complaint
     const complaint = await base44.entities.Complaint.get(complaint_id);
