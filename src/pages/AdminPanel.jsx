@@ -372,6 +372,37 @@ export default function AdminPanel() {
   const [bookings,      setBookings     ] = useState([]);
   const [guestsLoading, setGuestsLoading] = useState(true);
   const [guestSessions, setGuestSessions] = useState([]);
+  const [cleanerWaitlist, setCleanerWaitlist] = useState([]);
+  const [waitlistLoading, setWaitlistLoading] = useState(false);
+  const [invitingId, setInvitingId] = useState(null);
+
+  const fetchCleanerWaitlist = async () => {
+    setWaitlistLoading(true);
+    try {
+      const entries = await base44.entities.CleanerWaitlist.list("-priority_score", 200);
+      setCleanerWaitlist(entries || []);
+    } catch { setCleanerWaitlist([]); }
+    setWaitlistLoading(false);
+  };
+
+  const handleInviteCleaner = async (entry) => {
+    setInvitingId(entry.id);
+    try {
+      const res = await fetch('/api/apps/698eee4108bd1d9467648326/functions/inviteCleanerFromWaitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ waitlist_id: entry.id }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`Invitation sent to ${entry.name || entry.email}`);
+        fetchCleanerWaitlist();
+      } else {
+        toast.error(data.error || "Failed to send invitation");
+      }
+    } catch { toast.error("Failed to send invitation"); }
+    setInvitingId(null);
+  };
 
   const fetchMembers = async () => {
     setLoading(true);
