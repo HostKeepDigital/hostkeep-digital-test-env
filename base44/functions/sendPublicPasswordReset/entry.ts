@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
 
     // Always return success — never reveal whether an email exists
     if (!email || typeof email !== "string" || !email.includes("@")) {
-      return Response.json({ success: true });
+      return Response.json({ success: false, error: "email is required" }, { status: 400 });
     }
 
     const normalizedEmail = email.toLowerCase().trim();
