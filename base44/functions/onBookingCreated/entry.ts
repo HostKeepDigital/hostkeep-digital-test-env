@@ -2,7 +2,7 @@
  * Automation handler: fires when a Booking record is created or updated.
  * Sends notifications to the relevant host and/or guest.
  */
-import { createClientFromRequest } from "npm:@base44/sdk@0.8.23";
+import { createClientFromRequest } from "npm:@base44/sdk@0.8.25";
 
 Deno.serve(async (req) => {
   try {
@@ -22,6 +22,24 @@ Deno.serve(async (req) => {
     const booking = data;
     const eventType = event?.type;
 
+    // ── notify helper ─────────────────────────────────────────────────────
+    // Wraps sendNotification for internal service calls using LOCK_ACCESS_TOKEN
+    async function notify(user_id, type, title, notifBody, link, email_to) {
+      try {
+        await serviceRole.functions.invoke("sendNotification", {
+          service_key: LOCK,
+          user_id,
+          type,
+          title,
+          body: notifBody,
+          link,
+          email_to: email_to || null,
+        });
+      } catch (e) {
+        console.error(`notify failed [${type}]:`, e?.message);
+      }
+    }
+
     // Look up host email so they receive email notifications too
     let hostEmail = null;
     if (booking.host_id) {
@@ -29,10 +47,7 @@ Deno.serve(async (req) => {
         const hostUser = await serviceRole.entities.User.get(booking.host_id);
         hostEmail = hostUser?.email || null;
       } catch (_) {}
-      await serviceRole.functions.invoke("sendNotification", {
-        user_id, type, title, body, link, email_to,
-      });
-    };
+    }
 
     if (eventType === "create") {
       // Notify host of new booking request
@@ -55,7 +70,7 @@ Deno.serve(async (req) => {
       if (changed.includes("booking_status")) {
         const status = booking.booking_status;
 
-        // Notify guest of booking confirmation
+        // Guest: booking confirmed
         if (status === "confirmed" && booking.guest_id) {
           await notify(
             booking.guest_id,
@@ -67,7 +82,7 @@ Deno.serve(async (req) => {
           );
         }
 
-        // Notify host they confirmed a booking
+        // Host: booking confirmed
         if (status === "confirmed" && booking.host_id) {
           await notify(
             booking.host_id,
@@ -79,7 +94,7 @@ Deno.serve(async (req) => {
           );
         }
 
-        // Notify guest of decline
+        // Guest: booking declined
         if (status === "declined" && booking.guest_id) {
           await notify(
             booking.guest_id,
@@ -91,7 +106,7 @@ Deno.serve(async (req) => {
           );
         }
 
-        // Notify guest of cancellation
+        // Guest: booking cancelled
         if (status === "cancelled" && booking.guest_id) {
           await notify(
             booking.guest_id,
@@ -103,7 +118,7 @@ Deno.serve(async (req) => {
           );
         }
 
-        // Notify host of guest cancellation
+        // Host: guest cancelled
         if (status === "cancelled" && booking.host_id && old.booking_status !== "cancelled") {
           await notify(
             booking.host_id,
@@ -111,36 +126,55 @@ Deno.serve(async (req) => {
             "Booking Cancelled by Guest",
             `${booking.guest_name || "A guest"} has cancelled their booking for ${booking.check_in} to ${booking.check_out}.`,
             "/HostBookings",
-            null
+            hostEmail
           );
         }
-        // Notify guest to pay deposit
+
+        // Guest: deposit required
         if (status === "awaiting_payment" && booking.guest_id) {
-          await notify(booking.guest_id, "payment_due", "Complete Your Booking — Deposit Required",
+          await notify(
+            booking.guest_id,
+            "payment_due",
+            "Complete Your Booking — Deposit Required",
             `Your booking for ${booking.check_in} to ${booking.check_out} is reserved. Please pay your deposit to confirm.`,
-            "/MyTrips", booking.guest_email);
+            "/MyTrips",
+            booking.guest_email
+          );
         }
 
-        // Notify both parties on check-in
-        if (status === "checked_in") {
-          if (booking.guest_id) {
-            await notify(booking.guest_id, "booking_checked_in", "Welcome! Enjoy Your Stay 🏡",
-              `Your stay from ${booking.check_in} to ${booking.check_out} has started. Have a wonderful time!`,
-              "/MyTrips", booking.guest_email);
-          }
+        // Guest: checked in
+        if (status === "checked_in" && booking.guest_id) {
+          await notify(
+            booking.guest_id,
+            "booking_checked_in",
+            "Welcome! Enjoy Your Stay 🏡",
+            `Your stay from ${booking.check_in} to ${booking.check_out} has started. Have a wonderful time!`,
+            "/MyTrips",
+            booking.guest_email
+          );
         }
 
-        // Notify both parties on completion
+        // Both: stay completed
         if (status === "completed") {
           if (booking.guest_id) {
-            await notify(booking.guest_id, "booking_completed", "Stay Complete — Leave a Review",
+            await notify(
+              booking.guest_id,
+              "booking_completed",
+              "Stay Complete — Leave a Review",
               `Your stay has ended. We hope you had a great time! Leave a review to help future guests.`,
-              "/MyTrips", booking.guest_email);
+              "/MyTrips",
+              booking.guest_email
+            );
           }
           if (booking.host_id) {
-            await notify(booking.host_id, "booking_completed", "Stay Completed — Payout Processing",
+            await notify(
+              booking.host_id,
+              "booking_completed",
+              "Stay Completed — Payout Processing",
               `${booking.guest_name || "Your guest"}'s stay is complete. Your payout will be processed within 24 hours.`,
-              "/HostBookings", hostEmail);
+              "/HostBookings",
+              hostEmail
+            );
           }
         }
       }
