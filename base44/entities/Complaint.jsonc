@@ -163,6 +163,26 @@
           "data.raised_by_user_id": "{{user.id}}"
         },
         {
+          "data.booking_id": {
+            "$in": {
+              "$query": {
+                "collection": "Booking",
+                "filter": {
+                  "$or": [
+                    {
+                      "data.host_id": "{{user.id}}"
+                    },
+                    {
+                      "data.guest_id": "{{user.id}}"
+                    }
+                  ]
+                },
+                "field": "id"
+              }
+            }
+          }
+        },
+        {
           "user_condition": {
             "role": "admin"
           }
@@ -173,6 +193,26 @@
       "$or": [
         {
           "data.raised_by_user_id": "{{user.id}}"
+        },
+        {
+          "data.booking_id": {
+            "$in": {
+              "$query": {
+                "collection": "Booking",
+                "filter": {
+                  "$or": [
+                    {
+                      "data.host_id": "{{user.id}}"
+                    },
+                    {
+                      "data.guest_id": "{{user.id}}"
+                    }
+                  ]
+                },
+                "field": "id"
+              }
+            }
+          }
         },
         {
           "user_condition": {
