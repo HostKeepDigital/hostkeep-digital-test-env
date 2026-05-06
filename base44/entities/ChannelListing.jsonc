@@ -47,7 +47,17 @@
     "create": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
+          "data.property_id": {
+            "$in": {
+              "$query": {
+                "collection": "Property",
+                "filter": {
+                  "data.owner_id": "{{user.id}}"
+                },
+                "field": "id"
+              }
+            }
+          }
         },
         {
           "user_condition": {
@@ -59,7 +69,17 @@
     "read": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
+          "data.property_id": {
+            "$in": {
+              "$query": {
+                "collection": "Property",
+                "filter": {
+                  "data.owner_id": "{{user.id}}"
+                },
+                "field": "id"
+              }
+            }
+          }
         },
         {
           "user_condition": {
@@ -71,7 +91,17 @@
     "update": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
+          "data.property_id": {
+            "$in": {
+              "$query": {
+                "collection": "Property",
+                "filter": {
+                  "data.owner_id": "{{user.id}}"
+                },
+                "field": "id"
+              }
+            }
+          }
         },
         {
           "user_condition": {
@@ -83,7 +113,17 @@
     "delete": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
+          "data.property_id": {
+            "$in": {
+              "$query": {
+                "collection": "Property",
+                "filter": {
+                  "data.owner_id": "{{user.id}}"
+                },
+                "field": "id"
+              }
+            }
+          }
         },
         {
           "user_condition": {
