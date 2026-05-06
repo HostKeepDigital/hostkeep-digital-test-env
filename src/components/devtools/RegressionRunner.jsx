@@ -268,9 +268,9 @@ const TESTS = [
     id: "profile_write_then_read", group: "Profile",
     label: "Profile: saveUserProfile → getUserProfile — write actually persists",
     claudeHint: "Check base44/functions/saveUserProfile/entry.ts — save may return success=true but not write to UserProfile entity. Also check getUserProfile reads from UserProfile first, then falls back to User.",
-    run: async () => {
+    run: async (ctx) => {
       const marker = `RegTest_${Date.now()}`;
-      const saveRes = await callFn("saveUserProfile", { email: ADMIN_EMAIL, forename: marker, middle_name: "", surname: "Clarke", phone: "", location: "" });
+      const saveRes = await callFn("saveUserProfile", { session_token: ctx.adminToken, email: ADMIN_EMAIL, forename: marker, middle_name: "", surname: "Clarke", phone: "", location: "" });
       if (!saveRes.success) return { pass: false, detail: `Save failed: ${saveRes.error}` };
       const readRes = await callFn("getUserProfile", { email: ADMIN_EMAIL });
       const readName = readRes.profile?.forename;
