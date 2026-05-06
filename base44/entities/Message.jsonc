@@ -65,7 +65,19 @@
   ],
   "rls": {
     "create": {
-      "data.sender_id": "{{user.id}}"
+      "$or": [
+        {
+          "data.sender_id": "{{user.id}}"
+        },
+        {
+          "data.receiver_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     },
     "read": {
       "$or": [
@@ -88,6 +100,9 @@
           "data.sender_id": "{{user.id}}"
         },
         {
+          "data.receiver_id": "{{user.id}}"
+        },
+        {
           "user_condition": {
             "role": "admin"
           }
@@ -95,9 +110,19 @@
       ]
     },
     "delete": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "$or": [
+        {
+          "data.sender_id": "{{user.id}}"
+        },
+        {
+          "data.receiver_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     }
   }
 }
