@@ -718,8 +718,8 @@ if (res.error?.includes("No such account")) return { pass: true, detail: "⚠️
   {
     id: "notif_resend_key_set",
     group: "Notifications",
-    label: "Notifications: RESEND_API_KEY is set — email delivery possible",
-    claudeHint: "Check Base44 Secrets — RESEND_API_KEY must be set. If missing, ALL email notifications silently fail. sendNotification creates in-app records but skips email.",
+    label: "Notifications: sendNotification — function reachable and validates input",
+    claudeHint: "This confirms sendNotification is deployed and responding. It does NOT verify RESEND_API_KEY is set — that must be checked manually in Base44 Secrets. If RESEND_API_KEY is missing, emails silently fail while in-app notifications still work.",
     run: async () => {
       // We test indirectly — sendNotification with force_email on a test call
       // If RESEND_API_KEY is missing, the function still returns success=true (it skips email silently)
