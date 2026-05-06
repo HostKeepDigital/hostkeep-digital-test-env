@@ -143,13 +143,7 @@
   ],
   "rls": {
     "create": {
-      "data.reviewer_id": "{{user.id}}"
-    },
-    "read": {
       "$or": [
-        {
-          "data.public_visible": true
-        },
         {
           "data.reviewer_id": "{{user.id}}"
         },
@@ -163,10 +157,14 @@
         }
       ]
     },
+    "read": {},
     "update": {
       "$or": [
         {
           "data.reviewer_id": "{{user.id}}"
+        },
+        {
+          "data.reviewee_id": "{{user.id}}"
         },
         {
           "user_condition": {
@@ -176,16 +174,9 @@
       ]
     },
     "delete": {
-      "$or": [
-        {
-          "data.reviewer_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "user_condition": {
+        "role": "admin"
+      }
     }
   }
 }
