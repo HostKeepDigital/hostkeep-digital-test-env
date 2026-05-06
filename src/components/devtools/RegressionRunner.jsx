@@ -526,6 +526,32 @@ if (res.error?.includes("No such account")) return { pass: true, detail: "⚠️
     },
   },
   {
+    id: "referral_full_chain", group: "Referral",
+    label: "Referral: generate → link → verify record exists in entity",
+    claudeHint: "Tests the full referral chain: generateReferralCode creates a code, linkReferral uses it, Referral entity has a record for the referee. Check base44/functions/linkReferral/entry.ts if linkReferral fails.",
+    run: async (ctx) => {
+      const userId = await getFallbackUserId(ctx);
+      if (!userId) return { pass: false, detail: "No user_id — admin session needed" };
+
+      // Step 1: generate (or retrieve existing) code
+      const genRes = await callFn("generateReferralCode", { session_token: ctx.adminToken, user_id: userId, email: ADMIN_EMAIL });
+      if (!genRes.ref_code) return { pass: false, detail: `generateReferralCode failed: ${genRes.error}` };
+
+      // Step 2: link a dummy referee to that code
+      const refereeEmail = `regression-referee-${Date.now()}@hostkeepdigital-test.invalid`;
+      const linkRes = await callFn("linkReferral", { ref_code: genRes.ref_code, referee_email: refereeEmail, referee_name: "Regression Test" });
+      if (!linkRes.success) return { pass: false, detail: `linkReferral failed: ${linkRes.error}` };
+
+      // Step 3: confirm record exists in entity
+      const records = await base44.entities.Referral.list("-created_date", 20);
+      const found = records.find(r => r.ref_code === genRes.ref_code);
+      return {
+        pass: !!found,
+        detail: `ref_code=${genRes.ref_code} link=${linkRes.success} record_found=${!!found}`,
+      };
+    },
+  },
+  {
     id: "host_get_allowed_nights", group: "Host",
     label: "Host: getAllowedNights — runs without crashing",
     claudeHint: "Check base44/functions/getAllowedNights/entry.ts — if returning HTML it is not deployed in Base44.",
