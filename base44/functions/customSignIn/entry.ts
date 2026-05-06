@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
         await new Promise(r => setTimeout(r, 500));
         return Response.json(
           { success: false, error: "invalid_credentials" },
-          { status: 401 }
+          { status: 200 }
         );
       }
       // Look up admin User record to get user_id for session
@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
       await new Promise(r => setTimeout(r, 500));
       return Response.json(
         { success: false, error: "invalid_credentials" },
-        { status: 401 }
+        { status: 200 }
       );
     }
 
@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
           error: "account_locked",
           message: `Too many failed attempts. Try again in ${unlockMinutes} minute${unlockMinutes === 1 ? "" : "s"}.`,
         },
-        { status: 429 }
+        { status: 200 }
       );
     }
 
@@ -122,12 +122,12 @@ Deno.serve(async (req) => {
             error: "account_locked",
             message: "Too many failed attempts. Your account has been locked for 15 minutes.",
           },
-          { status: 429 }
+          { status: 200 }
         );
       }
       return Response.json(
         { success: false, error: "invalid_credentials" },
-        { status: 401 }
+        { status: 200 }
       );
     }
 
@@ -191,7 +191,7 @@ Deno.serve(async (req) => {
       if (guestRecords?.[0]?.status === "blacklisted") {
         return Response.json(
           { success: false, error: "account_suspended", message: "Your account has been suspended. Please contact hello@hostkeepdigital.co.uk if you believe this is an error." },
-          { status: 403 }
+          { status: 200 }
         );
       }
     }
