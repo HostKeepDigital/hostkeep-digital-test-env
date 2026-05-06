@@ -259,8 +259,8 @@ const TESTS = [
     id: "profile_save_missing_fields", group: "Profile",
     label: "Profile: saveUserProfile — missing name fields returns error",
     claudeHint: "Check base44/functions/saveUserProfile/entry.ts — forename and surname required. Missing must return error not 500.",
-    run: async () => {
-      const res = await callFn("saveUserProfile", { email: ADMIN_EMAIL });
+    run: async (ctx) => {
+      const res = await callFn("saveUserProfile", { session_token: ctx.adminToken, email: ADMIN_EMAIL });
       return { pass: res.success === false || !!res.error, detail: `success=${res.success} error=${res.error}` };
     },
   },
