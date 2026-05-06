@@ -521,7 +521,7 @@ if (res.error?.includes("No such account")) return { pass: true, detail: "⚠️
     run: async (ctx) => {
       const userId = await getFallbackUserId(ctx);
       if (!userId) return { pass: false, detail: "No user_id available" };
-      const res = await callFn("generateReferralCode", { user_id: userId, email: ADMIN_EMAIL });
+      const res = await callFn("generateReferralCode", { session_token: ctx.adminToken, user_id: userId, email: ADMIN_EMAIL });
       return { pass: typeof res.ref_code === "string" && res.ref_code.length > 0, detail: `ref_code=${res.ref_code}` };
     },
   },
