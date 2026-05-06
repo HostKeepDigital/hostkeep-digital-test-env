@@ -58,6 +58,19 @@
     "create": {
       "$or": [
         {
+          "data.cleaner_id": {
+            "$in": {
+              "$query": {
+                "collection": "Cleaner",
+                "filter": {
+                  "data.user_id": "{{user.id}}"
+                },
+                "field": "id"
+              }
+            }
+          }
+        },
+        {
           "data.host_id": "{{user.id}}"
         },
         {
@@ -71,6 +84,19 @@
     "update": {
       "$or": [
         {
+          "data.cleaner_id": {
+            "$in": {
+              "$query": {
+                "collection": "Cleaner",
+                "filter": {
+                  "data.user_id": "{{user.id}}"
+                },
+                "field": "id"
+              }
+            }
+          }
+        },
+        {
           "data.host_id": "{{user.id}}"
         },
         {
@@ -81,16 +107,9 @@
       ]
     },
     "delete": {
-      "$or": [
-        {
-          "data.host_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "user_condition": {
+        "role": "admin"
+      }
     }
   }
 }
