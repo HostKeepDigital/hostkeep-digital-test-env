@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,11 +20,24 @@ import { useNavigate } from "react-router-dom";
 import { addUserRole, getUserRoles, hasRole } from "@/components/utils/roleHelpers";
 import { useAuth } from "@/lib/AuthContext";
 
-const BETA_ACTIVE = true; // Set to false when beta ends to remove capacity gating
+// BETA_ACTIVE is now driven by BetaSettings entity — toggled via Admin Panel
+// Default true keeps gating on until the fetch completes
 
 export default function CleanerSignup() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
+
+  const [BETA_ACTIVE, setBetaActive] = useState(true); // default true until fetched
+  useEffect(() => {
+    fetch("/api/apps/698eee4108bd1d9467648326/functions/getBetaSettings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    })
+      .then(r => r.json())
+      .then(res => { if (typeof res.beta_open === "boolean") setBetaActive(res.beta_open); })
+      .catch(() => {}); // keep default true on error
+  }, []);
 
   const [loading, setLoading] = useState(false);
   const [capacityResult, setCapacityResult] = useState(null);
