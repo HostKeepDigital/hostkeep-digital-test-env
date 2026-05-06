@@ -32,6 +32,7 @@ Deno.serve(async (req) => {
     let messageLink = "/GuestMessages";
     try {
       const receiverUser = await serviceRole.entities.User.get(message.receiver_id);
+      const receiverEmail = receiverUser?.email || null;
       const roles = await serviceRole.entities.UserRole.filter({ user_id: message.receiver_id, approval_status: "approved" });
       const isHost = roles.some((r) => r.role === "host");
       const isCleaner = roles.some((r) => r.role === "cleaner");
@@ -45,6 +46,7 @@ Deno.serve(async (req) => {
       title: `New message from ${senderName}`,
       body: message.content?.slice(0, 200) || "You have a new message.",
       link: messageLink,
+      email_to: receiverEmail,
     });
 
     return Response.json({ ok: true });
