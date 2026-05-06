@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const serviceRole = base44.asServiceRole;
 
-    const { email, password, forename, middle_name, surname, ref_code } = await req.json();
+    const { email, password, forename, middle_name, surname, ref_code } = await req.json().catch(() => ({}));
 
     if (!email || !password || !forename || !surname) {
       return Response.json(
