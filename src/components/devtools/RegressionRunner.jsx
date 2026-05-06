@@ -270,7 +270,7 @@ const TESTS = [
     claudeHint: "Check base44/functions/saveUserProfile/entry.ts — save may return success=true but not write to UserProfile entity. Also check getUserProfile reads from UserProfile first, then falls back to User.",
     run: async (ctx) => {
       const marker = `RegTest_${Date.now()}`;
-      const saveRes = await callFn("saveUserProfile", { session_token: ctx.adminToken, email: ADMIN_EMAIL, forename: marker, middle_name: "", surname: "Clarke", phone: "", location: "" });
+      const saveRes = await callFn("saveUserProfile", { session_token: ctx.adminToken, email: "regression-profile-test@hostkeepdigital-test.invalid", forename: marker, middle_name: "", surname: "Test", phone: "", location: "" });
       if (!saveRes.success) return { pass: false, detail: `Save failed: ${saveRes.error}` };
       const readRes = await callFn("getUserProfile", { session_token: ctx.adminToken, email: "regression-profile-test@hostkeepdigital-test.invalid" });
       const readName = readRes.profile?.forename;
