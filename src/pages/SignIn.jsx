@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
-import { base44 } from "@/api/base44Client";
 
+const APP_ID = "698eee4108bd1d9467648326";
 const CORNWALL_IMG = "https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/vecteezy_cornwall-coast-in-england_2524414.jpg";
 const LOGO_IMG = "https://raw.githubusercontent.com/HostKeepDigital/hostkeep-assets/main/HostKeep_Digital_Navy_Background.png";
 
@@ -22,27 +22,39 @@ export default function SignIn() {
     try {
       const isApp = localStorage.getItem("is_app") === "true";
 
-      const APP_ID = "698eee4108bd1d9467648326";
+      // Raw fetch — no Base44 SDK auth headers so Base44 treats this as a public call
       const raw = await fetch(`/api/apps/${APP_ID}/functions/customSignIn`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, is_app: isApp }),
       });
-      const data = await raw.json();
+
+      // Parse JSON safely — Base44 platform errors may not be JSON
+      let data;
+      try {
+        data = await raw.json();
+      } catch {
+        // Platform-level block (not our function) — treat as server error
+        setError("Something went wrong. Please try again.");
+        return;
+      }
 
       if (!data.success) {
-        // NEW — unverified guest
-        if (data.error === 'email_not_verified') {
+        if (data.error === "email_not_verified") {
           window.location.href = `/verify-email?email=${encodeURIComponent(data.email)}&role=guest`;
+          return;
+        }
+        if (data.error === "account_locked") {
+          setError(data.message || "Account locked. Too many failed attempts — try again in 15 minutes.");
           return;
         }
         const messages = {
           invalid_credentials: "Incorrect email or password.",
           missing_fields: "Please enter your email and password.",
+          account_suspended: "Your account has been suspended. Contact hello@hostkeepdigital.co.uk",
           server_error: "Something went wrong. Please try again.",
         };
-        const newAttempts = data.error === "invalid_credentials" ? failedAttempts + 1 : failedAttempts;
-        if (data.error === "invalid_credentials") setFailedAttempts(newAttempts);
+        if (data.error === "invalid_credentials") setFailedAttempts(f => f + 1);
         setError(messages[data.error] || "Unable to sign in. Please try again.");
         return;
       }
@@ -55,14 +67,10 @@ export default function SignIn() {
       const params = new URLSearchParams(window.location.search);
       const next = params.get("next");
       window.location.href = next || "/";
+
     } catch (err) {
-      if (err?.response?.status === 401 || err?.response?.data?.error === "invalid_credentials") {
-        setFailedAttempts((prev) => prev + 1);
-        setError("Incorrect email or password.");
-      } else {
-        console.error("SignIn error:", err);
-        setError("Something went wrong. Please try again.");
-      }
+      console.error("SignIn error:", err);
+      setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
