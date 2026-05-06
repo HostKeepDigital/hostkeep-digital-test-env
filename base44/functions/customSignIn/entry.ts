@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
     const adminEmails = ["admin@hostkeepdigital.co.uk"];
     if (adminEmails.includes(normalisedEmail)) {
       const adminPwd = Deno.env.get("ADMIN_PASSWORD") || "";
-      if (!adminPwd || password !== adminPwd) {
+        if (!adminPwd || password !== adminPwd) {
         await new Promise(r => setTimeout(r, 500));
         return Response.json(
           { success: false, error: "invalid_credentials" },
