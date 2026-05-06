@@ -1,115 +1,75 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { X, AlertTriangle } from "lucide-react";
+import { X, AlertTriangle, ExternalLink, Clock, CheckCircle2, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import DisputeEvidencePanel from "./DisputeEvidencePanel";
 
-export default function ComplaintDetailPanel({
-  complaint,
-  booking,
-  property,
-  host,
-  guest,
-  onClose,
-}) {
-  const [status, setStatus] = useState(complaint.status);
+const RESOLUTION_OPTIONS_DAMAGE = [
+  { value: "deposit_full_to_host", label: "Full deposit → host" },
+  { value: "deposit_partial_to_host", label: "Partial deposit → host" },
+  { value: "deposit_returned_to_guest", label: "Return deposit → guest" },
+  { value: "dismissed", label: "Dismiss claim" },
+];
+
+const RESOLUTION_OPTIONS_RENTAL = [
+  { value: "full_refund_to_guest", label: "Full refund → guest" },
+  { value: "partial_refund_to_guest", label: "Partial refund → guest" },
+  { value: "released_to_host", label: "Release full amount → host" },
+  { value: "dismissed", label: "Dismiss complaint" },
+];
+
+const STATUS_BADGE = {
+  open: "bg-amber-100 text-amber-800",
+  under_review: "bg-blue-100 text-blue-800",
+  resolved: "bg-green-100 text-green-800",
+  dismissed: "bg-gray-100 text-gray-600",
+};
+
+export default function ComplaintDetailPanel({ complaint, booking, property, host, guest, onClose, onResolved }) {
   const [resolution, setResolution] = useState(complaint.admin_resolution || "");
   const [amount, setAmount] = useState(complaint.admin_resolution_amount || 0);
   const [notes, setNotes] = useState(complaint.admin_notes || "");
   const [loading, setLoading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  const isDamageClaimRequest = complaint.complaint_type === "damage_claim";
+  const isDamage = complaint.complaint_type === "damage_claim";
+  const isResolved = ["resolved", "dismissed"].includes(complaint.status);
 
-  // Calculate max award based on guest_situation
+  const deposit = booking?.security_deposit || 0;
+  const totalRental = booking?.total_amount || 0;
+  const nights = booking?.nights || 0;
+  const nightsStayed = complaint.nights_stayed || 0;
+
   const getMaxAward = () => {
-    const totalRental = booking?.total_amount || 0;
-    const deposit = booking?.security_deposit || 0;
-    const nights = booking?.nights || 0;
-    const nightsStayed = complaint.nights_stayed || 0;
-
-    if (isDamageClaimRequest) {
-      return {
-        text: `Maximum award: £${deposit.toFixed(2)} (security deposit amount)`,
-        amount: deposit,
-      };
-    }
-
+    if (isDamage) return { text: `Max: £${deposit.toFixed(2)} (full deposit)`, amount: deposit };
     switch (complaint.guest_situation) {
       case "never_got_in":
       case "left_same_day":
-        return {
-          text: `Maximum award: Full refund (£${totalRental.toFixed(2)})`,
-          amount: totalRental,
-        };
+        return { text: `Max: £${totalRental.toFixed(2)} (full refund)`, amount: totalRental };
       case "left_early":
-        const prorata = ((nights - nightsStayed) / nights) * totalRental;
-        return {
-          text: `Maximum award: Pro-rata for unused nights (£${prorata.toFixed(2)})`,
-          amount: prorata,
-        };
-      case "still_in_property":
-        return {
-          text: "Maximum award: Partial refund only",
-          amount: 0,
-        };
+        const prorata = nights > 0 ? ((nights - nightsStayed) / nights) * totalRental : 0;
+        return { text: `Max: £${prorata.toFixed(2)} (pro-rata unused nights)`, amount: prorata };
       case "completed_stay":
-        const halfRefund = totalRental * 0.5;
-        return {
-          text: `Maximum award: 50% of rental (£${halfRefund.toFixed(2)})`,
-          amount: halfRefund,
-        };
+        return { text: `Max: £${(totalRental * 0.5).toFixed(2)} (50% goodwill)`, amount: totalRental * 0.5 };
       default:
-        return { text: "—", amount: 0 };
+        return { text: "Partial refund only", amount: 0 };
     }
   };
 
   const maxAward = getMaxAward();
 
-  // Calculate breakdown
-  const calculateBreakdown = () => {
-    const depositAmount = booking?.security_deposit || 0;
-    let guestAmount = 0;
-    let hostAmount = 0;
-    let remainingDeposit = depositAmount;
-
-    if (isDamageClaimRequest) {
-      // For damage claims, amount goes to host, remainder back to guest
-      hostAmount = Math.min(amount, depositAmount);
-      remainingDeposit = depositAmount - hostAmount;
-    } else {
-      // For rental disputes, amount goes to guest
-      guestAmount = amount;
+  const getBreakdown = () => {
+    if (isDamage) {
+      const hostAmt = Math.min(amount, deposit);
+      return { host: hostAmt, guest: deposit - hostAmt };
     }
-
-    return { guestAmount, hostAmount, remainingDeposit };
+    return { guest: amount, host: totalRental - amount };
   };
+  const breakdown = getBreakdown();
 
-  const breakdown = calculateBreakdown();
-
-  const getResolutionOptions = () => {
-    if (isDamageClaimRequest) {
-      return [
-        { value: "deposit_full_to_host", label: "Full deposit to host" },
-        { value: "deposit_partial_to_host", label: "Partial amount to host" },
-        { value: "deposit_returned_to_guest", label: "Return deposit to guest" },
-        { value: "dismissed", label: "Dismiss" },
-      ];
-    } else {
-      return [
-        { value: "full_refund_to_guest", label: "Full refund to guest" },
-        { value: "partial_refund_to_guest", label: "Partial refund to guest" },
-        { value: "released_to_host", label: "Release to host" },
-        { value: "dismissed", label: "Dismiss" },
-      ];
-    }
-  };
-
-  const handleConfirmResolution = async () => {
-    if (!resolution) {
-      toast.error("Please select a resolution");
-      return;
-    }
-
+  const handleResolve = async () => {
+    if (!resolution) { toast.error("Select a resolution type"); return; }
     setLoading(true);
     try {
       await base44.functions.invoke("resolveComplaint", {
@@ -120,335 +80,268 @@ export default function ComplaintDetailPanel({
         admin_resolution_amount: amount,
         admin_notes: notes,
       });
-      toast.success("Resolution confirmed. Stripe payments triggered and both parties notified.");
+      toast.success("Resolution confirmed — Stripe payments triggered, parties notified.");
+      onResolved?.();
       onClose();
     } catch (e) {
-      toast.error(`Resolution failed: ${e.message}`);
-      console.error(e);
+      toast.error(`Failed: ${e.message}`);
     }
     setLoading(false);
   };
 
+  const handleMarkUnderReview = async () => {
+    try {
+      await base44.entities.Complaint.update(complaint.id, { status: "under_review" });
+      toast.success("Marked as under review");
+      onResolved?.();
+    } catch (e) {
+      toast.error(e.message);
+    }
+  };
+
+  const resolutionOptions = isDamage ? RESOLUTION_OPTIONS_DAMAGE : RESOLUTION_OPTIONS_RENTAL;
+  const showAmount = ["deposit_partial_to_host", "partial_refund_to_guest"].includes(resolution);
+
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-end overflow-y-auto">
-      <div className="bg-white w-full max-w-2xl min-h-screen flex flex-col">
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-start justify-end overflow-y-auto">
+      <div className="bg-white w-full max-w-2xl min-h-screen flex flex-col shadow-2xl">
+
         {/* Header */}
-        <div className="border-b border-gray-200 p-6 flex items-center justify-between flex-shrink-0">
-          <h2 className="text-lg font-bold text-gray-900">Review Complaint</h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition"
-          >
-            <X className="w-5 h-5 text-gray-400" />
-          </button>
+        <div className="sticky top-0 bg-white z-10 border-b border-gray-200 px-6 py-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <h2 className="text-lg font-bold text-gray-900 truncate">
+              {isDamage ? "Damage Claim" : "Rental Dispute"}
+            </h2>
+            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${STATUS_BADGE[complaint.status] || "bg-gray-100 text-gray-600"}`}>
+              {complaint.status?.replace("_", " ")}
+            </span>
+            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${complaint.raised_by === "host" ? "bg-teal-100 text-teal-800" : "bg-blue-100 text-blue-800"}`}>
+              by {complaint.raised_by}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {complaint.status === "open" && (
+              <Button size="sm" variant="outline" onClick={handleMarkUnderReview} className="text-xs h-8">
+                <Clock className="w-3.5 h-3.5 mr-1" /> Mark Under Review
+              </Button>
+            )}
+            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition">
+              <X className="w-5 h-5 text-gray-400" />
+            </button>
+          </div>
         </div>
 
-        {/* Content */}
+        {/* Body */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-6 space-y-6">
-            {/* Booking Facts Section */}
-            <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">
-                Booking Facts
-              </h3>
-              <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Property:</span>
-                  <span className="font-medium text-gray-900">
-                    {property?.title || "—"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Guest:</span>
-                  <span className="font-medium text-gray-900">
-                    {guest?.full_name || booking?.guest_name || "—"} (
-                    {guest?.email || booking?.guest_email || "—"})
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Host:</span>
-                  <span className="font-medium text-gray-900">
-                    {host?.full_name || "—"} ({host?.email || "—"})
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Check-in / Check-out:</span>
-                  <span className="font-medium text-gray-900">
-                    {booking?.check_in && booking?.check_out
-                      ? `${new Date(booking.check_in).toLocaleDateString(
-                          "en-GB"
-                        )} – ${new Date(booking.check_out).toLocaleDateString(
-                          "en-GB"
-                        )}`
-                      : "—"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Total Nights:</span>
-                  <span className="font-medium text-gray-900">
-                    {booking?.nights || "—"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Nights Stayed:</span>
-                  <span className="font-medium text-gray-900">
-                    {complaint.nights_stayed || "—"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Guest Situation:</span>
-                  <span className="font-medium text-gray-900">
-                    {complaint.guest_situation
-                      ?.replace(/_/g, " ")
-                      .replace(/^./, c => c.toUpperCase()) || "—"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Total Rental Amount:</span>
-                  <span className="font-medium text-gray-900">
-                    £{booking?.total_amount?.toFixed(2) || "—"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Security Deposit:</span>
-                  <span className="font-medium text-gray-900">
-                    £{booking?.security_deposit?.toFixed(2) || "0.00"}
-                  </span>
-                </div>
-                {booking?.cancellation_policy_snapshot && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Cancellation Policy:</span>
-                    <span className="font-medium text-gray-900">
-                      {booking.cancellation_policy_snapshot.type ||
-                        booking.cancellation_policy_snapshot || "—"}
-                    </span>
-                  </div>
+
+            {/* Booking Summary */}
+            <section>
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Booking Facts</h3>
+              <div className="bg-gray-50 rounded-xl p-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                <Row label="Property" value={property?.title || "—"} />
+                <Row label="Guest" value={`${guest?.full_name || booking?.guest_name || "—"} · ${guest?.email || booking?.guest_email || "—"}`} />
+                <Row label="Host" value={`${host?.full_name || "—"} · ${host?.email || "—"}`} />
+                <Row label="Dates" value={booking ? `${fmt(booking.check_in)} – ${fmt(booking.check_out)}` : "—"} />
+                <Row label="Nights" value={booking?.nights ?? "—"} />
+                <Row label="Nights Stayed" value={complaint.nights_stayed ?? "—"} />
+                <Row label="Rental Total" value={booking ? `£${booking.total_amount?.toFixed(2)}` : "—"} />
+                <Row label="Security Deposit" value={`£${deposit.toFixed(2)}`} />
+                {complaint.guest_situation && (
+                  <Row label="Guest Situation" value={complaint.guest_situation.replace(/_/g, " ")} />
                 )}
               </div>
-            </div>
+            </section>
 
             {/* Claim Details */}
-            <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">
-                Claim Details
-              </h3>
-              <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
-                <div>
-                  <span className="text-gray-600">Category:</span>
-                  <span className="font-medium text-gray-900 ml-2">
-                    {complaint.category?.replace(/_/g, " ") || "—"}
-                  </span>
-                </div>
-                {complaint.specific_issue && (
-                  <div>
-                    <span className="text-gray-600">Specific Issue:</span>
-                    <span className="font-medium text-gray-900 ml-2">
-                      {complaint.specific_issue}
-                    </span>
-                  </div>
-                )}
+            <section>
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Claim Details</h3>
+              <div className="bg-gray-50 rounded-xl p-4 space-y-3 text-sm">
+                {complaint.category && <Row label="Category" value={complaint.category.replace(/_/g, " ")} />}
+                {complaint.specific_issue && <Row label="Specific Issue" value={complaint.specific_issue} />}
                 {complaint.description && (
                   <div>
-                    <p className="text-gray-600 mb-1">Description:</p>
-                    <p className="text-gray-900 bg-white p-2 rounded border border-gray-200">
+                    <p className="text-gray-500 text-xs mb-1">Description</p>
+                    <p className="bg-white border border-gray-200 rounded-lg p-3 text-gray-800 leading-relaxed">
                       {complaint.description}
                     </p>
                   </div>
                 )}
-                {complaint.evidence_urls && complaint.evidence_urls.length > 0 && (
-                  <div>
-                    <p className="text-gray-600 mb-1">Evidence:</p>
-                    <div className="flex flex-wrap gap-2">
-                      {complaint.evidence_urls.map((url, i) => (
-                        <a
-                          key={i}
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-20 h-20 rounded border border-gray-300 overflow-hidden hover:opacity-80"
-                        >
-                          <img
-                            src={url}
-                            alt={`Evidence ${i + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                        </a>
-                      ))}
-                    </div>
-                  </div>
+                {complaint.requested_resolution && (
+                  <Row
+                    label="Claimant Requests"
+                    value={`${complaint.requested_resolution.replace(/_/g, " ")}${complaint.requested_amount ? ` · £${complaint.requested_amount?.toFixed(2)}` : ""}`}
+                  />
                 )}
-                {isDamageClaimRequest && complaint.damage_items && (
+                {/* Damage items */}
+                {isDamage && complaint.damage_items?.length > 0 && (
                   <div>
-                    <p className="text-gray-600 mb-1">Itemised Damage:</p>
-                    <div className="bg-white p-2 rounded border border-gray-200 space-y-1">
+                    <p className="text-gray-500 text-xs mb-1">Itemised Damage</p>
+                    <div className="bg-white border border-gray-200 rounded-lg divide-y divide-gray-100">
                       {complaint.damage_items.map((item, i) => (
-                        <div
-                          key={i}
-                          className="flex justify-between text-sm"
-                        >
-                          <span>{item.item_name}</span>
-                          <span className="font-medium">
-                            £{item.cost?.toFixed(2) || "0.00"}
-                          </span>
+                        <div key={i} className="flex justify-between px-3 py-2 text-sm">
+                          <span className="text-gray-700">{item.item_name}</span>
+                          <span className="font-medium text-gray-900">£{item.cost?.toFixed(2)}</span>
                         </div>
                       ))}
-                      <div className="border-t border-gray-200 pt-1 mt-1 flex justify-between font-medium">
+                      <div className="flex justify-between px-3 py-2 text-sm font-semibold bg-gray-50">
                         <span>Total Claimed</span>
-                        <span>
-                          £{complaint.damage_total_claimed?.toFixed(2) || "0.00"}
-                        </span>
+                        <span>£{complaint.damage_total_claimed?.toFixed(2)}</span>
                       </div>
                     </div>
                   </div>
                 )}
-                {complaint.requested_resolution && (
-                  <div>
-                    <span className="text-gray-600">Claimant Requested:</span>
-                    <span className="font-medium text-gray-900 ml-2">
-                      {complaint.requested_resolution?.replace(/_/g, " ")}
-                    </span>
-                    {complaint.requested_amount > 0 && (
-                      <span className="font-medium text-gray-900 ml-2">
-                        £{complaint.requested_amount?.toFixed(2) || "0.00"}
-                      </span>
-                    )}
-                  </div>
-                )}
               </div>
-            </div>
+            </section>
 
-            {/* System Max Award */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-sm font-medium text-blue-900">
-                {maxAward.text}
-              </p>
-            </div>
+            {/* Evidence & Party Responses */}
+            <section>
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Evidence & Responses</h3>
+              <DisputeEvidencePanel
+                key={refreshKey}
+                complaint={complaint}
+                bookingGuestId={booking?.guest_id}
+                bookingHostId={booking?.host_id}
+                currentUserId={null}
+                isAdmin={true}
+                onUpdated={() => setRefreshKey(k => k + 1)}
+              />
+            </section>
 
-            {/* Resolution Panel */}
-            <div className="border-t border-gray-200 pt-6">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">
-                Resolution
-              </h3>
+            {/* Max award guidance */}
+            {!isResolved && (
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <p className="text-sm font-semibold text-blue-900">{maxAward.text}</p>
+              </div>
+            )}
 
-              <div className="space-y-4">
-                {/* Status */}
+            {/* Resolution */}
+            {!isResolved ? (
+              <section className="border-t border-gray-200 pt-6 space-y-4">
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Admin Resolution</h3>
+
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Status
-                  </label>
-                  <select
-                    value={status}
-                    onChange={e => setStatus(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg p-2 text-sm"
-                  >
-                    <option value="open">Open</option>
-                    <option value="under_review">Under Review</option>
-                    <option value="resolved">Resolved</option>
-                    <option value="dismissed">Dismissed</option>
-                  </select>
-                </div>
-
-                {/* Resolution Type */}
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Resolution Type
-                  </label>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Resolution Type</label>
                   <select
                     value={resolution}
                     onChange={e => setResolution(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg p-2 text-sm"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
                   >
                     <option value="">— Select resolution —</option>
-                    {getResolutionOptions().map(opt => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
+                    {resolutionOptions.map(o => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
                     ))}
                   </select>
                 </div>
 
-                {/* Amount (if partial selected) */}
-                {(resolution === "deposit_partial_to_host" ||
-                  resolution === "partial_refund_to_guest") && (
+                {showAmount && (
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Amount (£)
+                      Amount (£) — max £{maxAward.amount.toFixed(2)}
                     </label>
                     <input
                       type="number"
                       value={amount}
-                      onChange={e => setAmount(parseFloat(e.target.value) || 0)}
+                      min={0}
                       max={maxAward.amount}
-                      className="w-full border border-gray-300 rounded-lg p-2 text-sm"
+                      step={0.01}
+                      onChange={e => setAmount(parseFloat(e.target.value) || 0)}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
                     />
                   </div>
                 )}
 
-                {/* Breakdown */}
-                {amount > 0 && (
-                  <div className="bg-gray-50 rounded-lg p-3 space-y-1 text-sm">
-                    {isDamageClaimRequest ? (
+                {/* Breakdown preview */}
+                {resolution && resolution !== "dismissed" && (
+                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-2 text-sm">
+                    <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Payment Preview</p>
+                    {isDamage ? (
                       <>
                         <div className="flex justify-between">
-                          <span className="text-gray-600">Host receives:</span>
-                          <span className="font-medium text-gray-900">
-                            £{breakdown.hostAmount.toFixed(2)}
-                          </span>
+                          <span className="text-gray-600">Host receives</span>
+                          <span className="font-semibold text-gray-900">£{breakdown.host.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-600">
-                            Remaining deposit to guest:
-                          </span>
-                          <span className="font-medium text-gray-900">
-                            £{breakdown.remainingDeposit.toFixed(2)}
-                          </span>
+                          <span className="text-gray-600">Guest receives (deposit remainder)</span>
+                          <span className="font-semibold text-gray-900">£{breakdown.guest.toFixed(2)}</span>
                         </div>
                       </>
                     ) : (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Guest receives:</span>
-                        <span className="font-medium text-gray-900">
-                          £{breakdown.guestAmount.toFixed(2)}
-                        </span>
-                      </div>
+                      <>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Guest receives</span>
+                          <span className="font-semibold text-gray-900">£{breakdown.guest.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Host receives</span>
+                          <span className="font-semibold text-gray-900">£{Math.max(0, breakdown.host).toFixed(2)}</span>
+                        </div>
+                      </>
                     )}
                   </div>
                 )}
 
-                {/* Admin Notes */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Internal Admin Notes
-                  </label>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Internal Admin Notes</label>
                   <textarea
                     value={notes}
                     onChange={e => setNotes(e.target.value)}
-                    placeholder="Internal notes only — not shown to parties"
-                    className="w-full border border-gray-300 rounded-lg p-2 text-sm h-20 resize-none"
+                    placeholder="Notes for internal use only — not shown to parties"
+                    rows={3}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-teal-400"
                   />
                 </div>
 
-                {/* Warning */}
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex gap-3">
-                  <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex gap-2.5">
+                  <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
                   <p className="text-xs text-red-700">
-                    This action is irreversible. Stripe payments will fire immediately upon confirmation.
+                    This action is <strong>irreversible</strong>. Stripe payments fire immediately. Both parties will be notified by email.
                   </p>
                 </div>
 
-                {/* Confirm Button */}
                 <Button
-                  onClick={handleConfirmResolution}
+                  onClick={handleResolve}
                   disabled={loading || !resolution}
-                  className="w-full h-10 bg-[#0d9488] hover:bg-[#0f766e] text-white font-medium"
+                  className="w-full h-10 bg-[#0d9488] hover:bg-[#0f766e] text-white font-semibold"
                 >
-                  {loading ? "Processing..." : "Confirm Resolution"}
+                  {loading ? "Processing…" : "Confirm Resolution"}
                 </Button>
-              </div>
-            </div>
+              </section>
+            ) : (
+              <section className="border-t border-gray-200 pt-6">
+                <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl p-4">
+                  <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-semibold text-green-900">
+                      Resolved: {complaint.admin_resolution?.replace(/_/g, " ")}
+                    </p>
+                    {complaint.admin_resolution_amount > 0 && (
+                      <p className="text-xs text-green-700">Amount: £{complaint.admin_resolution_amount?.toFixed(2)}</p>
+                    )}
+                    {complaint.admin_notes && (
+                      <p className="text-xs text-green-700 mt-1">Notes: {complaint.admin_notes}</p>
+                    )}
+                  </div>
+                </div>
+              </section>
+            )}
           </div>
         </div>
       </div>
     </div>
   );
+}
+
+function Row({ label, value }) {
+  return (
+    <div className="col-span-1">
+      <span className="text-gray-500">{label}: </span>
+      <span className="font-medium text-gray-900">{value}</span>
+    </div>
+  );
+}
+
+function fmt(d) {
+  if (!d) return "—";
+  return new Date(d).toLocaleDateString("en-GB");
 }

@@ -1,9 +1,12 @@
 import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
 import { Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import BookingCard from "@/components/bookings/BookingCard";
 import DepositReturnTimer from "@/components/bookings/DepositReturnTimer";
 import ReviewsDialog from "@/components/reviews/ReviewsDialog";
+import DisputeEvidenceUploader from "@/components/bookings/DisputeEvidenceUploader";
 
 export default function BookingFilterList({
   bookings,
@@ -30,6 +33,22 @@ export default function BookingFilterList({
   setDamageClaimBooking,
 }) {
   const [activeFilter, setActiveFilter] = useState("all");
+  const queryClient = useQueryClient();
+
+  // Load open complaints for these bookings so we can show the evidence uploader
+  const bookingIds = bookings.map(b => b.id);
+  const { data: openComplaints = [], refetch: refetchComplaints } = useQuery({
+    queryKey: ["open-complaints-for-bookings", bookingIds.join(",")],
+    queryFn: async () => {
+      if (!bookingIds.length) return [];
+      const all = await base44.entities.Complaint.list("-created_date", 200);
+      return all.filter(c => bookingIds.includes(c.booking_id) && ["open", "under_review"].includes(c.status));
+    },
+    enabled: bookingIds.length > 0,
+  });
+
+  const getComplaintForBooking = (bookingId) =>
+    openComplaints.find(c => c.booking_id === bookingId) || null;
 
   const actionCount = awaitingDecision.length + awaitingPayment.length;
 
@@ -171,6 +190,20 @@ export default function BookingFilterList({
                       )}
                     </div>
                   )}
+
+                  {/* Open dispute — evidence uploader */}
+                  {(() => {
+                    const complaint = getComplaintForBooking(booking.id);
+                    if (!complaint) return null;
+                    return (
+                      <div className="mt-3 pt-3 border-t border-gray-100">
+                        <DisputeEvidenceUploader
+                          complaint={complaint}
+                          onUpdated={() => refetchComplaints()}
+                        />
+                      </div>
+                    );
+                  })()}
 
                   {/* Completed: review actions */}
                   {isCompleted && (
