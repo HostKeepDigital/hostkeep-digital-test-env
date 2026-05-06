@@ -107,7 +107,30 @@
     "create": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
+          "data.property_id": {
+            "$in": {
+              "$query": {
+                "collection": "Property",
+                "filter": {
+                  "data.owner_id": "{{user.id}}"
+                },
+                "field": "id"
+              }
+            }
+          }
+        },
+        {
+          "data.booking_id": {
+            "$in": {
+              "$query": {
+                "collection": "Booking",
+                "filter": {
+                  "data.guest_id": "{{user.id}}"
+                },
+                "field": "id"
+              }
+            }
+          }
         },
         {
           "user_condition": {
@@ -119,7 +142,30 @@
     "read": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
+          "data.property_id": {
+            "$in": {
+              "$query": {
+                "collection": "Property",
+                "filter": {
+                  "data.owner_id": "{{user.id}}"
+                },
+                "field": "id"
+              }
+            }
+          }
+        },
+        {
+          "data.booking_id": {
+            "$in": {
+              "$query": {
+                "collection": "Booking",
+                "filter": {
+                  "data.guest_id": "{{user.id}}"
+                },
+                "field": "id"
+              }
+            }
+          }
         },
         {
           "user_condition": {
@@ -129,28 +175,14 @@
       ]
     },
     "update": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "user_condition": {
+        "role": "admin"
+      }
     },
     "delete": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "user_condition": {
+        "role": "admin"
+      }
     }
   }
 }
