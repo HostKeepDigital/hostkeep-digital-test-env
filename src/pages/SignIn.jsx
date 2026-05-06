@@ -22,8 +22,13 @@ export default function SignIn() {
     try {
       const isApp = localStorage.getItem("is_app") === "true";
 
-      const res = await base44.functions.invoke("customSignIn", { email, password, is_app: isApp });
-      const data = res.data;
+      const APP_ID = "698eee4108bd1d9467648326";
+      const raw = await fetch(`/api/apps/${APP_ID}/functions/customSignIn`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, is_app: isApp }),
+      });
+      const data = await raw.json();
 
       if (!data.success) {
         // NEW — unverified guest
