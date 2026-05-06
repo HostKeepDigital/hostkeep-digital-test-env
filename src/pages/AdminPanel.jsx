@@ -361,6 +361,45 @@ export default function AdminPanel() {
 
   const canDelete = true; // Admin panel already requires admin role
 
+  // ── BETA MODE TOGGLE ──────────────────────────────────────────────────────
+  const [betaMode, setBetaMode] = useState(null); // null = loading
+  const [betaToggling, setBetaToggling] = useState(false);
+
+  const APP_ID = "698eee4108bd1d9467648326";
+  const callFn = async (name, body = {}) => {
+    const res = await fetch(`/api/apps/${APP_ID}/functions/${name}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    return res.json();
+  };
+
+  useEffect(() => {
+    callFn("getBetaSettings").then(res => {
+      setBetaMode(res.beta_open !== undefined ? res.beta_open : true);
+    }).catch(() => setBetaMode(true));
+  }, []);
+
+  const handleBetaToggle = async () => {
+    if (betaToggling) return;
+    const sessionToken = localStorage.getItem("session_token");
+    const newValue = !betaMode;
+    setBetaToggling(true);
+    try {
+      const res = await callFn("setBetaActive", { session_token: sessionToken, beta_open: newValue });
+      if (res.success) {
+        setBetaMode(newValue);
+        toast.success(`Beta mode ${newValue ? "enabled" : "disabled"}`);
+      } else {
+        toast.error(res.error || "Failed to update beta mode");
+      }
+    } catch {
+      toast.error("Failed to update beta mode");
+    }
+    setBetaToggling(false);
+  };
+
   const [members,       setMembers      ] = useState([]);
   const [loading,       setLoading      ] = useState(true);
   const [actionLoading, setActionLoading] = useState({});
@@ -1037,6 +1076,33 @@ const handleDocBan = async (member) => {
             <RefreshCw className={`w-3.5 h-3.5 ${(loading||crmLoading) ? "animate-spin" : ""}`} />
             Refresh
           </Button>
+        </div>
+
+        {/* ── BETA MODE BAR ──────────────────────────────────────────────── */}
+        <div className={`flex items-center justify-between px-6 py-2.5 border-t text-sm ${betaMode ? "bg-amber-50 border-amber-200" : "bg-gray-50 border-gray-200"}`}>
+          <div className="flex items-center gap-3">
+            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${betaMode === null ? "bg-gray-300 animate-pulse" : betaMode ? "bg-amber-500" : "bg-gray-400"}`} />
+            <span className={`font-semibold ${betaMode ? "text-amber-800" : "text-gray-500"}`}>
+              Beta Mode: {betaMode === null ? "Loading…" : betaMode ? "ON" : "OFF"}
+            </span>
+            <span className={`text-xs ${betaMode ? "text-amber-700" : "text-gray-400"}`}>
+              {betaMode
+                ? "Cornwall-only postcode restrictions · founding caps · capacity gating active"
+                : "No postcode restrictions · standard onboarding · no capacity gating"}
+            </span>
+          </div>
+          <button
+            onClick={handleBetaToggle}
+            disabled={betaToggling || betaMode === null}
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50 ${
+              betaMode
+                ? "bg-amber-500 hover:bg-amber-600 text-white"
+                : "bg-[#1E3A5F] hover:bg-[#16304f] text-white"
+            }`}
+          >
+            {betaToggling && <div className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />}
+            {betaMode ? "Switch to Live Mode" : "Switch to Beta Mode"}
+          </button>
         </div>
 
         {/* Tabs */}
