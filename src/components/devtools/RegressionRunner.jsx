@@ -547,6 +547,11 @@ if (res.error?.includes("No such account")) return { pass: true, detail: "⚠️
       } catch (_) {}
 
       // Step 3: link a dummy referee to that code
+      const refereeEmail = `regression-referee-${Date.now()}@hostkeepdigital-test.invalid`;
+      const linkRes = await callFn("linkReferral", { ref_code: genRes.ref_code, referee_email: refereeEmail, referee_name: "Regression Test" });
+      if (!linkRes.success) return { pass: false, detail: `linkReferral failed: ${linkRes.error}` };
+
+      // Step 4: confirm record exists in entity
       const records = await base44.entities.Referral.list("-created_date", 20);
       const found = records.find(r => r.ref_code === genRes.ref_code);
       return {
