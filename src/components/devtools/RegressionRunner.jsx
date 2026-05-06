@@ -116,7 +116,7 @@ const TESTS = [
     claudeHint: "Check base44/functions/checkUserExists/entry.ts — UserCredentials filter by email may be failing.",
     run: async () => {
       const res = await callFn("checkUserExists", { email: ADMIN_EMAIL });
-      { pass: res.exists === false || res.exists === true, detail `exists=${res.exists} (admin has no UserCredentials — exists=false is correct)` };
+      return { pass: res.exists === false || res.exists === true, detail: `exists=${res.exists} (admin has no UserCredentials — exists=false is correct)` };''
     },
   },
   {
