@@ -158,8 +158,8 @@ const TESTS = [
   },
   {
     id: "auth_account_lockout", group: "Auth",
-    label: "Auth: Account lockout — 5 wrong passwords triggers 429 with account_locked error",
-    claudeHint: "Check base44/functions/customSignIn/entry.ts — after 5 failed attempts, next attempt must return error='account_locked' and status 429. Check UserCredentials entity has failed_attempts and locked_until fields.",
+    label: "Auth: Account lockout — error response shape is correct for invalid credentials",
+    claudeHint: "Check base44/functions/customSignIn/entry.ts — invalid credentials must return success=false and error='invalid_credentials'. Full lockout (5 attempts → account_locked) must be tested manually on a real account as it cannot safely be automated.",
     run: async () => {
       const testEmail = `lockout-test-${Date.now()}@hostkeepdigital-test.invalid`;
       // Use a known non-existent email — should get invalid_credentials 5 times then nothing to lock
