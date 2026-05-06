@@ -59,11 +59,7 @@
     "create": {
       "$or": [
         {
-          "data.participants": {
-            "$in": [
-              "{{user.id}}"
-            ]
-          }
+          "data.participants": "{{user.id}}"
         },
         {
           "user_condition": {
@@ -75,11 +71,7 @@
     "read": {
       "$or": [
         {
-          "data.participants": {
-            "$in": [
-              "{{user.id}}"
-            ]
-          }
+          "data.participants": "{{user.id}}"
         },
         {
           "user_condition": {
@@ -91,6 +83,9 @@
     "update": {
       "$or": [
         {
+          "data.participants": "{{user.id}}"
+        },
+        {
           "user_condition": {
             "role": "admin"
           }
@@ -99,6 +94,9 @@
     },
     "delete": {
       "$or": [
+        {
+          "data.participants": "{{user.id}}"
+        },
         {
           "user_condition": {
             "role": "admin"
