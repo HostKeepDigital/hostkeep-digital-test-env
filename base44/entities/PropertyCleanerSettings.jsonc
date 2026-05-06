@@ -115,7 +115,30 @@
           "data.host_id": "{{user.id}}"
         },
         {
-          "data.default_cleaner_id": "{{user.id}}"
+          "data.property_id": {
+            "$in": {
+              "$query": {
+                "collection": "Property",
+                "filter": {
+                  "data.owner_id": "{{user.id}}"
+                },
+                "field": "id"
+              }
+            }
+          }
+        },
+        {
+          "data.default_cleaner_id": {
+            "$in": {
+              "$query": {
+                "collection": "Cleaner",
+                "filter": {
+                  "data.user_id": "{{user.id}}"
+                },
+                "field": "id"
+              }
+            }
+          }
         },
         {
           "user_condition": {
