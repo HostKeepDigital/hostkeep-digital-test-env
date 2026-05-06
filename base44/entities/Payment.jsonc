@@ -42,14 +42,62 @@
   ],
   "rls": {
     "create": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "$or": [
+        {
+          "data.booking_id": {
+            "$in": {
+              "$query": {
+                "collection": "Booking",
+                "filter": {
+                  "$or": [
+                    {
+                      "data.guest_id": "{{user.id}}"
+                    },
+                    {
+                      "data.host_id": "{{user.id}}"
+                    }
+                  ]
+                },
+                "field": "id"
+              }
+            }
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     },
     "read": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "$or": [
+        {
+          "data.booking_id": {
+            "$in": {
+              "$query": {
+                "collection": "Booking",
+                "filter": {
+                  "$or": [
+                    {
+                      "data.guest_id": "{{user.id}}"
+                    },
+                    {
+                      "data.host_id": "{{user.id}}"
+                    }
+                  ]
+                },
+                "field": "id"
+              }
+            }
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     },
     "update": {
       "user_condition": {
