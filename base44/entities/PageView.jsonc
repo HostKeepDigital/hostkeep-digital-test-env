@@ -14,7 +14,7 @@
   },
   "required": [],
   "rls": {
-    "create": true,
+    "create": {},
     "read": {
       "user_condition": {
         "role": "admin"
