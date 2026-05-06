@@ -1155,6 +1155,7 @@ export default function RegressionRunner() {
       const elapsed = Date.now() - start;
       resultLog.push({ ...result, label: test.label, id: test.id, group: test.group, elapsed, claudeHint: test.claudeHint });
       setResults([...resultLog]);
+      await new Promise(r => setTimeout(r, 300));
     }
     setCurrentTest(null);
     setRunning(false);
