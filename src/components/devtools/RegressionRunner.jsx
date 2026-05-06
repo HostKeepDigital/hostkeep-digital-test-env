@@ -272,7 +272,7 @@ const TESTS = [
       const marker = `RegTest_${Date.now()}`;
       const saveRes = await callFn("saveUserProfile", { session_token: ctx.adminToken, email: ADMIN_EMAIL, forename: marker, middle_name: "", surname: "Clarke", phone: "", location: "" });
       if (!saveRes.success) return { pass: false, detail: `Save failed: ${saveRes.error}` };
-      const readRes = await callFn("getUserProfile", { session_token: ctx.adminToken, email: ADMIN_EMAIL });
+      const readRes = await callFn("getUserProfile", { session_token: ctx.adminToken, email: "regression-profile-test@hostkeepdigital-test.invalid" });
       const readName = readRes.profile?.forename;
       return { pass: readRes.success === true && readName === marker, detail: `wrote=${marker} read=${readName}` };
     },
