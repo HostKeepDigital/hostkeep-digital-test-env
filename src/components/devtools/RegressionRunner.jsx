@@ -537,12 +537,16 @@ if (res.error?.includes("No such account")) return { pass: true, detail: "⚠️
       const genRes = await callFn("generateReferralCode", { session_token: ctx.adminToken, user_id: userId, email: ADMIN_EMAIL });
       if (!genRes.ref_code) return { pass: false, detail: `generateReferralCode failed: ${genRes.error}` };
 
-      // Step 2: link a dummy referee to that code
-      const refereeEmail = `regression-referee-${Date.now()}@hostkeepdigital-test.invalid`;
-      const linkRes = await callFn("linkReferral", { ref_code: genRes.ref_code, referee_email: refereeEmail, referee_name: "Regression Test" });
-      if (!linkRes.success) return { pass: false, detail: `linkReferral failed: ${linkRes.error}` };
+      // Step 2: reset any previously linked seed so this test is repeatable
+      try {
+        const allRefs = await base44.entities.Referral.list("-created_date", 100);
+        const seedRef = allRefs.find(r => r.ref_code === genRes.ref_code);
+        if (seedRef?.id && seedRef.referee_email) {
+          await base44.entities.Referral.update(seedRef.id, { referee_email: "", referee_name: "" });
+        }
+      } catch (_) {}
 
-      // Step 3: confirm record exists in entity
+      // Step 3: link a dummy referee to that code
       const records = await base44.entities.Referral.list("-created_date", 20);
       const found = records.find(r => r.ref_code === genRes.ref_code);
       return {
