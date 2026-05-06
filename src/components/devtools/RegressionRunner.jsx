@@ -760,8 +760,8 @@ if (res.error?.includes("No such account")) return { pass: true, detail: "⚠️
         const notifs = await base44.entities.Notification.list("-created_date", 200);
         const found = notifs.filter(n => n.type === "booking_request");
         return {
-          pass: found.length > 0,
-          detail: `booking_request_notifications=${found.length} — make a test booking to populate if 0`,
+          pass: hostNotifs.length > 0 && guestNotifs.length > 0,
+          detail: `booking_confirmed_total=${found.length} host=${hostNotifs.length} guest=${guestNotifs.length} (expect ≥1 each — failing means one party is not being notified)`,
         };
       } catch (e) { return { pass: false, detail: e.message }; }
     },
@@ -803,15 +803,17 @@ if (res.error?.includes("No such account")) return { pass: true, detail: "⚠️
   {
     id: "notif_booking_cancelled_fires",
     group: "Notifications",
-    label: "Notifications: booking_cancelled — fires for guest and host",
-    claudeHint: "Check base44/functions/onBookingCreated/entry.ts — on status=cancelled, both guest (email) and host must be notified.",
+    label: "Notifications: booking_cancelled — fires for BOTH guest and host",
+    claudeHint: "Check base44/functions/onBookingCreated/entry.ts — on status=cancelled, guest must get /MyTrips link and host must get /HostBookings link. If only one party is present, check the cancelled handler in onBookingCreated.",
     run: async () => {
       try {
         const notifs = await base44.entities.Notification.list("-created_date", 200);
         const found = notifs.filter(n => n.type === "booking_cancelled");
+        const hostNotifs = found.filter(n => n.link === "/HostBookings");
+        const guestNotifs = found.filter(n => n.link === "/MyTrips");
         return {
-          pass: found.length > 0,
-          detail: `booking_cancelled_notifications=${found.length}`,
+          pass: hostNotifs.length > 0 && guestNotifs.length > 0,
+          detail: `booking_cancelled_total=${found.length} host=${hostNotifs.length} guest=${guestNotifs.length} (expect ≥1 each — failing means one party is not being notified)`,
         };
       } catch (e) { return { pass: false, detail: e.message }; }
     },
