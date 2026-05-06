@@ -283,10 +283,10 @@
     "create": {
       "$or": [
         {
-          "data.host_id": "{{user.id}}"
+          "data.guest_id": "{{user.id}}"
         },
         {
-          "data.guest_id": "{{user.id}}"
+          "data.host_id": "{{user.id}}"
         },
         {
           "user_condition": {
@@ -298,10 +298,10 @@
     "read": {
       "$or": [
         {
-          "data.host_id": "{{user.id}}"
+          "data.guest_id": "{{user.id}}"
         },
         {
-          "data.guest_id": "{{user.id}}"
+          "data.host_id": "{{user.id}}"
         },
         {
           "user_condition": {
@@ -313,10 +313,10 @@
     "update": {
       "$or": [
         {
-          "data.host_id": "{{user.id}}"
+          "data.guest_id": "{{user.id}}"
         },
         {
-          "data.guest_id": "{{user.id}}"
+          "data.host_id": "{{user.id}}"
         },
         {
           "user_condition": {
@@ -328,10 +328,10 @@
     "delete": {
       "$or": [
         {
-          "data.host_id": "{{user.id}}"
+          "data.guest_id": "{{user.id}}"
         },
         {
-          "data.guest_id": "{{user.id}}"
+          "data.host_id": "{{user.id}}"
         },
         {
           "user_condition": {
