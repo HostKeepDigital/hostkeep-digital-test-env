@@ -63,7 +63,20 @@
     "create": {
       "$or": [
         {
-          "data.sender_id": "{{user.id}}"
+          "data.cleaner_id": {
+            "$in": {
+              "$query": {
+                "collection": "Cleaner",
+                "filter": {
+                  "data.user_id": "{{user.id}}"
+                },
+                "field": "id"
+              }
+            }
+          }
+        },
+        {
+          "data.host_id": "{{user.id}}"
         },
         {
           "user_condition": {
@@ -75,7 +88,17 @@
     "read": {
       "$or": [
         {
-          "data.cleaner_id": "{{user.id}}"
+          "data.cleaner_id": {
+            "$in": {
+              "$query": {
+                "collection": "Cleaner",
+                "filter": {
+                  "data.user_id": "{{user.id}}"
+                },
+                "field": "id"
+              }
+            }
+          }
         },
         {
           "data.host_id": "{{user.id}}"
@@ -90,7 +113,20 @@
     "update": {
       "$or": [
         {
-          "data.sender_id": "{{user.id}}"
+          "data.cleaner_id": {
+            "$in": {
+              "$query": {
+                "collection": "Cleaner",
+                "filter": {
+                  "data.user_id": "{{user.id}}"
+                },
+                "field": "id"
+              }
+            }
+          }
+        },
+        {
+          "data.host_id": "{{user.id}}"
         },
         {
           "user_condition": {
@@ -102,7 +138,20 @@
     "delete": {
       "$or": [
         {
-          "data.sender_id": "{{user.id}}"
+          "data.cleaner_id": {
+            "$in": {
+              "$query": {
+                "collection": "Cleaner",
+                "filter": {
+                  "data.user_id": "{{user.id}}"
+                },
+                "field": "id"
+              }
+            }
+          }
+        },
+        {
+          "data.host_id": "{{user.id}}"
         },
         {
           "user_condition": {
