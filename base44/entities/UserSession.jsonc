@@ -33,11 +33,28 @@
     "email"
   ],
   "rls": {
-    "create": {},
+    "create": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "data.email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
     "read": {
       "$or": [
         {
           "data.user_id": "{{user.id}}"
+        },
+        {
+          "data.email": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -52,6 +69,9 @@
           "data.user_id": "{{user.id}}"
         },
         {
+          "data.email": "{{user.email}}"
+        },
+        {
           "user_condition": {
             "role": "admin"
           }
@@ -62,6 +82,9 @@
       "$or": [
         {
           "data.user_id": "{{user.id}}"
+        },
+        {
+          "data.email": "{{user.email}}"
         },
         {
           "user_condition": {
