@@ -387,7 +387,7 @@ export default function AdminPanel() {
     const newValue = !betaMode;
     setBetaToggling(true);
     try {
-      const res = await callFn("setBetaActive", { session_token: sessionToken, beta_open: newValue });
+      const res = await callFn("Setbetaactive", { session_token: sessionToken, beta_open: newValue });
       if (res.success) {
         setBetaMode(newValue);
         toast.success(`Beta mode ${newValue ? "enabled" : "disabled"}`);
