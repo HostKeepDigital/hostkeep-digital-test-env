@@ -1,11 +1,11 @@
-import { createClientFromRequest } from "npm:@base44/sdk@0.8.25";
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 async function hashPassword(password, salt) {
   const encoder = new TextEncoder();
   const data = encoder.encode(password + salt);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 Deno.serve(async (req) => {
@@ -13,164 +13,122 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const serviceRole = base44.asServiceRole;
 
-    const body = await req.json();
-    const { email, password, is_app } = body || {};
+    const { email, password, forename, middle_name, surname, ref_code } = await req.json();
 
-    if (!email || !password) {
+    if (!email || !password || !forename || !surname) {
       return Response.json(
-        { success: false, error: "missing_fields" },
+        { success: false, message: 'Email, password, forename, and surname are required' },
         { status: 400 }
       );
     }
 
+    if (forename.length > 100 || surname.length > 100) {
+      return Response.json({ success: false, error: "Name fields cannot exceed 100 characters" }, { status: 400 });
+    }
+    if ((middle_name || "").length > 100) {
+      return Response.json({ success: false, error: "Middle name cannot exceed 100 characters" }, { status: 400 });
+    }
+    if (password.length > 128) {
+      return Response.json({ success: false, error: "Password cannot exceed 128 characters" }, { status: 400 });
+    }
+    if (password.length < 8) {
+      return Response.json({ success: false, error: "Password must be at least 8 characters" }, { status: 400 });
+    }
+
     const normalisedEmail = email.toLowerCase().trim();
-
-    const credentials = await serviceRole.entities.UserCredentials.filter({
-      email: normalisedEmail,
-    });
-    const cred = credentials?.[0];
-
-    if (!cred) {
+    // Check if credentials already exist
+    const existing = await serviceRole.entities.UserCredentials.filter({ email: normalisedEmail });
+    if (existing && existing.length > 0) {
       return Response.json(
-        { success: false, error: "invalid_credentials" },
-        { status: 401 }
+        { success: false, message: 'Email already registered' },
+        { status: 400 }
       );
     }
 
-    const salt = Deno.env.get("HASH_SALT") || "";
-    const incomingHash = await hashPassword(password, salt);
+    // Hash password using same pattern as customSignIn
+    const salt = Deno.env.get('HASH_SALT') || '';
+    const password_hash = await hashPassword(password, salt);
 
-    if (incomingHash !== cred.password_hash) {
-      await new Promise(r => setTimeout(r, 500));
-      return Response.json(
-        { success: false, error: "invalid_credentials" },
-        { status: 401 }
-      );
-    }
-
-    let role = null;
-    let founding_member_id = null;
-    let userId = null;
-
-    // Check FoundingMember first so we can use it for userId fallback
-    const members = await serviceRole.entities.FoundingMember.filter({
-      email: normalisedEmail,
-    });
-    if (members?.[0]) {
-      founding_member_id = members[0].id;
-    }
-
-    // Resolve real User entity ID by email
-    // Read user_id directly from credentials — set at signup
-    if (cred.user_id) {
-      userId = cred.user_id;
-    }
-
-    // Fallback: use user_id stored on FoundingMember record
-    if (!userId && members?.[0]?.user_id) {
-      userId = members[0].user_id;
-    }
-
-    // Resolve role via UserRole (approved)
+    // Create User record
+    let user;
     try {
-      if (userId) {
-        const userRoles = await serviceRole.entities.UserRole.filter({
-          user_id: userId,
-        });
+      user = await serviceRole.entities.User.create({
+        email: normalisedEmail,
+        forename,
+        middle_name: middle_name || null,
+        surname,
+        full_name: [forename, middle_name, surname].filter(Boolean).join(" "),
+      });
+    } catch (err) {
+      console.error('Failed to create User:', err.message);
+      throw err;
+    }
 
-        const approved = userRoles.filter(
-          (r) => (r.approval_status || "").toLowerCase() === "approved"
-        );
+    // Create UserCredentials record
+    try {
+      await serviceRole.entities.UserCredentials.create({
+        email: normalisedEmail,
+        password_hash,
+        user_id: user.id,
+      });
+    } catch (err) {
+      console.error('Failed to create UserCredentials:', err.message);
+      throw err;
+    }
 
-        const priority = ["admin", "host", "cleaner"];
-        for (const p of priority) {
-          if (approved.some((r) => r.role === p)) {
-            role = p;
-            break;
-          }
+    // Link referee to referral record if a ref_code was provided
+    if (ref_code) {
+      try {
+        const normCode = ref_code.trim().toUpperCase();
+        const refs = await serviceRole.entities.Referral.filter({ ref_code: normCode });
+        if (refs.length > 0) {
+          await serviceRole.entities.Referral.update(refs[0].id, {
+            referee_email: normalisedEmail,
+            referee_name: [forename, surname].filter(Boolean).join(" "),
+          });
         }
-
-        if (!role && approved.some((r) => r.role === "guest")) {
-          role = "guest";
-        }
-      }
-    } catch (_) {
-      // Role lookup failed, will use fallback below
+      } catch (_) {}
     }
 
-    // ADMIN OVERRIDE
-    const adminEmails = ["admin@hostkeepdigital.co.uk"];
-    if (adminEmails.includes(normalisedEmail)) {
-      role = "admin";
+    // Create guest UserRole
+    try {
+      await serviceRole.entities.UserRole.create({
+        user_id: user.id,
+        role: 'guest',
+        approval_status: 'approved',
+      });
+    } catch (err) {
+      console.error('Failed to create UserRole:', err.message);
+      throw err;
     }
 
-    // FALLBACK TO FOUNDING MEMBER ROLE
-    if (!role && !adminEmails.includes(normalisedEmail) && members?.[0]?.role) {
-      role = members[0].role;
+    // Create Guest record for profile storage
+    try {
+      await serviceRole.entities.Guest.create({
+        forename,
+        middle_name: middle_name || null,
+        surname,
+        email: normalisedEmail,
+      });
+    } catch (err) {
+      console.error('Failed to create Guest:', err.message);
+      // Don't throw - Guest is optional
     }
 
-    // Final fallback
-    if (!role) {
-      role = "guest";
+    // Send verification code
+    try {
+      await serviceRole.functions.invoke('sendVerificationCode', { email: normalisedEmail, name: forename });
+    } catch (err) {
+      console.error('Failed to send verification code:', err.message);
+      // Don't throw - email sending is optional
     }
 
-    // Block banned guests
-    if (role === "guest") {
-      const guestRecords = await serviceRole.entities.Guest.filter({ email: normalisedEmail });
-      if (guestRecords?.[0]?.status === "blacklisted") {
-        return Response.json(
-          { success: false, error: "account_suspended", message: "Your account has been suspended. Please contact hello@hostkeepdigital.co.uk if you believe this is an error." },
-          { status: 403 }
-        );
-      }
-    }
+    return Response.json({ success: true, email: normalisedEmail });
 
-    // Block unverified guest accounts from signing in
-    if (role === "guest" && !adminEmails.includes(normalisedEmail)) {
-      if (cred.email_verified !== true) {
-        return Response.json(
-          { success: false, error: "email_not_verified", email: normalisedEmail },
-          { status: 200 }
-        );
-      }
-    }
-
-    const session_token = crypto.randomUUID();
-
-    const isApp = is_app === true;
-    let expiresAt;
-
-    if (role === "founding_member") {
-      expiresAt = new Date(Date.now() + 12 * 60 * 60 * 1000);
-    } else if (isApp) {
-      expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-    } else {
-      expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    }
-
-    const expires_at = expiresAt.toISOString();
-
-    await serviceRole.entities.UserSession.create({
-      session_token,
-      email: normalisedEmail,
-      role,
-      founding_member_id,
-      user_id: userId || null,
-      expires_at,
-    });
-
-    return Response.json({
-      success: true,
-      session_token,
-      email: normalisedEmail,
-      role,
-      founding_member_id,
-      expires_at,
-    });
-  } catch (err) {
-    console.error("customSignIn error:", err);
+  } catch (error) {
+    console.error('Sign-up error:', error);
     return Response.json(
-      { success: false, error: "server_error" },
+      { success: false, message: error.message || 'Sign-up failed' },
       { status: 500 }
     );
   }
