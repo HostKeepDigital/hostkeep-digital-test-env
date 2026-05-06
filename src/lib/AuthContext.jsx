@@ -28,13 +28,26 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      const APP_ID = "698eee4108bd1d9467648326";
-      const raw = await fetch(`/api/apps/${APP_ID}/functions/checkSession`, {
+      // Raw fetch — no Base44 SDK auth headers
+      const raw = await fetch(`/api/apps/698eee4108bd1d9467648326/functions/checkSession`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ session_token }),
       });
-      const data = await raw.json();
+
+      let data;
+      try {
+        data = await raw.json();
+      } catch {
+        // Platform error — treat session as invalid
+        localStorage.removeItem("session_token");
+        localStorage.removeItem("session_expires_at");
+        setIsAuthenticated(false);
+        setUser(null);
+        setRoles([]);
+        setIsLoadingAuth(false);
+        return;
+      }
 
       if (!data.authenticated) {
         localStorage.removeItem("session_token");
