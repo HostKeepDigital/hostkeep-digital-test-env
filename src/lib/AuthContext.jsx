@@ -28,8 +28,13 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      const res = await base44.functions.invoke("checkSession", { session_token });
-      const data = res.data;
+      const APP_ID = "698eee4108bd1d9467648326";
+      const raw = await fetch(`/api/apps/${APP_ID}/functions/checkSession`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ session_token }),
+      });
+      const data = await raw.json();
 
       if (!data.authenticated) {
         localStorage.removeItem("session_token");
