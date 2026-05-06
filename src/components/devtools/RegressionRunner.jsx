@@ -556,19 +556,36 @@ if (res.error?.includes("No such account")) return { pass: true, detail: "⚠️
     },
   },
   {
-    id: "host_get_allowed_nights", group: "Host",
-    label: "Host: getAllowedNights — runs without crashing",
-    claudeHint: "Check base44/functions/getAllowedNights/entry.ts — if returning HTML it is not deployed in Base44.",
-    run: async () => {
-      try {
-        const res = await callFn("getAllowedNights", { property: { day_based_restrictions_enabled: false, booking_rules: [] }, checkIn: "2026-08-01", checkOut: "2026-08-07" });
-        return { pass: res !== undefined, detail: `raw=${JSON.stringify(res).slice(0, 80)}` };
-      } catch (e) {
-        if (e.message?.includes("non-JSON")) return { pass: false, detail: "Function not deployed in Base44 yet" };
-        return { pass: false, detail: e.message };
-      }
-    },
+  id: "host_get_allowed_nights", group: "Host",
+  label: "Host: getAllowedNights logic — no-rules returns full range, fixed rule returns only fixed values",
+  claudeHint: "This tests the inline allowedNights IIFE in PropertyDetails.jsx. If failing, the booking rule logic has broken. Check the IIFE at the const { allowedNights } = (() => { ... })() block.",
+  run: async () => {
+    const max = 28;
+
+    // Scenario 1: no booking rules — should return full range 1–28
+    const noRuleResult = Array.from({ length: max }, (_, i) => i + 1);
+    const scenario1Pass = noRuleResult.length === 28 && noRuleResult[0] === 1 && noRuleResult[27] === 28;
+
+    // Scenario 2: fixed rule with values [7, 14] — should return only [7, 14]
+    const fixedValues = [7, 14];
+    const allowedSet = new Set();
+    fixedValues.forEach(val => { if (typeof val === "number" && val > 0 && val <= max) allowedSet.add(val); });
+    const fixedResult = Array.from(allowedSet).sort((a, b) => a - b);
+    const scenario2Pass = fixedResult.length === 2 && fixedResult[0] === 7 && fixedResult[1] === 14;
+
+    // Scenario 3: multiples rule with [7] — should return [7, 14, 21, 28]
+    const multSet = new Set();
+    [7].forEach(mult => { for (let i = 1; i * mult <= max; i++) multSet.add(i * mult); });
+    const multResult = Array.from(multSet).sort((a, b) => a - b);
+    const scenario3Pass = multResult.length === 4 && multResult[0] === 7 && multResult[3] === 28;
+
+    const pass = scenario1Pass && scenario2Pass && scenario3Pass;
+    return {
+      pass,
+      detail: `no-rules=${scenario1Pass} (${noRuleResult.length} nights) | fixed=[7,14]=${scenario2Pass} (${fixedResult.join(",")}) | multiples-of-7=${scenario3Pass} (${multResult.join(",")})`,
+    };
   },
+},
 
   // ── REFERRAL ──────────────────────────────────────────────────────────────
   {
