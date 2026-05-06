@@ -1,8 +1,8 @@
 /**
  * Automation handler: fires when a Message record is created.
- * Notifies the receiver.
+ * Notifies the receiver in-app and by email.
  */
-import { createClientFromRequest } from "npm:@base44/sdk@0.8.23";
+import { createClientFromRequest } from "npm:@base44/sdk@0.8.25";
 
 Deno.serve(async (req) => {
   try {
@@ -25,15 +25,20 @@ Deno.serve(async (req) => {
     // Don't notify system messages
     if (message.message_type === "system") return Response.json({ ok: true });
 
-    // Get sender name
-    let senderName = message.sender_name || "Someone";
+    const senderName = message.sender_name || "Someone";
 
-    // Determine correct message inbox link based on receiver role
+    // Determine receiver's inbox link and fetch their email
     let messageLink = "/GuestMessages";
+    let receiverEmail = null;
+
     try {
       const receiverUser = await serviceRole.entities.User.get(message.receiver_id);
-      const receiverEmail = receiverUser?.email || null;
-      const roles = await serviceRole.entities.UserRole.filter({ user_id: message.receiver_id, approval_status: "approved" });
+      receiverEmail = receiverUser?.email || null;
+
+      const roles = await serviceRole.entities.UserRole.filter({
+        user_id: message.receiver_id,
+        approval_status: "approved",
+      });
       const isHost = roles.some((r) => r.role === "host");
       const isCleaner = roles.some((r) => r.role === "cleaner");
       if (isCleaner) messageLink = "/CleanKeep";
@@ -41,6 +46,7 @@ Deno.serve(async (req) => {
     } catch (_) {}
 
     await serviceRole.functions.invoke("sendNotification", {
+      service_key: LOCK,
       user_id: message.receiver_id,
       type: "new_message",
       title: `New message from ${senderName}`,
