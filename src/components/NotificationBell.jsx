@@ -104,9 +104,7 @@ export default function NotificationBell() {
 
   const markAllRead = async () => {
     const unreadOnes = notifications.filter((n) => !n.read);
-    for (const n of unreadOnes) {
-      await base44.entities.Notification.update(n.id, { read: true });
-    }
+    await Promise.all(unreadOnes.map((n) => base44.entities.Notification.update(n.id, { read: true })));
   };
 
   const handleOpen = () => {
@@ -178,27 +176,29 @@ export default function NotificationBell() {
                     key={n.id}
                     to={n.link}
                     onClick={() => handleClick(n)}
-                    className={`flex gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-50 ${!n.read ? "bg-teal-50/50" : ""}`}
+                    className={`flex gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-50 ${!n.read ? typeConfig(n.type).bg : ""}`}
                   >
-                    <span className="text-xl flex-shrink-0 mt-0.5">{typeIcon(n.type)}</span>
+                    <span className="text-xl flex-shrink-0 mt-0.5">{typeConfig(n.type).icon}</span>
                     <div className="flex-1 min-w-0">
                       <p className={`text-sm ${!n.read ? "font-semibold text-gray-900" : "font-medium text-gray-700"}`}>{n.title}</p>
                       <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{n.body}</p>
+                      <p className="text-xs text-gray-400 mt-1">{relativeTime(n.created_date)}</p>
                     </div>
-                    {!n.read && <span className="w-2 h-2 rounded-full bg-teal-500 flex-shrink-0 mt-1.5" />}
+                    {!n.read && <span className={`w-2 h-2 rounded-full ${typeConfig(n.type).dot} flex-shrink-0 mt-1.5`} />}
                   </Link>
                 ) : (
                   <div
                     key={n.id}
                     onClick={() => handleClick(n)}
-                    className={`flex gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-50 cursor-pointer ${!n.read ? "bg-teal-50/50" : ""}`}
+                    className={`flex gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-50 cursor-pointer ${!n.read ? typeConfig(n.type).bg : ""}`}
                   >
-                    <span className="text-xl flex-shrink-0 mt-0.5">{typeIcon(n.type)}</span>
+                    <span className="text-xl flex-shrink-0 mt-0.5">{typeConfig(n.type).icon}</span>
                     <div className="flex-1 min-w-0">
                       <p className={`text-sm ${!n.read ? "font-semibold text-gray-900" : "font-medium text-gray-700"}`}>{n.title}</p>
                       <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{n.body}</p>
+                      <p className="text-xs text-gray-400 mt-1">{relativeTime(n.created_date)}</p>
                     </div>
-                    {!n.read && <span className="w-2 h-2 rounded-full bg-teal-500 flex-shrink-0 mt-1.5" />}
+                    {!n.read && <span className={`w-2 h-2 rounded-full ${typeConfig(n.type).dot} flex-shrink-0 mt-1.5`} />}
                   </div>
                 )
               ))
