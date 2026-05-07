@@ -25,19 +25,5 @@
     "email",
     "code",
     "expires_at"
-  ],
-  "rls": {
-    "create": {
-      "data.email": "{{user.email}}"
-    },
-    "read": {
-      "data.email": "{{user.email}}"
-    },
-    "update": {
-      "data.email": "{{user.email}}"
-    },
-    "delete": {
-      "data.email": "{{user.email}}"
-    }
-  }
+  ]
 }
