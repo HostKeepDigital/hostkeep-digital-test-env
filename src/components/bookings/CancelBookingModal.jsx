@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { notifyBookingEvent } from "@/lib/notificationHelpers";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2, AlertTriangle, ShieldCheck } from "lucide-react";
@@ -104,6 +105,7 @@ export default function CancelBookingModal({ booking, open, onOpenChange, user }
       queryClient.invalidateQueries({ queryKey: ['guest-bookings'] });
       toast.success("Booking cancelled successfully.");
       onOpenChange(false);
+      notifyBookingEvent(booking.id, "cancelled", booking.booking_status);
     },
     onError: () => {
       setIsProcessing(false);
