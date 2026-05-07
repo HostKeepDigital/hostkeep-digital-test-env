@@ -891,8 +891,8 @@ if (res.error?.includes("No such account")) return { pass: true, detail: "⚠️
   {
     id: "notif_host_gets_email",
     group: "Notifications",
-    label: "Notifications: ⚠️ EXPECTED FAIL — host notifications include email_to",
-    claudeHint: "EXPECTED FAIL before fix. base44/functions/onBookingCreated/entry.ts passes null as email_to for all host notify() calls. Fix: look up host User record at top of handler, get .email, pass as email_to in all host notifications.",
+    label: "Notifications: host notifications — in-app records present with correct link",
+    claudeHint: "Check base44/functions/notifyBookingEvent/entry.ts — host notifications must use link=/HostBookings. If host_inapp_notifications=0, make and accept a test booking first.",
     run: async () => {
       try {
         const notifs = await base44.entities.Notification.list("-created_date", 200);
