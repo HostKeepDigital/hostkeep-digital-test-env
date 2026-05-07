@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { notifyBookingEvent } from "@/lib/notificationHelpers";
+import { notifyBookingEvent } from "@/lib/notificationHelpers";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -195,65 +197,45 @@ export default function HostBookings() {
     const hasDeposit = booking.deposit_amount > 0;
 
     if (hasDeposit) {
-      updateMutation.mutate({
-        id: booking.id,
-        data: {
-          booking_status: "awaiting_payment",
-          accepted_at: new Date().toISOString(),
-          deposit_due_date: addHours(new Date(), 48).toISOString(),
-        },
-      });
+      updateMutation.mutate(
+        { id: booking.id, data: { booking_status: "awaiting_payment", accepted_at: new Date().toISOString(), deposit_due_date: addHours(new Date(), 48).toISOString() } },
+        { onSuccess: () => notifyBookingEvent(booking.id, "awaiting_payment") }
+      );
     } else {
-      updateMutation.mutate({
-        id: booking.id,
-        data: {
-          booking_status: "confirmed",
-          accepted_at: new Date().toISOString(),
-          full_payment_due_date: addDays(
-            parseISO(booking.check_in),
-            -14
-          ).toISOString(),
-        },
-      });
+      updateMutation.mutate(
+        { id: booking.id, data: { booking_status: "confirmed", accepted_at: new Date().toISOString(), full_payment_due_date: addDays(parseISO(booking.check_in), -14).toISOString() } },
+        { onSuccess: () => notifyBookingEvent(booking.id, "confirmed") }
+      );
     }
   };
 
   const handleDecline = (booking) => {
-    updateMutation.mutate({
-      id: booking.id,
-      data: { booking_status: "declined" },
-    });
+    updateMutation.mutate(
+      { id: booking.id, data: { booking_status: "declined" } },
+      { onSuccess: () => notifyBookingEvent(booking.id, "declined") }
+    );
   };
 
   const handleCheckIn = (booking) => {
-    updateMutation.mutate({
-      id: booking.id,
-      data: {
-        booking_status: "checked_in",
-        checked_in_at: new Date().toISOString(),
-      },
-    });
+    updateMutation.mutate(
+      { id: booking.id, data: { booking_status: "checked_in", checked_in_at: new Date().toISOString() } },
+      { onSuccess: () => notifyBookingEvent(booking.id, "checked_in") }
+    );
   };
 
   const handleConfirmCheckin = (booking) => {
-    updateMutation.mutate({
-      id: booking.id,
-      data: {
-        checkin_confirmed_at: new Date().toISOString(),
-        booking_status: "checked_in",
-      },
-    });
+    updateMutation.mutate(
+      { id: booking.id, data: { checkin_confirmed_at: new Date().toISOString(), booking_status: "checked_in" } },
+      { onSuccess: () => notifyBookingEvent(booking.id, "checked_in") }
+    );
     toast.success("Check-in confirmed — payment will be released to your account within 24 hours");
   };
 
   const handleComplete = (booking) => {
-    updateMutation.mutate({
-      id: booking.id,
-      data: {
-        booking_status: "completed",
-        completed_at: new Date().toISOString(),
-      },
-    });
+    updateMutation.mutate(
+      { id: booking.id, data: { booking_status: "completed", completed_at: new Date().toISOString() } },
+      { onSuccess: () => notifyBookingEvent(booking.id, "completed") }
+    );
   };
 
   return (
