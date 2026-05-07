@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { notifyMessage } from "@/lib/notificationHelpers";
 import {
   Dialog,
   DialogContent,
@@ -49,6 +50,7 @@ export default function RaiseQuestionModal({
     },
     onSuccess: () => {
       toast.success("Message sent to host!");
+      notifyMessage(booking.host_id, guestUser.full_name || "Your guest", `[${subject}]\n\n${message}`);
       setSubject("");
       setMessage("");
       onClose();
