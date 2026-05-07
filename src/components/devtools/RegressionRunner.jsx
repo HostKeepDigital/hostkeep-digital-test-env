@@ -831,7 +831,7 @@ if (res.error?.includes("No such account")) return { pass: true, detail: "⚠️
           pass: found.length > 0,
           detail: found.length > 0
             ? `payment_due_notifications=${found.length} ✓ fix working`
-            : `payment_due_notifications=0 — EXPECTED FAIL: awaiting_payment handler missing in onBookingCreated`,
+            : `payment_due_notifications=0 — make a test booking and accept it with a deposit from HostBookings`,
         };
       } catch (e) { return { pass: false, detail: e.message }; }
     },
@@ -849,7 +849,7 @@ if (res.error?.includes("No such account")) return { pass: true, detail: "⚠️
           pass: found.length > 0,
           detail: found.length > 0
             ? `booking_checked_in_notifications=${found.length} ✓ fix working`
-            : `booking_checked_in_notifications=0 — EXPECTED FAIL: checked_in handler missing in onBookingCreated`,
+            : `booking_checked_in_notifications=0 — check in a confirmed test booking from HostBookings`,
         };
       } catch (e) { return { pass: false, detail: e.message }; }
     },
@@ -867,7 +867,7 @@ if (res.error?.includes("No such account")) return { pass: true, detail: "⚠️
           pass: found.length > 0,
           detail: found.length > 0
             ? `booking_completed_notifications=${found.length} ✓ fix working`
-            : `booking_completed_notifications=0 — EXPECTED FAIL: completed handler missing in onBookingCreated`,
+           : `booking_completed_notifications=0 — complete a checked-in test booking from HostBookings`,
         };
       } catch (e) { return { pass: false, detail: e.message }; }
     },
@@ -1165,7 +1165,7 @@ if (res.error?.includes("No such account")) return { pass: true, detail: "⚠️
 
 // ── COMPONENT ─────────────────────────────────────────────────────────────────
 
-const GROUP_ORDER = ["Auth", "Password Reset", "Email Verification", "Profile", "Founding", "Postcode", "Stripe", "Guest", "Host", "Referral", "Cleaner", "Money", "Entities", "Notifications", "Frontend Logic"];
+const GROUP_ORDER = ["Auth", "Password Reset", "Email Verification", "Profile", "Founding", "Postcode", "Stripe", "Guest", "Host", "Referral", "Cleaner", "Money", "Entities", "Notifications", "notifyBookingEvent", "Frontend Logic"];
 
 export default function RegressionRunner() {
   const [adminPassword, setAdminPassword] = useState("");
