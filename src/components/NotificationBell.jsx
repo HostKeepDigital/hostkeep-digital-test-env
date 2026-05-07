@@ -4,10 +4,54 @@ import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { Link } from "react-router-dom";
 
+const PREF_MAP = {
+  booking_request: "bookings", booking_confirmed: "bookings", booking_declined: "bookings",
+  booking_cancelled: "bookings", booking_checked_in: "bookings", booking_completed: "bookings",
+  new_message: "messages", cleaning_job_assigned: "jobs", cleaning_job_accepted: "jobs",
+  cleaning_job_declined: "jobs", cleaning_job_completed: "jobs",
+  payment_received: "payments", payment_due: "payments", general: "general",
+};
+
+const relativeTime = (dateStr) => {
+  if (!dateStr) return "";
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(dateStr).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+};
+
+const typeConfig = (type) => {
+  if (type === "booking_request")   return { icon: "🏠", bg: "bg-blue-50",   dot: "bg-blue-500"   };
+  if (type === "booking_confirmed") return { icon: "✅", bg: "bg-teal-50",   dot: "bg-teal-500"   };
+  if (type === "booking_declined" || type === "booking_cancelled") return { icon: "❌", bg: "bg-red-50", dot: "bg-red-500" };
+  if (type === "booking_completed") return { icon: "🎉", bg: "bg-green-50",  dot: "bg-green-500"  };
+  if (type === "booking_checked_in") return { icon: "🏡", bg: "bg-teal-50", dot: "bg-teal-500"   };
+  if (type === "new_message")       return { icon: "💬", bg: "bg-purple-50", dot: "bg-purple-500" };
+  if (type === "payment_due" || type === "payment_received") return { icon: "💳", bg: "bg-green-50", dot: "bg-green-500" };
+  if (type?.includes("job"))        return { icon: "🧹", bg: "bg-orange-50", dot: "bg-orange-500" };
+  return { icon: "🔔", bg: "bg-gray-50", dot: "bg-gray-400" };
+};
+
+const triggerBrowserNotification = (notif, prefs) => {
+  if (!("Notification" in window) || Notification.permission !== "granted") return;
+  const prefKey = PREF_MAP[notif.type] || "general";
+  if (prefs[prefKey] === false) return;
+  try {
+    new Notification(notif.title, { body: notif.body, icon: "/favicon.ico", tag: notif.id });
+  } catch (_) {}
+};
+
 export default function NotificationBell() {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [open, setOpen] = useState(false);
+  const [userPrefs, setUserPrefs] = useState({});
+  const userPrefsRef = useRef({});
   const ref = useRef(null);
 
   useEffect(() => {
@@ -20,6 +64,13 @@ export default function NotificationBell() {
         20
       );
       setNotifications(records || []);
+
+      try {
+        const userRecords = await base44.entities.User.filter({ id: user.id });
+        const prefs = userRecords?.[0]?.notification_preferences || {};
+        setUserPrefs(prefs);
+        userPrefsRef.current = prefs;
+      } catch (_) {}
     };
 
     load();
@@ -27,7 +78,10 @@ export default function NotificationBell() {
     const unsub = base44.entities.Notification.subscribe((event) => {
       if (event.data?.user_id !== user.id) return;
       setNotifications((prev) => {
-        if (event.type === "create") return [event.data, ...prev].slice(0, 20);
+        if (event.type === "create") {
+          triggerBrowserNotification(event.data, userPrefsRef.current);
+          return [event.data, ...prev].slice(0, 20);
+        }
         if (event.type === "update") return prev.map((n) => n.id === event.id ? event.data : n);
         if (event.type === "delete") return prev.filter((n) => n.id !== event.id);
         return prev;
