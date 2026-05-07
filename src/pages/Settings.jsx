@@ -448,6 +448,55 @@ const handleDeleteAccount = async () => {
 
           {/* Notifications Tab */}
           <TabsContent value="notifications">
+
+            {/* Browser notification permission card */}
+            {typeof window !== "undefined" && "Notification" in window && (
+              <Card className="mb-4">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <span>🔔</span> Device Notifications
+                  </CardTitle>
+                  <CardDescription>
+                    Allow HostKeep to show notifications on this device when you receive a new booking, message or payment alert.
+                    These respect your preferences below — if you turn off Booking Notifications, you won't get a device popup for bookings.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {Notification.permission === "granted" && (
+                    <div className="flex items-center gap-2 text-sm text-green-700 font-medium">
+                      <span className="w-2 h-2 rounded-full bg-green-500 inline-block" />
+                      Device notifications are enabled
+                    </div>
+                  )}
+                  {Notification.permission === "denied" && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm text-red-600 font-medium">
+                        <span className="w-2 h-2 rounded-full bg-red-500 inline-block" />
+                        Device notifications are blocked
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        You've blocked notifications for this site. To enable them, click the padlock icon in your browser's address bar and allow notifications, then refresh the page.
+                      </p>
+                    </div>
+                  )}
+                  {Notification.permission === "default" && (
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        Notification.requestPermission().then((result) => {
+                          if (result === "granted") {
+                            toast.success("Device notifications enabled");
+                          }
+                        });
+                      }}
+                    >
+                      Enable device notifications
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
             <Card>
               <CardHeader>
                 <CardTitle>Notification Preferences</CardTitle>
