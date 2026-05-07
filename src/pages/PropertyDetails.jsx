@@ -416,6 +416,7 @@ export default function PropertyDetails() {
     onSuccess: (booking) => {
       setShowBookingDialog(false);
       navigate(`/Pay?bookingId=${booking.id}`);
+      notifyBookingEvent(booking.id, "requested");
     },
   });
 
