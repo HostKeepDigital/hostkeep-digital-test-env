@@ -821,8 +821,8 @@ if (res.error?.includes("No such account")) return { pass: true, detail: "⚠️
   {
     id: "notif_awaiting_payment_fires",
     group: "Notifications",
-    label: "Notifications: ⚠️ EXPECTED FAIL — awaiting_payment fires payment_due to guest",
-    claudeHint: "EXPECTED FAIL before fix. base44/functions/onBookingCreated/entry.ts is missing the awaiting_payment handler. Fix: add if (status === 'awaiting_payment' && booking.guest_id) notify guest with type=payment_due and email_to=booking.guest_email.",
+    label: "Notifications: awaiting_payment — payment_due notification fires to guest",
+    claudeHint: "Check base44/functions/notifyBookingEvent/entry.ts — awaiting_payment event_type must create a payment_due Notification for the guest. If 0 records, make a test booking and accept it (with deposit) from HostBookings.",
     run: async () => {
       try {
         const notifs = await base44.entities.Notification.list("-created_date", 200);
@@ -839,8 +839,8 @@ if (res.error?.includes("No such account")) return { pass: true, detail: "⚠️
   {
     id: "notif_checked_in_fires",
     group: "Notifications",
-    label: "Notifications: ⚠️ EXPECTED FAIL — checked_in fires booking_checked_in to guest",
-    claudeHint: "EXPECTED FAIL before fix. base44/functions/onBookingCreated/entry.ts is missing the checked_in handler. Fix: add if (status === 'checked_in' && booking.guest_id) notify guest with type=booking_checked_in.",
+    label: "Notifications: checked_in — booking_checked_in notification fires to guest",
+    claudeHint: "Check base44/functions/notifyBookingEvent/entry.ts — checked_in event_type must create a booking_checked_in Notification for the guest. If 0 records, check in a confirmed test booking from HostBookings.",
     run: async () => {
       try {
         const notifs = await base44.entities.Notification.list("-created_date", 200);
@@ -857,8 +857,8 @@ if (res.error?.includes("No such account")) return { pass: true, detail: "⚠️
   {
     id: "notif_completed_fires_both",
     group: "Notifications",
-    label: "Notifications: ⚠️ EXPECTED FAIL — completed fires to guest (review) and host (payout)",
-    claudeHint: "EXPECTED FAIL before fix. base44/functions/onBookingCreated/entry.ts is missing the completed handler. Fix: add if (status === 'completed') notify guest booking_completed (review prompt) AND host booking_completed (payout processing).",
+    label: "Notifications: completed — fires booking_completed to guest and host",
+    claudeHint: "Check base44/functions/notifyBookingEvent/entry.ts — completed event_type must create booking_completed Notifications for both guest and host. If 0 records, complete a checked-in test booking from HostBookings.",
     run: async () => {
       try {
         const notifs = await base44.entities.Notification.list("-created_date", 200);
