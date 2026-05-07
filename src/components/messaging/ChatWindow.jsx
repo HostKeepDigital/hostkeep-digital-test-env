@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { notifyMessage } from "@/lib/notificationHelpers";
 import { motion } from "framer-motion";
 import { format, parseISO } from "date-fns";
 import {
@@ -80,7 +81,10 @@ export default function ChatWindow({
       setNewMessage(content);
       toast.error("Failed to send message");
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['messages'] }),
+    onSuccess: (_, content) => {
+      queryClient.invalidateQueries({ queryKey: ['messages'] });
+      notifyMessage(conversation.otherPartyId, "Your host", content);
+    },
   });
 
   const handleSendMessage = () => {
