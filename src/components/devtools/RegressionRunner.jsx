@@ -950,6 +950,194 @@ if (res.error?.includes("No such account")) return { pass: true, detail: "⚠️
     },
   },
 
+  // ── notifyBookingEvent DIRECT TESTS ──────────────────────────────────────
+  {
+    id: "notify_booking_event_requested",
+    group: "notifyBookingEvent",
+    label: "notifyBookingEvent: requested — creates booking_request Notification for host",
+    claudeHint: "Check base44/functions/notifyBookingEvent/entry.ts — event_type=requested must create a booking_request Notification record for the host user. If failing, check the function is deployed and session_token validation is working.",
+    run: async (ctx) => {
+      if (!ctx.adminToken || !ctx.adminUserId) return { pass: false, detail: "Need admin session — run auth tests first" };
+
+      // Create a minimal test booking
+      let testBookingId = null;
+      try {
+        const testBooking = await base44.entities.Booking.create({
+          host_id: ctx.adminUserId,
+          guest_id: ctx.adminUserId,
+          guest_name: "Regression Test Guest",
+          guest_email: "regression@hostkeepdigital-test.invalid",
+          property_id: "regression-test-property-id",
+          check_in: "2099-01-01",
+          check_out: "2099-01-07",
+          booking_status: "awaiting_decision",
+        });
+        testBookingId = testBooking?.id;
+      } catch (e) {
+        return { pass: false, detail: `Could not create test booking: ${e.message}` };
+      }
+
+      if (!testBookingId) return { pass: false, detail: "Test booking creation returned no ID" };
+
+      // Fire the notification
+      const res = await callFn("notifyBookingEvent", {
+        session_token: ctx.adminToken,
+        booking_id: testBookingId,
+        event_type: "requested",
+      });
+
+      // Check a notification was created
+      await new Promise(r => setTimeout(r, 800));
+      const notifs = await base44.entities.Notification.list("-created_date", 50);
+      const found = notifs.find(n =>
+        n.type === "booking_request" &&
+        n.user_id === ctx.adminUserId &&
+        n.link === "/HostBookings"
+      );
+
+      // Clean up
+      try {
+        await base44.entities.Booking.delete(testBookingId);
+        if (found?.id) await base44.entities.Notification.delete(found.id);
+      } catch (_) {}
+
+      return {
+        pass: !!found,
+        detail: res.success
+          ? `notifyBookingEvent returned success | notification_created=${!!found}`
+          : `notifyBookingEvent error=${res.error}`,
+      };
+    },
+  },
+  {
+    id: "notify_booking_event_confirmed",
+    group: "notifyBookingEvent",
+    label: "notifyBookingEvent: confirmed — creates booking_confirmed for BOTH guest and host",
+    claudeHint: "Check base44/functions/notifyBookingEvent/entry.ts — event_type=confirmed must create booking_confirmed for both host (/HostBookings) and guest (/MyTrips).",
+    run: async (ctx) => {
+      if (!ctx.adminToken || !ctx.adminUserId) return { pass: false, detail: "Need admin session" };
+
+      let testBookingId = null;
+      try {
+        const testBooking = await base44.entities.Booking.create({
+          host_id: ctx.adminUserId,
+          guest_id: ctx.adminUserId,
+          guest_name: "Regression Test Guest",
+          guest_email: "regression@hostkeepdigital-test.invalid",
+          property_id: "regression-test-property-id",
+          check_in: "2099-01-01",
+          check_out: "2099-01-07",
+          booking_status: "confirmed",
+        });
+        testBookingId = testBooking?.id;
+      } catch (e) {
+        return { pass: false, detail: `Could not create test booking: ${e.message}` };
+      }
+
+      await callFn("notifyBookingEvent", {
+        session_token: ctx.adminToken,
+        booking_id: testBookingId,
+        event_type: "confirmed",
+      });
+
+      await new Promise(r => setTimeout(r, 800));
+      const notifs = await base44.entities.Notification.list("-created_date", 50);
+      const hostNotif = notifs.find(n => n.type === "booking_confirmed" && n.user_id === ctx.adminUserId && n.link === "/HostBookings");
+      const guestNotif = notifs.find(n => n.type === "booking_confirmed" && n.user_id === ctx.adminUserId && n.link === "/MyTrips");
+
+      try {
+        await base44.entities.Booking.delete(testBookingId);
+        if (hostNotif?.id) await base44.entities.Notification.delete(hostNotif.id);
+        if (guestNotif?.id) await base44.entities.Notification.delete(guestNotif.id);
+      } catch (_) {}
+
+      return {
+        pass: !!hostNotif && !!guestNotif,
+        detail: `host_notif=${!!hostNotif} guest_notif=${!!guestNotif} (both must be true)`,
+      };
+    },
+  },
+  {
+    id: "notify_booking_event_cancelled",
+    group: "notifyBookingEvent",
+    label: "notifyBookingEvent: cancelled — creates booking_cancelled for both parties",
+    claudeHint: "Check base44/functions/notifyBookingEvent/entry.ts — event_type=cancelled must notify both host (/HostBookings) and guest (/MyTrips).",
+    run: async (ctx) => {
+      if (!ctx.adminToken || !ctx.adminUserId) return { pass: false, detail: "Need admin session" };
+
+      let testBookingId = null;
+      try {
+        const testBooking = await base44.entities.Booking.create({
+          host_id: ctx.adminUserId,
+          guest_id: ctx.adminUserId,
+          guest_name: "Regression Test Guest",
+          guest_email: "regression@hostkeepdigital-test.invalid",
+          property_id: "regression-test-property-id",
+          check_in: "2099-01-01",
+          check_out: "2099-01-07",
+          booking_status: "confirmed",
+        });
+        testBookingId = testBooking?.id;
+      } catch (e) {
+        return { pass: false, detail: `Could not create test booking: ${e.message}` };
+      }
+
+      await callFn("notifyBookingEvent", {
+        session_token: ctx.adminToken,
+        booking_id: testBookingId,
+        event_type: "cancelled",
+        old_status: "confirmed",
+      });
+
+      await new Promise(r => setTimeout(r, 800));
+      const notifs = await base44.entities.Notification.list("-created_date", 50);
+      const hostNotif = notifs.find(n => n.type === "booking_cancelled" && n.link === "/HostBookings");
+      const guestNotif = notifs.find(n => n.type === "booking_cancelled" && n.link === "/MyTrips");
+
+      try {
+        await base44.entities.Booking.delete(testBookingId);
+        if (hostNotif?.id) await base44.entities.Notification.delete(hostNotif.id);
+        if (guestNotif?.id) await base44.entities.Notification.delete(guestNotif.id);
+      } catch (_) {}
+
+      return {
+        pass: !!hostNotif && !!guestNotif,
+        detail: `host_notif=${!!hostNotif} guest_notif=${!!guestNotif}`,
+      };
+    },
+  },
+  {
+    id: "notify_message_direct",
+    group: "notifyBookingEvent",
+    label: "notifyBookingEvent: sendNotification direct — new_message creates Notification record",
+    claudeHint: "Check base44/functions/sendNotification/entry.ts — calling with session_token and a valid user_id must create a Notification record. If failing, check RLS on the Notification entity allows service role writes.",
+    run: async (ctx) => {
+      if (!ctx.adminToken || !ctx.adminUserId) return { pass: false, detail: "Need admin session" };
+
+      const res = await callFn("sendNotification", {
+        session_token: ctx.adminToken,
+        user_id: ctx.adminUserId,
+        type: "new_message",
+        title: "Regression Test Message",
+        body: "This is an automated test notification — safe to delete.",
+        link: null,
+      });
+
+      await new Promise(r => setTimeout(r, 800));
+      const notifs = await base44.entities.Notification.list("-created_date", 20);
+      const found = notifs.find(n => n.type === "new_message" && n.title === "Regression Test Message");
+
+      try {
+        if (found?.id) await base44.entities.Notification.delete(found.id);
+      } catch (_) {}
+
+      return {
+        pass: !!found,
+        detail: `sendNotification success=${res.success} | notification_record_created=${!!found}`,
+      };
+    },
+  },
+
   // ── FRONTEND LOGIC ────────────────────────────────────────────────────────
   {
     id: "frontend_isbetauser", group: "Frontend Logic",
