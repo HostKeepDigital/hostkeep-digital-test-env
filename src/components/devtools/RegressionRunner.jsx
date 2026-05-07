@@ -757,6 +757,7 @@ if (res.error?.includes("No such account")) return { pass: true, detail: "⚠️
     claudeHint: "Check base44/functions/onBookingCreated/entry.ts — on eventType=create, host must receive booking_request notification. If missing, the automation trigger is not connected.",
     run: async () => {
       try {
+        const notifs = await base44.entities.Notification.list("-created_date", 200);
         const found = notifs.filter(n => n.type === "booking_request");
         return {
           pass: found.length > 0,
