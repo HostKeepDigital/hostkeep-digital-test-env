@@ -25,10 +25,11 @@ Deno.serve(async (req) => {
       return Response.json({ status: "not_connected", error: "no_user_id" });
     }
 
-    // Look up user by ID directly — fast, no email filter
+    // Look up user by ID — use filter(), not get(), on User entity
     let user = null;
     try {
-      user = await serviceRole.entities.User.get(user_id);
+      const users = await serviceRole.entities.User.filter({ id: user_id });
+      user = users?.[0] || null;
     } catch (_) {}
 
     const stripeStatus = user?.stripe_connect_status;
