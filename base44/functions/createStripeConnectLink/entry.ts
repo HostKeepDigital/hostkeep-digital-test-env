@@ -73,6 +73,7 @@ Deno.serve(async (req) => {
       }
     }
 
+    return Response.json({ debug: true, user_id: user?.id, email: user?.email });
     const origin = req.headers.get("origin") || "https://hostkeepdigital.co.uk";
     const return_url = body.return_url || `${origin}/HostDashboard?stripe_connect_return=success`;
     const refresh_url = body.refresh_url || `${origin}/HostDashboard?stripe_connect_return=refresh`;
