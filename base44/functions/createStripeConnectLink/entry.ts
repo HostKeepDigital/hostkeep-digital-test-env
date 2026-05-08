@@ -34,73 +34,42 @@ Deno.serve(async (req) => {
     //return Response.json({ debug: true, user_id, email, user_found_by_email: debugUsers?.[0]?.id || null });
 
     // Look up user — try by ID first, fall back to email
-    let user = null;
-    try {
-      if (user_id) {
-        const users = await serviceRole.entities.User.filter({ id: user_id });
-        user = users?.[0] || null;
-      }
-      if (!user && email) {
-        const users = await serviceRole.entities.User.filter({ email });
-        user = users?.[0] || null;
-      }
-    } catch (_) {}
-
-    if (!user) {
-      try {
-        const members = await serviceRole.entities.FoundingMember.filter({ email });
-        const member = members?.[0];
-        const parts = (member?.full_name || "").trim().split(/\s+/).filter(Boolean);
-        const forename = parts[0] || "Unknown";
-        const surname = parts.length > 1 ? parts[parts.length - 1] : "Unknown";
-        const middle_name = parts.length > 2 ? parts.slice(1, -1).join(" ") : null;
-        const full_name = member?.full_name?.trim() || email;
-
-        user = await serviceRole.entities.User.create({
-          email,
-          forename,
-          middle_name,
-          surname,
-          full_name,
-        });
-
-        const creds = await serviceRole.entities.UserCredentials.filter({ email });
-        if (creds?.[0]) {
-          await serviceRole.entities.UserCredentials.update(creds[0].id, { user_id: user.id });
-        }
-      } catch (err) {
-        return Response.json({ error: "Could not create user record: " + err.message }, { status: 500 });
-      }
+    if (!user_id && !email) {
+      return Response.json({ error: "Session has no user identity" }, { status: 401 });
     }
 
-    //return Response.json({ debug: true, user_id: user?.id, email: user?.email });
+    // Use FoundingMember to check for existing Stripe account — avoids User entity auth restriction
+    const members = await serviceRole.entities.FoundingMember.filter({ email }).catch(() => []);
+    const member = members?.[0];
+
+    //return Response.json({ debug: true, user_id, email, member_id: member?.id || null });
     const origin = req.headers.get("origin") || "https://hostkeepdigital.co.uk";
     const return_url = body.return_url || `${origin}/HostDashboard?stripe_connect_return=success`;
     const refresh_url = body.refresh_url || `${origin}/HostDashboard?stripe_connect_return=refresh`;
 
-    let accountId = user.stripe_connect_account_id;
+    let accountId = member?.stripe_connect_account_id || null;
 
-    if (!accountId) {
-      const account = await stripe.accounts.create({
-        type: "express",
-        country: "GB",
-        email,
-        capabilities: {
-          card_payments: { requested: true },
-          transfers: { requested: true },
-        },
-        business_profile: { mcc: "7011", url: origin },
-      });
+        if (!accountId) {
+          const account = await stripe.accounts.create({
+            type: "express",
+            country: "GB",
+            email,
+            capabilities: {
+              card_payments: { requested: true },
+              transfers: { requested: true },
+            },
+            business_profile: { mcc: "7011", url: origin },
+          });
 
-     accountId = account.id;
+        accountId = account.id;
 
-      return Response.json({ debug: true, stage: "stripe_account_created", accountId });
+          return Response.json({ debug: true, stage: "stripe_account_created", accountId });
 
-      await serviceRole.entities.User.update(user.id, {
-        stripe_connect_account_id: accountId,
-        stripe_connect_status: "pending",
-      });
-    }
+          await serviceRole.entities.User.update(user.id, {
+            stripe_connect_account_id: accountId,
+            stripe_connect_status: "pending",
+          });
+        }
 
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
