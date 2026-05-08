@@ -20,24 +20,21 @@ Deno.serve(async (req) => {
       return Response.json({ status: "not_connected", error: "unauthenticated" });
     }
 
-    const user_id = session.user_id;
-    if (!user_id) {
-      return Response.json({ status: "not_connected", error: "no_user_id" });
+    const email = session.email;
+
+    if (!email) {
+      return Response.json({ status: "not_connected", error: "no_email" });
     }
 
-    // Look up user by ID — use filter(), not get(), on User entity
-    let user = null;
-    try {
-      const users = await serviceRole.entities.User.filter({ id: user_id });
-      user = users?.[0] || null;
-    } catch (_) {}
+    const members = await serviceRole.entities.FoundingMember.filter({ email }).catch(() => []);
+    const member = members?.[0];
 
-    const stripeStatus = user?.stripe_connect_status;
-    const hasAccount = !!user?.stripe_connect_account_id;
+    const hasAccount = !!member?.stripe_connect_account_id;
+    const stripeVerified = !!member?.stripe_verified;
 
     let status = "not_connected";
-    if (stripeStatus === "verified") status = "verified";
-    else if (stripeStatus === "pending" && hasAccount) status = "pending_verification";
+    if (stripeVerified) status = "verified";
+    else if (hasAccount) status = "pending_verification";
 
     return Response.json({ success: true, status });
   } catch (err) {
