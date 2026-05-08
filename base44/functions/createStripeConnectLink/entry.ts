@@ -30,10 +30,9 @@ Deno.serve(async (req) => {
     const email = session.email;
 
     // TEMP DEBUG — remove after diagnosis
-    const debugUsers = await serviceRole.entities.User.filter({ email }).catch(() => []);
-    return Response.json({ debug: true, user_id, email, user_found_by_email: debugUsers?.[0]?.id || null });
+    //const debugUsers = await serviceRole.entities.User.filter({ email }).catch(() => []);
+    //return Response.json({ debug: true, user_id, email, user_found_by_email: debugUsers?.[0]?.id || null });
 
-// Look up user — try by ID first, fall back to email
     // Look up user — try by ID first, fall back to email
     let user = null;
     try {
@@ -48,8 +47,16 @@ Deno.serve(async (req) => {
     } catch (_) {}
 
     if (!user) {
-      return Response.json({ error: "User record not found — please log out and back in" }, { status: 400 });
+    try {
+      user = await serviceRole.entities.User.create({ email });
+      await serviceRole.entities.UserCredentials.update(
+        (await serviceRole.entities.UserCredentials.filter({ email }))?.[0]?.id,
+        { user_id: user.id }
+      );
+    } catch (err) {
+      return Response.json({ error: "Could not create user record: " + err.message }, { status: 500 });
     }
+  }
 
     const origin = req.headers.get("origin") || "https://hostkeepdigital.co.uk";
     const return_url = body.return_url || `${origin}/HostDashboard?stripe_connect_return=success`;
