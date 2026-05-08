@@ -83,10 +83,6 @@
       "default": false,
       "description": "Stripe Connect account is connected and charges enabled"
     },
-    "stripe_connect_account_id": {
-      "type": "string",
-      "description": "Stripe Connect Express account ID"
-    },
     "subscription_active": {
       "type": "boolean",
       "default": false,
