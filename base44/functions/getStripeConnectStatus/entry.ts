@@ -20,17 +20,17 @@ Deno.serve(async (req) => {
       return Response.json({ status: "not_connected", error: "unauthenticated" });
     }
 
-    const email = session.email;
+    const user_id = session.user_id;
 
-    if (!email) {
-      return Response.json({ status: "not_connected", error: "no_email" });
+    if (!user_id) {
+      return Response.json({ status: "not_connected", error: "no_user_id" });
     }
 
-    const members = await serviceRole.entities.FoundingMember.filter({ email }).catch(() => []);
-    const member = members?.[0];
+    const roles = await serviceRole.entities.UserRole.filter({ user_id, role: "host" }).catch(() => []);
+    const hostRole = roles?.[0];
 
-    const hasAccount = !!member?.stripe_connect_account_id;
-    const stripeVerified = !!member?.stripe_verified;
+    const hasAccount = !!hostRole?.stripe_connect_account_id;
+    const stripeVerified = hostRole?.stripe_connect_status === "verified";
 
     let status = "not_connected";
     if (stripeVerified) status = "verified";
