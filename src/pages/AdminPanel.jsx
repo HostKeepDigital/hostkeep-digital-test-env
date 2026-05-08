@@ -902,25 +902,13 @@ const handleDocBan = async (member) => {
     const [userGates, setUserGates] = useState({});
 
     useEffect(() => {
-      const fetchUserGates = async () => {
-        const gatesData = {};
-        for (const m of rows) {
-          if (m.user_id && ["awaiting_document_verification", "documentation_failed_attempt_1", "documentation_failed_attempt_2"].includes(m.approval_status)) {
-            try {
-              const users = await base44.entities.User.filter({ id: m.user_id });
-              if (users?.[0]) {
-                gatesData[m.id] = users[0];
-              }
-            } catch (e) {
-              console.error(`Failed to fetch user gates for ${m.id}:`, e);
-            }
-          }
+      const gatesData = {};
+      for (const m of rows) {
+        if (["awaiting_document_verification", "documentation_failed_attempt_1", "documentation_failed_attempt_2"].includes(m.approval_status)) {
+          gatesData[m.id] = m;
         }
-        setUserGates(gatesData);
-      };
-      if (rows.length > 0) {
-        fetchUserGates();
       }
+      setUserGates(gatesData);
     }, [rows]);
 
     const GateItem = ({ label, status, timeElapsed }) => (
