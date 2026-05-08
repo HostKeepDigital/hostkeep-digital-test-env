@@ -78,10 +78,13 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, already_approved: true });
     }
 
+    const userRecords = await base44.asServiceRole.entities.User.filter({ id: user_id });
+    const user = userRecords?.[0];
+
     const gates = {
-      documents: !!member.documents_verified,
-      stripe: !!member.stripe_verified,
-      subscription: !!member.subscription_active,
+      documents: !!user?.documents_verified,
+      stripe: !!user?.stripe_verified,
+      subscription: !!user?.subscription_active,
     };
 
     // Not all gates passed
