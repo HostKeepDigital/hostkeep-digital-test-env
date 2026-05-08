@@ -29,6 +29,11 @@ Deno.serve(async (req) => {
     const user_id = session.user_id;
     const email = session.email;
 
+    // TEMP DEBUG — remove after diagnosis
+    const debugUsers = await serviceRole.entities.User.filter({ email }).catch(() => []);
+    return Response.json({ debug: true, user_id, email, user_found_by_email: debugUsers?.[0]?.id || null });
+
+// Look up user — try by ID first, fall back to email
     // Look up user — try by ID first, fall back to email
     let user = null;
     try {
