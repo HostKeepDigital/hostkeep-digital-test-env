@@ -26,50 +26,43 @@ Deno.serve(async (req) => {
       return Response.json({ error: "Invalid or expired session" }, { status: 401 });
     }
 
-    const user_id = session.user_id;
     const email = session.email;
 
-    // TEMP DEBUG — remove after diagnosis
-    //const debugUsers = await serviceRole.entities.User.filter({ email }).catch(() => []);
-    //return Response.json({ debug: true, user_id, email, user_found_by_email: debugUsers?.[0]?.id || null });
-
-    // Look up user — try by ID first, fall back to email
-    if (!user_id && !email) {
-      return Response.json({ error: "Session has no user identity" }, { status: 401 });
+    if (!email) {
+      return Response.json({ error: "Session has no email" }, { status: 401 });
     }
 
-    // Use FoundingMember to check for existing Stripe account — avoids User entity auth restriction
     const members = await serviceRole.entities.FoundingMember.filter({ email }).catch(() => []);
     const member = members?.[0];
 
-    //return Response.json({ debug: true, user_id, email, member_id: member?.id || null });
+    if (!member) {
+      return Response.json({ error: "No founding member record found for this account" }, { status: 400 });
+    }
+
     const origin = req.headers.get("origin") || "https://hostkeepdigital.co.uk";
     const return_url = body.return_url || `${origin}/HostDashboard?stripe_connect_return=success`;
     const refresh_url = body.refresh_url || `${origin}/HostDashboard?stripe_connect_return=refresh`;
 
-    let accountId = member?.stripe_connect_account_id || null;
+    let accountId = member.stripe_connect_account_id || null;
 
-        if (!accountId) {
-          const account = await stripe.accounts.create({
-            type: "express",
-            country: "GB",
-            email,
-            capabilities: {
-              card_payments: { requested: true },
-              transfers: { requested: true },
-            },
-            business_profile: { mcc: "7011", url: origin },
-          });
+    if (!accountId) {
+      const account = await stripe.accounts.create({
+        type: "express",
+        country: "GB",
+        email,
+        capabilities: {
+          card_payments: { requested: true },
+          transfers: { requested: true },
+        },
+        business_profile: { mcc: "7011", url: origin },
+      });
 
-        accountId = account.id;
+      accountId = account.id;
 
-          return Response.json({ debug: true, stage: "stripe_account_created", accountId });
-
-          await serviceRole.entities.User.update(user.id, {
-            stripe_connect_account_id: accountId,
-            stripe_connect_status: "pending",
-          });
-        }
+      await serviceRole.entities.FoundingMember.update(member.id, {
+        stripe_connect_account_id: accountId,
+      });
+    }
 
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
