@@ -29,15 +29,17 @@ Deno.serve(async (req) => {
     const user_id = session.user_id;
     const email = session.email;
 
-    if (!user_id) {
-      return Response.json({ error: "Session missing user_id — please log out and back in" }, { status: 400 });
-    }
-
-    // Look up user by ID — use filter(), not get(), on User entity
+    // Look up user — try by ID first, fall back to email
     let user = null;
     try {
-      const users = await serviceRole.entities.User.filter({ id: user_id });
-      user = users?.[0] || null;
+      if (user_id) {
+        const users = await serviceRole.entities.User.filter({ id: user_id });
+        user = users?.[0] || null;
+      }
+      if (!user && email) {
+        const users = await serviceRole.entities.User.filter({ email });
+        user = users?.[0] || null;
+      }
     } catch (_) {}
 
     if (!user) {
