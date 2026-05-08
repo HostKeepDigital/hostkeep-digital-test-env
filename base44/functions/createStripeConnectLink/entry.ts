@@ -26,24 +26,25 @@ Deno.serve(async (req) => {
       return Response.json({ error: "Invalid or expired session" }, { status: 401 });
     }
 
+    const user_id = session.user_id;
     const email = session.email;
 
-    if (!email) {
-      return Response.json({ error: "Session has no email" }, { status: 401 });
+    if (!user_id) {
+      return Response.json({ error: "Session missing user_id" }, { status: 401 });
     }
 
-    const members = await serviceRole.entities.FoundingMember.filter({ email }).catch(() => []);
-    const member = members?.[0];
+    const roles = await serviceRole.entities.UserRole.filter({ user_id, role: "host" });
+    const hostRole = roles?.[0];
 
-    if (!member) {
-      return Response.json({ error: "No founding member record found for this account" }, { status: 400 });
+    if (!hostRole) {
+      return Response.json({ error: "No host role found for this account" }, { status: 400 });
     }
 
     const origin = req.headers.get("origin") || "https://hostkeepdigital.co.uk";
     const return_url = body.return_url || `${origin}/HostDashboard?stripe_connect_return=success`;
     const refresh_url = body.refresh_url || `${origin}/HostDashboard?stripe_connect_return=refresh`;
 
-    let accountId = member.stripe_connect_account_id || null;
+    let accountId = hostRole.stripe_connect_account_id || null;
 
     if (!accountId) {
       const account = await stripe.accounts.create({
@@ -59,8 +60,9 @@ Deno.serve(async (req) => {
 
       accountId = account.id;
 
-      await serviceRole.entities.FoundingMember.update(member.id, {
+      await serviceRole.entities.UserRole.update(hostRole.id, {
         stripe_connect_account_id: accountId,
+        stripe_connect_status: "pending",
       });
     }
 
