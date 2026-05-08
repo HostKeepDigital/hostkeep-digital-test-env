@@ -93,10 +93,10 @@ async function handleSubscriptionDeactivated(base44, user_id) {
 
      // Mark FoundingMember subscription_active = false
      // Mark FoundingMember subscription_active = false
-     const members = await base44.asServiceRole.entities.FoundingMember.filter({ user_id });
-     if (members?.[0]) {
-       await base44.asServiceRole.entities.FoundingMember.update(members[0].id, { subscription_active: false });
-     }
+     // Set stripe_verified gate on User
+      await base44.asServiceRole.entities.User.update(userRole.user_id, {
+        stripe_verified: true,
+      });
 
      // Flip admin gate back to red
      try {
