@@ -47,16 +47,31 @@ Deno.serve(async (req) => {
     } catch (_) {}
 
     if (!user) {
-    try {
-      user = await serviceRole.entities.User.create({ email });
-      await serviceRole.entities.UserCredentials.update(
-        (await serviceRole.entities.UserCredentials.filter({ email }))?.[0]?.id,
-        { user_id: user.id }
-      );
-    } catch (err) {
-      return Response.json({ error: "Could not create user record: " + err.message }, { status: 500 });
+      try {
+        const members = await serviceRole.entities.FoundingMember.filter({ email });
+        const member = members?.[0];
+        const parts = (member?.full_name || "").trim().split(/\s+/).filter(Boolean);
+        const forename = parts[0] || "Unknown";
+        const surname = parts.length > 1 ? parts[parts.length - 1] : "Unknown";
+        const middle_name = parts.length > 2 ? parts.slice(1, -1).join(" ") : null;
+        const full_name = member?.full_name?.trim() || email;
+
+        user = await serviceRole.entities.User.create({
+          email,
+          forename,
+          middle_name,
+          surname,
+          full_name,
+        });
+
+        const creds = await serviceRole.entities.UserCredentials.filter({ email });
+        if (creds?.[0]) {
+          await serviceRole.entities.UserCredentials.update(creds[0].id, { user_id: user.id });
+        }
+      } catch (err) {
+        return Response.json({ error: "Could not create user record: " + err.message }, { status: 500 });
+      }
     }
-  }
 
     const origin = req.headers.get("origin") || "https://hostkeepdigital.co.uk";
     const return_url = body.return_url || `${origin}/HostDashboard?stripe_connect_return=success`;
