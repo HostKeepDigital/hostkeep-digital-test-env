@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    return Response.json({ debug: true, user_id: user?.id, email: user?.email });
+    //return Response.json({ debug: true, user_id: user?.id, email: user?.email });
     const origin = req.headers.get("origin") || "https://hostkeepdigital.co.uk";
     const return_url = body.return_url || `${origin}/HostDashboard?stripe_connect_return=success`;
     const refresh_url = body.refresh_url || `${origin}/HostDashboard?stripe_connect_return=refresh`;
@@ -92,7 +92,9 @@ Deno.serve(async (req) => {
         business_profile: { mcc: "7011", url: origin },
       });
 
-      accountId = account.id;
+     accountId = account.id;
+
+      return Response.json({ debug: true, stage: "stripe_account_created", accountId });
 
       await serviceRole.entities.User.update(user.id, {
         stripe_connect_account_id: accountId,
