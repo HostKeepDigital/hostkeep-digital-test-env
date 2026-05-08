@@ -30,6 +30,21 @@
       "type": "boolean",
       "default": false,
       "description": "Whether messaging is disabled for this role"
+    },
+    "stripe_connect_account_id": {
+      "type": "string",
+      "description": "Stripe Connect Express account ID"
+    },
+    "stripe_connect_status": {
+      "type": "string",
+      "enum": [
+        "not_connected",
+        "pending",
+        "pending_verification",
+        "verified"
+      ],
+      "default": "not_connected",
+      "description": "Stripe Connect onboarding status"
     }
   },
   "required": [
