@@ -508,28 +508,33 @@ Deno.serve(async (req) => {
   }
 
   // account.updated — Stripe fires this when a Connect Express host completes onboarding.
-  // All stripe_connect fields are stored on User entity.
+  // stripe_connect_account_id is stored on UserRole (host role record).
   if (event.type === 'account.updated') {
     const account = event.data.object;
     if (account.charges_enabled) {
       try {
-        const users = await base44.asServiceRole.entities.User.filter({ stripe_connect_account_id: account.id });
-        const user = users?.[0];
-        if (user) {
-          // Update stripe status on User
-          await base44.asServiceRole.entities.User.update(user.id, {
+        const roles = await base44.asServiceRole.entities.UserRole.filter({ stripe_connect_account_id: account.id });
+        const userRole = roles?.[0];
+        if (userRole) {
+          // Update stripe status on UserRole
+          await base44.asServiceRole.entities.UserRole.update(userRole.id, {
+            stripe_connect_status: 'verified',
+          });
+
+          // Update stripe flags on User
+          await base44.asServiceRole.entities.User.update(userRole.user_id, {
             stripe_connect_status: 'verified',
             stripe_verified: true,
           });
 
-          // Update FoundingMember stripe_verified flag
-          const members = await base44.asServiceRole.entities.FoundingMember.filter({ user_id: user.id });
+          // Update FoundingMember stripe_verified gate
+          const members = await base44.asServiceRole.entities.FoundingMember.filter({ user_id: userRole.user_id });
           if (members?.[0]) {
             await base44.asServiceRole.entities.FoundingMember.update(members[0].id, { stripe_verified: true });
           }
 
           // Check all approval gates
-          await base44.asServiceRole.functions.invoke('checkApprovalGates', { user_id: user.id });
+          await base44.asServiceRole.functions.invoke('checkApprovalGates', { user_id: userRole.user_id });
         }
       } catch (err) {
         console.error('account.updated handler error:', err);
