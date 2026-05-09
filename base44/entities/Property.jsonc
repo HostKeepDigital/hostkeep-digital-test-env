@@ -289,6 +289,27 @@
     "cleaning_fee_refundable": {
       "type": "boolean",
       "default": true
+    },
+    "smart_lock_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable automated smart lock code delivery"
+    },
+    "smart_lock_code": {
+      "type": "string",
+      "description": "Guest access code for smart lock"
+    },
+    "smart_lock_send_hours": {
+      "type": "number",
+      "description": "Hours before check-in to auto-send code"
+    },
+    "smart_lock_message": {
+      "type": "string",
+      "description": "Custom host message sent with the access code"
+    },
+    "smart_lock_map_image": {
+      "type": "string",
+      "description": "URL of map/directions image (e.g. holiday park map) sent with the access code"
     }
   },
   "required": [

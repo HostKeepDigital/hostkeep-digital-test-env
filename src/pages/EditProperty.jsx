@@ -201,6 +201,8 @@ export default function EditProperty() {
         smart_lock_enabled: property.smart_lock_enabled || false,
         smart_lock_code: property.smart_lock_code || "",
         smart_lock_send_hours: property.smart_lock_send_hours ?? null,
+        smart_lock_message: property.smart_lock_message || "",
+        smart_lock_map_image: property.smart_lock_map_image || null,
 
         // ⭐ VERIFICATION DOCUMENT FIELDS
         doc_government_id: null,
@@ -345,6 +347,8 @@ export default function EditProperty() {
       smart_lock_enabled: "Smart Lock Enabled",
       smart_lock_code: "Smart Lock Code",
       smart_lock_send_hours: "Smart Lock Auto-Send Timing",
+      smart_lock_message: "Check-in Message",
+      smart_lock_map_image: "Map / Directions Image",
       verification_document: "Verification Document",
       };
       return map[field] || field;
@@ -1277,24 +1281,76 @@ export default function EditProperty() {
           </CardContent>
         </Card>
 
-        {/* SMART LOCK AUTOMATION */}
+        {/* SMART LOCK / ACCESS CODE */}
         <Card className="mt-6">
           <CardHeader>
-            <CardTitle>Smart Lock Automation</CardTitle>
+            <CardTitle>Smart Lock / Access Code</CardTitle>
             <CardDescription>
-              If your property has a smart lock, enter the guest access code below. Guests will use this to gain entry to your property. You can optionally enable automatic delivery of this code before check‑in.
+              Set your guest access code and customise the automated message sent to guests when the code is delivered. Ideal for smart locks, key safes, holiday parks, and caravan sites.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-5">
+            {/* Access code */}
             <div>
-              <Label>Smart Lock Code</Label>
+              <Label>Access Code</Label>
               <Input
                 value={formData.smart_lock_code}
                 onChange={(e) => handleChange("smart_lock_code", e.target.value)}
                 placeholder="e.g. 4829# or app-generated code"
                 className="mt-1"
               />
+              <p className="text-xs text-gray-400 mt-1">This code will be included in the automated message to your guest.</p>
             </div>
+
+            {/* Custom message */}
+            <div>
+              <Label>Custom Check-in Message <span className="text-gray-400 font-normal">(optional)</span></Label>
+              <Textarea
+                value={formData.smart_lock_message}
+                onChange={(e) => handleChange("smart_lock_message", e.target.value)}
+                placeholder="e.g. Welcome to Sunset Caravan! Your caravan is pitch B14 — see the map below for directions from the park entrance. Hot tub code: 1234. Any questions call 07700 900123."
+                rows={4}
+                className="mt-1"
+              />
+              <p className="text-xs text-gray-400 mt-1">This message is sent to guests alongside the access code when it's delivered.</p>
+            </div>
+
+            {/* Map / directions image */}
+            <div>
+              <Label>Map or Directions Image <span className="text-gray-400 font-normal">(optional)</span></Label>
+              <p className="text-xs text-gray-500 mt-0.5 mb-2">Upload a site map, park layout, or directions image — perfect for holiday parks and caravan sites where guests need to find their pitch or plot.</p>
+              {formData.smart_lock_map_image ? (
+                <div className="relative inline-block">
+                  <img src={formData.smart_lock_map_image} alt="Map" className="rounded-xl border border-gray-200 max-h-48 object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => handleChange("smart_lock_map_image", null)}
+                    className="absolute top-2 right-2 w-7 h-7 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <label className="flex items-center gap-3 cursor-pointer border-2 border-dashed border-gray-200 rounded-xl p-4 hover:border-teal-300 transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files[0];
+                      if (!file) return;
+                      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                      handleChange("smart_lock_map_image", file_url);
+                      e.target.value = "";
+                    }}
+                  />
+                  <Upload className="w-5 h-5 text-gray-400" />
+                  <span className="text-sm text-gray-500">Upload map or directions image</span>
+                </label>
+              )}
+            </div>
+
+            {/* Auto-send toggle */}
             <div className="pt-2 border-t border-gray-100">
               <label className="flex items-start gap-2 cursor-pointer">
                 <Checkbox
@@ -1312,13 +1368,13 @@ export default function EditProperty() {
                 />
                 <div>
                   <p className="text-sm font-medium">
-                    Enable smart lock automation
+                    Enable automated delivery
                     {!formData.cancellation_policy_id && (
                       <span className="text-gray-400 font-normal"> (select a cancellation policy first)</span>
                     )}
                   </p>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    Automatically send your smart lock code to guests before check‑in. The system will never send the code while the guest is still eligible for any refund.
+                    Automatically send the access code and your message to guests before check‑in. The system will never send the code while the guest is still eligible for any refund.
                   </p>
                 </div>
               </label>
@@ -1353,8 +1409,8 @@ export default function EditProperty() {
                   {smartLockPolicyWarning && (
                     <p className="text-xs text-red-500 mt-1 font-medium">{smartLockPolicyWarning}</p>
                   )}
-                  </div>
-                  )}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
