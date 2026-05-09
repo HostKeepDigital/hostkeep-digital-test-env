@@ -130,6 +130,34 @@ export default function FoundingHost() {
       if (refCode) {
         try { await base44.functions.invoke("linkReferral", { ref_code: refCode, referee_email: form.email.toLowerCase().trim(), referee_name: fullName() }); } catch (_) {}
       }
+
+      // Store name parts so they can be saved to UserProfile after account activation
+      if (!isGuest) {
+        localStorage.setItem("pending_profile", JSON.stringify({
+          forename: form.forename.trim(),
+          middle_name: form.middle_name.trim(),
+          surname: form.surname.trim(),
+          email: form.email.toLowerCase().trim(),
+        }));
+      } else {
+        // Already has a session — save profile immediately
+        try {
+          await fetch('/api/apps/698eee4108bd1d9467648326/functions/saveUserProfile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              session_token: localStorage.getItem('session_token'),
+              email: form.email.toLowerCase().trim(),
+              forename: form.forename.trim(),
+              middle_name: form.middle_name.trim(),
+              surname: form.surname.trim(),
+              phone: '',
+              location: '',
+            }),
+          });
+        } catch (_) {}
+      }
+
       if (result?.data?.out_of_area || isOutOfArea) {
         if (!isGuest) {
           try { await base44.functions.invoke("sendVerificationCode", { email: form.email.toLowerCase().trim(), name: form.forename.trim() }); } catch (_) {}

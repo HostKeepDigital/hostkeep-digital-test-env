@@ -75,6 +75,31 @@ export default function CreatePassword() {
       if (data.expires_at) {
         localStorage.setItem("session_expires_at", data.expires_at);
       }
+
+      // Save profile name parts collected during sign-up flow
+      try {
+        const pending = localStorage.getItem("pending_profile");
+        if (pending) {
+          const { forename, middle_name, surname, email: profileEmail } = JSON.parse(pending);
+          if (forename && surname) {
+            await fetch('/api/apps/698eee4108bd1d9467648326/functions/saveUserProfile', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                session_token: data.session_token,
+                email: profileEmail || email,
+                forename,
+                middle_name: middle_name || '',
+                surname,
+                phone: '',
+                location: '',
+              }),
+            });
+          }
+          localStorage.removeItem("pending_profile");
+        }
+      } catch (_) {}
+
       window.location.href = "/";
     } catch {
       setError("Something went wrong. Please try again.");
