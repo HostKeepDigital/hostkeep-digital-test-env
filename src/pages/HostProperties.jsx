@@ -113,7 +113,7 @@ export default function HostProperties() {
   const isAttempt1 = approvalStatus === "documentation_failed_attempt_1";
   const isAttempt2 = approvalStatus === "documentation_failed_attempt_2";
   const isBanned = approvalStatus?.startsWith("banned_");
-  const stripeVerified = foundingMemberData?.stripe_verified === true;
+  const stripeVerified = stripeConnected === true;
   const subscriptionActive = !!subscription && subscription.status === "active";
   const allGatesPassed = isApproved && stripeVerified && subscriptionActive;
 
