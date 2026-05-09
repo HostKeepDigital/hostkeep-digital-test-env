@@ -87,78 +87,57 @@ const PLAN_DETAILS = {
 };
 
 async function handleSubscriptionDeactivated(base44, user_id) {
-   try {
-     // Mark User subscription_active = false
-     await base44.asServiceRole.entities.User.update(user_id, { subscription_active: false });
+  try {
+    // Mark subscription_active = false on User
+    await base44.asServiceRole.entities.User.update(user_id, { subscription_active: false });
 
-     // Mark FoundingMember subscription_active = false
-     // Mark FoundingMember subscription_active = false
-     // Set stripe_verified gate on User
-      await base44.asServiceRole.entities.User.update(userRole.user_id, {
-        stripe_verified: true,
+    // Flip admin gate back to red
+    try {
+      await base44.asServiceRole.functions.invoke('checkApprovalGates', { user_id });
+    } catch (_) {}
+
+    // Mark Subscription record as expired
+    try {
+      const subs = await base44.asServiceRole.entities.Subscription.filter({ user_id });
+      if (subs?.[0]) {
+        await base44.asServiceRole.entities.Subscription.update(subs[0].id, { status: 'expired' });
+      }
+    } catch (_) {}
+
+    // Unpublish all published properties
+    const properties = await base44.asServiceRole.entities.Property.filter({ owner_id: user_id, status: 'published' });
+    for (const property of (properties || [])) {
+      await base44.asServiceRole.entities.Property.update(property.id, { status: 'draft' });
+    }
+
+    // Send subscription expired email
+    const userRecords = await base44.asServiceRole.entities.User.filter({ id: user_id });
+    const user = userRecords?.[0];
+    if (user?.email) {
+      const html = buildEmail({
+        heading: 'Your subscription has expired',
+        body: `
+          <p>Hi ${user.full_name?.split(' ')[0] || 'there'},</p>
+          <p>Your HostKeep subscription has ended. As a result:</p>
+          <ul style="padding-left:20px;line-height:1.8;">
+            <li>Your properties have been moved to <strong>Draft</strong> and are no longer visible to guests.</li>
+            <li>Any existing confirmed bookings will continue as normal and will not be affected.</li>
+          </ul>
+          <p>To republish your properties and continue accepting new bookings, simply resubscribe from your dashboard.</p>
+          <p style="margin-top:24px;">If you have any questions, we're happy to help.</p>
+          <p>Warm regards,<br/><strong>The HostKeep Digital Team</strong></p>
+        `,
+        buttonText: 'Resubscribe Now',
+        buttonUrl: 'https://hostkeepdigital.co.uk/Subscription',
       });
+      await sendEmail({ to: user.email, subject: 'Your HostKeep subscription has expired', html });
+    }
 
-     // Flip admin gate back to red
-     try {
-       await base44.asServiceRole.functions.invoke('checkApprovalGates', { user_id });
-     } catch (_) {}
-
-     // Mark Subscription record as expired
-     try {
-       const subs = await base44.asServiceRole.entities.Subscription.filter({ user_id });
-       if (subs?.[0]) {
-         await base44.asServiceRole.entities.Subscription.update(subs[0].id, { status: 'expired' });
-       }
-     } catch (_) {}
-
-     // Unpublish all published properties
-     const properties = await base44.asServiceRole.entities.Property.filter({ owner_id: user_id, status: 'published' });
-     for (const property of (properties || [])) {
-       await base44.asServiceRole.entities.Property.update(property.id, { status: 'draft' });
-     }
-
-     // Send subscription expired email
-     // Call checkApprovalGates so admin gate flips back to red
-     try {
-       await base44.asServiceRole.functions.invoke('checkApprovalGates', { user_id });
-     } catch (_) {}
-
-     // Update Subscription record status
-     try {
-       const subs = await base44.asServiceRole.entities.Subscription.filter({ user_id });
-       if (subs?.[0]) {
-         await base44.asServiceRole.entities.Subscription.update(subs[0].id, { status: 'expired' });
-       }
-     } catch (_) {}
-
-     // Send subscription expired email
-     const userRecords = await base44.asServiceRole.entities.User.filter({ id: user_id });
-     const user = userRecords?.[0];
-     if (user?.email) {
-       const html = buildEmail({
-         heading: 'Your subscription has expired',
-         body: `
-           <p>Hi ${user.full_name?.split(' ')[0] || 'there'},</p>
-           <p>Your HostKeep subscription has ended. As a result:</p>
-           <ul style="padding-left:20px;line-height:1.8;">
-             <li>Your properties have been moved to <strong>Draft</strong> and are no longer visible to guests.</li>
-             <li>Any existing confirmed bookings will continue as normal and will not be affected.</li>
-           </ul>
-           <p>To republish your properties and continue accepting new bookings, simply resubscribe from your dashboard.</p>
-           <p style="margin-top:24px;">If you have any questions, we're happy to help.</p>
-           <p>Warm regards,<br/><strong>The HostKeep Digital Team</strong></p>
-         `,
-         buttonText: 'Resubscribe Now',
-         buttonUrl: 'https://hostkeepdigital.co.uk/Subscription',
-       });
-       await sendEmail({ to: user.email, subject: 'Your HostKeep subscription has expired', html });
-     }
-
-     // Invoke messaging cutoff check
-     await base44.asServiceRole.functions.invoke('checkHostMessagingCutoff', { host_user_id: user_id });
-   } catch (err) {
-     console.error('handleSubscriptionDeactivated error:', err);
-   }
+    // Invoke messaging cutoff check
+    await base44.asServiceRole.functions.invoke('checkHostMessagingCutoff', { host_user_id: user_id });
+  } catch (err) {
+    console.error('handleSubscriptionDeactivated error:', err);
+  }
 }
 
 Deno.serve(async (req) => {
@@ -245,15 +224,8 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Set subscription_active on FoundingMember so the gate turns green
-      try {
-        const foundingMembers = await base44.asServiceRole.entities.FoundingMember.filter({ user_id });
-        if (foundingMembers?.[0]) {
-          await base44.asServiceRole.entities.FoundingMember.update(foundingMembers[0].id, {
-            subscription_active: true,
-          });
-        }
-      } catch (_) {}
+      // Set subscription_active on User
+      await base44.asServiceRole.entities.User.update(user_id, { subscription_active: true });
 
       // Apply referral reward if this user was referred
       try {
@@ -458,13 +430,10 @@ Deno.serve(async (req) => {
         const subs = await base44.asServiceRole.entities.Subscription.filter({ stripe_subscription_id: stripeSubscriptionId });
         const sub = subs?.[0];
         if (sub && sub.status === 'active') {
-           const members = await base44.asServiceRole.entities.FoundingMember.filter({ user_id: sub.user_id });
-           if (members?.[0]) {
-             await base44.asServiceRole.entities.FoundingMember.update(members[0].id, { subscription_active: true });
-           }
-           await base44.asServiceRole.entities.User.update(sub.user_id, { subscription_active: true });
-           await base44.asServiceRole.functions.invoke('checkApprovalGates', { user_id: sub.user_id });
-         }
+          // Set subscription_active gate on User
+          await base44.asServiceRole.entities.User.update(sub.user_id, { subscription_active: true });
+          await base44.asServiceRole.functions.invoke('checkApprovalGates', { user_id: sub.user_id });
+        }
       } catch (err) {
         console.error('invoice.payment_succeeded handler error:', err);
       }
@@ -477,30 +446,27 @@ Deno.serve(async (req) => {
     if (user_id) {
       try {
         if (subscription.status === 'active') {
-           const members = await base44.asServiceRole.entities.FoundingMember.filter({ user_id });
-           if (members?.[0]) {
-             await base44.asServiceRole.entities.FoundingMember.update(members[0].id, { subscription_active: true });
-           }
-           await base44.asServiceRole.entities.User.update(user_id, { subscription_active: true });
-           await base44.asServiceRole.functions.invoke('checkApprovalGates', { user_id });
+          // Set subscription_active gate on User
+          await base44.asServiceRole.entities.User.update(user_id, { subscription_active: true });
+          await base44.asServiceRole.functions.invoke('checkApprovalGates', { user_id });
 
-           // Apply referral reward if this user was referred
-           try {
-             const users = await base44.asServiceRole.entities.User.filter({ id: user_id });
-             const userEmail = users?.[0]?.email;
-             if (userEmail) {
-               const refs = await base44.asServiceRole.entities.Referral.filter({ referee_email: userEmail.toLowerCase().trim() });
-               if (refs.length > 0 && refs[0].status === "pending") {
-                 await base44.asServiceRole.functions.invoke("applyReferralReward", {
-                   referee_user_id: user_id,
-                   referee_email: userEmail,
-                 });
-               }
-             }
-           } catch (_) {}
-         } else if (subscription.status === 'canceled' || subscription.status === 'past_due') {
-           await handleSubscriptionDeactivated(base44, user_id);
-         }
+          // Apply referral reward if this user was referred
+          try {
+            const users = await base44.asServiceRole.entities.User.filter({ id: user_id });
+            const userEmail = users?.[0]?.email;
+            if (userEmail) {
+              const refs = await base44.asServiceRole.entities.Referral.filter({ referee_email: userEmail.toLowerCase().trim() });
+              if (refs.length > 0 && refs[0].status === "pending") {
+                await base44.asServiceRole.functions.invoke("applyReferralReward", {
+                  referee_user_id: user_id,
+                  referee_email: userEmail,
+                });
+              }
+            }
+          } catch (_) {}
+        } else if (subscription.status === 'canceled' || subscription.status === 'past_due') {
+          await handleSubscriptionDeactivated(base44, user_id);
+        }
       } catch (err) {
         console.error('customer.subscription.updated handler error:', err);
       }
@@ -509,6 +475,7 @@ Deno.serve(async (req) => {
 
   // account.updated — Stripe fires this when a Connect Express host completes onboarding.
   // stripe_connect_account_id is stored on UserRole (host role record).
+  // Gate flags (stripe_verified) live on User.
   if (event.type === 'account.updated') {
     const account = event.data.object;
     if (account.charges_enabled) {
@@ -521,17 +488,11 @@ Deno.serve(async (req) => {
             stripe_connect_status: 'verified',
           });
 
-          // Update stripe flags on User
+          // Set stripe gate flags on User
           await base44.asServiceRole.entities.User.update(userRole.user_id, {
             stripe_connect_status: 'verified',
             stripe_verified: true,
           });
-
-          // Update FoundingMember stripe_verified gate
-          const members = await base44.asServiceRole.entities.FoundingMember.filter({ user_id: userRole.user_id });
-          if (members?.[0]) {
-            await base44.asServiceRole.entities.FoundingMember.update(members[0].id, { stripe_verified: true });
-          }
 
           // Check all approval gates
           await base44.asServiceRole.functions.invoke('checkApprovalGates', { user_id: userRole.user_id });
