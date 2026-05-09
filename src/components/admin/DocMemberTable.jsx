@@ -99,6 +99,7 @@ export default function DocMemberTable({
   showDeleteButton = false,
   onDelete,
   actionLoading = {},
+  extraActions = null,
 }) {
   const [decisions, setDecisions] = useState({});
   const [submitting, setSubmitting] = useState({});
@@ -240,6 +241,9 @@ export default function DocMemberTable({
                       : <><Trash2 className="w-3 h-3 mr-1" />Delete</>}
                   </Button>
                 )}
+
+                {/* Extra actions (e.g. Ban button for attempt 2) */}
+                {extraActions && extraActions(m)}
               </div>
 
               {/* RIGHT — Documents */}

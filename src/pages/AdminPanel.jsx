@@ -1520,7 +1520,13 @@ const handleDocBan = async (member) => {
               </Section>
 
               <Section title="Document Failed — Attempt 2" count={docFail2Members.length} accent="red">
-                <DocMemberTable members={docFail2Members} properties={allProperties} verificationDocs={allVerificationDocs} showApproveButton showFailButton onSubmitDecision={handleSubmitDocDecision} showDeleteButton={canDelete} onDelete={handleDeleteMember} actionLoading={actionLoading} />
+                <DocMemberTable members={docFail2Members} properties={allProperties} verificationDocs={allVerificationDocs} showApproveButton showFailButton onSubmitDecision={handleSubmitDocDecision} actionLoading={actionLoading} onDelete={handleDeleteMember}
+                  extraActions={(m) => (
+                    <Button size="sm" variant="outline" className="w-full h-7 px-3 text-xs border-red-800 text-red-800 hover:bg-red-50 mt-1" disabled={!!actionLoading[m.id]} onClick={() => handleDocBan(m)}>
+                      {actionLoading[m.id] === "doc_ban" ? "..." : <><Ban className="w-3 h-3 mr-1" />Ban</>}
+                    </Button>
+                  )}
+                />
               </Section>
 
               <Section title="Approved" count={approvedMembers.length} accent="green">
