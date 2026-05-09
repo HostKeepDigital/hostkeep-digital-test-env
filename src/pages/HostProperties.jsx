@@ -37,7 +37,8 @@ import {
   Home,
   Crown,
   X,
-  PlusCircle
+  PlusCircle,
+  CheckCircle2
 } from "lucide-react";
 import { toast } from "sonner";
 import PropertyListingCard from "@/components/properties/PropertyListingCard";
@@ -196,10 +197,16 @@ export default function HostProperties() {
           </div>
         )}
         {allGatesPassed && (
-          <div className="mb-6 p-4 rounded-lg border-l-4 border-green-500 bg-green-50">
-            <p className="text-sm text-green-800">
-              <strong>You're all set!</strong> Your documents are approved, subscription is active and Stripe is connected. You can now publish your property.
-            </p>
+          <div className="mb-6 p-5 rounded-xl border border-green-300 bg-green-50 flex items-start gap-4">
+            <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+              <CheckCircle2 className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="font-bold text-green-900 text-base">You're ready to publish! 🎉</p>
+              <p className="text-sm text-green-800 mt-1">
+                All three requirements are complete — your documents are approved, Stripe is connected, and your subscription is active. Click <strong>Publish</strong> on your property to make it live.
+              </p>
+            </div>
           </div>
         )}
         {isAttempt1 && properties.length > 0 && (
