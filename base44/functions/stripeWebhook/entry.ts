@@ -169,6 +169,8 @@ Deno.serve(async (req) => {
     }
     await base44.asServiceRole.entities.AdminAlert.create({
       alert_type: "processed_webhook",
+      title: "Stripe Webhook",
+      message: event.id,
       description: event.id,
       created_by: "stripe_webhook",
     });
