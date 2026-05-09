@@ -428,6 +428,7 @@ export default function CreateProperty() {
 
         // No subscription — allow through, gates prevent publishing
         if (!sub || sub.status !== 'active') {
+          window.location.href = createPageUrl("HostProperties");
           return;
         }
 

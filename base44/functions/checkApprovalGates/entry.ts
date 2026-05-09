@@ -70,39 +70,23 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 1) Load User and FoundingMember in parallel
-    const [user, members] = await Promise.all([
-      base44.asServiceRole.entities.User.get(user_id),
-      base44.asServiceRole.entities.FoundingMember.filter({ user_id }),
-    ]);
-
-    if (!user) {
-      return Response.json(
-        { success: false, error: "user_not_found" },
-        { status: 404 }
-      );
-    }
-
+    // 1) Load FoundingMember
+    const members = await base44.asServiceRole.entities.FoundingMember.filter({ user_id });
     const member = members?.[0];
 
     if (!member) {
       return Response.json({ success: false, reason: "no_member" });
     }
 
-    // 2) Check if already approved
+    // 3) Check if already approved
     if (member.approval_status === "approved") {
       return Response.json({ success: true, already_approved: true });
     }
 
-    // 3) Read documents gate directly from User (service role)
-    const documents_verified = user.documents_verified || false;
-
-    // Stripe and subscription gates read from UserRole / Subscription
-    const userRoles = await base44.asServiceRole.entities.UserRole.filter({ user_id, role: member.role });
-    const stripe_verified = userRoles?.[0]?.stripe_connect_status === "verified";
-
-    const subs = await base44.asServiceRole.entities.Subscription.filter({ user_id });
-    const subscription_active = subs?.some(s => s.status === "active") || false;
+    // 4) Read gates
+    const documents_verified = member.documents_verified || false;
+    const stripe_verified = user.stripe_verified || false;
+    const subscription_active = user.subscription_active || false;
 
     // 5) If all gates passed
     if (documents_verified && stripe_verified && subscription_active) {
@@ -123,7 +107,7 @@ Deno.serve(async (req) => {
       }
 
       // Send approval email
-      await sendApprovalEmail(user.email, user.full_name);
+      await sendApprovalEmail(member.email, member.full_name);
 
       return Response.json({ success: true, approved: true });
     }
