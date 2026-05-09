@@ -81,6 +81,8 @@ Deno.serve(async (req) => {
     const userRecords = await base44.asServiceRole.entities.User.filter({ id: user_id });
     const user = userRecords?.[0];
 
+    return Response.json({ debug: true, user_id, user_found: !!user, user_id_from_record: user?.id, stripe_verified: user?.stripe_verified, documents_verified: user?.documents_verified, subscription_active: user?.subscription_active });
+
     const gates = {
       documents: !!user?.documents_verified,
       stripe: !!user?.stripe_verified,
