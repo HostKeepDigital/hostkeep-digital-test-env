@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, reason: "missing_user_id" }, { status: 400 });
     }
 
-    // Load FoundingMember by user_id
+    // Load FoundingMember by user_id — needed for approval_status update and email
     const members = await base44.asServiceRole.entities.FoundingMember.filter({ user_id });
     const member = members?.[0];
 
@@ -78,20 +78,28 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, already_approved: true });
     }
 
-      const creds = await base44.asServiceRole.entities.UserCredentials.filter({ user_id });
-    const email = creds?.[0]?.email;
+    // Stripe gate — read from UserRole.stripe_connect_status (reliable, no User entity restriction)
+    const hostRoles = await base44.asServiceRole.entities.UserRole.filter({ user_id, role: "host" });
+    const hostRole = hostRoles?.[0];
+    const stripeVerified = hostRole?.stripe_connect_status === "verified";
 
-    let user = null;
+    // Subscription gate — read from Subscription entity (reliable)
+    const subs = await base44.asServiceRole.entities.Subscription.filter({ user_id });
+    const subscriptionActive = subs?.some(s => s.status === "active") || false;
+
+    // Documents gate — read from User via email lookup (admin writes this from frontend)
+    const creds = await base44.asServiceRole.entities.UserCredentials.filter({ user_id });
+    const email = creds?.[0]?.email;
+    let documentsVerified = false;
     if (email) {
       const userRecords = await base44.asServiceRole.entities.User.filter({ email });
-      user = userRecords?.[0] || null;
+      documentsVerified = !!userRecords?.[0]?.documents_verified;
     }
-   // return Response.json({ debug: true, user_id, user_found: !!user, user_id_from_record: user?.id, stripe_verified: user?.stripe_verified, documents_verified: user?.documents_verified, subscription_active: user?.subscription_active });
 
     const gates = {
-      documents: !!user?.documents_verified,
-      stripe: !!user?.stripe_verified,
-      subscription: !!user?.subscription_active,
+      documents: documentsVerified,
+      stripe: stripeVerified,
+      subscription: subscriptionActive,
     };
 
     // Not all gates passed
@@ -99,7 +107,7 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, approved: false, gates });
     }
 
-    // All gates passed — approve
+    // All gates passed — approve FoundingMember
     await base44.asServiceRole.entities.FoundingMember.update(member.id, {
       approval_status: "approved",
     });
