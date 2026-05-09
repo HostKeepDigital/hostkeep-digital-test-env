@@ -780,6 +780,54 @@ function AccountManager({ title, role, color }) {
   );
 }
 
+const TEST_ACCOUNTS = [
+  { email: 'tyleris1192@gmail.com', label: 'Host (tyleris1192@gmail.com)' },
+  { email: 'hkdcleaner@outlook.com', label: 'Cleaner (hkdcleaner@outlook.com)' },
+  { email: 'tyler.d.clarke@hotmail.com', label: 'Guest (tyler.d.clarke@hotmail.com)' },
+];
+const TEST_ACCOUNT_PASSWORD = 'Test123!';
+
+function SetTestPasswords({ sessionToken }) {
+  const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState(null);
+
+  const run = async () => {
+    setLoading(true); setResults(null);
+    const out = [];
+    for (const acc of TEST_ACCOUNTS) {
+      const res = await fn('devSetPassword', { session_token: sessionToken, email: acc.email, password: TEST_ACCOUNT_PASSWORD });
+      out.push({ label: acc.label, success: res.success === true, error: res.error });
+    }
+    setResults(out);
+    setLoading(false);
+  };
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+      <div>
+        <h3 className="font-semibold text-gray-900 text-sm">Set Test Account Passwords</h3>
+        <p className="text-xs text-gray-500 mt-0.5">Sets password to <span className="font-mono font-bold">{TEST_ACCOUNT_PASSWORD}</span> for all 3 test accounts in one click.</p>
+      </div>
+      <button onClick={run} disabled={loading}
+        className="px-5 py-2.5 bg-[#0d9488] hover:bg-[#0f766e] disabled:opacity-50 text-white text-sm font-semibold rounded-xl flex items-center gap-2">
+        {loading && <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>}
+        {loading ? 'Setting passwords…' : '🔑 Set all test passwords to Test123!'}
+      </button>
+      {results && (
+        <div className="space-y-2">
+          {results.map((r, i) => (
+            <div key={i} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs ${r.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+              <span>{r.success ? '✅' : '❌'}</span>
+              <span>{r.label}</span>
+              {!r.success && <span className="ml-auto font-mono">{r.error}</span>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ResetAllProgress() {
   const [done, setDone] = useState(false);
   const go = () => {
@@ -802,7 +850,7 @@ function ResetAllProgress() {
 // MAIN EXPORT
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export default function DevToolsSection({ members, user }) {
+export default function DevToolsSection({ members, user, sessionToken }) {
   const [tab, setTab] = useState('host');
 
   const tabs = [
@@ -849,6 +897,7 @@ export default function DevToolsSection({ members, user }) {
       {tab === 'mobile' && <MobileChecklist />}
       {tab === 'data'   && (
         <div className="space-y-4">
+          <SetTestPasswords sessionToken={sessionToken} />
           <ResetAllProgress />
           <AccountManager title="Guest Accounts" role="guest" color="bg-[#1E3A5F] hover:bg-[#162d4a]" />
           <AccountManager title="Host Accounts" role="host" color="bg-[#0d9488] hover:bg-[#0f766e]" />

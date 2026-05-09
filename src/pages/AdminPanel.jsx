@@ -1622,7 +1622,7 @@ const handleDocBan = async (member) => {
 
       {/* ── DEV TOOLS ────────────────────────────────────────────────────── */}
       {activeTab === "devtools" && (
-        <DevToolsSection members={members} user={user} />
+        <DevToolsSection members={members} user={user} sessionToken={getSessionToken()} />
       )}
     </div>
   );
