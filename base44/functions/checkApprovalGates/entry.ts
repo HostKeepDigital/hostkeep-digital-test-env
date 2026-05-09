@@ -1,9 +1,11 @@
-import { createClientFromRequest } from "npm:@base44/sdk@0.8.25";
+import { createClientFromRequest } from "npm:@base44/sdk@0.8.23";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
-async function sendFullyApprovedEmail(to, fullName) {
+// Helper: Send approval email
+async function sendApprovalEmail(to: string, fullName: string) {
   if (!RESEND_API_KEY) return;
+
   try {
     await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -14,7 +16,7 @@ async function sendFullyApprovedEmail(to, fullName) {
       body: JSON.stringify({
         from: "HostKeep <hello@hostkeepdigital.co.uk>",
         to,
-        subject: "You're fully approved on HostKeep 🎉",
+        subject: "You're fully approved — your property can now be published",
         html: `
           <!DOCTYPE html>
           <html>
@@ -29,11 +31,11 @@ async function sendFullyApprovedEmail(to, fullName) {
                   Hi ${fullName || "there"},
                 </p>
                 <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px;">
-                  All your verification steps are complete. Your property can now be published on HostKeep and you can start accepting bookings.
+                  Congratulations! You've completed all verification requirements. Your property can now be published to guests.
                 </p>
                 <a href="https://hostkeepdigital.co.uk/HostDashboard"
                    style="display:inline-block;background:#0d9488;color:#ffffff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;">
-                  Go to your Dashboard
+                  Go to Dashboard
                 </a>
                 <p style="color:#6b7280;font-size:13px;margin-top:24px;">
                   If you have any questions, contact us at hello@hostkeepdigital.co.uk
@@ -62,73 +64,87 @@ Deno.serve(async (req) => {
     const { user_id } = await req.json();
 
     if (!user_id) {
-      return Response.json({ success: false, reason: "missing_user_id" }, { status: 400 });
+      return Response.json(
+        { success: false, error: "missing_user_id" },
+        { status: 400 }
+      );
     }
 
-    // Load FoundingMember by user_id — needed for approval_status update and email
-    const members = await base44.asServiceRole.entities.FoundingMember.filter({ user_id });
+    // 1) Load FoundingMember
+    const members = await base44.asServiceRole.entities.FoundingMember.filter({
+      user_id,
+    });
     const member = members?.[0];
 
     if (!member) {
       return Response.json({ success: false, reason: "no_member" });
     }
 
-    // Already fully approved — nothing to do
+    // 3) Check if already approved
     if (member.approval_status === "approved") {
       return Response.json({ success: true, already_approved: true });
     }
 
-    // Stripe gate — read from UserRole.stripe_connect_status (reliable, no User entity restriction)
+    // 4) Read gates via reliable entity lookups (User.get/filter by id is blocked)
+
+    // Stripe gate — UserRole where role=host, stripe_connect_status === "verified"
     const hostRoles = await base44.asServiceRole.entities.UserRole.filter({ user_id, role: "host" });
-    const hostRole = hostRoles?.[0];
-    const stripeVerified = hostRole?.stripe_connect_status === "verified";
+    const stripe_verified = hostRoles?.[0]?.stripe_connect_status === "verified";
 
-    // Subscription gate — read from Subscription entity (reliable)
+    // Subscription gate — any Subscription with status === "active"
     const subs = await base44.asServiceRole.entities.Subscription.filter({ user_id });
-    const subscriptionActive = subs?.some(s => s.status === "active") || false;
+    const subscription_active = subs?.some(s => s.status === "active") || false;
 
-    // Documents gate — read from User via email lookup (admin writes this from frontend)
-    const creds = await base44.asServiceRole.entities.UserCredentials.filter({ user_id });
-    const email = creds?.[0]?.email;
-    let documentsVerified = false;
-    if (email) {
-      const userRecords = await base44.asServiceRole.entities.User.filter({ email });
-      documentsVerified = !!userRecords?.[0]?.documents_verified;
-    }
+    // Documents gate — look up email via UserCredentials, then User.filter({ email })
+    let documents_verified = false;
+    try {
+      const creds = await base44.asServiceRole.entities.UserCredentials.filter({ user_id });
+      const email = creds?.[0]?.email;
+      if (email) {
+        const userRecords = await base44.asServiceRole.entities.User.filter({ email });
+        documents_verified = !!userRecords?.[0]?.documents_verified;
+      }
+    } catch (_) {}
 
-    const gates = {
-      documents: documentsVerified,
-      stripe: stripeVerified,
-      subscription: subscriptionActive,
-    };
-
-    // Not all gates passed
-    if (!gates.documents || !gates.stripe || !gates.subscription) {
-      return Response.json({ success: true, approved: false, gates });
-    }
-
-    // All gates passed — approve FoundingMember
-    await base44.asServiceRole.entities.FoundingMember.update(member.id, {
-      approval_status: "approved",
-    });
-
-    // Update the matching UserRole to approved
-    const userRoles = await base44.asServiceRole.entities.UserRole.filter({
-      user_id,
-      role: member.role,
-    });
-    if (userRoles?.[0]) {
-      await base44.asServiceRole.entities.UserRole.update(userRoles[0].id, {
+    // 5) If all gates passed
+    if (documents_verified && stripe_verified && subscription_active) {
+      // Update FoundingMember
+      await base44.asServiceRole.entities.FoundingMember.update(member.id, {
         approval_status: "approved",
       });
+
+      // Find and update UserRole
+      const roles = await base44.asServiceRole.entities.UserRole.filter({
+        user_id,
+        role: member.role,
+      });
+      if (roles?.[0]) {
+        await base44.asServiceRole.entities.UserRole.update(roles[0].id, {
+          approval_status: "approved",
+        });
+      }
+
+      // Send approval email — use FoundingMember record which has email + full_name
+      await sendApprovalEmail(member.email, member.full_name);
+
+      return Response.json({ success: true, approved: true });
     }
 
-    // Send fully approved email
-    await sendFullyApprovedEmail(member.email, member.full_name);
-
-    return Response.json({ success: true, approved: true });
+    // 6) Return gate status
+    return Response.json({
+      success: true,
+      approved: false,
+      gates: {
+        documents: documents_verified,
+        stripe: stripe_verified,
+        subscription: subscription_active,
+      },
+    });
   } catch (err) {
     console.error("checkApprovalGates error:", err);
-    return Response.json({ success: false, error: "server_error" }, { status: 500 });
+    return Response.json(
+      { success: false, error: "server_error" },
+      { status: 500 }
+    );
   }
 });
