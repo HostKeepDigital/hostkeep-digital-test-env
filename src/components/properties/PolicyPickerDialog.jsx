@@ -48,7 +48,10 @@ export default function PolicyPickerDialog({
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto space-y-2 py-2 pr-1">
-          {policies.map((policy) => {
+          {[...policies].sort((a, b) => {
+            const order = ["Flexible", "Moderate", "Strict", "Super Strict"];
+            return (order.indexOf(a.policy_name) ?? 99) - (order.indexOf(b.policy_name) ?? 99);
+          }).map((policy) => {
             const isSelected = selected === policy.id;
             return (
               <button
