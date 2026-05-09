@@ -81,9 +81,27 @@ export default function Settings() {
           if (u.notification_preferences && typeof u.notification_preferences === "object") {
             setNotifications((prev) => ({ ...prev, ...u.notification_preferences }));
           }
+        } else {
+          // Fallback: populate from the AuthContext user object
+          setProfile({
+            forename: user.forename || "",
+            middle_name: user.middle_name || "",
+            surname: user.surname || "",
+            phone: user.phone || "",
+            location: user.location || "",
+          });
         }
       })
-      .catch(() => {})
+      .catch(() => {
+        // On any error, fallback to AuthContext user data
+        setProfile({
+          forename: user.forename || "",
+          middle_name: user.middle_name || "",
+          surname: user.surname || "",
+          phone: user.phone || "",
+          location: user.location || "",
+        });
+      })
       .finally(() => setProfileLoading(false));
     if (user?.id) {
       base44.entities.UserRole.filter({ user_id: user.id }).then(setUserRoles).catch(() => {});
