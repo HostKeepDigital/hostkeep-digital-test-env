@@ -607,7 +607,7 @@ const handleDocApprove = async (member) => {
      // Mark documents_verified on both FoundingMember and User
      await base44.entities.FoundingMember.update(member.id, { documents_verified: true });
      if (member.user_id) {
-       await base44.entities.User.update(member.user_id, { documents_verified: true });
+       await base44.functions.invoke("adminSetDocumentsVerified", { user_id: member.user_id, documents_verified: true });
      }
 
      // Send approval email
@@ -735,8 +735,7 @@ const DOC_LABELS = { government_id: "Government ID", selfie: "Selfie with ID", u
     // All three passed — run approval logic
     await base44.entities.FoundingMember.update(member.id, { documents_verified: true });
     if (member.user_id) {
-      await base44.entities.User.update(member.user_id, { documents_verified: true });
-      await base44.functions.invoke("checkApprovalGates", { user_id: member.user_id });
+      await base44.functions.invoke("adminSetDocumentsVerified", { user_id: member.user_id, documents_verified: true });
     }
     await base44.functions.invoke("sendEmail", {
       to: member.email,
