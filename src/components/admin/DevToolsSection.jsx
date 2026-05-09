@@ -828,6 +828,67 @@ function SetTestPasswords({ sessionToken }) {
   );
 }
 
+function SeedTestAccounts() {
+  const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState(null);
+  const [error, setError] = useState(null);
+
+  const run = async () => {
+    setLoading(true); setResults(null); setError(null);
+    try {
+      const res = await fn('seedTestAccounts', { secret: 'seed_test_accounts_2026' });
+      if (res.success) {
+        setResults(res.results);
+      } else {
+        setError(res.error || 'Unknown error');
+      }
+    } catch (e) {
+      setError(e.message);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="bg-white rounded-xl border border-blue-200 p-5 space-y-4">
+      <div>
+        <h3 className="font-semibold text-gray-900 text-sm">🌱 Seed Test Accounts</h3>
+        <p className="text-xs text-gray-500 mt-0.5">
+          Creates Host, Cleaner &amp; Guest test accounts in the <span className="font-semibold text-blue-600">current database environment</span>.
+          Run this while in <span className="font-mono font-bold text-blue-600">Test DB</span> mode to populate the test database.
+          Password: <span className="font-mono font-bold">Test123!</span>
+        </p>
+        <div className="mt-2 grid grid-cols-1 gap-1 text-xs text-gray-500">
+          {TEST_ACCOUNTS.map(a => <span key={a.email} className="font-mono">{a.email}</span>)}
+        </div>
+      </div>
+      <button onClick={run} disabled={loading}
+        className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-semibold rounded-xl flex items-center gap-2">
+        {loading && <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>}
+        {loading ? 'Seeding accounts…' : '🌱 Seed test accounts into current DB'}
+      </button>
+      {error && <p className="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">❌ {error}</p>}
+      {results && (
+        <div className="space-y-2">
+          {results.map((r, i) => (
+            <div key={i} className="bg-gray-50 rounded-lg px-3 py-2 text-xs">
+              <p className="font-mono font-semibold text-gray-700">{r.email}</p>
+              <ul className="mt-1 space-y-0.5">
+                {r.steps.map((s, j) => (
+                  <li key={j} className="text-gray-500 flex items-center gap-1">
+                    <span className={s.includes('created') ? 'text-green-600' : s.includes('exists') ? 'text-gray-400' : 'text-blue-600'}>●</span>
+                    {s}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+          <p className="text-xs text-green-700 bg-green-50 rounded-lg px-3 py-2">✅ All accounts seeded successfully</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ResetAllProgress() {
   const [done, setDone] = useState(false);
   const go = () => {
@@ -897,6 +958,7 @@ export default function DevToolsSection({ members, user, sessionToken }) {
       {tab === 'mobile' && <MobileChecklist />}
       {tab === 'data'   && (
         <div className="space-y-4">
+          <SeedTestAccounts />
           <SetTestPasswords sessionToken={sessionToken} />
           <ResetAllProgress />
           <AccountManager title="Guest Accounts" role="guest" color="bg-[#1E3A5F] hover:bg-[#162d4a]" />
