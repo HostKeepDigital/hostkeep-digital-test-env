@@ -78,10 +78,15 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, already_approved: true });
     }
 
-    const userRecords = await base44.asServiceRole.entities.User.filter({ id: user_id });
-    const user = userRecords?.[0];
+      const creds = await base44.asServiceRole.entities.UserCredentials.filter({ user_id });
+    const email = creds?.[0]?.email;
 
-    return Response.json({ debug: true, user_id, user_found: !!user, user_id_from_record: user?.id, stripe_verified: user?.stripe_verified, documents_verified: user?.documents_verified, subscription_active: user?.subscription_active });
+    let user = null;
+    if (email) {
+      const userRecords = await base44.asServiceRole.entities.User.filter({ email });
+      user = userRecords?.[0] || null;
+    }
+   // return Response.json({ debug: true, user_id, user_found: !!user, user_id_from_record: user?.id, stripe_verified: user?.stripe_verified, documents_verified: user?.documents_verified, subscription_active: user?.subscription_active });
 
     const gates = {
       documents: !!user?.documents_verified,
