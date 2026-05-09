@@ -1,9 +1,9 @@
-import { createClientFromRequest } from "npm:@base44/sdk@0.8.23";
+import { createClientFromRequest } from "npm:@base44/sdk@0.8.25";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 // Helper: Send approval email
-async function sendApprovalEmail(to: string, fullName: string) {
+async function sendApprovalEmail(to, fullName) {
   if (!RESEND_API_KEY) return;
 
   try {
@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, reason: "no_member" });
     }
 
-    // 3) Check if already approved
+    // 2) Check if already approved
     if (member.approval_status === "approved") {
       return Response.json({ success: true, already_approved: true });
     }
@@ -86,22 +86,22 @@ Deno.serve(async (req) => {
     // Documents gate — from FoundingMember (set reliably by adminSetDocumentsVerified)
     const documents_verified = member.documents_verified || false;
 
-    // Stripe gate — from UserRole.stripe_connect_status
+    // Stripe gate — from UserRole.stripe_connect_status (never touches User entity)
     const hostRoles = await base44.asServiceRole.entities.UserRole.filter({ user_id, role: "host" });
     const stripe_verified = hostRoles?.[0]?.stripe_connect_status === "verified";
 
-    // Subscription gate — from Subscription entity
+    // Subscription gate — from Subscription entity (never touches User entity)
     const subs = await base44.asServiceRole.entities.Subscription.filter({ user_id });
     const subscription_active = subs?.some(s => s.status === "active") || false;
 
-    // 5) If all gates passed
+    // 3) If all gates passed — approve
     if (documents_verified && stripe_verified && subscription_active) {
-      // Update FoundingMember
+      // Update FoundingMember approval_status
       await base44.asServiceRole.entities.FoundingMember.update(member.id, {
         approval_status: "approved",
       });
 
-      // Find and update UserRole
+      // Update matching UserRole approval_status
       const roles = await base44.asServiceRole.entities.UserRole.filter({
         user_id,
         role: member.role,
@@ -112,13 +112,13 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Send approval email
+      // Send fully approved email
       await sendApprovalEmail(member.email, member.full_name);
 
       return Response.json({ success: true, approved: true });
     }
 
-    // 6) Return gate status
+    // 4) Return current gate status
     return Response.json({
       success: true,
       approved: false,
