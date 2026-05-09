@@ -83,10 +83,10 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, already_approved: true });
     }
 
-    // 4) Read gates
+    // 4) Read gates from FoundingMember
     const documents_verified = member.documents_verified || false;
-    const stripe_verified = user.stripe_verified || false;
-    const subscription_active = user.subscription_active || false;
+    const stripe_verified = member.stripe_verified || false;
+    const subscription_active = member.subscription_active || false;
 
     // 5) If all gates passed
     if (documents_verified && stripe_verified && subscription_active) {
