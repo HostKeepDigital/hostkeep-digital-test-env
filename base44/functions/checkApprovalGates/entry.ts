@@ -83,10 +83,16 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, already_approved: true });
     }
 
-    // 4) Read gates from FoundingMember
+    // Documents gate — from FoundingMember (set reliably by adminSetDocumentsVerified)
     const documents_verified = member.documents_verified || false;
-    const stripe_verified = member.stripe_verified || false;
-    const subscription_active = member.subscription_active || false;
+
+    // Stripe gate — from UserRole.stripe_connect_status
+    const hostRoles = await base44.asServiceRole.entities.UserRole.filter({ user_id, role: "host" });
+    const stripe_verified = hostRoles?.[0]?.stripe_connect_status === "verified";
+
+    // Subscription gate — from Subscription entity
+    const subs = await base44.asServiceRole.entities.Subscription.filter({ user_id });
+    const subscription_active = subs?.some(s => s.status === "active") || false;
 
     // 5) If all gates passed
     if (documents_verified && stripe_verified && subscription_active) {
