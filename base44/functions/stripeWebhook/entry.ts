@@ -488,11 +488,19 @@ Deno.serve(async (req) => {
             stripe_connect_status: 'verified',
           });
 
-          // Set stripe gate flags on User
-          await base44.asServiceRole.entities.User.update(userRole.user_id, {
-            stripe_connect_status: 'verified',
-            stripe_verified: true,
-          });
+          // Set stripe gate flags on User — look up by email via UserCredentials
+          const creds = await base44.asServiceRole.entities.UserCredentials.filter({ user_id: userRole.user_id });
+          const email = creds?.[0]?.email;
+          if (email) {
+            const userRecords = await base44.asServiceRole.entities.User.filter({ email });
+            const foundUser = userRecords?.[0];
+            if (foundUser) {
+              await base44.asServiceRole.entities.User.update(foundUser.id, {
+                stripe_connect_status: 'verified',
+                stripe_verified: true,
+              });
+            }
+          }
 
           // Check all approval gates
           await base44.asServiceRole.functions.invoke('checkApprovalGates', { user_id: userRole.user_id });
