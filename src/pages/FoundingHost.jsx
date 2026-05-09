@@ -356,11 +356,11 @@ export default function FoundingHost() {
         )}
 
         {cornwallWarn && (
-          <div className="mb-5 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-start gap-3 text-sm">
-            <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+          <div className="mb-5 bg-amber-50 border border-amber-200 rounded-2xl px-6 py-5 flex items-start gap-4">
+            <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-amber-800 font-medium mb-1">We're launching in Cornwall & Devon first (TR, PL, EX postcodes). Register and we'll notify you when we expand.</p>
-              <p className="text-amber-800"><strong>Hosting multiple properties?</strong> Register with your <strong>Cornwall property first</strong> — this is your primary property for the beta. You can then add further properties from your dashboard; they'll be held in draft until beta ends, after which they can be published immediately once your documents, Stripe Express, and subscription are set up correctly.</p>
+              <p className="text-amber-900 font-bold text-base mb-4">We're launching in Cornwall & Devon first (TR, PL, EX postcodes). Register and we'll notify you when we expand.</p>
+              <p className="text-sm text-amber-800"><strong>Hosting multiple properties?</strong> Register with your <strong>Cornwall property first</strong> — this is your primary property for the beta. You can then add further properties from your dashboard; they'll be held in draft until beta ends, after which they can be published immediately once your documents, Stripe Express, and subscription are set up correctly.</p>
             </div>
           </div>
         )}
