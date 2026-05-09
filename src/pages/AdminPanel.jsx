@@ -905,12 +905,18 @@ const handleDocBan = async (member) => {
       const fetchUserGates = async () => {
         const gatesData = {};
         for (const m of rows) {
-          if (["awaiting_document_verification", "documentation_failed_attempt_1", "documentation_failed_attempt_2"].includes(m.approval_status)) {
+          if (["awaiting_document_verification", "documentation_failed_attempt_1", "documentation_failed_attempt_2"].includes(m.approval_status) && m.user_id) {
             try {
-              const users = await base44.entities.User.filter({ email: m.email });
-              if (users?.[0]) {
-                gatesData[m.id] = users[0];
-              }
+              const [hostRoles, subs, userRecords] = await Promise.all([
+                base44.entities.UserRole.filter({ user_id: m.user_id, role: "host" }),
+                base44.entities.Subscription.filter({ user_id: m.user_id }),
+                base44.entities.User.filter({ email: m.email }),
+              ]);
+              gatesData[m.id] = {
+                stripe_verified: hostRoles?.[0]?.stripe_connect_status === "verified",
+                subscription_active: subs?.some(s => s.status === "active") || false,
+                documents_verified: !!userRecords?.[0]?.documents_verified,
+              };
             } catch (e) {
               console.error(`Failed to fetch user gates for ${m.id}:`, e);
             }
