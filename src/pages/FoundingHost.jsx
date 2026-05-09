@@ -340,19 +340,6 @@ export default function FoundingHost() {
           ))}
         </div>
 
-        {/* Multi-property Cornwall notice */}
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl px-6 py-5 flex items-start gap-4">
-          <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="font-semibold text-amber-900 mb-1">Hosting multiple properties? Read this first.</p>
-            <p className="text-sm text-amber-800 leading-relaxed">
-              During beta, HostKeep is live in <strong>Cornwall only</strong>. If you have properties across the UK, please register using your <strong>Cornwall property first</strong> — this is your primary property for the beta period.
-            </p>
-            <p className="text-sm text-amber-700 mt-2">
-              Once registered, you can add your other properties from your dashboard. Properties outside Cornwall will be set up and ready to publish when we expand nationally — we'll notify you when each area goes live.
-            </p>
-          </div>
-        </div>
       </section>
 
       {/* APPLICATION FORM */}
@@ -371,7 +358,10 @@ export default function FoundingHost() {
         {cornwallWarn && (
           <div className="mb-5 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-start gap-3 text-sm">
             <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
-            <p className="text-amber-800">We're launching in Cornwall & Devon first (TR, PL, EX postcodes). Register and we'll notify you when we expand.</p>
+            <div>
+              <p className="text-amber-800 font-medium mb-1">We're launching in Cornwall & Devon first (TR, PL, EX postcodes). Register and we'll notify you when we expand.</p>
+              <p className="text-amber-800"><strong>Hosting multiple properties?</strong> Register with your <strong>Cornwall property first</strong> — this is your primary property for the beta. You can then add further properties from your dashboard; they'll be held in draft until beta ends, after which they can be published immediately once your documents, Stripe Express, and subscription are set up correctly.</p>
+            </div>
           </div>
         )}
 
