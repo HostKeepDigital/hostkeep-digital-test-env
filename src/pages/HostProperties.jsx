@@ -113,11 +113,11 @@ export default function HostProperties() {
   const isAttempt1 = approvalStatus === "documentation_failed_attempt_1";
   const isAttempt2 = approvalStatus === "documentation_failed_attempt_2";
   const isBanned = approvalStatus?.startsWith("banned_");
+  const [stripeConnected, setStripeConnected] = useState(false);
+
   const stripeVerified = stripeConnected === true;
   const subscriptionActive = !!subscription && subscription.status === "active";
   const allGatesPassed = isApproved && stripeVerified && subscriptionActive;
-
-  const [stripeConnected, setStripeConnected] = useState(false);
 
   useEffect(() => {
     if (!user?.id) return;
