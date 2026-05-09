@@ -79,6 +79,7 @@ export default function EditProperty() {
    const { user } = useAuth();
 
   const [isUploading, setIsUploading] = useState(false);
+  const [isUploadingMapImage, setIsUploadingMapImage] = useState(false);
   const [formData, setFormData] = useState(null);
   const [stripeStatus, setStripeStatus] = useState(null);
   const [hostSubscription, setHostSubscription] = useState(undefined); // undefined = loading
@@ -1336,16 +1337,23 @@ export default function EditProperty() {
                     type="file"
                     accept="image/*"
                     className="hidden"
+                    disabled={isUploadingMapImage}
                     onChange={async (e) => {
                       const file = e.target.files[0];
                       if (!file) return;
+                      setIsUploadingMapImage(true);
                       const { file_url } = await base44.integrations.Core.UploadFile({ file });
                       handleChange("smart_lock_map_image", file_url);
+                      setIsUploadingMapImage(false);
                       e.target.value = "";
                     }}
                   />
-                  <Upload className="w-5 h-5 text-gray-400" />
-                  <span className="text-sm text-gray-500">Upload map or directions image</span>
+                  {isUploadingMapImage ? (
+                    <Loader2 className="w-5 h-5 text-teal-600 animate-spin" />
+                  ) : (
+                    <Upload className="w-5 h-5 text-gray-400" />
+                  )}
+                  <span className="text-sm text-gray-500">{isUploadingMapImage ? "Uploading..." : "Upload map or directions image"}</span>
                 </label>
               )}
             </div>

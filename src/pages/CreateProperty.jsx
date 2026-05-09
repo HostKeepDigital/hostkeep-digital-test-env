@@ -176,6 +176,7 @@ export default function CreateProperty() {
 
   const [currentStep, setCurrentStep] = useState(1);
   const [isUploading, setIsUploading] = useState(false);
+  const [isUploadingMapImage, setIsUploadingMapImage] = useState(false);
 
   const { data: policies } = useQuery({
     queryKey: ["cancellation-policies"],
@@ -1109,16 +1110,23 @@ export default function CreateProperty() {
                              type="file"
                              accept="image/*"
                              className="hidden"
+                             disabled={isUploadingMapImage}
                              onChange={async (e) => {
                                const file = e.target.files[0];
                                if (!file) return;
+                               setIsUploadingMapImage(true);
                                const { file_url } = await base44.integrations.Core.UploadFile({ file });
                                handleChange("smart_lock_map_image", file_url);
+                               setIsUploadingMapImage(false);
                                e.target.value = "";
                              }}
                            />
-                           <Upload className="w-5 h-5 text-gray-400" />
-                           <span className="text-sm text-gray-500">Upload map or directions image</span>
+                           {isUploadingMapImage ? (
+                             <Loader2 className="w-5 h-5 text-teal-600 animate-spin" />
+                           ) : (
+                             <Upload className="w-5 h-5 text-gray-400" />
+                           )}
+                           <span className="text-sm text-gray-500">{isUploadingMapImage ? "Uploading..." : "Upload map or directions image"}</span>
                          </label>
                        )}
                      </div>
