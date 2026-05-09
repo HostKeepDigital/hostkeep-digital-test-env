@@ -13,7 +13,8 @@ import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function PublishGateModal({ open, onClose, foundingMember }) {
-  const [user, setUser] = useState(null);
+  const [stripeStatus, setStripeStatus] = useState(null);
+  const [subscription, setSubscription] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -22,19 +23,27 @@ export default function PublishGateModal({ open, onClose, foundingMember }) {
       return;
     }
 
-    const fetchUser = async () => {
+    const fetchGates = async () => {
       try {
-        const users = await base44.entities.User.filter({ id: foundingMember.user_id });
-        setUser(users?.[0] || null);
+        const session_token = localStorage.getItem("session_token");
+        const [stripeRes, subs] = await Promise.all([
+          fetch('/api/apps/698eee4108bd1d9467648326/functions/getStripeConnectStatus', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ session_token }),
+          }).then(r => r.json()),
+          base44.entities.Subscription.filter({ user_id: foundingMember.user_id }),
+        ]);
+        setStripeStatus(stripeRes?.status || null);
+        setSubscription(subs?.find(s => s.status === "active") || null);
       } catch (e) {
-        console.error("Failed to fetch user:", e);
-        setUser(null);
+        console.error("Failed to fetch gates:", e);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUser();
+    fetchGates();
   }, [open, foundingMember?.user_id]);
 
   if (!open) return null;
@@ -54,13 +63,13 @@ export default function PublishGateModal({ open, onClose, foundingMember }) {
   // Determine which gates are incomplete
   const gatesIncomplete = [];
 
-  if (!user?.documents_verified) {
+  if (!foundingMember?.documents_verified) {
     gatesIncomplete.push("documents");
   }
-  if (!user?.stripe_verified) {
+  if (stripeStatus !== "verified") {
     gatesIncomplete.push("stripe");
   }
-  if (!user?.subscription_active) {
+  if (!subscription) {
     gatesIncomplete.push("subscription");
   }
 
@@ -69,8 +78,8 @@ export default function PublishGateModal({ open, onClose, foundingMember }) {
     return null;
   }
 
-  const hoursElapsed = user?.documents_submitted_at
-    ? Math.floor((Date.now() - new Date(user.documents_submitted_at).getTime()) / (1000 * 60 * 60))
+  const hoursElapsed = foundingMember?.documents_submitted_at
+    ? Math.floor((Date.now() - new Date(foundingMember.documents_submitted_at).getTime()) / (1000 * 60 * 60))
     : null;
   const over24Hours = hoursElapsed && hoursElapsed > 24;
 
