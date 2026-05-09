@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const serviceRole = base44.asServiceRole;
 
-    const { email, password } = await req.json();
+    const { email, password, forename, middle_name, surname } = await req.json();
 
     if (!email || !password) {
       return Response.json(
@@ -117,6 +117,16 @@ Deno.serve(async (req) => {
        user_id: userLookup.user?.id || null,
        expires_at,
 });
+
+    // Save UserProfile name parts if provided (founding host onboarding)
+    if (forename && surname) {
+      const existing = await serviceRole.entities.UserProfile.filter({ email: normalisedEmail });
+      if (existing.length > 0) {
+        await serviceRole.entities.UserProfile.update(existing[0].id, { forename, middle_name: middle_name || "", surname });
+      } else {
+        await serviceRole.entities.UserProfile.create({ email: normalisedEmail, forename, middle_name: middle_name || "", surname, phone: "", location: "" });
+      }
+    }
 
     return Response.json({
       success: true,
