@@ -639,36 +639,6 @@ export default function Subscription() {
             </div>
           ) : null}
 
-          {/* Stripe Connect gate — shown for beta host users who haven't connected */}
-          {isBetaUser && activeTab === 'host' && (
-            <div className={`rounded-2xl border-2 p-6 mb-8 ${stripeConnected ? 'border-teal-300 bg-teal-50' : 'border-amber-300 bg-amber-50'}`}>
-              <div className="flex flex-col sm:flex-row items-center gap-4">
-                <div className="flex-1 text-left">
-                  <p className="font-bold flex items-center gap-2" style={{ color: '#000000' }}>
-                    {stripeConnected ? (
-                      <><CheckCircle className="w-5 h-5 text-teal-600" /> Step 1: Payment account set up ✓</>
-                    ) : (
-                      <><AlertCircle className="w-5 h-5 text-amber-600" /> Step 1: Set up your payment account first</>
-                    )}
-                  </p>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {stripeConnected
-                      ? 'Your Stripe account is connected. Now choose your founding plan below.'
-                      : 'You must connect Stripe before selecting a plan. This is required to receive guest payments.'}
-                  </p>
-                </div>
-                {!stripeConnected && (
-                  <Button
-                    className="bg-amber-600 hover:bg-amber-700 text-white flex-shrink-0"
-                    onClick={handleStripeConnect}
-                    disabled={stripeConnecting || stripeStatusLoading}
-                  >
-                    {stripeConnecting ? <><Loader2 className="w-4 h-4 animate-spin" /> Redirecting...</> : stripeStatusLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Set Up Payments'}
-                  </Button>
-                )}
-              </div>
-            </div>
-          )}
 
           {/* Free Tier — full width */}
           <div className="rounded-2xl border-2 border-teal-300 bg-teal-50 dark:bg-teal-950 dark:border-teal-800 p-6 text-center mb-8">
