@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
@@ -936,7 +937,8 @@ export default function Subscription() {
       </div>
 
       {/* Plan confirmation overlay */}
-      <AnimatePresence>
+      {createPortal(
+        <AnimatePresence>
         {pendingPlan && (
           <>
             <motion.div
@@ -944,13 +946,13 @@ export default function Subscription() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setPendingPlan(null)}
-              className="fixed inset-0 bg-black/50 z-[60]"
+              style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 9998 }}
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed inset-0 z-[61] flex items-center justify-center p-6"
+              style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }}
             >
               <Card className="max-w-md w-full relative">
                 <button
@@ -1002,22 +1004,24 @@ export default function Subscription() {
           </>
         )}
       </AnimatePresence>
+        , document.body)}
 
       {/* Stripe Connect prompt — shown after plan selection if not yet connected */}
-      <AnimatePresence>
+      {createPortal(
+        <AnimatePresence>
         {showStripePrompt && (
           <>
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 z-[60]"
+              style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 9998 }}
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed inset-0 z-[61] flex items-center justify-center p-6"
+              style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }}
             >
               <Card className="max-w-md w-full relative">
                 <CardHeader className="text-center pb-4">
@@ -1076,8 +1080,10 @@ export default function Subscription() {
           </>
         )}
       </AnimatePresence>
+        , document.body)}
 
-      <AnimatePresence>
+      {createPortal(
+        <AnimatePresence>
         {showCancelDialog && (
           <>
             <motion.div
@@ -1085,13 +1091,13 @@ export default function Subscription() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowCancelDialog(false)}
-              className="fixed inset-0 bg-black/50 z-[60]"
+              style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 9998 }}
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed inset-0 z-[61] flex items-center justify-center p-6"
+              style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }}
             >
               <Card className="max-w-lg w-full relative">
                 <button
@@ -1170,6 +1176,7 @@ export default function Subscription() {
           </>
         )}
       </AnimatePresence>
+        , document.body)}
     </div>
   );
 }
