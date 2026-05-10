@@ -437,6 +437,7 @@ export default function CreateProperty() {
 
         // Beta user without chosen plan — allow through, gates prevent publishing
         if (isBeta && !sub.next_subscription) {
+          window.location.href = createPageUrl("HostProperties");
           return;
         }
 
