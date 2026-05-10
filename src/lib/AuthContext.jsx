@@ -28,16 +28,11 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      // Raw fetch — no Base44 SDK auth headers
-      const raw = await fetch(`/api/apps/698eee4108bd1d9467648326/functions/checkSession`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ session_token }),
-      });
-
+      // Use SDK so test DB context is automatically inherited
       let data;
       try {
-        data = await raw.json();
+        const res = await base44.functions.invoke("checkSession", { session_token });
+        data = res.data;
       } catch {
         // Platform error — treat session as invalid
         localStorage.removeItem("session_token");
