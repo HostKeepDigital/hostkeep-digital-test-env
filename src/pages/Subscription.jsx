@@ -229,12 +229,13 @@ export default function Subscription() {
       pollRef.current = setInterval(async () => {
         attempts++;
         try {
-          // Re-validate session
-          const sessionRes = await base44.functions.invoke("checkSession", { session_token: localStorage.getItem("session_token") });
-          const session = sessionRes.data;
-          if (!session?.authenticated || !session.user_id) {
+          if (!user?.id) {
             return;
           }
+
+          const subs = await base44.entities.Subscription.filter({
+            user_id: user.id,
+          });
 
           const subs = await base44.entities.Subscription.filter({
             user_id: session.user_id,
