@@ -73,18 +73,21 @@ Deno.serve(async (req) => {
       read: false,
     });
 
-    // Fetch user to check notification preferences and get email if not supplied
-    let userRecord = null;
+    // Fetch email from UserCredentials and preferences from User via email lookup
+    let recipientEmail = email_to || null;
+    let prefs = {};
+
     try {
-      userRecord = await serviceRole.entities.User.get(user_id);
+      const creds = await serviceRole.entities.UserCredentials.filter({ user_id });
+      if (creds?.[0]?.email) {
+        if (!recipientEmail) recipientEmail = creds[0].email;
+        const users = await serviceRole.entities.User.filter({ email: creds[0].email });
+        prefs = users?.[0]?.notification_preferences || {};
+      }
     } catch (_) {}
 
-    const prefs = userRecord?.notification_preferences || {};
     const prefKey = PREF_MAP[type] || "general";
-
-    // Default: all preferences on (only off if explicitly set to false)
     const emailEnabled = force_email || (prefs[prefKey] !== false);
-    const recipientEmail = email_to || userRecord?.email;
 
     if (emailEnabled && recipientEmail && RESEND_API_KEY) {
       await fetch("https://api.resend.com/emails", {
