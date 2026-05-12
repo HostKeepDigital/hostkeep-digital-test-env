@@ -237,9 +237,6 @@ export default function Subscription() {
             user_id: user.id,
           });
 
-          const subs = await base44.entities.Subscription.filter({
-            user_id: session.user_id,
-          });
           const active = subs.find(
             (s) => s.status === "active",
           );
