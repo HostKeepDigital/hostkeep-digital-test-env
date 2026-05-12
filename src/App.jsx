@@ -28,6 +28,7 @@ import FoundingHost from "./pages/FoundingHost";
 import FoundingCleaner from "./pages/FoundingCleaner";
 import GuestSignUp from "./pages/GuestSignUp";
 import CleanerPayoutHistory from "./pages/CleanerPayoutHistory";
+import CompleteReservation from "./pages/CompleteReservation";
 
 // Pages accessible without authentication
 const PUBLIC_ROUTES = new Set([
@@ -37,6 +38,7 @@ const PUBLIC_ROUTES = new Set([
   "/DisputePolicy", "/PaymentPolicy", "/RefundPolicy", "/Accessibility",
   "/BecomeHost", "/BecomeCleaner", "/Index", "/LockScreen",
   "/founding", "/foundinghost", "/foundingcleaner", "/waitlist", "/pending", "/Subscription",
+  "/CompleteReservation",
   "/login", "/SignIn", "/ForgotPassword", "/CreatePassword", "/ResetPassword", "/verify-email", "/founding-thankyou",
 ]);
 
@@ -367,6 +369,14 @@ const AuthenticatedApp = () => {
                 <LayoutWrapper currentPageName="HostPayoutHistory">
                   <Slide><HostPayoutHistory /></Slide>
                 </LayoutWrapper>
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/CompleteReservation"
+            element={
+              <RequireAuth>
+                <Slide><CompleteReservation /></Slide>
               </RequireAuth>
             }
           />
