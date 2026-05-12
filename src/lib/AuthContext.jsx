@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+const APP_ID = "698eee4108bd1d9467648326";
 
 const AuthContext = createContext();
 
@@ -31,8 +31,12 @@ export const AuthProvider = ({ children }) => {
       // Use SDK so test DB context is automatically inherited
       let data;
       try {
-        const res = await base44.functions.invoke("checkSession", { session_token });
-        data = res.data;
+        const res = await fetch(`/api/apps/${APP_ID}/functions/checkSession`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ session_token }),
+        });
+        data = await res.json();
       } catch {
         // Platform error — treat session as invalid
         localStorage.removeItem("session_token");
