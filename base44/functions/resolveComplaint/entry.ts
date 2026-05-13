@@ -17,7 +17,6 @@ async function sendEmail({ to, subject, body }) {
   });
 }
 
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
 
 Deno.serve(async (req) => {
   try {
@@ -45,15 +44,13 @@ Deno.serve(async (req) => {
     }
 
     // Load complaint
-    const complaints = await sr.entities.Complaint.filter({ id: complaint_id });
-    const complaint = complaints?.[0];
+    const complaint = await sr.entities.Complaint.get(complaint_id).catch(() => null);
     if (!complaint) {
       return Response.json({ error: 'Complaint not found' }, { status: 404 });
     }
 
     // Load booking
-    const bookings = await sr.entities.Booking.filter({ id: complaint.booking_id });
-    const booking = bookings?.[0];
+    const booking = await sr.entities.Booking.get(complaint.booking_id).catch(() => null);
     if (!booking) {
       return Response.json({ error: 'Booking not found' }, { status: 404 });
     }
@@ -80,7 +77,7 @@ Deno.serve(async (req) => {
 
     try {
       if (admin_resolution === 'full_refund_to_guest') {
-        await stripe.refunds.create({
+        await stripeClient.refunds.create({
           payment_intent: booking.stripe_rental_intent_id,
         });
         bookingUpdate.rental_payment_status = 'transferred';
@@ -88,7 +85,7 @@ Deno.serve(async (req) => {
         guestAmount = booking.total_amount;
         hostAmount = 0;
       } else if (admin_resolution === 'partial_refund_to_guest') {
-        await stripe.refunds.create({
+        await stripeClient.refunds.create({
           payment_intent: booking.stripe_rental_intent_id,
           amount: Math.round(admin_resolution_amount * 100),
         });
@@ -103,10 +100,10 @@ Deno.serve(async (req) => {
         guestAmount = admin_resolution_amount;
         hostAmount = booking.total_amount - admin_resolution_amount;
       } else if (admin_resolution === 'released_to_host') {
-        await stripe.transfers.create({
+        await stripeClient.transfers.create({
           amount: Math.round(booking.total_amount * 100),
           currency: 'gbp',
-         destination: hostRole.stripe_connect_account_id,
+          destination: hostRole.stripe_connect_account_id,
           metadata: { booking_id: booking.id },
         });
         bookingUpdate.rental_payment_status = 'transferred';
@@ -141,7 +138,7 @@ Deno.serve(async (req) => {
         guestAmount = booking.security_deposit - admin_resolution_amount;
         hostAmount = admin_resolution_amount;
       } else if (admin_resolution === 'deposit_returned_to_guest') {
-        await stripe.paymentIntents.cancel(booking.stripe_deposit_intent_id);
+        await stripeClient.paymentIntents.cancel(booking.stripe_deposit_intent_id);
         bookingUpdate.deposit_status = 'returned';
         bookingUpdate.deposit_frozen = false;
         bookingUpdate.deposit_resolved_at = now.toISOString();
@@ -171,7 +168,7 @@ Deno.serve(async (req) => {
 
     // Check for account flags
     if (complaint.specific_issue === 'threatening_behaviour' || complaint.specific_issue === 'property_occupied') {
-      await base44.asServiceRole.entities.User.update(booking.host_id, {
+      await base44client.asServiceRole.entities.User.update(booking.host_id, {
         account_flagged: true,
       });
     }
