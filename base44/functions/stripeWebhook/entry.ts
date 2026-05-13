@@ -133,7 +133,7 @@ async function handleSubscriptionDeactivated(base44, user_id) {
         buttonText: 'Resubscribe Now',
         buttonUrl: 'https://hostkeepdigital.co.uk/Subscription',
       });
-      await sendEmail({ to: user.email, subject: 'Your HostKeep subscription has expired', html });
+      await sendEmail({ to: recipientEmail, subject: 'Your HostKeep subscription has expired', html });
     }
 
     // Invoke messaging cutoff check
