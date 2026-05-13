@@ -4,6 +4,26 @@ import { Button } from "@/components/ui/button";
 
 const APP_ID = "698eee4108bd1d9467648326";
 
+function buildClaudePrompt(failedTests) {
+  const lines = [
+    "I ran the HostKeep integration tests and the following tests failed. Please help me fix them.",
+    "",
+    "App ID: 698eee4108bd1d9467648326",
+    "Stack: Base44 (Deno/TypeScript backend, React/Vite frontend), Stripe, Resend",
+    "",
+    "FAILED TESTS:",
+    "",
+  ];
+  failedTests.forEach((t, i) => {
+    lines.push(`${i + 1}. [${t.group}] ${t.label}`);
+    lines.push(`   Error: ${t.message || "no detail"}`);
+    if (t.claudeHint) lines.push(`   Context: ${t.claudeHint}`);
+    lines.push("");
+  });
+  lines.push("Please check the relevant backend functions and frontend files and give me the fix.");
+  return lines.join("\n");
+}
+
 const callFn = async (name, body = {}) => {
   const res = await fetch(`/api/apps/${APP_ID}/functions/${name}`, {
     method: "POST",
@@ -20,6 +40,7 @@ const TESTS = [
     id: "rrp_executes",
     group: "releaseRentalPayments",
     label: "Function executes and returns correct shape",
+    claudeHint: "Check base44/functions/releaseRentalPayments/entry.ts — function must return { processed, results, ran_at }. If 500, check STRIPE_SECRET_KEY and LOCK_ACCESS_TOKEN secrets are set.",
     run: async () => {
       const { status, data } = await callFn("releaseRentalPayments");
       if (status !== 200) throw new Error(`Expected 200, got ${status}`);
@@ -33,6 +54,7 @@ const TESTS = [
     id: "rrp_no_crash",
     group: "releaseRentalPayments",
     label: "Function handles empty booking set without error",
+    claudeHint: "Check base44/functions/releaseRentalPayments/entry.ts — Booking.filter with no results must return empty results array, not crash.",
     run: async () => {
       const { status, data } = await callFn("releaseRentalPayments");
       if (status !== 200) throw new Error(`Expected 200, got ${status}: ${data.error}`);
@@ -46,6 +68,7 @@ const TESTS = [
     id: "rc_no_session",
     group: "raiseComplaint",
     label: "Rejects request with no session token",
+    claudeHint: "Check base44/functions/raiseComplaint/entry.ts — missing session_token must return 401. Check the session_token guard at the top of the function.",
     run: async () => {
       const { status, data } = await callFn("raiseComplaint", {});
       if (status !== 401) throw new Error(`Expected 401, got ${status}`);
@@ -56,6 +79,7 @@ const TESTS = [
     id: "rc_invalid_session",
     group: "raiseComplaint",
     label: "Rejects request with invalid session token",
+    claudeHint: "Check base44/functions/raiseComplaint/entry.ts — invalid session tokens must fail UserSession.filter lookup and return 401.",
     run: async () => {
       const { status, data } = await callFn("raiseComplaint", {
         session_token: "invalid_token_test_12345",
@@ -70,6 +94,7 @@ const TESTS = [
     id: "rc_booking_not_found",
     group: "raiseComplaint",
     label: "Returns 404 for non-existent booking",
+    claudeHint: "Check base44/functions/raiseComplaint/entry.ts — Booking.filter({ id: booking_id }) returning empty array must return 404, not crash.",
     run: async (sessionToken) => {
       if (!sessionToken) throw new Error("No session token available — log in first");
       const { status, data } = await callFn("raiseComplaint", {
@@ -91,6 +116,7 @@ const TESTS = [
     id: "resc_no_session",
     group: "resolveComplaint",
     label: "Rejects request with no session token",
+    claudeHint: "Check base44/functions/resolveComplaint/entry.ts — missing session_token must return 401. Check the session_token guard at the top of the function.",
     run: async () => {
       const { status } = await callFn("resolveComplaint", {});
       if (status !== 401) throw new Error(`Expected 401, got ${status}`);
@@ -101,6 +127,7 @@ const TESTS = [
     id: "resc_invalid_session",
     group: "resolveComplaint",
     label: "Rejects request with invalid session token",
+    claudeHint: "Check base44/functions/resolveComplaint/entry.ts — invalid session tokens must fail UserSession.filter lookup and return 401.",
     run: async () => {
       const { status } = await callFn("resolveComplaint", {
         session_token: "invalid_token_test_12345",
@@ -114,6 +141,7 @@ const TESTS = [
     id: "resc_non_admin",
     group: "resolveComplaint",
     label: "Rejects non-admin session with 403",
+    claudeHint: "Check base44/functions/resolveComplaint/entry.ts — UserRole.filter({ user_id, role: 'admin' }) returning empty must return 403.",
     run: async (sessionToken) => {
       if (!sessionToken) throw new Error("No session token available — log in first");
       // Use a known non-admin test token if available, otherwise note this needs a guest session
@@ -124,6 +152,7 @@ const TESTS = [
     id: "resc_complaint_not_found",
     group: "resolveComplaint",
     label: "Returns 404 for non-existent complaint",
+    claudeHint: "Check base44/functions/resolveComplaint/entry.ts — Complaint.filter({ id: complaint_id }) returning empty must return 404.",
     run: async (sessionToken) => {
       if (!sessionToken) throw new Error("No session token available — log in first");
       const { status, data } = await callFn("resolveComplaint", {
@@ -152,18 +181,19 @@ const STATUS_ICON = {
 export default function IntegrationTestsTab({ sessionToken }) {
   const [results, setResults] = useState({});
   const [runningAll, setRunningAll] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const setResult = (id, result) =>
     setResults(prev => ({ ...prev, [id]: result }));
 
   const runTest = async (test) => {
-    setResult(test.id, { status: "running", message: "" });
+    setResult(test.id, { status: "running", message: "", group: test.group, label: test.label, claudeHint: test.claudeHint });
     try {
       const message = await test.run(sessionToken);
       const isSkip = message?.startsWith("Skipped");
-      setResult(test.id, { status: isSkip ? "skip" : "pass", message });
+      setResult(test.id, { status: isSkip ? "skip" : "pass", message, group: test.group, label: test.label, claudeHint: test.claudeHint });
     } catch (err) {
-      setResult(test.id, { status: "fail", message: err.message });
+      setResult(test.id, { status: "fail", message: err.message, group: test.group, label: test.label, claudeHint: test.claudeHint });
     }
   };
 
