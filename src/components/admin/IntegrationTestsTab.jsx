@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { CheckCircle2, XCircle, Loader2, Play, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { base44 } from "@/api/base44Client";
 
 const APP_ID = "698eee4108bd1d9467648326";
 
@@ -204,11 +205,11 @@ const TESTS = [
       return `Passed — notification record created successfully`;
     },
   },
-  {
+ {
     id: "sn_cleaning_types",
     group: "sendNotification",
-    label: "Accepts all cleaning job move types (PREF_MAP fix)",
-    claudeHint: "Check base44/functions/sendNotification/entry.ts PREF_MAP — cleaning_job_move_requested, cleaning_job_move_approved, cleaning_job_move_denied, cleaning_job_cancelled_by_cleaner, cleaning_job_cancelled_by_host must all be present under the jobs key.",
+    label: "Accepts all cleaning job move types and writes DB records",
+    claudeHint: "Check base44/functions/sendNotification/entry.ts PREF_MAP — cleaning_job_move_requested, cleaning_job_move_approved, cleaning_job_move_denied, cleaning_job_cancelled_by_cleaner, cleaning_job_cancelled_by_host must all be present. Also verify Notification entity records are being created for each type.",
     run: async (sessionToken) => {
       if (!sessionToken) throw new Error("No session token available — log in first");
       const types = [
@@ -218,7 +219,9 @@ const TESTS = [
         "cleaning_job_cancelled_by_cleaner",
         "cleaning_job_cancelled_by_host",
       ];
-      const failures = [];
+
+      // Step 1 — send all 5 types
+      const sendFailures = [];
       for (const type of types) {
         const { status, data } = await callFn("sendNotification", {
           session_token: sessionToken,
@@ -227,10 +230,23 @@ const TESTS = [
           title: `[Integration Test] ${type}`,
           body: "Automated integration test — safe to ignore.",
         });
-        if (status !== 200 || !data.success) failures.push(type);
+        if (status !== 200 || !data.success) sendFailures.push(type);
       }
-      if (failures.length > 0) throw new Error(`Failed for types: ${failures.join(", ")}`);
-      return `Passed — all 5 cleaning job move types accepted correctly`;
+      if (sendFailures.length > 0) throw new Error(`sendNotification failed for: ${sendFailures.join(", ")}`);
+
+      // Step 2 — verify DB records were actually written
+      const allRecords = await base44.entities.Notification.filter({ user_id: "integration_test_placeholder" });
+      const testRecords = allRecords.filter(n => n.title?.startsWith("[Integration Test]"));
+      const writtenTypes = new Set(testRecords.map(n => n.type));
+      const missingFromDb = types.filter(t => !writtenTypes.has(t));
+
+      // Step 3 — clean up test records
+      for (const record of testRecords) {
+        try { await base44.entities.Notification.delete(record.id); } catch (_) {}
+      }
+
+      if (missingFromDb.length > 0) throw new Error(`DB records missing for types: ${missingFromDb.join(", ")}`);
+      return `Passed — all 5 types written to DB and verified (${testRecords.length} records cleaned up)`;
     },
   },
   {
