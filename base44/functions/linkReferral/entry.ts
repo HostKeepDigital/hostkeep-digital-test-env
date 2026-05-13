@@ -1,5 +1,15 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
+const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+
+async function sendEmail({ to, subject, html }) {
+  await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from: 'HostKeep Digital <hello@hostkeepdigital.co.uk>', to, subject, html }),
+  });
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
