@@ -25,7 +25,7 @@ function buildClaudePrompt(failedTests) {
 }
 
 const callFn = async (name, body = {}) => {
-  const res = await fetch(`/api/apps/${APP_ID}/functions/${name}`, {
+  const res = await fetch(`/functions/${name}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
