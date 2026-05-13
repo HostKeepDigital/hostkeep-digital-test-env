@@ -45,25 +45,32 @@ Deno.serve(async (req) => {
     }
 
     // Load complaint
-    const complaint = await base44.entities.Complaint.get(complaint_id);
+    const complaints = await sr.entities.Complaint.filter({ id: complaint_id });
+    const complaint = complaints?.[0];
     if (!complaint) {
       return Response.json({ error: 'Complaint not found' }, { status: 404 });
     }
 
     // Load booking
-    const booking = await base44.entities.Booking.get(complaint.booking_id);
+    const bookings = await sr.entities.Booking.filter({ id: complaint.booking_id });
+    const booking = bookings?.[0];
     if (!booking) {
       return Response.json({ error: 'Booking not found' }, { status: 404 });
     }
 
-    // Load host user
-    const host = await base44.asServiceRole.entities.User.get(booking.host_id);
-    if (!host?.stripe_connect_account_id) {
+    // Load host UserRole for stripe_connect_account_id
+    const hostRoles = await sr.entities.UserRole.filter({ user_id: booking.host_id, role: 'host' });
+    const hostRole = hostRoles?.[0];
+    if (!hostRole?.stripe_connect_account_id) {
       return Response.json(
         { error: 'Host has not connected their bank account' },
         { status: 400 }
       );
     }
+
+    // Load host email via UserCredentials
+    const hostCreds = await sr.entities.UserCredentials.filter({ user_id: booking.host_id });
+    const hostEmail = booking.host_email || hostCreds?.[0]?.email;
 
     // Execute Stripe actions
     const now = new Date();
