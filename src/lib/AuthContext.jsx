@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }) => {
       // Use SDK so test DB context is automatically inherited
       let data;
       try {
-        const res = await fetch(`/api/apps/${APP_ID}/functions/checkSession`, {
+        const res = await fetch(`/functions/checkSession`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ session_token }),
