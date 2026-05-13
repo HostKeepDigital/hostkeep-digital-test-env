@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
       });
 
       // Email the referee confirming their free month
-      await base44.functions.invoke("sendEmail", {
+      await sendEmail({
         to: referee_email,
         subject: "Your referral reward is ready — HostKeep",
         html: buildEmail({
@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
 
       // Email the referrer confirming their reward
       if (referral.referrer_email) {
-        await base44.functions.invoke("sendEmail", {
+       await sendEmail({
           to: referral.referrer_email,
           subject: "Your referral reward has been applied — HostKeep",
           html: buildEmail({
