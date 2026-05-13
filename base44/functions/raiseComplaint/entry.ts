@@ -32,7 +32,8 @@ Deno.serve(async (req) => {
 
     const sr = base44client.asServiceRole;
     const authenticatedUserId = session.user_id;
-    if (!authenticatedUserId) {
+    const isAdmin = session.role === 'admin';
+    if (!authenticatedUserId && !isAdmin) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
