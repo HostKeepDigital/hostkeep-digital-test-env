@@ -406,9 +406,9 @@ Deno.serve(async (req) => {
         if (type === 'rental') {
           update.rental_payment_status = 'held';
         } else if (type === 'security_deposit') {
-            update.deposit_status = 'held';
-            update.stripe_deposit_payment_intent_id = pi.id;
-          }
+          update.deposit_status = 'held';
+          update.stripe_deposit_intent_id = pi.id;
+        }
         if (booking.booking_status === 'awaiting_payment') {
           update.booking_status = 'confirmed';
         }
