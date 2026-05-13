@@ -106,7 +106,7 @@ Deno.serve(async (req) => {
         await stripe.transfers.create({
           amount: Math.round(booking.total_amount * 100),
           currency: 'gbp',
-          destination: host.stripe_connect_account_id,
+         destination: hostRole.stripe_connect_account_id,
           metadata: { booking_id: booking.id },
         });
         bookingUpdate.rental_payment_status = 'transferred';
@@ -114,11 +114,11 @@ Deno.serve(async (req) => {
         guestAmount = 0;
         hostAmount = booking.total_amount;
       } else if (admin_resolution === 'deposit_full_to_host') {
-        await stripe.paymentIntents.capture(booking.stripe_deposit_intent_id);
-        await stripe.transfers.create({
+        await stripeClient.paymentIntents.capture(booking.stripe_deposit_intent_id);
+        await stripeClient.transfers.create({
           amount: Math.round(booking.security_deposit * 100),
           currency: 'gbp',
-          destination: host.stripe_connect_account_id,
+          destination: hostRole.stripe_connect_account_id,
           metadata: { booking_id: booking.id },
         });
         bookingUpdate.deposit_status = 'claimed';
@@ -126,13 +126,13 @@ Deno.serve(async (req) => {
         bookingUpdate.deposit_resolved_at = now.toISOString();
         hostAmount = booking.security_deposit;
       } else if (admin_resolution === 'deposit_partial_to_host') {
-        await stripe.paymentIntents.capture(booking.stripe_deposit_intent_id, {
+        await stripeClient.paymentIntents.capture(booking.stripe_deposit_intent_id, {
           amount_to_capture: Math.round(admin_resolution_amount * 100),
         });
-        await stripe.transfers.create({
+        await stripeClient.transfers.create({
           amount: Math.round(admin_resolution_amount * 100),
           currency: 'gbp',
-          destination: host.stripe_connect_account_id,
+          destination: hostRole.stripe_connect_account_id,
           metadata: { booking_id: booking.id },
         });
         bookingUpdate.deposit_status = 'claimed';
