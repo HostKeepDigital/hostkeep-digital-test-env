@@ -287,6 +287,7 @@ const TESTS = [
       return `Passed — processed: ${data.processed}, skipped: ${data.skipped}, errors: ${data.errors}, total: ${data.total}`;
     },
   },
+  // NEW
   {
     id: "pdr_skips_frozen",
     group: "processDepositRefunds",
@@ -294,22 +295,24 @@ const TESTS = [
     claudeHint: "Check processDepositRefunds/entry.ts — deposit_frozen check must skip before Stripe is called. If deposit_status becomes 'refunding', the frozen guard is missing.",
     run: async () => {
       const pastDate = new Date(Date.now() - 86400000 * 3).toISOString().split("T")[0];
-      let bookingId = null;
-      const booking = await base44.entities.Booking.create({
-        host_id: "regression-test", guest_id: "regression-test",
-        guest_name: "Deposit Refund Test", guest_email: "regression@hostkeepdigital-test.invalid",
-        property_id: "regression-test-property-id", check_in: pastDate, check_out: pastDate,
-        booking_status: "completed", deposit_status: "held",
-        deposit_frozen: true, stripe_deposit_intent_id: "pi_regression_frozen_test",
+      const { data: created } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: "regression-test", guest_id: "regression-test",
+          guest_name: "Deposit Refund Test", guest_email: "regression@hostkeepdigital-test.invalid",
+          property_id: "regression-test-property-id", check_in: pastDate, check_out: pastDate,
+          booking_status: "completed", deposit_status: "held",
+          deposit_frozen: true, stripe_deposit_intent_id: "pi_regression_frozen_test",
+        },
       });
-      bookingId = booking?.id;
-      if (!bookingId) throw new Error("Test booking creation returned no ID");
+      const bookingId = created?.id;
+      if (!bookingId) throw new Error("seedTestBooking returned no ID");
 
       await callFn("processDepositRefunds");
       await new Promise(r => setTimeout(r, 1000));
 
       const refreshed = await base44.entities.Booking.filter({ id: bookingId });
-      try { await base44.entities.Booking.delete(bookingId); } catch (_) {}
+      await callFn("seedTestBooking", { action: "delete", id: bookingId });
 
       if (refreshed?.[0]?.deposit_status !== "held")
         throw new Error(`Expected 'held', got '${refreshed?.[0]?.deposit_status}' — frozen guard is broken`);
@@ -323,21 +326,23 @@ const TESTS = [
     claudeHint: "Check processDepositRefunds/entry.ts — missing stripe_deposit_intent_id must be caught and skipped. If function returns success: false, the null check is absent.",
     run: async () => {
       const pastDate = new Date(Date.now() - 86400000 * 3).toISOString().split("T")[0];
-      const booking = await base44.entities.Booking.create({
-        host_id: "regression-test", guest_id: "regression-test",
-        guest_name: "Deposit Refund Test", guest_email: "regression@hostkeepdigital-test.invalid",
-        property_id: "regression-test-property-id", check_in: pastDate, check_out: pastDate,
-        booking_status: "completed", deposit_status: "held", deposit_frozen: false,
-        // intentionally no stripe_deposit_intent_id
+      const { data: created } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: "regression-test", guest_id: "regression-test",
+          guest_name: "Deposit Refund Test", guest_email: "regression@hostkeepdigital-test.invalid",
+          property_id: "regression-test-property-id", check_in: pastDate, check_out: pastDate,
+          booking_status: "completed", deposit_status: "held", deposit_frozen: false,
+        },
       });
-      const bookingId = booking?.id;
-      if (!bookingId) throw new Error("Test booking creation returned no ID");
+      const bookingId = created?.id;
+      if (!bookingId) throw new Error("seedTestBooking returned no ID");
 
       const { status, data } = await callFn("processDepositRefunds");
       await new Promise(r => setTimeout(r, 1000));
 
       const refreshed = await base44.entities.Booking.filter({ id: bookingId });
-      try { await base44.entities.Booking.delete(bookingId); } catch (_) {}
+      await callFn("seedTestBooking", { action: "delete", id: bookingId });
 
       if (status !== 200 || data.success !== true) throw new Error(`Function crashed: ${data.error}`);
       if (refreshed?.[0]?.deposit_status !== "held")
@@ -352,21 +357,24 @@ const TESTS = [
     claudeHint: "Check processDepositRefunds/entry.ts — now < checkoutPlus48 must skip. If deposit_status becomes 'refunding', the time guard is wrong.",
     run: async () => {
       const futureDate = new Date(Date.now() + 86400000).toISOString().split("T")[0];
-      const booking = await base44.entities.Booking.create({
-        host_id: "regression-test", guest_id: "regression-test",
-        guest_name: "Deposit Refund Test", guest_email: "regression@hostkeepdigital-test.invalid",
-        property_id: "regression-test-property-id", check_in: futureDate, check_out: futureDate,
-        booking_status: "completed", deposit_status: "held",
-        deposit_frozen: false, stripe_deposit_intent_id: "pi_regression_future_test",
+      const { data: created } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: "regression-test", guest_id: "regression-test",
+          guest_name: "Deposit Refund Test", guest_email: "regression@hostkeepdigital-test.invalid",
+          property_id: "regression-test-property-id", check_in: futureDate, check_out: futureDate,
+          booking_status: "completed", deposit_status: "held",
+          deposit_frozen: false, stripe_deposit_intent_id: "pi_regression_future_test",
+        },
       });
-      const bookingId = booking?.id;
-      if (!bookingId) throw new Error("Test booking creation returned no ID");
+      const bookingId = created?.id;
+      if (!bookingId) throw new Error("seedTestBooking returned no ID");
 
       await callFn("processDepositRefunds");
       await new Promise(r => setTimeout(r, 1000));
 
       const refreshed = await base44.entities.Booking.filter({ id: bookingId });
-      try { await base44.entities.Booking.delete(bookingId); } catch (_) {}
+      await callFn("seedTestBooking", { action: "delete", id: bookingId });
 
       if (refreshed?.[0]?.deposit_status !== "held")
         throw new Error(`Expected 'held', got '${refreshed?.[0]?.deposit_status}' — 48h time guard is broken`);
@@ -380,20 +388,23 @@ const TESTS = [
     claudeHint: "Check processDepositRefunds/entry.ts — the per-booking try/catch must catch Stripe errors and increment errors without throwing. If success: false, the catch block is missing or re-throwing.",
     run: async () => {
       const pastDate = new Date(Date.now() - 86400000 * 3).toISOString().split("T")[0];
-      const booking = await base44.entities.Booking.create({
-        host_id: "regression-test", guest_id: "regression-test",
-        guest_name: "Deposit Refund Test", guest_email: "regression@hostkeepdigital-test.invalid",
-        property_id: "regression-test-property-id", check_in: pastDate, check_out: pastDate,
-        booking_status: "completed", deposit_status: "held",
-        deposit_frozen: false, stripe_deposit_intent_id: "pi_regression_fake_should_error",
+      const { data: created } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: "regression-test", guest_id: "regression-test",
+          guest_name: "Deposit Refund Test", guest_email: "regression@hostkeepdigital-test.invalid",
+          property_id: "regression-test-property-id", check_in: pastDate, check_out: pastDate,
+          booking_status: "completed", deposit_status: "held",
+          deposit_frozen: false, stripe_deposit_intent_id: "pi_regression_fake_should_error",
+        },
       });
-      const bookingId = booking?.id;
-      if (!bookingId) throw new Error("Test booking creation returned no ID");
+      const bookingId = created?.id;
+      if (!bookingId) throw new Error("seedTestBooking returned no ID");
 
       const { status, data } = await callFn("processDepositRefunds");
       await new Promise(r => setTimeout(r, 1000));
 
-      try { await base44.entities.Booking.delete(bookingId); } catch (_) {}
+      await callFn("seedTestBooking", { action: "delete", id: bookingId });
 
       if (status !== 200 || data.success !== true)
         throw new Error(`Function crashed on Stripe error — per-booking catch is broken: ${data.error}`);
