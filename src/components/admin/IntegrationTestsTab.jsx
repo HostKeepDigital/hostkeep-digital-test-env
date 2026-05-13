@@ -341,12 +341,12 @@ const TESTS = [
       const { status, data } = await callFn("processDepositRefunds");
       await new Promise(r => setTimeout(r, 1000));
 
-      const refreshed = await base44.entities.Booking.filter({ id: bookingId });
+      const { data: readBack } = await callFn("seedTestBooking", { action: "read", id: bookingId });
       await callFn("seedTestBooking", { action: "delete", id: bookingId });
 
       if (status !== 200 || data.success !== true) throw new Error(`Function crashed: ${data.error}`);
-      if (refreshed?.[0]?.deposit_status !== "held")
-        throw new Error(`Expected 'held', got '${refreshed?.[0]?.deposit_status}'`);
+      if (readBack?.booking?.deposit_status !== "held")
+        throw new Error(`Expected 'held', got '${readBack?.booking?.deposit_status}'`);
       return `Passed — missing intent skipped, function stayed success: true`;
     },
   },
@@ -373,11 +373,11 @@ const TESTS = [
       await callFn("processDepositRefunds");
       await new Promise(r => setTimeout(r, 1000));
 
-      const refreshed = await base44.entities.Booking.filter({ id: bookingId });
+      const { data: readBack } = await callFn("seedTestBooking", { action: "read", id: bookingId });
       await callFn("seedTestBooking", { action: "delete", id: bookingId });
 
-      if (refreshed?.[0]?.deposit_status !== "held")
-        throw new Error(`Expected 'held', got '${refreshed?.[0]?.deposit_status}' — 48h time guard is broken`);
+      if (readBack?.booking?.deposit_status !== "held")
+        throw new Error(`Expected 'held', got '${readBack?.booking?.deposit_status}' — 48h time guard is broken`);
       return `Passed — future checkout skipped, deposit_status still 'held'`;
     },
   },
