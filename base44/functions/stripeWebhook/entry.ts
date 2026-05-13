@@ -406,8 +406,9 @@ Deno.serve(async (req) => {
         if (type === 'rental') {
           update.rental_payment_status = 'held';
         } else if (type === 'security_deposit') {
-          update.deposit_status = 'held';
-        }
+            update.deposit_status = 'held';
+            update.stripe_deposit_payment_intent_id = pi.id;
+          }
         if (booking.booking_status === 'awaiting_payment') {
           update.booking_status = 'confirmed';
         }
@@ -512,6 +513,21 @@ Deno.serve(async (req) => {
         }
       } catch (err) {
         console.error('account.updated handler error:', err);
+      }
+    }
+  }
+
+  return Response.json({ received: true });// NEW
+  if (event.type === 'charge.refunded') {
+    const charge = event.data.object;
+    const { booking_id, type } = charge.metadata || {};
+    if (booking_id && type === 'security_deposit') {
+      try {
+        await base44.asServiceRole.entities.Booking.update(booking_id, {
+          deposit_status: 'refunded',
+        });
+      } catch (err) {
+        console.error('charge.refunded handler error:', err);
       }
     }
   }
