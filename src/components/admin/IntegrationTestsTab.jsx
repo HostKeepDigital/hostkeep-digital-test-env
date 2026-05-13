@@ -306,7 +306,7 @@ const TESTS = [
         },
       });
       const bookingId = created?.id;
-      if (!bookingId) throw new Error("seedTestBooking returned no ID");
+       if (!bookingId) throw new Error(`seedTestBooking failed: ${JSON.stringify(created)}`);
 
       await callFn("processDepositRefunds");
       await new Promise(r => setTimeout(r, 1000));
@@ -336,7 +336,7 @@ const TESTS = [
         },
       });
       const bookingId = created?.id;
-      if (!bookingId) throw new Error("seedTestBooking returned no ID");
+      if (!bookingId) throw new Error(`seedTestBooking failed: ${JSON.stringify(created)}`);
 
       const { status, data } = await callFn("processDepositRefunds");
       await new Promise(r => setTimeout(r, 1000));
@@ -368,7 +368,7 @@ const TESTS = [
         },
       });
       const bookingId = created?.id;
-      if (!bookingId) throw new Error("seedTestBooking returned no ID");
+      if (!bookingId) throw new Error(`seedTestBooking failed: ${JSON.stringify(created)}`);
 
       await callFn("processDepositRefunds");
       await new Promise(r => setTimeout(r, 1000));
@@ -399,7 +399,7 @@ const TESTS = [
         },
       });
       const bookingId = created?.id;
-      if (!bookingId) throw new Error("seedTestBooking returned no ID");
+      if (!bookingId) throw new Error(`seedTestBooking failed: ${JSON.stringify(created)}`);
 
       const { status, data } = await callFn("processDepositRefunds");
       await new Promise(r => setTimeout(r, 1000));
