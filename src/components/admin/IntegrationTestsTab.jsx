@@ -235,7 +235,8 @@ const TESTS = [
       if (sendFailures.length > 0) throw new Error(`sendNotification failed for: ${sendFailures.join(", ")}`);
 
       // Step 2 — verify DB records were actually written
-      const allRecords = await base44.entities.Notification.filter({ user_id: "integration_test_placeholder" });
+      const { data: notifData } = await callFn("seedTestBooking", { action: "listNotifications", user_id: "integration_test_placeholder" });
+      const allRecords = notifData?.notifications || [];
       const testRecords = allRecords.filter(n => n.title?.startsWith("[Integration Test]"));
       const writtenTypes = new Set(testRecords.map(n => n.type));
       const missingFromDb = types.filter(t => !writtenTypes.has(t));
