@@ -33,14 +33,17 @@ Deno.serve(async (req) => {
 
     const sr = base44client.asServiceRole;
     const authenticatedUserId = session.user_id;
-    if (!authenticatedUserId) {
+    const isAdmin = session.role === 'admin';
+    if (!authenticatedUserId && !isAdmin) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Verify admin role
-    const adminRoles = await sr.entities.UserRole.filter({ user_id: authenticatedUserId, role: 'admin' });
-    if (!adminRoles?.[0]) {
-      return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+    // Verify admin role via session role or UserRole entity
+    if (!isAdmin) {
+      const adminRoles = await sr.entities.UserRole.filter({ user_id: authenticatedUserId, role: 'admin' });
+      if (!adminRoles?.[0]) {
+        return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+      }
     }
 
     // Load complaint
@@ -163,7 +166,7 @@ Deno.serve(async (req) => {
       admin_resolution_amount,
       admin_notes,
       resolved_at: now.toISOString(),
-      resolved_by: authenticatedUserId,
+      resolved_by: authenticatedUserId || 'admin',
     });
 
     // Check for account flags
