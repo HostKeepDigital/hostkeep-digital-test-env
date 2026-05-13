@@ -1,6 +1,22 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 import Stripe from 'npm:stripe@14';
 
+const stripeClient = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') ?? '');
+const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+
+async function sendEmail({ to, subject, body }) {
+  await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: 'HostKeep Digital <hello@hostkeepdigital.co.uk>',
+      to,
+      subject,
+      html: `<p>${body}</p>`,
+    }),
+  });
+}
+
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
 
 Deno.serve(async (req) => {
