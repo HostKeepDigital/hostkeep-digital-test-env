@@ -92,10 +92,10 @@ Deno.serve(async (req) => {
           payment_intent: booking.stripe_rental_intent_id,
           amount: Math.round(admin_resolution_amount * 100),
         });
-        await stripe.transfers.create({
+        await stripeClient.transfers.create({
           amount: Math.round((booking.total_amount - admin_resolution_amount) * 100),
           currency: 'gbp',
-          destination: host.stripe_connect_account_id,
+          destination: hostRole.stripe_connect_account_id,
           metadata: { booking_id: booking.id },
         });
         bookingUpdate.rental_payment_status = 'transferred';
