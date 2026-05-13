@@ -1,6 +1,22 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 import { differenceInHours } from 'npm:date-fns@3.6.0';
 
+const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+const ADMIN_EMAIL = Deno.env.get('ADMIN_EMAIL') || 'hello@hostkeepdigital.co.uk';
+
+async function sendEmail({ to, subject, body }) {
+  await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: 'HostKeep Digital <hello@hostkeepdigital.co.uk>',
+      to,
+      subject,
+      html: `<p>${body}</p>`,
+    }),
+  });
+}
+
 Deno.serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}));
@@ -14,10 +30,9 @@ Deno.serve(async (req) => {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-
-    if (!user) {
+    const sr = base44client.asServiceRole;
+    const authenticatedUserId = session.user_id;
+    if (!authenticatedUserId) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -37,13 +52,14 @@ Deno.serve(async (req) => {
     } = body;
 
     // Load booking
-    const booking = await base44.entities.Booking.get(booking_id);
+    const bookings = await sr.entities.Booking.filter({ id: booking_id });
+    const booking = bookings?.[0];
     if (!booking) {
       return Response.json({ error: 'Booking not found' }, { status: 404 });
     }
 
     // Verify user is guest or host on this booking
-    if (user.id !== booking.guest_id && user.id !== booking.host_id) {
+    if (authenticatedUserId !== booking.guest_id && authenticatedUserId !== booking.host_id) {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -101,16 +117,16 @@ Deno.serve(async (req) => {
 
     // Freeze relevant payment
     if (raised_by === 'guest') {
-      await base44.entities.Booking.update(booking_id, { rental_frozen: true });
+      await sr.entities.Booking.update(booking_id, { rental_frozen: true });
     } else if (raised_by === 'host') {
-      await base44.entities.Booking.update(booking_id, { deposit_frozen: true });
+      await sr.entities.Booking.update(booking_id, { deposit_frozen: true });
     }
 
     // Create Complaint record
     const complaintData = {
       booking_id,
       raised_by,
-      raised_by_user_id: user.id,
+      raised_by_user_id: authenticatedUserId,
       complaint_type: raised_by === 'guest' ? 'rental_dispute' : 'damage_claim',
       category,
       specific_issue,
@@ -129,36 +145,38 @@ Deno.serve(async (req) => {
       complaintData.damage_total_claimed = damage_total_claimed;
     }
 
-    const complaint = await base44.entities.Complaint.create(complaintData);
+    const complaint = await sr.entities.Complaint.create(complaintData);
 
+    // Send notification emails
     // Send notification emails
     try {
       if (raised_by === 'guest') {
-        // Email host
-        await base44.functions.invoke('sendEmail', {
-          to: booking.host_email || (await base44.asServiceRole.entities.User.get(booking.host_id))?.email,
-          subject: `Guest Complaint Raised - Booking ${booking_id}`,
-          body: `A complaint has been raised on booking ${booking_id}. The rental payment is frozen until this is resolved. HostKeep admin will be in touch.`,
-        });
+        const hostCreds = await sr.entities.UserCredentials.filter({ user_id: booking.host_id });
+        const hostEmail = booking.host_email || hostCreds?.[0]?.email;
+        if (hostEmail) {
+          await sendEmail({
+            to: hostEmail,
+            subject: `Guest Complaint Raised — Booking ${booking_id}`,
+            body: `A complaint has been raised on booking ${booking_id}. The rental payment is frozen until this is resolved. HostKeep admin will be in touch within 24 hours.`,
+          });
+        }
       } else if (raised_by === 'host') {
-        // Email guest
-        await base44.functions.invoke('sendEmail', {
-          to: booking.guest_email,
-          subject: `Damage Claim Raised - Booking ${booking_id}`,
-          body: `Your host has raised a damage claim on your recent stay. Your security deposit is frozen until this is resolved. HostKeep admin will be in touch.`,
-        });
+        if (booking.guest_email) {
+          await sendEmail({
+            to: booking.guest_email,
+            subject: `Damage Claim Raised — Booking ${booking_id}`,
+            body: `Your host has raised a damage claim on your recent stay. Your security deposit is frozen until this is resolved. HostKeep admin will be in touch within 24 hours.`,
+          });
+        }
       }
 
-      // Email admin
-      const adminEmail = Deno.env.get('ADMIN_EMAIL') || 'hello@hostkeepdigital.co.uk';
-      await base44.functions.invoke('sendEmail', {
-        to: adminEmail,
-        subject: `New Complaint - Booking ${booking_id}`,
-        body: `A new complaint has been raised.\n\nComplaint ID: ${complaint.id}\nBooking ID: ${booking_id}\nRaised By: ${raised_by}\nComplaint Type: ${complaint.complaint_type}\nCategory: ${category}\nDescription: ${description}\n\nStatus: open`,
+      await sendEmail({
+        to: ADMIN_EMAIL,
+        subject: `New Complaint — Booking ${booking_id}`,
+        body: `A new complaint has been raised.<br><br>Complaint ID: ${complaint.id}<br>Booking ID: ${booking_id}<br>Raised By: ${raised_by}<br>Type: ${complaint.complaint_type}<br>Category: ${category}<br>Description: ${description}<br><br>Status: open`,
       });
     } catch (emailErr) {
       console.error('Email sending error:', emailErr);
-      // Don't fail the whole operation if emails fail
     }
 
     return Response.json({
