@@ -301,11 +301,12 @@ const TESTS = [
           host_id: "regression-test", guest_id: "regression-test",
           guest_name: "Deposit Refund Test", guest_email: "regression@hostkeepdigital-test.invalid",
           property_id: "regression-test-property-id", check_in: pastDate, check_out: pastDate,
-          booking_status: "completed", deposit_status: "held", total_amount: 0, deposit_frozen: false,
+          booking_status: "completed", deposit_status: "held", total_amount: 0,
+          deposit_frozen: true, stripe_deposit_intent_id: "pi_regression_frozen_test",
         },
       });
       const bookingId = created?.id;
-       if (!bookingId) throw new Error(`seedTestBooking failed: ${JSON.stringify(created)}`);
+      if (!bookingId) throw new Error(`seedTestBooking failed: ${JSON.stringify(created)}`);
 
       await callFn("processDepositRefunds");
       await new Promise(r => setTimeout(r, 1000));
