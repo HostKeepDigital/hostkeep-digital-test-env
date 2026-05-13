@@ -111,13 +111,16 @@ async function handleSubscriptionDeactivated(base44, user_id) {
     }
 
     // Send subscription expired email
-    const userRecords = await base44.asServiceRole.entities.User.filter({ id: user_id });
-    const user = userRecords?.[0];
-    if (user?.email) {
+    const creds = await base44.asServiceRole.entities.UserCredentials.filter({ user_id });
+    const recipientEmail = creds?.[0]?.email;
+    if (recipientEmail) {
+      const userRecords = await base44.asServiceRole.entities.User.filter({ email: recipientEmail });
+      const user = userRecords?.[0];
+      const firstName = user?.full_name?.split(' ')[0] || 'there';
       const html = buildEmail({
         heading: 'Your subscription has expired',
         body: `
-          <p>Hi ${user.full_name?.split(' ')[0] || 'there'},</p>
+          <p>Hi ${firstName},</p>
           <p>Your HostKeep subscription has ended. As a result:</p>
           <ul style="padding-left:20px;line-height:1.8;">
             <li>Your properties have been moved to <strong>Draft</strong> and are no longer visible to guests.</li>
