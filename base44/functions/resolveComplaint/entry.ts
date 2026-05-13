@@ -32,14 +32,15 @@ Deno.serve(async (req) => {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-
-    if (!user) {
+    const sr = base44client.asServiceRole;
+    const authenticatedUserId = session.user_id;
+    if (!authenticatedUserId) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (user.role !== 'admin') {
+    // Verify admin role
+    const adminRoles = await sr.entities.UserRole.filter({ user_id: authenticatedUserId, role: 'admin' });
+    if (!adminRoles?.[0]) {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
