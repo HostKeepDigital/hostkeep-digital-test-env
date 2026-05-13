@@ -147,6 +147,7 @@ const TESTS = [
       return `Skipped — requires a non-admin session token to test. Verify manually by calling resolveComplaint with a guest session.`;
     },
   },
+  // NEW
   {
     id: "resc_complaint_not_found",
     group: "resolveComplaint",
@@ -163,6 +164,87 @@ const TESTS = [
       });
       if (status !== 404 && status !== 403) throw new Error(`Expected 404 or 403, got ${status}: ${JSON.stringify(data)}`);
       return `Passed — correctly returned ${status} for unknown complaint`;
+    },
+  },
+
+  // ── sendNotification ──────────────────────────────────────────────────
+  {
+    id: "sn_missing_fields",
+    group: "sendNotification",
+    label: "Returns missing_fields error when type, title, body are absent",
+    claudeHint: "Check base44/functions/sendNotification/entry.ts — the missing fields guard must return { success: false, error: 'missing_fields' } with status 400 when type/title/body are omitted.",
+    run: async () => {
+      const { status, data } = await callFn("sendNotification", {
+        user_id: "integration_test_placeholder",
+      });
+      if (status !== 400) throw new Error(`Expected 400, got ${status}`);
+      if (data.error !== "missing_fields") throw new Error(`Expected missing_fields error, got: ${JSON.stringify(data)}`);
+      return `Passed — correctly returned 400 with missing_fields error`;
+    },
+  },
+  {
+    id: "sn_executes",
+    group: "sendNotification",
+    label: "Executes and returns success: true with valid payload",
+    claudeHint: "Check base44/functions/sendNotification/entry.ts — a valid payload must create a Notification record and return { success: true } with status 200. Check RESEND_API_KEY and entity write permissions.",
+    run: async () => {
+      const { status, data } = await callFn("sendNotification", {
+        user_id: "integration_test_placeholder",
+        type: "general",
+        title: "[Integration Test] sendNotification",
+        body: "Automated integration test — safe to ignore.",
+      });
+      if (status !== 200) throw new Error(`Expected 200, got ${status}: ${JSON.stringify(data)}`);
+      if (!data.success) throw new Error(`Expected success: true, got: ${JSON.stringify(data)}`);
+      return `Passed — notification record created successfully`;
+    },
+  },
+  {
+    id: "sn_cleaning_types",
+    group: "sendNotification",
+    label: "Accepts all cleaning job move types (PREF_MAP fix)",
+    claudeHint: "Check base44/functions/sendNotification/entry.ts PREF_MAP — cleaning_job_move_requested, cleaning_job_move_approved, cleaning_job_move_denied, cleaning_job_cancelled_by_cleaner, cleaning_job_cancelled_by_host must all be present under the jobs key.",
+    run: async () => {
+      const types = [
+        "cleaning_job_move_requested",
+        "cleaning_job_move_approved",
+        "cleaning_job_move_denied",
+        "cleaning_job_cancelled_by_cleaner",
+        "cleaning_job_cancelled_by_host",
+      ];
+      const failures = [];
+      for (const type of types) {
+        const { status, data } = await callFn("sendNotification", {
+          user_id: "integration_test_placeholder",
+          type,
+          title: `[Integration Test] ${type}`,
+          body: "Automated integration test — safe to ignore.",
+        });
+        if (status !== 200 || !data.success) failures.push(type);
+      }
+      if (failures.length > 0) throw new Error(`Failed for types: ${failures.join(", ")}`);
+      return `Passed — all 5 cleaning job move types accepted correctly`;
+    },
+  },
+  {
+    id: "sn_force_email",
+    group: "sendNotification",
+    label: "force_email flag sends email without error",
+    claudeHint: "Check base44/functions/sendNotification/entry.ts — force_email: true with a valid email_to must bypass preference check, send via Resend, and return success: true. If failing, check RESEND_API_KEY is set in secrets.",
+    run: async (sessionToken) => {
+      if (!sessionToken) throw new Error("No session token available — log in first");
+      const { status, data } = await callFn("sendNotification", {
+        session_token: sessionToken,
+        user_id: "integration_test_placeholder",
+        type: "general",
+        title: "[Integration Test] Force Email",
+        body: "Forced email integration test — safe to ignore.",
+        email_to: "hello@hostkeepdigital.co.uk",
+        force_email: true,
+      });
+      if (status !== 200) throw new Error(`Expected 200, got ${status}: ${JSON.stringify(data)}`);
+      if (!data.success) throw new Error(`Expected success: true, got: ${JSON.stringify(data)}`);
+      return `Passed — force_email dispatched to hello@hostkeepdigital.co.uk`;
     },
   },
 ];
