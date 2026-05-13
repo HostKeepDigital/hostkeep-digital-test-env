@@ -52,8 +52,7 @@ Deno.serve(async (req) => {
     } = body;
 
     // Load booking
-    const bookings = await sr.entities.Booking.filter({ id: booking_id });
-    const booking = bookings?.[0];
+    const booking = await sr.entities.Booking.get(booking_id).catch(() => null);
     if (!booking) {
       return Response.json({ error: 'Booking not found' }, { status: 404 });
     }
