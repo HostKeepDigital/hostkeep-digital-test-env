@@ -49,6 +49,26 @@ export default function DepositReturnTimer({
     );
   }
 
+  if (depositStatus === 'refunded') {
+    return (
+      <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3">
+        <p className="text-sm font-medium text-emerald-700">
+          ✓ Security deposit has been returned to guest
+        </p>
+      </div>
+    );
+  }
+
+  if (depositStatus === 'refunding') {
+    return (
+      <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3">
+        <p className="text-sm font-medium text-emerald-700">
+          ↻ Security deposit refund is being processed
+        </p>
+      </div>
+    );
+  }
+
   if (isExpired) {
     return (
       <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3">
