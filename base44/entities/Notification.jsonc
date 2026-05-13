@@ -22,7 +22,12 @@
         "cleaning_job_completed",
         "payment_received",
         "payment_due",
-        "general"
+        "general",
+        "cleaning_job_move_requested",
+        "cleaning_job_move_approved",
+        "cleaning_job_move_denied",
+        "cleaning_job_cancelled_by_cleaner",
+        "cleaning_job_cancelled_by_host"
       ],
       "description": "Notification type"
     },
