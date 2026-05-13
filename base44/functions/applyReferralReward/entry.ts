@@ -38,13 +38,6 @@ Deno.serve(async (req) => {
     const referral = refs.find(r => r.status === "pending" && r.ref_code);
     if (!referral) return Response.json({ success: false, error: "no pending referral found" });
 
-    // Update referral record
-    await sr.entities.Referral.update(referral.id, {
-      referee_user_id,
-      referee_name: referee_name || referee_email,
-      status: "subscription_activated",
-    });
-
     // Apply 1 month free credit to the referring host's Stripe subscription
     const referrerSubs = await sr.entities.Subscription.filter({ user_id: referral.referrer_user_id });
     const referrerSub = referrerSubs.find(s => s.status === "active" && s.stripe_subscription_id);
