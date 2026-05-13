@@ -457,8 +457,8 @@ Deno.serve(async (req) => {
 
           // Apply referral reward if this user was referred
           try {
-            const users = await base44.asServiceRole.entities.User.filter({ id: user_id });
-            const userEmail = users?.[0]?.email;
+            const creds = await base44.asServiceRole.entities.UserCredentials.filter({ user_id });
+            const userEmail = creds?.[0]?.email;
             if (userEmail) {
               const refs = await base44.asServiceRole.entities.Referral.filter({ referee_email: userEmail.toLowerCase().trim() });
               if (refs.length > 0 && refs[0].status === "pending") {
