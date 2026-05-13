@@ -70,7 +70,7 @@ const TESTS = [
     label: "Rejects request with no session token",
     claudeHint: "Check base44/functions/raiseComplaint/entry.ts — missing session_token must return 401. Check the session_token guard at the top of the function.",
     run: async () => {
-      const { status, data } = await callFn("raiseComplaint", {});
+      const { status } = await callFn("raiseComplaint", {});
       if (status !== 401) throw new Error(`Expected 401, got ${status}`);
       return `Passed — correctly returned 401 Unauthorized`;
     },
@@ -81,7 +81,7 @@ const TESTS = [
     label: "Rejects request with invalid session token",
     claudeHint: "Check base44/functions/raiseComplaint/entry.ts — invalid session tokens must fail UserSession.filter lookup and return 401.",
     run: async () => {
-      const { status, data } = await callFn("raiseComplaint", {
+      const { status } = await callFn("raiseComplaint", {
         session_token: "invalid_token_test_12345",
         booking_id: "test",
         raised_by: "guest",
@@ -144,7 +144,6 @@ const TESTS = [
     claudeHint: "Check base44/functions/resolveComplaint/entry.ts — UserRole.filter({ user_id, role: 'admin' }) returning empty must return 403.",
     run: async (sessionToken) => {
       if (!sessionToken) throw new Error("No session token available — log in first");
-      // Use a known non-admin test token if available, otherwise note this needs a guest session
       return `Skipped — requires a non-admin session token to test. Verify manually by calling resolveComplaint with a guest session.`;
     },
   },
@@ -178,6 +177,41 @@ const STATUS_ICON = {
   skip: <CheckCircle2 className="w-4 h-4 text-gray-400" />,
 };
 
+function ClaudePromptPanel({ failedTests, copied, onCopy }) {
+  const prompt = buildClaudePrompt(failedTests);
+  return (
+    <div className="bg-red-50 border-2 border-red-200 rounded-xl p-5 space-y-4">
+      <div>
+        <p className="text-sm font-bold text-red-800">
+          {failedTests.length} test{failedTests.length > 1 ? "s" : ""} failing — get Claude to fix these
+        </p>
+        <p className="text-xs text-red-600 mt-0.5">
+          Copy the prompt below and paste it into this conversation.
+        </p>
+      </div>
+      <div className="bg-white border border-red-200 rounded-lg p-3 max-h-48 overflow-y-auto">
+        <pre className="text-xs text-gray-700 whitespace-pre-wrap font-mono">{prompt}</pre>
+      </div>
+      <div className="flex gap-2">
+        <button
+          onClick={onCopy}
+          className="flex-1 py-2.5 rounded-lg bg-[#1E3A5F] text-white text-sm font-semibold hover:bg-[#16304f] transition-colors"
+        >
+          {copied ? "Copied!" : "Copy Prompt"}
+        </button>
+        <a
+          href={"https://claude.ai/new?q=" + encodeURIComponent(prompt.slice(0, 2000))}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-1 py-2.5 rounded-lg border border-[#1E3A5F] text-[#1E3A5F] text-sm font-semibold hover:bg-blue-50 transition-colors text-center"
+        >
+          Open Claude
+        </a>
+      </div>
+    </div>
+  );
+}
+
 export default function IntegrationTestsTab({ sessionToken }) {
   const [results, setResults] = useState({});
   const [runningAll, setRunningAll] = useState(false);
@@ -187,13 +221,31 @@ export default function IntegrationTestsTab({ sessionToken }) {
     setResults(prev => ({ ...prev, [id]: result }));
 
   const runTest = async (test) => {
-    setResult(test.id, { status: "running", message: "", group: test.group, label: test.label, claudeHint: test.claudeHint });
+    setResult(test.id, {
+      status: "running",
+      message: "",
+      group: test.group,
+      label: test.label,
+      claudeHint: test.claudeHint,
+    });
     try {
       const message = await test.run(sessionToken);
       const isSkip = message?.startsWith("Skipped");
-      setResult(test.id, { status: isSkip ? "skip" : "pass", message, group: test.group, label: test.label, claudeHint: test.claudeHint });
+      setResult(test.id, {
+        status: isSkip ? "skip" : "pass",
+        message,
+        group: test.group,
+        label: test.label,
+        claudeHint: test.claudeHint,
+      });
     } catch (err) {
-      setResult(test.id, { status: "fail", message: err.message, group: test.group, label: test.label, claudeHint: test.claudeHint });
+      setResult(test.id, {
+        status: "fail",
+        message: err.message,
+        group: test.group,
+        label: test.label,
+        claudeHint: test.claudeHint,
+      });
     }
   };
 
@@ -215,9 +267,11 @@ export default function IntegrationTestsTab({ sessionToken }) {
   const passed = Object.values(results).filter(r => r.status === "pass").length;
   const failed = Object.values(results).filter(r => r.status === "fail").length;
   const total = TESTS.length;
+  const failedTests = Object.values(results).filter(r => r.status === "fail");
 
   return (
     <div className="space-y-6">
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -328,6 +382,21 @@ export default function IntegrationTestsTab({ sessionToken }) {
           </div>
         );
       })}
+
+      {/* Claude prompt panel — shown when there are failures */}
+      {failedTests.length > 0 && (
+        <ClaudePromptPanel
+          failedTests={failedTests}
+          copied={copied}
+          onCopy={() => {
+            const prompt = buildClaudePrompt(failedTests);
+            navigator.clipboard.writeText(prompt).then(() => {
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+            });
+          }}
+        />
+      )}
 
       <p className="text-xs text-gray-400 text-center">
         Tests run against live functions in this environment. No production data is modified.
