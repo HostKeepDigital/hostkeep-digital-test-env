@@ -21,13 +21,22 @@ Deno.serve(async (req) => {
       return Response.json({ id: created.id });
     }
 
-     if (action === "read") {
+      if (action === "read") {
       const { id } = body;
       if (!id) {
         return Response.json({ error: "missing_id" }, { status: 400 });
       }
       const bookings = await sr.entities.Booking.filter({ id });
       return Response.json({ booking: bookings?.[0] || null });
+    }
+
+    if (action === "listNotifications") {
+      const { user_id } = body;
+      if (!user_id) {
+        return Response.json({ error: "missing_user_id" }, { status: 400 });
+      }
+      const notifications = await sr.entities.Notification.filter({ user_id });
+      return Response.json({ notifications });
     }
 
     if (action === "delete") {
