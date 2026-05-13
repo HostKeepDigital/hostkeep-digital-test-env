@@ -58,10 +58,10 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Booking not found' }, { status: 404 });
     }
 
-    // Verify user is guest or host on this booking
-    if (authenticatedUserId !== booking.guest_id && authenticatedUserId !== booking.host_id) {
-      return Response.json({ error: 'Forbidden' }, { status: 403 });
-    }
+    // Verify user is guest or host on this booking (admin can bypass)
+      if (!isAdmin && authenticatedUserId !== booking.guest_id && authenticatedUserId !== booking.host_id) {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
 
     // Validate complaint window
     const now = new Date();
