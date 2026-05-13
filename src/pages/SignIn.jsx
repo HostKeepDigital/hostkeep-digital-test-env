@@ -23,7 +23,7 @@ export default function SignIn() {
       const isApp = localStorage.getItem("is_app") === "true";
 
       // Raw fetch — no Base44 SDK auth headers so Base44 treats this as a public call
-      const raw = await fetch(`/api/apps/${APP_ID}/functions/customSignIn`, {
+      const raw = await fetch(`/functions/customSignIn`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, is_app: isApp }),
