@@ -301,8 +301,7 @@ const TESTS = [
           host_id: "regression-test", guest_id: "regression-test",
           guest_name: "Deposit Refund Test", guest_email: "regression@hostkeepdigital-test.invalid",
           property_id: "regression-test-property-id", check_in: pastDate, check_out: pastDate,
-          booking_status: "completed", deposit_status: "held",
-          deposit_frozen: true, stripe_deposit_intent_id: "pi_regression_frozen_test",
+          booking_status: "completed", deposit_status: "held", total_amount: 0, deposit_frozen: false,
         },
       });
       const bookingId = created?.id;
@@ -363,7 +362,7 @@ const TESTS = [
           host_id: "regression-test", guest_id: "regression-test",
           guest_name: "Deposit Refund Test", guest_email: "regression@hostkeepdigital-test.invalid",
           property_id: "regression-test-property-id", check_in: futureDate, check_out: futureDate,
-          booking_status: "completed", deposit_status: "held",
+          booking_status: "completed", deposit_status: "held", total_amount: 0,
           deposit_frozen: false, stripe_deposit_intent_id: "pi_regression_future_test",
         },
       });
@@ -394,7 +393,7 @@ const TESTS = [
           host_id: "regression-test", guest_id: "regression-test",
           guest_name: "Deposit Refund Test", guest_email: "regression@hostkeepdigital-test.invalid",
           property_id: "regression-test-property-id", check_in: pastDate, check_out: pastDate,
-          booking_status: "completed", deposit_status: "held",
+          booking_status: "completed", deposit_status: "held", total_amount: 0,
           deposit_frozen: false, stripe_deposit_intent_id: "pi_regression_fake_should_error",
         },
       });
