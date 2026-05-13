@@ -168,13 +168,16 @@ const TESTS = [
   },
 
   // ── sendNotification ──────────────────────────────────────────────────
+  // NEW
   {
     id: "sn_missing_fields",
     group: "sendNotification",
     label: "Returns missing_fields error when type, title, body are absent",
     claudeHint: "Check base44/functions/sendNotification/entry.ts — the missing fields guard must return { success: false, error: 'missing_fields' } with status 400 when type/title/body are omitted.",
-    run: async () => {
+    run: async (sessionToken) => {
+      if (!sessionToken) throw new Error("No session token available — log in first");
       const { status, data } = await callFn("sendNotification", {
+        session_token: sessionToken,
         user_id: "integration_test_placeholder",
       });
       if (status !== 400) throw new Error(`Expected 400, got ${status}`);
@@ -187,8 +190,10 @@ const TESTS = [
     group: "sendNotification",
     label: "Executes and returns success: true with valid payload",
     claudeHint: "Check base44/functions/sendNotification/entry.ts — a valid payload must create a Notification record and return { success: true } with status 200. Check RESEND_API_KEY and entity write permissions.",
-    run: async () => {
+    run: async (sessionToken) => {
+      if (!sessionToken) throw new Error("No session token available — log in first");
       const { status, data } = await callFn("sendNotification", {
+        session_token: sessionToken,
         user_id: "integration_test_placeholder",
         type: "general",
         title: "[Integration Test] sendNotification",
@@ -204,7 +209,8 @@ const TESTS = [
     group: "sendNotification",
     label: "Accepts all cleaning job move types (PREF_MAP fix)",
     claudeHint: "Check base44/functions/sendNotification/entry.ts PREF_MAP — cleaning_job_move_requested, cleaning_job_move_approved, cleaning_job_move_denied, cleaning_job_cancelled_by_cleaner, cleaning_job_cancelled_by_host must all be present under the jobs key.",
-    run: async () => {
+    run: async (sessionToken) => {
+      if (!sessionToken) throw new Error("No session token available — log in first");
       const types = [
         "cleaning_job_move_requested",
         "cleaning_job_move_approved",
@@ -215,6 +221,7 @@ const TESTS = [
       const failures = [];
       for (const type of types) {
         const { status, data } = await callFn("sendNotification", {
+          session_token: sessionToken,
           user_id: "integration_test_placeholder",
           type,
           title: `[Integration Test] ${type}`,
