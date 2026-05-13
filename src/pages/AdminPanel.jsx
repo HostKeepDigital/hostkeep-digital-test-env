@@ -1624,6 +1624,12 @@ const handleDocBan = async (member) => {
       {activeTab === "devtools" && (
         <DevToolsSection members={members} user={user} sessionToken={getSessionToken()} />
       )}
+
+      {activeTab === "integration" && (
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <IntegrationTestsTab sessionToken={getSessionToken()} />
+        </div>
+      )}
     </div>
   );
 }
