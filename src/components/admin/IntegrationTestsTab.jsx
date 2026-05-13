@@ -310,11 +310,11 @@ const TESTS = [
       await callFn("processDepositRefunds");
       await new Promise(r => setTimeout(r, 1000));
 
-      const refreshed = await base44.entities.Booking.filter({ id: bookingId });
+      const { data: readBack } = await callFn("seedTestBooking", { action: "read", id: bookingId });
       await callFn("seedTestBooking", { action: "delete", id: bookingId });
 
-      if (refreshed?.[0]?.deposit_status !== "held")
-        throw new Error(`Expected 'held', got '${refreshed?.[0]?.deposit_status}' — frozen guard is broken`);
+      if (readBack?.booking?.deposit_status !== "held")
+        throw new Error(`Expected 'held', got '${readBack?.booking?.deposit_status}' — frozen guard is broken`);
       return `Passed — frozen booking skipped, deposit_status still 'held'`;
     },
   },
