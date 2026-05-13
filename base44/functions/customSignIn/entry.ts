@@ -45,15 +45,11 @@ Deno.serve(async (req) => {
       // Look up or create admin User record to get user_id for session
       let adminUserId = null;
       try {
-        const adminUsers = await serviceRole.entities.User.filter({ email: normalisedEmail });
+        const adminUsers = await serviceRole.entities.User.filter({ role: "admin" });
         if (adminUsers?.[0]?.id) {
           adminUserId = adminUsers[0].id;
         } else {
-          const newAdmin = await serviceRole.entities.User.create({
-            email: normalisedEmail,
-            full_name: "Admin",
-            role: "admin",
-          });
+          const newAdmin = await serviceRole.entities.User.create({ role: "admin" });
           adminUserId = newAdmin?.id || null;
         }
       } catch (_) {}
