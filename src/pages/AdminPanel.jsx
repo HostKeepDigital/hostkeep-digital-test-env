@@ -1119,6 +1119,7 @@ const handleDocBan = async (member) => {
             { id:"smartpricing",  label:"Smart Pricing",     Icon:TrendingUp    },
             { id:"sectors",       label:"UK Sectors",        Icon:Globe         },
             { id:"devtools",      label:"Dev Tools & Tests", Icon:Settings      },
+            { id:"integration",   label:"Integration Tests", Icon:CheckCircle   },
           ].map(({ id, label, Icon }) => (
             <button key={id} onClick={() => setActiveTab(id)}
               className={`flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap flex-shrink-0 ${activeTab===id ? "border-[#0d9488] text-[#0d9488]" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
