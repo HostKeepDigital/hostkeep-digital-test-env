@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
 
     // Email the referee explaining the referral reward and what happens next
     try {
-      await base44.functions.invoke("sendEmail", {
+      await sendEmail({
         to: normEmail,
         subject: "You've been referred to HostKeep — here's what to expect",
         html: `<p>Hi ${referee_name || "there"},</p>
