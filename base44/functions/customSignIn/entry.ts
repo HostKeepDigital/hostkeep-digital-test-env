@@ -42,11 +42,20 @@ Deno.serve(async (req) => {
           { status: 200 }
         );
       }
-      // Look up admin User record to get user_id for session
+      // Look up or create admin User record to get user_id for session
       let adminUserId = null;
       try {
         const adminUsers = await serviceRole.entities.User.filter({ email: normalisedEmail });
-        adminUserId = adminUsers?.[0]?.id || null;
+        if (adminUsers?.[0]?.id) {
+          adminUserId = adminUsers[0].id;
+        } else {
+          const newAdmin = await serviceRole.entities.User.create({
+            email: normalisedEmail,
+            full_name: "Admin",
+            role: "admin",
+          });
+          adminUserId = newAdmin?.id || null;
+        }
       } catch (_) {}
       const session_token = crypto.randomUUID();
       const expires_at = new Date(
