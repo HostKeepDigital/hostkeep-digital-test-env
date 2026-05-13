@@ -72,14 +72,20 @@ export default function ComplaintDetailPanel({ complaint, booking, property, hos
     if (!resolution) { toast.error("Select a resolution type"); return; }
     setLoading(true);
     try {
-      await base44.functions.invoke("resolveComplaint", {
-        session_token: localStorage.getItem("session_token"),
-        complaint_id: complaint.id,
-        status: "resolved",
-        admin_resolution: resolution,
-        admin_resolution_amount: amount,
-        admin_notes: notes,
+      const res = await fetch('/api/apps/698eee4108bd1d9467648326/functions/resolveComplaint', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_token: localStorage.getItem('session_token'),
+          complaint_id: complaint.id,
+          status: 'resolved',
+          admin_resolution: resolution,
+          admin_resolution_amount: amount,
+          admin_notes: notes,
+        }),
       });
+      const result = await res.json();
+      if (!res.ok || result.error) throw new Error(result.error || 'Failed to resolve complaint');
       toast.success("Resolution confirmed — Stripe payments triggered, parties notified.");
       onResolved?.();
       onClose();
