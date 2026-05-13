@@ -157,16 +157,16 @@ Deno.serve(async (req) => {
     }
 
     // Update booking record
-    await base44.entities.Booking.update(complaint.booking_id, bookingUpdate);
+    await sr.entities.Booking.update(complaint.booking_id, bookingUpdate);
 
     // Update complaint record
-    await base44.entities.Complaint.update(complaint_id, {
+    await sr.entities.Complaint.update(complaint_id, {
       status: 'resolved',
       admin_resolution,
       admin_resolution_amount,
       admin_notes,
       resolved_at: now.toISOString(),
-      resolved_by: user.id,
+      resolved_by: authenticatedUserId,
     });
 
     // Check for account flags
@@ -187,20 +187,21 @@ Deno.serve(async (req) => {
           ? `You have received £${hostAmount.toFixed(2)}`
           : 'No payment has been awarded';
 
-      // Email guest
-      await base44.functions.invoke('sendEmail', {
-        to: booking.guest_email,
-        subject: `Complaint Resolution - Booking ${complaint.booking_id}`,
-        body: `Your complaint has been reviewed and resolved.\n\nResolution: ${admin_resolution}\n${guestResolutionText}\n\nAdmin notes: ${admin_notes || 'None'}\n\nIf you have any questions, please contact HostKeep support.`,
-      });
+      if (booking.guest_email) {
+        await sendEmail({
+          to: booking.guest_email,
+          subject: `Complaint Resolution — Booking ${complaint.booking_id}`,
+          body: `Your complaint has been reviewed and resolved.<br><br>Resolution: ${admin_resolution}<br>${guestResolutionText}<br><br>Admin notes: ${admin_notes || 'None'}<br><br>If you have any questions please contact HostKeep support.`,
+        });
+      }
 
-      // Email host
-      const hostEmail = host.email;
-      await base44.functions.invoke('sendEmail', {
-        to: hostEmail,
-        subject: `Complaint Resolution - Booking ${complaint.booking_id}`,
-        body: `A complaint on your booking has been reviewed and resolved.\n\nResolution: ${admin_resolution}\n${hostResolutionText}\n\nAdmin notes: ${admin_notes || 'None'}\n\nIf you have any questions, please contact HostKeep support.`,
-      });
+      if (hostEmail) {
+        await sendEmail({
+          to: hostEmail,
+          subject: `Complaint Resolution — Booking ${complaint.booking_id}`,
+          body: `A complaint on your booking has been reviewed and resolved.<br><br>Resolution: ${admin_resolution}<br>${hostResolutionText}<br><br>Admin notes: ${admin_notes || 'None'}<br><br>If you have any questions please contact HostKeep support.`,
+        });
+      }
     } catch (emailErr) {
       console.error('Email sending error:', emailErr);
       // Don't fail if emails fail
