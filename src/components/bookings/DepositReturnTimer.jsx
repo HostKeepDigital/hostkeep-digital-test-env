@@ -4,6 +4,7 @@ import { AlertCircle } from "lucide-react";
 export default function DepositReturnTimer({
   checkOutDate,
   depositFrozen,
+  depositStatus,
 }) {
   const [timeRemaining, setTimeRemaining] = useState(null);
   const [isExpired, setIsExpired] = useState(false);
