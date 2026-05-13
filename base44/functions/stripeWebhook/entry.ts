@@ -517,7 +517,6 @@ Deno.serve(async (req) => {
     }
   }
 
-  return Response.json({ received: true });// NEW
   if (event.type === 'charge.refunded') {
     const charge = event.data.object;
     const { booking_id, type } = charge.metadata || {};
