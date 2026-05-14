@@ -551,7 +551,159 @@ const TESTS = [
       return `Passed — fake intent errored gracefully. success: true, errors: ${data.errors}`;
     },
   },
-// ── checkInBooking ────────────────────────────────────────────────────
+// ── releaseRentalPayments — business scenario tests ───────────────────
+  {
+    id: "rrp_biz_deposit_only_not_released",
+    group: "releaseRentalPayments",
+    label: "Business: Deposit only paid — not released before 24h check-in window",
+    claudeHint: "Check releaseRentalPayments/entry.ts — DB filter requires rental_payment_status: 'held'. A booking where only the security deposit has been paid (deposit_status: 'held', rental_payment_status: 'unpaid') must never be touched by this function.",
+    run: async () => {
+      const futureRelease = new Date(Date.now() + 86400000).toISOString();
+      const { data: created } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: "regression-test", guest_id: "regression-test",
+          guest_name: "RRP Deposit Only Test", guest_email: "regression@hostkeepdigital-test.invalid",
+          property_id: "regression-test-property-id",
+          check_in: new Date().toISOString().split("T")[0],
+          check_out: new Date(Date.now() + 86400000 * 7).toISOString().split("T")[0],
+          booking_status: "checked_in",
+          deposit_status: "held",
+          rental_payment_status: "unpaid",
+          rental_frozen: false,
+          rental_release_due_at: futureRelease,
+          subtotal: 700, cleaning_fee: 50, security_deposit: 200, total_amount: 950,
+        },
+      });
+      const bookingId = created?.id;
+      if (!bookingId) throw new Error(`seedTestBooking failed: ${JSON.stringify(created)}`);
+
+      await callFn("releaseRentalPayments");
+      await new Promise(r => setTimeout(r, 1000));
+
+      const { data: readBack } = await callFn("seedTestBooking", { action: "read", id: bookingId });
+      await callFn("seedTestBooking", { action: "delete", id: bookingId });
+
+      if (readBack?.booking?.deposit_status !== "held")
+        throw new Error(`Security deposit should remain 'held', got '${readBack?.booking?.deposit_status}'`);
+      if (readBack?.booking?.rental_payment_status !== "unpaid")
+        throw new Error(`Rental status should remain 'unpaid', got '${readBack?.booking?.rental_payment_status}'`);
+      return `Passed — deposit only booking ignored entirely, deposit_status 'held', rental_payment_status 'unpaid'`;
+    },
+  },
+  {
+    id: "rrp_biz_full_payment_not_released_before_24h",
+    group: "releaseRentalPayments",
+    label: "Business: Full payment held — not released before 24h check-in window elapses",
+    claudeHint: "Check releaseRentalPayments/entry.ts — rental_release_due_at in the future must prevent release even when booking is checked_in and rental_payment_status is 'held'.",
+    run: async () => {
+      const futureRelease = new Date(Date.now() + 86400000).toISOString();
+      const { data: created } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: "regression-test", guest_id: "regression-test",
+          guest_name: "RRP Full Payment 24h Test", guest_email: "regression@hostkeepdigital-test.invalid",
+          property_id: "regression-test-property-id",
+          check_in: new Date().toISOString().split("T")[0],
+          check_out: new Date(Date.now() + 86400000 * 7).toISOString().split("T")[0],
+          booking_status: "checked_in",
+          rental_payment_status: "held",
+          rental_frozen: false,
+          rental_release_due_at: futureRelease,
+          subtotal: 700, cleaning_fee: 50, total_amount: 750,
+        },
+      });
+      const bookingId = created?.id;
+      if (!bookingId) throw new Error(`seedTestBooking failed: ${JSON.stringify(created)}`);
+
+      await callFn("releaseRentalPayments");
+      await new Promise(r => setTimeout(r, 1000));
+
+      const { data: readBack } = await callFn("seedTestBooking", { action: "read", id: bookingId });
+      await callFn("seedTestBooking", { action: "delete", id: bookingId });
+
+      if (readBack?.booking?.rental_payment_status !== "held")
+        throw new Error(`Full payment should remain 'held' before 24h window, got '${readBack?.booking?.rental_payment_status}'`);
+      return `Passed — full payment held, 24h not elapsed, rental_payment_status still 'held'`;
+    },
+  },
+  {
+    id: "rrp_biz_deposit_and_full_not_released_before_24h",
+    group: "releaseRentalPayments",
+    label: "Business: Deposit + full payment held — neither released before 24h check-in window",
+    claudeHint: "Check releaseRentalPayments/entry.ts — when both deposit_status and rental_payment_status are 'held', the rental release function must not touch either before rental_release_due_at has passed.",
+    run: async () => {
+      const futureRelease = new Date(Date.now() + 86400000).toISOString();
+      const { data: created } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: "regression-test", guest_id: "regression-test",
+          guest_name: "RRP Deposit And Full Test", guest_email: "regression@hostkeepdigital-test.invalid",
+          property_id: "regression-test-property-id",
+          check_in: new Date().toISOString().split("T")[0],
+          check_out: new Date(Date.now() + 86400000 * 7).toISOString().split("T")[0],
+          booking_status: "checked_in",
+          deposit_status: "held",
+          rental_payment_status: "held",
+          rental_frozen: false,
+          rental_release_due_at: futureRelease,
+          subtotal: 700, cleaning_fee: 50, security_deposit: 200, total_amount: 950,
+        },
+      });
+      const bookingId = created?.id;
+      if (!bookingId) throw new Error(`seedTestBooking failed: ${JSON.stringify(created)}`);
+
+      await callFn("releaseRentalPayments");
+      await new Promise(r => setTimeout(r, 1000));
+
+      const { data: readBack } = await callFn("seedTestBooking", { action: "read", id: bookingId });
+      await callFn("seedTestBooking", { action: "delete", id: bookingId });
+
+      if (readBack?.booking?.rental_payment_status !== "held")
+        throw new Error(`Rental should remain 'held' before 24h window, got '${readBack?.booking?.rental_payment_status}'`);
+      if (readBack?.booking?.deposit_status !== "held")
+        throw new Error(`Deposit should remain 'held', got '${readBack?.booking?.deposit_status}'`);
+      return `Passed — deposit 'held', rental 'held', 24h not elapsed, neither released`;
+    },
+  },
+  {
+    id: "rrp_biz_payment_eligible_after_24h",
+    group: "releaseRentalPayments",
+    label: "Business: Payment eligible for release after 24h check-in window — enters processing loop",
+    claudeHint: "Check releaseRentalPayments/entry.ts — a booking with rental_release_due_at in the past, booking_status checked_in/completed, rental_payment_status 'held', rental_frozen false must enter the results array.",
+    run: async () => {
+      const pastRelease = new Date(Date.now() - 86400000 * 2).toISOString();
+      const { data: created } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: "regression-test", guest_id: "regression-test",
+          guest_name: "RRP Eligible After 24h Test", guest_email: "regression@hostkeepdigital-test.invalid",
+          property_id: "regression-test-property-id",
+          check_in: new Date(Date.now() - 86400000 * 3).toISOString().split("T")[0],
+          check_out: new Date(Date.now() - 86400000 * 2).toISOString().split("T")[0],
+          booking_status: "completed",
+          rental_payment_status: "held",
+          rental_frozen: false,
+          rental_release_due_at: pastRelease,
+          subtotal: 700, cleaning_fee: 50, total_amount: 750,
+        },
+      });
+      const bookingId = created?.id;
+      if (!bookingId) throw new Error(`seedTestBooking failed: ${JSON.stringify(created)}`);
+
+      const { status, data } = await callFn("releaseRentalPayments");
+      await new Promise(r => setTimeout(r, 1000));
+
+      await callFn("seedTestBooking", { action: "delete", id: bookingId });
+
+      if (status !== 200) throw new Error(`Function crashed: ${data.error}`);
+      const entry = data.results?.find(r => r.booking_id === bookingId);
+      if (!entry) throw new Error(`Booking did not enter the processing loop — time guard did not open. results: ${JSON.stringify(data.results)}`);
+      return `Passed — 24h window elapsed, booking entered processing loop (result: ${entry.status}, reason: ${entry.reason || "n/a"})`;
+    },
+  },
+
+  // ── checkInBooking ────────────────────────────────────────────────────
   {
     id: "cib_smoke",
     group: "checkInBooking",
@@ -559,8 +711,7 @@ const TESTS = [
     claudeHint: "base44/functions/checkInBooking/entry.ts does not exist yet — this test is expected to fail until the function is built.",
     run: async () => {
       const { status, data } = await callFn("checkInBooking", {});
-      if (status === 404) throw new Error("Function not found — checkInBooking has not been built yet");
-      if (typeof data.success === "undefined") throw new Error("Missing 'success' field in response");
+      if (typeof data.success === "undefined" || data.error === "unrecognised_function") throw new Error("Function not found — checkInBooking has not been built yet");
       return `Passed — function reachable, shape correct`;
     },
   },
@@ -627,7 +778,7 @@ const TESTS = [
       const checkInTime = new Date();
       const expectedRelease = new Date(checkInTime.getTime() + 86400000);
 
-      await callFn("checkInBooking", {
+      const { status: cibStatus, data: cibData } = await callFn("checkInBooking", {
         booking_id: bookingId,
         check_in_time: checkInTime.toISOString(),
         notes: "Integration test check-in",
@@ -637,6 +788,7 @@ const TESTS = [
       const { data: readBack } = await callFn("seedTestBooking", { action: "read", id: bookingId });
       await callFn("seedTestBooking", { action: "delete", id: bookingId });
 
+      if (cibStatus !== 200 || !cibData.success) throw new Error(`checkInBooking must exist and succeed before this test is meaningful — got ${cibStatus}: ${JSON.stringify(cibData)}`);
       const actualRelease = new Date(readBack?.booking?.rental_release_due_at);
       const diffMs = Math.abs(actualRelease - expectedRelease);
 
@@ -654,7 +806,7 @@ const TESTS = [
     claudeHint: "base44/functions/checkInBooking/entry.ts — missing booking_id must return error not crash.",
     run: async () => {
       const { status, data } = await callFn("checkInBooking", { check_in_time: new Date().toISOString() });
-      if (status === 404) throw new Error("Function not found — checkInBooking has not been built yet");
+      if (typeof data.success === "undefined" || data.error === "unrecognised_function") throw new Error("Function not found — checkInBooking has not been built yet");
       if (status !== 400 && data.success !== false && !data.error)
         throw new Error(`Expected error response, got status ${status}: ${JSON.stringify(data)}`);
       return `Passed — missing booking_id correctly rejected`;
