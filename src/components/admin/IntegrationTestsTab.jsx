@@ -739,7 +739,7 @@ const TESTS = [
       const { data: readBack } = await callFn("seedTestBooking", { action: "read", id: bookingId });
       await callFn("seedTestBooking", { action: "delete", id: bookingId });
 
-      if (status !== 200) throw new Error(`autoCheckIn must exist and return 200 before this test is meaningful — got ${status}`);
+      if (status !== 200 || typeof data.processed !== "number" || !Array.isArray(data.results)) throw new Error(`autoCheckIn must exist and return correct shape before this test is meaningful — got ${status}: ${JSON.stringify(data)}`);
       if (readBack?.booking?.booking_status !== "confirmed")
         throw new Error(`Expected 'confirmed', got '${readBack?.booking?.booking_status}' — future booking should not be advanced`);
       return `Passed — future check-in booking left in 'confirmed'`;
@@ -769,12 +769,13 @@ const TESTS = [
       const bookingId = created?.id;
       if (!bookingId) throw new Error(`seedTestBooking failed: ${JSON.stringify(created)}`);
 
-      await callFn("autoCheckIn");
+      const { status: aciStatus, data: aciData } = await callFn("autoCheckIn");
       await new Promise(r => setTimeout(r, 1000));
 
       const { data: readBack } = await callFn("seedTestBooking", { action: "read", id: bookingId });
       await callFn("seedTestBooking", { action: "delete", id: bookingId });
 
+      if (aciStatus !== 200 || typeof aciData.processed !== "number" || !Array.isArray(aciData.results)) throw new Error(`autoCheckIn must exist and return correct shape before this test is meaningful — got ${aciStatus}: ${JSON.stringify(aciData)}`);
       if (readBack?.booking?.booking_status !== "checked_in")
         throw new Error(`booking_status changed unexpectedly to '${readBack?.booking?.booking_status}'`);
       const releaseUnchanged = readBack?.booking?.rental_release_due_at === existingRelease;
