@@ -63,6 +63,145 @@ const TESTS = [
       return `Passed — no errors, processed ${data.processed} bookings`;
     },
   },
+  {
+    id: "rrp_skips_rental_frozen",
+    group: "releaseRentalPayments",
+    label: "Skips rental_frozen=true — frozen rental not released",
+    claudeHint: "Check releaseRentalPayments/entry.ts — DB filter uses rental_frozen: false so frozen bookings never enter the loop. If rental_payment_status changes from 'held', the filter is missing.",
+    run: async () => {
+      const pastDate = new Date(Date.now() - 86400000 * 2).toISOString();
+      const { data: created } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: "regression-test", guest_id: "regression-test",
+          guest_name: "RRP Frozen Test", guest_email: "regression@hostkeepdigital-test.invalid",
+          property_id: "regression-test-property-id",
+          check_in: new Date(Date.now() - 86400000 * 3).toISOString().split("T")[0],
+          check_out: new Date(Date.now() - 86400000 * 2).toISOString().split("T")[0],
+          booking_status: "completed", rental_payment_status: "held",
+          rental_frozen: true, rental_release_due_at: pastDate,
+          subtotal: 500, cleaning_fee: 50, total_amount: 550,
+        },
+      });
+      const bookingId = created?.id;
+      if (!bookingId) throw new Error(`seedTestBooking failed: ${JSON.stringify(created)}`);
+
+      await callFn("releaseRentalPayments");
+      await new Promise(r => setTimeout(r, 1000));
+
+      const { data: readBack } = await callFn("seedTestBooking", { action: "read", id: bookingId });
+      await callFn("seedTestBooking", { action: "delete", id: bookingId });
+
+      if (readBack?.booking?.rental_payment_status !== "held")
+        throw new Error(`Expected 'held', got '${readBack?.booking?.rental_payment_status}' — rental_frozen guard is broken`);
+      return `Passed — frozen booking skipped, rental_payment_status still 'held'`;
+    },
+  },
+  {
+    id: "rrp_skips_future_due_date",
+    group: "releaseRentalPayments",
+    label: "Skips bookings where rental_release_due_at is in the future",
+    claudeHint: "Check releaseRentalPayments/entry.ts — new Date(b.rental_release_due_at) <= now must exclude future dates. If rental_payment_status changes from 'held', the time guard is broken.",
+    run: async () => {
+      const futureDate = new Date(Date.now() + 86400000 * 2).toISOString();
+      const { data: created } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: "regression-test", guest_id: "regression-test",
+          guest_name: "RRP Future Due Test", guest_email: "regression@hostkeepdigital-test.invalid",
+          property_id: "regression-test-property-id",
+          check_in: new Date(Date.now() - 86400000 * 3).toISOString().split("T")[0],
+          check_out: new Date(Date.now() - 86400000 * 2).toISOString().split("T")[0],
+          booking_status: "checked_in", rental_payment_status: "held",
+          rental_frozen: false, rental_release_due_at: futureDate,
+          subtotal: 500, cleaning_fee: 50, total_amount: 550,
+        },
+      });
+      const bookingId = created?.id;
+      if (!bookingId) throw new Error(`seedTestBooking failed: ${JSON.stringify(created)}`);
+
+      await callFn("releaseRentalPayments");
+      await new Promise(r => setTimeout(r, 1000));
+
+      const { data: readBack } = await callFn("seedTestBooking", { action: "read", id: bookingId });
+      await callFn("seedTestBooking", { action: "delete", id: bookingId });
+
+      if (readBack?.booking?.rental_payment_status !== "held")
+        throw new Error(`Expected 'held', got '${readBack?.booking?.rental_payment_status}' — future due date guard is broken`);
+      return `Passed — future due date booking skipped, rental_payment_status still 'held'`;
+    },
+  },
+  {
+    id: "rrp_skips_wrong_booking_status",
+    group: "releaseRentalPayments",
+    label: "Skips bookings not in checked_in or completed status",
+    claudeHint: "Check releaseRentalPayments/entry.ts — JS filter requires booking_status === 'checked_in' or 'completed'. A booking in 'confirmed' must be excluded.",
+    run: async () => {
+      const pastDate = new Date(Date.now() - 86400000 * 2).toISOString();
+      const { data: created } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: "regression-test", guest_id: "regression-test",
+          guest_name: "RRP Wrong Status Test", guest_email: "regression@hostkeepdigital-test.invalid",
+          property_id: "regression-test-property-id",
+          check_in: new Date(Date.now() - 86400000 * 3).toISOString().split("T")[0],
+          check_out: new Date(Date.now() - 86400000 * 2).toISOString().split("T")[0],
+          booking_status: "confirmed", rental_payment_status: "held",
+          rental_frozen: false, rental_release_due_at: pastDate,
+          subtotal: 500, cleaning_fee: 50, total_amount: 550,
+        },
+      });
+      const bookingId = created?.id;
+      if (!bookingId) throw new Error(`seedTestBooking failed: ${JSON.stringify(created)}`);
+
+      await callFn("releaseRentalPayments");
+      await new Promise(r => setTimeout(r, 1000));
+
+      const { data: readBack } = await callFn("seedTestBooking", { action: "read", id: bookingId });
+      await callFn("seedTestBooking", { action: "delete", id: bookingId });
+
+      if (readBack?.booking?.rental_payment_status !== "held")
+        throw new Error(`Expected 'held', got '${readBack?.booking?.rental_payment_status}' — booking_status guard is broken`);
+      return `Passed — 'confirmed' booking skipped, rental_payment_status still 'held'`;
+    },
+  },
+  {
+    id: "rrp_eligible_no_stripe",
+    group: "releaseRentalPayments",
+    label: "Eligible booking with no host Stripe Connect — skipped, rental_payment_status stays 'held'",
+    claudeHint: "Check releaseRentalPayments/entry.ts — UserRole.filter({ user_id: 'regression-test', role: 'host' }) returns empty, must push skipped with reason 'host stripe not verified'. rental_payment_status must not change.",
+    run: async () => {
+      const pastDate = new Date(Date.now() - 86400000 * 2).toISOString();
+      const { data: created } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: "regression-test", guest_id: "regression-test",
+          guest_name: "RRP No Stripe Test", guest_email: "regression@hostkeepdigital-test.invalid",
+          property_id: "regression-test-property-id",
+          check_in: new Date(Date.now() - 86400000 * 3).toISOString().split("T")[0],
+          check_out: new Date(Date.now() - 86400000 * 2).toISOString().split("T")[0],
+          booking_status: "completed", rental_payment_status: "held",
+          rental_frozen: false, rental_release_due_at: pastDate,
+          subtotal: 500, cleaning_fee: 50, total_amount: 550,
+        },
+      });
+      const bookingId = created?.id;
+      if (!bookingId) throw new Error(`seedTestBooking failed: ${JSON.stringify(created)}`);
+
+      const { status, data } = await callFn("releaseRentalPayments");
+      await new Promise(r => setTimeout(r, 1000));
+
+      const { data: readBack } = await callFn("seedTestBooking", { action: "read", id: bookingId });
+      await callFn("seedTestBooking", { action: "delete", id: bookingId });
+
+      if (status !== 200) throw new Error(`Function crashed: ${data.error}`);
+      const skippedEntry = data.results?.find(r => r.booking_id === bookingId && r.status === "skipped");
+      if (!skippedEntry) throw new Error(`Expected skipped entry for booking in results, got: ${JSON.stringify(data.results)}`);
+      if (readBack?.booking?.rental_payment_status !== "held")
+        throw new Error(`Expected 'held', got '${readBack?.booking?.rental_payment_status}'`);
+      return `Passed — no Stripe on host, skipped (reason: ${skippedEntry.reason}), rental_payment_status still 'held'`;
+    },
+  },
 
   // ── raiseComplaint ────────────────────────────────────────────────────
   {
