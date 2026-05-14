@@ -551,6 +551,237 @@ const TESTS = [
       return `Passed — fake intent errored gracefully. success: true, errors: ${data.errors}`;
     },
   },
+// ── checkInBooking ────────────────────────────────────────────────────
+  {
+    id: "cib_smoke",
+    group: "checkInBooking",
+    label: "Smoke: Function executes and returns correct shape",
+    claudeHint: "base44/functions/checkInBooking/entry.ts does not exist yet — this test is expected to fail until the function is built.",
+    run: async () => {
+      const { status, data } = await callFn("checkInBooking", {});
+      if (status === 404) throw new Error("Function not found — checkInBooking has not been built yet");
+      if (typeof data.success === "undefined") throw new Error("Missing 'success' field in response");
+      return `Passed — function reachable, shape correct`;
+    },
+  },
+  {
+    id: "cib_sets_checked_in_status",
+    group: "checkInBooking",
+    label: "Functional: Logging check-in sets booking_status to checked_in",
+    claudeHint: "base44/functions/checkInBooking/entry.ts — must update booking_status to 'checked_in' when called with a valid booking_id and check_in_time.",
+    run: async () => {
+      const { data: created } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: "regression-test", guest_id: "regression-test",
+          guest_name: "CheckIn Status Test", guest_email: "regression@hostkeepdigital-test.invalid",
+          property_id: "regression-test-property-id",
+          check_in: new Date().toISOString().split("T")[0],
+          check_out: new Date(Date.now() + 86400000 * 7).toISOString().split("T")[0],
+          booking_status: "confirmed",
+          rental_payment_status: "held",
+          total_amount: 750,
+        },
+      });
+      const bookingId = created?.id;
+      if (!bookingId) throw new Error(`seedTestBooking failed: ${JSON.stringify(created)}`);
+
+      const { status, data } = await callFn("checkInBooking", {
+        booking_id: bookingId,
+        check_in_time: new Date().toISOString(),
+        notes: "Integration test check-in",
+      });
+      await new Promise(r => setTimeout(r, 1000));
+
+      const { data: readBack } = await callFn("seedTestBooking", { action: "read", id: bookingId });
+      await callFn("seedTestBooking", { action: "delete", id: bookingId });
+
+      if (status !== 200 || !data.success) throw new Error(`checkInBooking failed: ${data.error}`);
+      if (readBack?.booking?.booking_status !== "checked_in")
+        throw new Error(`Expected booking_status 'checked_in', got '${readBack?.booking?.booking_status}'`);
+      return `Passed — booking_status correctly set to 'checked_in'`;
+    },
+  },
+  {
+    id: "cib_sets_rental_release_due_at",
+    group: "checkInBooking",
+    label: "Functional: Logging check-in sets rental_release_due_at to 24h from check-in time",
+    claudeHint: "base44/functions/checkInBooking/entry.ts — must set rental_release_due_at to check_in_time + 24 hours. If missing or wrong, releaseRentalPayments will never trigger correctly.",
+    run: async () => {
+      const { data: created } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: "regression-test", guest_id: "regression-test",
+          guest_name: "CheckIn ReleaseDate Test", guest_email: "regression@hostkeepdigital-test.invalid",
+          property_id: "regression-test-property-id",
+          check_in: new Date().toISOString().split("T")[0],
+          check_out: new Date(Date.now() + 86400000 * 7).toISOString().split("T")[0],
+          booking_status: "confirmed",
+          rental_payment_status: "held",
+          total_amount: 750,
+        },
+      });
+      const bookingId = created?.id;
+      if (!bookingId) throw new Error(`seedTestBooking failed: ${JSON.stringify(created)}`);
+
+      const checkInTime = new Date();
+      const expectedRelease = new Date(checkInTime.getTime() + 86400000);
+
+      await callFn("checkInBooking", {
+        booking_id: bookingId,
+        check_in_time: checkInTime.toISOString(),
+        notes: "Integration test check-in",
+      });
+      await new Promise(r => setTimeout(r, 1000));
+
+      const { data: readBack } = await callFn("seedTestBooking", { action: "read", id: bookingId });
+      await callFn("seedTestBooking", { action: "delete", id: bookingId });
+
+      const actualRelease = new Date(readBack?.booking?.rental_release_due_at);
+      const diffMs = Math.abs(actualRelease - expectedRelease);
+
+      if (!readBack?.booking?.rental_release_due_at)
+        throw new Error(`rental_release_due_at not set — checkInBooking must write this field`);
+      if (diffMs > 60000)
+        throw new Error(`rental_release_due_at is ${actualRelease.toISOString()}, expected ~${expectedRelease.toISOString()} (within 1 min tolerance)`);
+      return `Passed — rental_release_due_at set to ${actualRelease.toISOString()} (~24h from check-in)`;
+    },
+  },
+  {
+    id: "cib_missing_booking_id",
+    group: "checkInBooking",
+    label: "Smoke: Missing booking_id returns error",
+    claudeHint: "base44/functions/checkInBooking/entry.ts — missing booking_id must return error not crash.",
+    run: async () => {
+      const { status, data } = await callFn("checkInBooking", { check_in_time: new Date().toISOString() });
+      if (status === 404) throw new Error("Function not found — checkInBooking has not been built yet");
+      if (status !== 400 && data.success !== false && !data.error)
+        throw new Error(`Expected error response, got status ${status}: ${JSON.stringify(data)}`);
+      return `Passed — missing booking_id correctly rejected`;
+    },
+  },
+
+  // ── autoCheckIn ───────────────────────────────────────────────────────
+  {
+    id: "aci_smoke",
+    group: "autoCheckIn",
+    label: "Smoke: Function executes and returns correct shape",
+    claudeHint: "base44/functions/autoCheckIn/entry.ts does not exist yet — this test is expected to fail until the function is built.",
+    run: async () => {
+      const { status, data } = await callFn("autoCheckIn", {});
+      if (status === 404) throw new Error("Function not found — autoCheckIn has not been built yet");
+      if (typeof data.processed !== "number") throw new Error("Missing 'processed' field");
+      if (!Array.isArray(data.results)) throw new Error("Missing 'results' array");
+      return `Passed — processed: ${data.processed}`;
+    },
+  },
+  {
+    id: "aci_advances_overdue_confirmed_booking",
+    group: "autoCheckIn",
+    label: "Functional: Confirmed booking past check-in date → advanced to checked_in with rental_release_due_at set",
+    claudeHint: "base44/functions/autoCheckIn/entry.ts — must find bookings where booking_status='confirmed' and check_in date has passed, set booking_status='checked_in' and rental_release_due_at=now+24h.",
+    run: async () => {
+      const { data: created } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: "regression-test", guest_id: "regression-test",
+          guest_name: "AutoCheckIn Overdue Test", guest_email: "regression@hostkeepdigital-test.invalid",
+          property_id: "regression-test-property-id",
+          check_in: new Date(Date.now() - 86400000 * 2).toISOString().split("T")[0],
+          check_out: new Date(Date.now() + 86400000 * 5).toISOString().split("T")[0],
+          booking_status: "confirmed",
+          rental_payment_status: "held",
+          total_amount: 750,
+        },
+      });
+      const bookingId = created?.id;
+      if (!bookingId) throw new Error(`seedTestBooking failed: ${JSON.stringify(created)}`);
+
+      const { status, data } = await callFn("autoCheckIn");
+      await new Promise(r => setTimeout(r, 1000));
+
+      const { data: readBack } = await callFn("seedTestBooking", { action: "read", id: bookingId });
+      await callFn("seedTestBooking", { action: "delete", id: bookingId });
+
+      if (status !== 200) throw new Error(`autoCheckIn crashed: ${data.error}`);
+      if (readBack?.booking?.booking_status !== "checked_in")
+        throw new Error(`Expected 'checked_in', got '${readBack?.booking?.booking_status}' — auto check-in did not fire`);
+      if (!readBack?.booking?.rental_release_due_at)
+        throw new Error(`rental_release_due_at not set — autoCheckIn must write this field`);
+      return `Passed — overdue confirmed booking advanced to checked_in, rental_release_due_at set`;
+    },
+  },
+  {
+    id: "aci_skips_future_check_in",
+    group: "autoCheckIn",
+    label: "Functional: Confirmed booking with future check-in date — not advanced",
+    claudeHint: "base44/functions/autoCheckIn/entry.ts — must only advance bookings where check_in date has passed. Future check-in dates must be left in 'confirmed' status.",
+    run: async () => {
+      const { data: created } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: "regression-test", guest_id: "regression-test",
+          guest_name: "AutoCheckIn Future Test", guest_email: "regression@hostkeepdigital-test.invalid",
+          property_id: "regression-test-property-id",
+          check_in: new Date(Date.now() + 86400000 * 3).toISOString().split("T")[0],
+          check_out: new Date(Date.now() + 86400000 * 10).toISOString().split("T")[0],
+          booking_status: "confirmed",
+          rental_payment_status: "held",
+          total_amount: 750,
+        },
+      });
+      const bookingId = created?.id;
+      if (!bookingId) throw new Error(`seedTestBooking failed: ${JSON.stringify(created)}`);
+
+      await callFn("autoCheckIn");
+      await new Promise(r => setTimeout(r, 1000));
+
+      const { data: readBack } = await callFn("seedTestBooking", { action: "read", id: bookingId });
+      await callFn("seedTestBooking", { action: "delete", id: bookingId });
+
+      if (readBack?.booking?.booking_status !== "confirmed")
+        throw new Error(`Expected 'confirmed', got '${readBack?.booking?.booking_status}' — future booking should not be advanced`);
+      return `Passed — future check-in booking left in 'confirmed'`;
+    },
+  },
+  {
+    id: "aci_skips_already_checked_in",
+    group: "autoCheckIn",
+    label: "Functional: Already checked_in booking — not touched",
+    claudeHint: "base44/functions/autoCheckIn/entry.ts — must only process bookings with booking_status='confirmed'. Already checked_in bookings must be skipped entirely.",
+    run: async () => {
+      const existingRelease = new Date(Date.now() + 86400000).toISOString();
+      const { data: created } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: "regression-test", guest_id: "regression-test",
+          guest_name: "AutoCheckIn AlreadyIn Test", guest_email: "regression@hostkeepdigital-test.invalid",
+          property_id: "regression-test-property-id",
+          check_in: new Date(Date.now() - 86400000 * 2).toISOString().split("T")[0],
+          check_out: new Date(Date.now() + 86400000 * 5).toISOString().split("T")[0],
+          booking_status: "checked_in",
+          rental_payment_status: "held",
+          rental_release_due_at: existingRelease,
+          total_amount: 750,
+        },
+      });
+      const bookingId = created?.id;
+      if (!bookingId) throw new Error(`seedTestBooking failed: ${JSON.stringify(created)}`);
+
+      await callFn("autoCheckIn");
+      await new Promise(r => setTimeout(r, 1000));
+
+      const { data: readBack } = await callFn("seedTestBooking", { action: "read", id: bookingId });
+      await callFn("seedTestBooking", { action: "delete", id: bookingId });
+
+      if (readBack?.booking?.booking_status !== "checked_in")
+        throw new Error(`booking_status changed unexpectedly to '${readBack?.booking?.booking_status}'`);
+      const releaseUnchanged = readBack?.booking?.rental_release_due_at === existingRelease;
+      if (!releaseUnchanged)
+        throw new Error(`rental_release_due_at was overwritten — already checked_in bookings must not be touched`);
+      return `Passed — already checked_in booking skipped, rental_release_due_at unchanged`;
+    },
+  },
 ];
 
 
