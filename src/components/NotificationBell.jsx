@@ -142,31 +142,31 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div className="fixed left-[3px] right-[3px] top-16 sm:left-auto sm:right-0 sm:w-80 sm:absolute sm:top-full sm:mt-2 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-            <h3 className="font-semibold text-gray-900 text-sm">Notifications</h3>
+        <div className="fixed left-[3px] right-[3px] top-16 sm:left-auto sm:right-0 sm:w-80 sm:absolute sm:top-full sm:mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 z-50 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">Notifications</h3>
             <div className="flex items-center gap-3">
               {unread > 0 && (
                 <button
                   onClick={markAllRead}
-                  className="text-xs text-teal-600 hover:text-teal-700 font-medium"
+                  className="text-xs text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 font-medium"
                 >
                   Mark all read
                 </button>
               )}
               <button
                 onClick={() => setOpen(false)}
-                className="p-1 rounded hover:bg-gray-100 transition-colors"
+                className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 aria-label="Close"
               >
-                <X className="w-4 h-4 text-gray-500" />
+                <X className="w-4 h-4 text-gray-500 dark:text-gray-400" />
               </button>
             </div>
           </div>
 
           <div className="max-h-96 overflow-y-auto">
             {notifications.length === 0 ? (
-              <div className="py-10 text-center text-sm text-gray-400">
+              <div className="py-10 text-center text-sm text-gray-400 dark:text-gray-500">
                 No notifications yet
               </div>
             ) : (
@@ -176,13 +176,13 @@ export default function NotificationBell() {
                     key={n.id}
                     to={n.link}
                     onClick={() => handleClick(n)}
-                    className={`flex gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-50 ${!n.read ? typeConfig(n.type).bg : ""}`}
+                    className={`flex gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-50 dark:border-gray-700 ${!n.read ? typeConfig(n.type).bg : ""}`}
                   >
                     <span className="text-xl flex-shrink-0 mt-0.5">{typeConfig(n.type).icon}</span>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm ${!n.read ? "font-semibold text-gray-900" : "font-medium text-gray-700"}`}>{n.title}</p>
-                      <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{n.body}</p>
-                      <p className="text-xs text-gray-400 mt-1">{relativeTime(n.created_date)}</p>
+                      <p className={`text-sm ${!n.read ? "font-semibold text-gray-900 dark:text-gray-100" : "font-medium text-gray-700 dark:text-gray-300"}`}>{n.title}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{n.body}</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{relativeTime(n.created_date)}</p>
                     </div>
                     {!n.read && <span className={`w-2 h-2 rounded-full ${typeConfig(n.type).dot} flex-shrink-0 mt-1.5`} />}
                   </Link>
@@ -190,13 +190,13 @@ export default function NotificationBell() {
                   <div
                     key={n.id}
                     onClick={() => handleClick(n)}
-                    className={`flex gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-50 cursor-pointer ${!n.read ? typeConfig(n.type).bg : ""}`}
+                    className={`flex gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-50 dark:border-gray-700 cursor-pointer ${!n.read ? typeConfig(n.type).bg : ""}`}
                   >
                     <span className="text-xl flex-shrink-0 mt-0.5">{typeConfig(n.type).icon}</span>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm ${!n.read ? "font-semibold text-gray-900" : "font-medium text-gray-700"}`}>{n.title}</p>
-                      <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{n.body}</p>
-                      <p className="text-xs text-gray-400 mt-1">{relativeTime(n.created_date)}</p>
+                      <p className={`text-sm ${!n.read ? "font-semibold text-gray-900 dark:text-gray-100" : "font-medium text-gray-700 dark:text-gray-300"}`}>{n.title}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{n.body}</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{relativeTime(n.created_date)}</p>
                     </div>
                     {!n.read && <span className={`w-2 h-2 rounded-full ${typeConfig(n.type).dot} flex-shrink-0 mt-1.5`} />}
                   </div>
