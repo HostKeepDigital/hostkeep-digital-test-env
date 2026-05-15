@@ -428,6 +428,270 @@ const TESTS = [
     },
   },
 
+  // ── notifyBookingEvent ───────────────────────────────────────────────
+
+  {
+    id: "nbe_smoke_missing_fields",
+    group: "notifyBookingEvent",
+    label: "Smoke — returns missing_fields when booking_id absent",
+    claudeHint: "Check base44/functions/notifyBookingEvent/entry.ts — missing booking_id or event_type must return { error: 'missing_fields' } with status 200.",
+    run: async (sessionToken) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      const { status, data } = await callFn("notifyBookingEvent", {
+        session_token: sessionToken,
+        event_type: "confirmed",
+      });
+      if (status !== 200) throw new Error(`Expected 200, got ${status}`);
+      if (data.error !== "missing_fields") throw new Error(`Expected missing_fields, got: ${JSON.stringify(data)}`);
+      return "Passed — missing booking_id correctly returns missing_fields";
+    },
+  },
+
+  {
+    id: "nbe_smoke_not_found",
+    group: "notifyBookingEvent",
+    label: "Smoke — returns booking_not_found for unknown booking",
+    claudeHint: "Check base44/functions/notifyBookingEvent/entry.ts — Booking.get with an unknown ID must return { error: 'booking_not_found' }. Note: function returns status 200 for all error types — check the error field not the status.",
+    run: async (sessionToken) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      const { status, data } = await callFn("notifyBookingEvent", {
+        session_token: sessionToken,
+        booking_id: "nonexistent_booking_nbe_test",
+        event_type: "confirmed",
+      });
+      if (status !== 200) throw new Error(`Expected 200, got ${status}`);
+      if (data.error !== "booking_not_found") throw new Error(`Expected booking_not_found, got: ${JSON.stringify(data)}`);
+      return "Passed — unknown booking_id correctly returns booking_not_found";
+    },
+  },
+
+  {
+    id: "nbe_func_requested",
+    group: "notifyBookingEvent",
+    label: "Functional — booking_request event creates notification for host with booking deep link",
+    claudeHint: "Check base44/functions/notifyBookingEvent/entry.ts — event_type 'requested' must create a Notification for booking.host_id with type 'booking_request' and link '/HostBookings?booking={id}'. If no notification found: serviceRole.functions.invoke('sendNotification') may be broken — replace with raw fetch + service_key. If notification exists but link wrong: add ?booking=${booking.id} to the link string.",
+    run: async (sessionToken, user) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      if (!user?.id) throw new Error("No user ID");
+
+      const { data: createData } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: user.id,
+          guest_id: "test_guest_nbe",
+          guest_name: "Integration Test Guest",
+          guest_email: "hello@hostkeepdigital.co.uk",
+          property_id: "test_property_nbe",
+          booking_status: "pending",
+          check_in: "2026-08-01",
+          check_out: "2026-08-07",
+          nights: 6,
+          total_amount: 600,
+          security_deposit: 200,
+        },
+      });
+      const bookingId = createData?.id;
+      if (!bookingId) throw new Error("Failed to seed test booking");
+
+      try {
+        await callFn("seedTestBooking", { action: "listNotificationsAndClean", user_id: user.id, title_prefix: "[Test]" });
+
+        const { status, data } = await callFn("notifyBookingEvent", {
+          session_token: sessionToken,
+          booking_id: bookingId,
+          event_type: "requested",
+        });
+        if (status !== 200 || !data.success) throw new Error(`Function failed: ${JSON.stringify(data)}`);
+
+        await new Promise(r => setTimeout(r, 1000));
+
+        const { data: notifData } = await callFn("seedTestBooking", { action: "listNotifications", user_id: user.id });
+        const hostNotif = (notifData?.notifications || []).find(n => n.type === "booking_request");
+        if (!hostNotif) throw new Error("No booking_request notification found for host — serviceRole.functions.invoke('sendNotification') is likely broken, replace with raw fetch + service_key");
+        if (!hostNotif.link?.includes(bookingId)) throw new Error(`Notification created but link '${hostNotif.link}' missing booking ID — needs ?booking=${bookingId}`);
+
+        return `Passed — host booking_request notification created with correct deep link`;
+      } finally {
+        await callFn("seedTestBooking", { action: "delete", id: bookingId });
+        await callFn("seedTestBooking", { action: "listNotificationsAndClean", user_id: user.id, title_prefix: "New Booking" });
+      }
+    },
+  },
+
+  {
+    id: "nbe_func_confirmed",
+    group: "notifyBookingEvent",
+    label: "Functional — confirmed event creates notifications for both host and guest with booking deep links",
+    claudeHint: "Check base44/functions/notifyBookingEvent/entry.ts — event_type 'confirmed' must create booking_confirmed notifications for both booking.host_id and booking.guest_id, each with link containing the booking ID.",
+    run: async (sessionToken, user) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      if (!user?.id) throw new Error("No user ID");
+
+      const { data: createData } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: user.id,
+          guest_id: "test_guest_nbe",
+          guest_name: "Integration Test Guest",
+          guest_email: "hello@hostkeepdigital.co.uk",
+          property_id: "test_property_nbe",
+          booking_status: "confirmed",
+          check_in: "2026-08-01",
+          check_out: "2026-08-07",
+          nights: 6,
+          total_amount: 600,
+          security_deposit: 200,
+        },
+      });
+      const bookingId = createData?.id;
+      if (!bookingId) throw new Error("Failed to seed test booking");
+
+      try {
+        await callFn("seedTestBooking", { action: "listNotificationsAndClean", user_id: user.id, title_prefix: "Booking Confirmed" });
+        await callFn("seedTestBooking", { action: "listNotificationsAndClean", user_id: "test_guest_nbe", title_prefix: "Booking Confirmed" });
+
+        const { status, data } = await callFn("notifyBookingEvent", {
+          session_token: sessionToken,
+          booking_id: bookingId,
+          event_type: "confirmed",
+        });
+        if (status !== 200 || !data.success) throw new Error(`Function failed: ${JSON.stringify(data)}`);
+
+        await new Promise(r => setTimeout(r, 1000));
+
+        const { data: hostNotifData } = await callFn("seedTestBooking", { action: "listNotifications", user_id: user.id });
+        const hostNotif = (hostNotifData?.notifications || []).find(n => n.type === "booking_confirmed");
+        if (!hostNotif) throw new Error("No booking_confirmed notification for host");
+        if (!hostNotif.link?.includes(bookingId)) throw new Error(`Host notification link '${hostNotif.link}' missing booking ID`);
+
+        const { data: guestNotifData } = await callFn("seedTestBooking", { action: "listNotifications", user_id: "test_guest_nbe" });
+        const guestNotif = (guestNotifData?.notifications || []).find(n => n.type === "booking_confirmed");
+        if (!guestNotif) throw new Error("No booking_confirmed notification for guest");
+        if (!guestNotif.link?.includes(bookingId)) throw new Error(`Guest notification link '${guestNotif.link}' missing booking ID`);
+
+        return `Passed — booking_confirmed notifications created for both host and guest with correct deep links`;
+      } finally {
+        await callFn("seedTestBooking", { action: "delete", id: bookingId });
+        await callFn("seedTestBooking", { action: "listNotificationsAndClean", user_id: user.id, title_prefix: "Booking Confirmed" });
+        await callFn("seedTestBooking", { action: "listNotificationsAndClean", user_id: "test_guest_nbe", title_prefix: "Booking Confirmed" });
+      }
+    },
+  },
+
+  {
+    id: "nbe_func_cancelled",
+    group: "notifyBookingEvent",
+    label: "Functional — cancelled event creates notifications for both host and guest",
+    claudeHint: "Check base44/functions/notifyBookingEvent/entry.ts — event_type 'cancelled' must notify both booking.guest_id (booking_cancelled) and booking.host_id (booking_cancelled) with correct deep links.",
+    run: async (sessionToken, user) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      if (!user?.id) throw new Error("No user ID");
+
+      const { data: createData } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: user.id,
+          guest_id: "test_guest_nbe",
+          guest_name: "Integration Test Guest",
+          guest_email: "hello@hostkeepdigital.co.uk",
+          property_id: "test_property_nbe",
+          booking_status: "confirmed",
+          check_in: "2026-08-01",
+          check_out: "2026-08-07",
+          nights: 6,
+          total_amount: 600,
+          security_deposit: 200,
+        },
+      });
+      const bookingId = createData?.id;
+      if (!bookingId) throw new Error("Failed to seed test booking");
+
+      try {
+        const { status, data } = await callFn("notifyBookingEvent", {
+          session_token: sessionToken,
+          booking_id: bookingId,
+          event_type: "cancelled",
+        });
+        if (status !== 200 || !data.success) throw new Error(`Function failed: ${JSON.stringify(data)}`);
+
+        await new Promise(r => setTimeout(r, 1000));
+
+        const { data: hostNotifData } = await callFn("seedTestBooking", { action: "listNotifications", user_id: user.id });
+        const hostNotif = (hostNotifData?.notifications || []).find(n => n.type === "booking_cancelled");
+        if (!hostNotif) throw new Error("No booking_cancelled notification for host");
+        if (!hostNotif.link?.includes(bookingId)) throw new Error(`Host notification link missing booking ID`);
+
+        const { data: guestNotifData } = await callFn("seedTestBooking", { action: "listNotifications", user_id: "test_guest_nbe" });
+        const guestNotif = (guestNotifData?.notifications || []).find(n => n.type === "booking_cancelled");
+        if (!guestNotif) throw new Error("No booking_cancelled notification for guest");
+        if (!guestNotif.link?.includes(bookingId)) throw new Error(`Guest notification link missing booking ID`);
+
+        return `Passed — booking_cancelled notifications created for both host and guest`;
+      } finally {
+        await callFn("seedTestBooking", { action: "delete", id: bookingId });
+        await callFn("seedTestBooking", { action: "listNotificationsAndClean", user_id: user.id, title_prefix: "Booking Cancelled" });
+        await callFn("seedTestBooking", { action: "listNotificationsAndClean", user_id: "test_guest_nbe", title_prefix: "Booking Cancelled" });
+      }
+    },
+  },
+
+  {
+    id: "nbe_func_completed",
+    group: "notifyBookingEvent",
+    label: "Functional — completed event creates notifications for both host and guest",
+    claudeHint: "Check base44/functions/notifyBookingEvent/entry.ts — event_type 'completed' must notify booking.guest_id (booking_completed, link to /MyTrips?booking=) and booking.host_id (booking_completed, link to /HostBookings?booking=).",
+    run: async (sessionToken, user) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      if (!user?.id) throw new Error("No user ID");
+
+      const { data: createData } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: user.id,
+          guest_id: "test_guest_nbe",
+          guest_name: "Integration Test Guest",
+          guest_email: "hello@hostkeepdigital.co.uk",
+          property_id: "test_property_nbe",
+          booking_status: "completed",
+          check_in: "2026-07-01",
+          check_out: "2026-07-07",
+          nights: 6,
+          total_amount: 600,
+          security_deposit: 200,
+        },
+      });
+      const bookingId = createData?.id;
+      if (!bookingId) throw new Error("Failed to seed test booking");
+
+      try {
+        const { status, data } = await callFn("notifyBookingEvent", {
+          session_token: sessionToken,
+          booking_id: bookingId,
+          event_type: "completed",
+        });
+        if (status !== 200 || !data.success) throw new Error(`Function failed: ${JSON.stringify(data)}`);
+
+        await new Promise(r => setTimeout(r, 1000));
+
+        const { data: hostNotifData } = await callFn("seedTestBooking", { action: "listNotifications", user_id: user.id });
+        const hostNotif = (hostNotifData?.notifications || []).find(n => n.type === "booking_completed");
+        if (!hostNotif) throw new Error("No booking_completed notification for host");
+        if (!hostNotif.link?.includes(bookingId)) throw new Error(`Host notification link missing booking ID`);
+
+        const { data: guestNotifData } = await callFn("seedTestBooking", { action: "listNotifications", user_id: "test_guest_nbe" });
+        const guestNotif = (guestNotifData?.notifications || []).find(n => n.type === "booking_completed");
+        if (!guestNotif) throw new Error("No booking_completed notification for guest");
+        if (!guestNotif.link?.includes(bookingId)) throw new Error(`Guest notification link missing booking ID`);
+
+        return `Passed — booking_completed notifications created for both host and guest`;
+      } finally {
+        await callFn("seedTestBooking", { action: "delete", id: bookingId });
+        await callFn("seedTestBooking", { action: "listNotificationsAndClean", user_id: user.id, title_prefix: "Stay Completed" });
+        await callFn("seedTestBooking", { action: "listNotificationsAndClean", user_id: "test_guest_nbe", title_prefix: "Stay Complete" });
+      }
+    },
+  },
+
   // ── processDepositRefunds ─────────────────────────────────────────────
   {
     id: "pdr_reachable",
