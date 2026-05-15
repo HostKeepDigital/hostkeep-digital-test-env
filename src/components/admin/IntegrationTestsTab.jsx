@@ -2,7 +2,7 @@ import { useState } from "react";
 import { CheckCircle2, XCircle, Loader2, Play, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
-import { useAuth } from "@/components/auth/AuthProvider";
+import { useAuth } from "@/lib/AuthContext";
 
 const APP_ID = "698eee4108bd1d9467648326";
 
