@@ -396,9 +396,15 @@ const TESTS = [
     claudeHint: "Check base44/functions/sendNotification/entry.ts — force_email: true with a valid email_to must bypass preference check, send via Resend, and return email_attempted: true, email_delivered: true. If email_delivered is false, check email_error in the response and verify RESEND_API_KEY is set correctly in secrets.",
     run: async (sessionToken) => {
       if (!sessionToken) throw new Error("No session token available — log in first");
+
+      // Get real user ID from session so notification appears in the bell
+      const meRes = await callFn("getCurrentUser", { session_token: sessionToken });
+      const userId = meRes.data?.id || meRes.data?.user_id;
+      if (!userId) throw new Error("Could not resolve real user ID from session token");
+
       const { status, data } = await callFn("sendNotification", {
         session_token: sessionToken,
-        user_id: "integration_test_placeholder",
+        user_id: userId,
         type: "general",
         title: "[Integration Test] Force Email",
         body: "Forced email integration test — safe to ignore.",
@@ -408,7 +414,7 @@ const TESTS = [
       if (status !== 200) throw new Error(`Expected 200, got ${status}: ${JSON.stringify(data)}`);
       if (!data.email_attempted) throw new Error(`Resend was never called — check RESEND_API_KEY is set in secrets and email_to is present`);
       if (!data.email_delivered) throw new Error(`Resend rejected the email — error: ${data.email_error}`);
-      return `Passed — email attempted and accepted by Resend`;
+      return `Passed — notification visible in bell, email accepted by Resend for user ${userId}`;
     },
   },
 
