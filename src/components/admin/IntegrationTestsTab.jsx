@@ -406,7 +406,6 @@ const TESTS = [
         type: "general",
         title: "[Integration Test] Force Email",
         body: "Forced email integration test — safe to ignore.",
-        email_to: "admin@hostkeepdigital.co.uk",
         force_email: true,
       });
       if (status !== 200) throw new Error(`Expected 200, got ${status}: ${JSON.stringify(data)}`);
