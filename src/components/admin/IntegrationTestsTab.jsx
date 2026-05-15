@@ -400,12 +400,17 @@ const TESTS = [
       if (!user?.id) throw new Error("Could not resolve real user ID — make sure you are logged in");
       const userId = user.id;
 
-       const { status, data } = await callFn("sendNotification", {
+      const creds = await base44.entities.UserCredentials.filter({ user_id: userId });
+      const emailTo = creds?.[0]?.email;
+      if (!emailTo) throw new Error(`Could not resolve email for user ${userId} — check UserCredentials entity has a record for this user`);
+
+      const { status, data } = await callFn("sendNotification", {
         session_token: sessionToken,
         user_id: userId,
         type: "general",
         title: "[Integration Test] Force Email",
         body: "Forced email integration test — safe to ignore.",
+        email_to: emailTo,
         force_email: true,
       });
       if (status !== 200) throw new Error(`Expected 200, got ${status}: ${JSON.stringify(data)}`);
