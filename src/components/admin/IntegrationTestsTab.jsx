@@ -395,10 +395,8 @@ const TESTS = [
     group: "sendNotification",
     label: "force_email flag sends email without error",
     claudeHint: "Check base44/functions/sendNotification/entry.ts — force_email: true with a valid email_to must bypass preference check, send via Resend, and return email_attempted: true, email_delivered: true. If email_delivered is false, check email_error in the response and verify RESEND_API_KEY is set correctly in secrets.",
-    run: async (sessionToken) => {
+    run: async (sessionToken, user) => {
       if (!sessionToken) throw new Error("No session token available — log in first");
-
-      // Get real user ID from session so notification appears in the bell
       if (!user?.id) throw new Error("Could not resolve real user ID — make sure you are logged in");
       const userId = user.id;
 
@@ -1010,7 +1008,7 @@ export default function IntegrationTestsTab({ sessionToken }) {
       claudeHint: test.claudeHint,
     });
     try {
-      const message = await test.run(sessionToken);
+      const message = await test.run(sessionToken, user);
       const isSkip = message?.startsWith("Skipped");
       setResult(test.id, {
         status: isSkip ? "skip" : "pass",
