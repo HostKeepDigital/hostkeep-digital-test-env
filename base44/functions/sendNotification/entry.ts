@@ -94,33 +94,51 @@ Deno.serve(async (req) => {
     const prefKey = PREF_MAP[type] || "general";
     const emailEnabled = force_email || (prefs[prefKey] !== false);
 
+    // NEW
+    let email_attempted = false;
+    let email_delivered = false;
+    let email_error = null;
+
     if (emailEnabled && recipientEmail && RESEND_API_KEY) {
-      await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${RESEND_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from: "HostKeep <hello@hostkeepdigital.co.uk>",
-          to: [recipientEmail],
-          subject: title,
-          html: `
-            <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px">
-              <div style="background:#1E3A5F;border-radius:8px;padding:16px 24px;margin-bottom:24px">
-                <span style="color:white;font-size:20px;font-weight:700">HostKeep</span>
+      email_attempted = true;
+      try {
+        const resendRes = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${RESEND_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: "HostKeep <hello@hostkeepdigital.co.uk>",
+            to: [recipientEmail],
+            subject: title,
+            html: `
+              <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px">
+                <div style="background:#1E3A5F;border-radius:8px;padding:16px 24px;margin-bottom:24px">
+                  <span style="color:white;font-size:20px;font-weight:700">HostKeep</span>
+                </div>
+                <h2 style="color:#111827;margin-bottom:8px">${title}</h2>
+                <p style="color:#4b5563;font-size:15px;line-height:1.6">${body}</p>
+                ${link ? `<a href="https://hostkeepdigital.co.uk${link}" style="display:inline-block;margin-top:20px;padding:12px 24px;background:#0d9488;color:white;border-radius:8px;text-decoration:none;font-weight:600">View Details</a>` : ""}
+                <p style="color:#9ca3af;font-size:12px;margin-top:32px">You're receiving this because your notification preferences are enabled. <a href="https://hostkeepdigital.co.uk/Settings?tab=notifications" style="color:#0d9488">Manage preferences</a>.</p>
               </div>
-              <h2 style="color:#111827;margin-bottom:8px">${title}</h2>
-              <p style="color:#4b5563;font-size:15px;line-height:1.6">${body}</p>
-              ${link ? `<a href="https://hostkeepdigital.co.uk${link}" style="display:inline-block;margin-top:20px;padding:12px 24px;background:#0d9488;color:white;border-radius:8px;text-decoration:none;font-weight:600">View Details</a>` : ""}
-              <p style="color:#9ca3af;font-size:12px;margin-top:32px">You're receiving this because your notification preferences are enabled. <a href="https://hostkeepdigital.co.uk/Settings?tab=notifications" style="color:#0d9488">Manage preferences</a>.</p>
-            </div>
-          `,
-        }),
-      });
+            `,
+          }),
+        });
+        const resendData = await resendRes.json();
+        if (resendRes.ok) {
+          email_delivered = true;
+        } else {
+          email_error = resendData?.message || resendData?.name || JSON.stringify(resendData);
+          console.error("Resend rejected email:", email_error);
+        }
+      } catch (emailErr) {
+        email_error = emailErr.message;
+        console.error("Resend fetch failed:", email_error);
+      }
     }
 
-    return Response.json({ success: true });
+    return Response.json({ success: true, email_attempted, email_delivered, email_error });
   } catch (err) {
     console.error("sendNotification error:", err);
     return Response.json({ success: false, error: err.message }, { status: 500 });
