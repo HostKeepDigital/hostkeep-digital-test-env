@@ -412,7 +412,18 @@ const TESTS = [
       if (status !== 200) throw new Error(`Expected 200, got ${status}: ${JSON.stringify(data)}`);
       if (!data.email_attempted) throw new Error(`Resend was never called — check RESEND_API_KEY is set in secrets and email_to is present`);
       if (!data.email_delivered) throw new Error(`Resend rejected the email — error: ${data.email_error}`);
-      return `Passed — notification visible in bell, email accepted by Resend for user ${userId}`;
+
+      // Verify notification record was actually written to DB
+      await new Promise(r => setTimeout(r, 1000));
+      const allNotifs = await base44.entities.Notification.filter({ user_id: userId });
+      const testNotif = allNotifs?.find(n => n.title === "[Integration Test] Force Email");
+      if (testNotif) {
+        await base44.entities.Notification.delete(testNotif.id);
+      } else {
+        throw new Error(`Resend accepted the email but no Notification record was written to DB for user ${userId} — check serviceRole entity write permissions`);
+      }
+
+      return `Passed — Notification record written to DB and cleaned up, email accepted by Resend`;
     },
   },
 
