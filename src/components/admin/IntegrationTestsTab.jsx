@@ -456,7 +456,7 @@ const TESTS = [
       if (!sessionToken) throw new Error("No session token — log in first");
       const { status, data } = await callFn("notifyBookingEvent", {
         session_token: sessionToken,
-        booking_id: "nonexistent_booking_nbe_test",
+        booking_id: "000000000000000000000000",
         event_type: "confirmed",
       });
       if (status !== 200) throw new Error(`Expected 200, got ${status}`);
