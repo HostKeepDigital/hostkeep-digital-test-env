@@ -21,7 +21,7 @@ Deno.serve(async (req) => {
       return Response.json({ id: created.id });
     }
 
-      if (action === "read") {
+      if (action === "read") { 
       const { id } = body;
       if (!id) {
         return Response.json({ error: "missing_id" }, { status: 400 });
