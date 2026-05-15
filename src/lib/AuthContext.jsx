@@ -5,6 +5,7 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [sessionToken, setSessionToken] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [roles, setRoles] = useState([]);
@@ -78,6 +79,7 @@ export const AuthProvider = ({ children }) => {
         approval_status: "approved",
       }]);
 
+      setSessionToken(session_token);
       setIsAuthenticated(true);
       setIsLoadingAuth(false);
 
@@ -85,6 +87,7 @@ export const AuthProvider = ({ children }) => {
       console.error("validateSession error:", err);
       setIsAuthenticated(false);
       setUser(null);
+      setSessionToken(null);
       setRoles([]);
       setIsLoadingAuth(false);
     }
@@ -94,6 +97,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("session_token");
     localStorage.removeItem("session_expires_at");
     setUser(null);
+    setSessionToken(null);
     setRoles([]);
     setIsAuthenticated(false);
     window.location.href = "/SignIn";
@@ -106,6 +110,7 @@ export const AuthProvider = ({ children }) => {
   return (
     <AuthContext.Provider value={{
       user,
+      sessionToken,
       isAuthenticated,
       isLoadingAuth,
       authError,
