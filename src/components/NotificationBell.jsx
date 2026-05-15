@@ -1,6 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Bell, X } from "lucide-react";
-import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { Link } from "react-router-dom";
 
@@ -46,50 +45,46 @@ const triggerBrowserNotification = (notif, prefs) => {
   } catch (_) {}
 };
 
+const callFn = async (name, body = {}) => {
+  const res = await fetch(`/functions/${name}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return res.json();
+};
+
 export default function NotificationBell() {
-  const { user } = useAuth();
+  const { user, sessionToken } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [open, setOpen] = useState(false);
   const [userPrefs, setUserPrefs] = useState({});
   const userPrefsRef = useRef({});
   const ref = useRef(null);
-
+  
   useEffect(() => {
     if (!user?.id) return;
 
     const load = async () => {
-      const records = await base44.entities.Notification.filter(
-        { user_id: user.id },
-        "-created_date",
-        20
-      );
-      setNotifications(records || []);
-
+      if (!sessionToken) return;
       try {
-        const userRecords = await base44.entities.User.filter({ id: user.id });
-        const prefs = userRecords?.[0]?.notification_preferences || {};
-        setUserPrefs(prefs);
-        userPrefsRef.current = prefs;
+        const data = await callFn("getNotifications", { session_token: sessionToken });
+        setNotifications(data.notifications || []);
       } catch (_) {}
     };
 
     load();
 
-    const unsub = base44.entities.Notification.subscribe((event) => {
-      if (event.data?.user_id !== user.id) return;
-      setNotifications((prev) => {
-        if (event.type === "create") {
-          triggerBrowserNotification(event.data, userPrefsRef.current);
-          return [event.data, ...prev].slice(0, 20);
-        }
-        if (event.type === "update") return prev.map((n) => n.id === event.id ? event.data : n);
-        if (event.type === "delete") return prev.filter((n) => n.id !== event.id);
-        return prev;
-      });
-    });
+     const interval = setInterval(async () => {
+      if (!sessionToken) return;
+      try {
+        const data = await callFn("getNotifications", { session_token: sessionToken });
+        setNotifications(data.notifications || []);
+      } catch (_) {}
+    }, 30000);
 
-    return unsub;
-  }, [user?.id]);
+    return () => clearInterval(interval);
+  }, [user?.id, sessionToken]);
 
   // Close on outside click
   useEffect(() => {
@@ -103,8 +98,11 @@ export default function NotificationBell() {
   const unread = notifications.filter((n) => !n.read).length;
 
   const markAllRead = async () => {
-    const unreadOnes = notifications.filter((n) => !n.read);
-    await Promise.all(unreadOnes.map((n) => base44.entities.Notification.update(n.id, { read: true })));
+    if (!sessionToken) return;
+    try {
+      await callFn("markNotificationsRead", { session_token: sessionToken, all: true });
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    } catch (_) {}
   };
 
   const handleOpen = () => {
@@ -112,8 +110,11 @@ export default function NotificationBell() {
   };
 
   const handleClick = async (n) => {
-    if (!n.read) {
-      await base44.entities.Notification.update(n.id, { read: true });
+    if (!n.read && sessionToken) {
+      try {
+        await callFn("markNotificationsRead", { session_token: sessionToken, notification_id: n.id });
+        setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x));
+      } catch (_) {}
     }
     setOpen(false);
   };
