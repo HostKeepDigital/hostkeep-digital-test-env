@@ -400,7 +400,7 @@ const TESTS = [
       if (!user?.id) throw new Error("Could not resolve real user ID — make sure you are logged in");
       const userId = user.id;
 
-      const { status, data } = await callFn("sendNotification", {
+       const { status, data } = await callFn("sendNotification", {
         session_token: sessionToken,
         user_id: userId,
         type: "general",
