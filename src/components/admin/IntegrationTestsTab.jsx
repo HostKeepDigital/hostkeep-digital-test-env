@@ -397,10 +397,9 @@ const TESTS = [
     run: async (sessionToken) => {
       if (!sessionToken) throw new Error("No session token available — log in first");
 
-       // Get real user ID from session so notification appears in the bell
-      const me = await base44.auth.me();
-      const userId = me?.id;
-      if (!userId) throw new Error("Could not resolve real user ID — make sure you are logged in");
+      // Get real user ID from session so notification appears in the bell
+      if (!user?.id) throw new Error("Could not resolve real user ID — make sure you are logged in");
+      const userId = user.id;
 
       const { status, data } = await callFn("sendNotification", {
         session_token: sessionToken,
