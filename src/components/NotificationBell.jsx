@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Bell, X } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { Link } from "react-router-dom";
@@ -58,8 +58,6 @@ export default function NotificationBell() {
   const { user, sessionToken } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [open, setOpen] = useState(false);
-  const [userPrefs, setUserPrefs] = useState({});
-  const userPrefsRef = useRef({});
   const ref = useRef(null);
   
   useEffect(() => {
