@@ -414,14 +414,15 @@ const TESTS = [
       if (!data.email_delivered) throw new Error(`Resend rejected the email — error: ${data.email_error}`);
 
       // Verify notification record was actually written to DB
+       // Verify notification record was actually written to DB
       await new Promise(r => setTimeout(r, 1000));
-      const allNotifs = await base44.entities.Notification.filter({ user_id: userId });
-      const testNotif = allNotifs?.find(n => n.title === "[Integration Test] Force Email");
-      if (testNotif) {
-        await base44.entities.Notification.delete(testNotif.id);
-      } else {
+      const { data: notifData } = await callFn("seedTestBooking", { action: "listNotifications", user_id: userId });
+      const allNotifs = notifData?.notifications || [];
+      const testNotif = allNotifs.find(n => n.title === "[Integration Test] Force Email");
+      if (!testNotif) {
         throw new Error(`Resend accepted the email but no Notification record was written to DB for user ${userId} — check serviceRole entity write permissions`);
       }
+      await callFn("seedTestBooking", { action: "deleteNotification", id: testNotif.id });
 
       return `Passed — Notification record written to DB and cleaned up, email accepted by Resend`;
     },
