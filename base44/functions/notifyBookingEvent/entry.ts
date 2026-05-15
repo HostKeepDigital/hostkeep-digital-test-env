@@ -104,8 +104,8 @@ Deno.serve(async (req) => {
           `/MyTrips?booking=${booking.id}`, booking.guest_email);
       }
       if (booking.host_id) {
-        await notify(booking.host_id, "booking_completed", "Stay Completed — Payout Processing",
-          `${booking.guest_name || "Your guest"}'s stay is complete. Your payout will be processed within 24 hours.`,
+        await notify(booking.host_id, "booking_completed", "Stay Completed",
+          `${booking.guest_name || "Your guest"}'s stay is now complete. Please leave a review and check your booking for any outstanding actions.`,
           `/HostBookings?booking=${booking.id}`, hostEmail);
       }
     }
