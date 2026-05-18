@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
   // Invalidate all previous codes for this email
   const existing = await base44.asServiceRole.entities.EmailVerificationCode.filter({ email: email.toLowerCase().trim() });
   for (const c of existing) {
-    await base44.asServiceRole.entities.EmailVerificationCode.update(c.id, { used: true });
+    await base44.asServiceRole.entities.EmailVerificationCode.delete(c.id);
   }
 
   // Generate 6-digit code
