@@ -1050,7 +1050,382 @@ const TESTS = [
     },
   },
 
+ // NEW
+  // ── verificationFlow ─────────────────────────────────────────────────
+
+  {
+    id: "vf_s1_missing_email",
+    group: "verificationFlow",
+    label: "Smoke — sendVerificationCode rejects missing email",
+    claudeHint: "Check base44/functions/sendVerificationCode/entry.ts — missing email must return 400 with { error: 'Email is required' }.",
+    run: async () => {
+      const { status, data } = await callFn("sendVerificationCode", {});
+      if (status !== 400) throw new Error(`Expected 400, got ${status}`);
+      if (data.error !== "Email is required") throw new Error(`Expected 'Email is required', got: ${JSON.stringify(data)}`);
+      return "Passed — missing email correctly returns 400";
+    },
+  },
+
+  {
+    id: "vf_s2_verify_missing_fields",
+    group: "verificationFlow",
+    label: "Smoke — verifyEmailCode returns valid: false for missing fields",
+    claudeHint: "Check base44/functions/verifyEmailCode/entry.ts — missing email and code must return { valid: false } without crashing.",
+    run: async () => {
+      const { status, data } = await callFn("verifyEmailCode", {});
+      if (status !== 200) throw new Error(`Expected 200, got ${status}`);
+      if (data.valid !== false) throw new Error(`Expected valid: false, got: ${JSON.stringify(data)}`);
+      return "Passed — missing fields correctly returns valid: false";
+    },
+  },
+
+  {
+    id: "vf_s3_verify_unknown_email",
+    group: "verificationFlow",
+    label: "Smoke — verifyEmailCode returns valid: false for unknown email",
+    claudeHint: "Check base44/functions/verifyEmailCode/entry.ts — unknown email must return { valid: false } without crashing. Confirms function ran and reached the DB query.",
+    run: async () => {
+      const { status, data } = await callFn("verifyEmailCode", {
+        email: "smoke-test-nobody-vf@integration.test",
+        code: "000000",
+      });
+      if (status !== 200) throw new Error(`Expected 200, got ${status}`);
+      if (data.valid !== false) throw new Error(`Expected valid: false, got: ${JSON.stringify(data)}`);
+      return "Passed — unknown email correctly returns valid: false";
+    },
+  },
+
+  {
+    id: "vf_f1_code_created_in_db",
+    group: "verificationFlow",
+    label: "Functional — sendVerificationCode creates exactly one DB record",
+    claudeHint: "Check base44/functions/sendVerificationCode/entry.ts — must create an EmailVerificationCode record with used: false and a valid expires_at in the future.",
+    run: async () => {
+      const testEmail = "hello@hostkeepdigital.co.uk";
+      await callFn("sendVerificationCode", { email: testEmail, name: "Test", type: "guest" });
+      await new Promise(r => setTimeout(r, 1000));
+
+      const { data } = await callFn("seedTestBooking", { action: "readEmailVerificationCode", email: testEmail });
+      if (!data.record) throw new Error("No EmailVerificationCode record found in DB after sending code");
+      if (data.record.used !== false) throw new Error(`Expected used: false, got: ${data.record.used}`);
+      if (new Date(data.record.expires_at) < new Date()) throw new Error("expires_at is in the past — code is immediately expired");
+      if (data.count !== 1) throw new Error(`Expected exactly 1 record, found ${data.count} — old codes may not be deleted`);
+
+      await callFn("seedTestBooking", { action: "deleteEmailVerificationCode", id: data.record.id });
+      return `Passed — one valid code record created with future expires_at`;
+    },
+  },
+
+  {
+    id: "vf_f2_old_codes_deleted",
+    group: "verificationFlow",
+    label: "Functional — sending a new code deletes the old one (regression for bug 1)",
+    claudeHint: "Check base44/functions/sendVerificationCode/entry.ts — old codes must be DELETED not marked used: true. If verifyEmailCode gets records[0] and it is the old used code, verification always fails. This is the root cause of the sign-up bug.",
+    run: async () => {
+      const testEmail = "hello@hostkeepdigital.co.uk";
+
+      await callFn("sendVerificationCode", { email: testEmail, name: "Test", type: "guest" });
+      await new Promise(r => setTimeout(r, 500));
+      await callFn("sendVerificationCode", { email: testEmail, name: "Test", type: "guest" });
+      await new Promise(r => setTimeout(r, 1000));
+
+      const { data } = await callFn("seedTestBooking", { action: "readEmailVerificationCode", email: testEmail });
+      if (data.count !== 1) throw new Error(`Expected exactly 1 record after resend, found ${data.count} — old codes are not being deleted, only marked used. verifyEmailCode will return the wrong code first.`);
+
+      if (data.record?.id) {
+        await callFn("seedTestBooking", { action: "deleteEmailVerificationCode", id: data.record.id });
+      }
+      return `Passed — only 1 code exists after resend, old code correctly deleted`;
+    },
+  },
+
+  {
+    id: "vf_f3_correct_code_verifies",
+    group: "verificationFlow",
+    label: "Functional — correct code returns valid: true and deletes the record",
+    claudeHint: "Check base44/functions/verifyEmailCode/entry.ts — correct code must return { valid: true } and delete the EmailVerificationCode record from the DB.",
+    run: async () => {
+      const testEmail = "integration-verify-f3@test.hostkeep";
+      const testCode = "847291";
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
+      const { data: seedData } = await callFn("seedTestBooking", {
+        action: "createEmailVerificationCode",
+        email: testEmail,
+        code: testCode,
+        expires_at: expiresAt,
+      });
+      if (!seedData?.id) throw new Error("Failed to seed EmailVerificationCode");
+
+      const { data } = await callFn("verifyEmailCode", { email: testEmail, code: testCode });
+      if (!data.valid) throw new Error(`Expected valid: true, got: ${JSON.stringify(data)}`);
+
+      // Confirm record was deleted
+      const { data: checkData } = await callFn("seedTestBooking", { action: "readEmailVerificationCode", email: testEmail });
+      if (checkData.record !== null) {
+        await callFn("seedTestBooking", { action: "deleteEmailVerificationCode", id: checkData.record.id });
+        throw new Error("Code record was not deleted after successful verification");
+      }
+
+      return `Passed — correct code verified and record deleted from DB`;
+    },
+  },
+
+  {
+    id: "vf_f4_wrong_code_fails",
+    group: "verificationFlow",
+    label: "Functional — wrong code returns valid: false and leaves record intact",
+    claudeHint: "Check base44/functions/verifyEmailCode/entry.ts — wrong code must return { valid: false } and must NOT delete the record. A wrong guess should not consume the code.",
+    run: async () => {
+      const testEmail = "integration-verify-f4@test.hostkeep";
+      const testCode = "123456";
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
+      const { data: seedData } = await callFn("seedTestBooking", {
+        action: "createEmailVerificationCode",
+        email: testEmail,
+        code: testCode,
+        expires_at: expiresAt,
+      });
+      if (!seedData?.id) throw new Error("Failed to seed EmailVerificationCode");
+
+      try {
+        const { data } = await callFn("verifyEmailCode", { email: testEmail, code: "999999" });
+        if (data.valid !== false) throw new Error(`Expected valid: false for wrong code, got: ${JSON.stringify(data)}`);
+
+        const { data: checkData } = await callFn("seedTestBooking", { action: "readEmailVerificationCode", email: testEmail });
+        if (!checkData.record) throw new Error("Code record was deleted after a wrong guess — it should remain intact");
+
+        return `Passed — wrong code correctly rejected, record still intact`;
+      } finally {
+        await callFn("seedTestBooking", { action: "deleteEmailVerificationCode", id: seedData.id });
+      }
+    },
+  },
+
+  {
+    id: "vf_f5_expired_code_fails",
+    group: "verificationFlow",
+    label: "Functional — expired code returns valid: false",
+    claudeHint: "Check base44/functions/verifyEmailCode/entry.ts — a code with expires_at in the past must return { valid: false }.",
+    run: async () => {
+      const testEmail = "integration-verify-f5@test.hostkeep";
+      const testCode = "654321";
+      const expiresAt = new Date(Date.now() - 1000).toISOString(); // 1 second in the past
+
+      const { data: seedData } = await callFn("seedTestBooking", {
+        action: "createEmailVerificationCode",
+        email: testEmail,
+        code: testCode,
+        expires_at: expiresAt,
+      });
+      if (!seedData?.id) throw new Error("Failed to seed expired EmailVerificationCode");
+
+      try {
+        const { data } = await callFn("verifyEmailCode", { email: testEmail, code: testCode });
+        if (data.valid !== false) throw new Error(`Expected valid: false for expired code, got: ${JSON.stringify(data)}`);
+        return `Passed — expired code correctly rejected`;
+      } finally {
+        const { data: checkData } = await callFn("seedTestBooking", { action: "readEmailVerificationCode", email: testEmail });
+        if (checkData.record) {
+          await callFn("seedTestBooking", { action: "deleteEmailVerificationCode", id: checkData.record.id });
+        }
+      }
+    },
+  },
+
+  {
+    id: "vf_f6_email_verified_set",
+    group: "verificationFlow",
+    label: "Functional — successful verification sets email_verified: true on UserCredentials",
+    claudeHint: "Check base44/functions/verifyEmailCode/entry.ts — after valid: true, UserCredentials.email_verified must be updated to true. If not, customSignIn will always reject the user with email_not_verified.",
+    run: async () => {
+      const testEmail = "integration-verify-f6@test.hostkeep";
+      const testCode = "112233";
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
+      const { data: credData } = await callFn("seedTestBooking", {
+        action: "createUserCredentials",
+        userCredentials: { email: testEmail, password_hash: "test_hash_not_real", email_verified: false },
+      });
+      if (!credData?.id) throw new Error("Failed to seed UserCredentials");
+
+      await callFn("seedTestBooking", {
+        action: "createEmailVerificationCode",
+        email: testEmail,
+        code: testCode,
+        expires_at: expiresAt,
+      });
+
+      try {
+        const { data } = await callFn("verifyEmailCode", { email: testEmail, code: testCode, type: "guest" });
+        if (!data.valid) throw new Error(`Expected valid: true, got: ${JSON.stringify(data)}`);
+
+        await new Promise(r => setTimeout(r, 1000));
+
+        const { data: credCheck } = await callFn("seedTestBooking", { action: "readUserCredentials", email: testEmail });
+        if (!credCheck.record) throw new Error("UserCredentials record not found after verification");
+        if (credCheck.record.email_verified !== true) throw new Error(`email_verified not set to true — got: ${credCheck.record.email_verified}. Guest will never be able to sign in.`);
+
+        return `Passed — email_verified correctly set to true after successful verification`;
+      } finally {
+        await callFn("seedTestBooking", { action: "deleteUserCredentials", id: credData.id });
+        const { data: codeCheck } = await callFn("seedTestBooking", { action: "readEmailVerificationCode", email: testEmail });
+        if (codeCheck.record) await callFn("seedTestBooking", { action: "deleteEmailVerificationCode", id: codeCheck.record.id });
+      }
+    },
+  },
+
+  {
+    id: "vf_b1_guest_code_created",
+    group: "verificationFlow",
+    label: "Business — guest sign-up type creates code and sends correct email",
+    claudeHint: "Check base44/functions/sendVerificationCode/entry.ts — type: 'guest' must create a code record and send an email saying 'Thank you for creating your HostKeep account' not founding member language. Verify code exists in DB. Check Resend dashboard to confirm email content.",
+    run: async () => {
+      const testEmail = "hello@hostkeepdigital.co.uk";
+
+      // Clean up any existing code first
+      const { data: existing } = await callFn("seedTestBooking", { action: "readEmailVerificationCode", email: testEmail });
+      if (existing.record) await callFn("seedTestBooking", { action: "deleteEmailVerificationCode", id: existing.record.id });
+
+      await callFn("sendVerificationCode", { email: testEmail, name: "Test Guest", type: "guest" });
+      await new Promise(r => setTimeout(r, 1000));
+
+      const { data } = await callFn("seedTestBooking", { action: "readEmailVerificationCode", email: testEmail });
+      if (!data.record) throw new Error("No code record created for guest type — sendVerificationCode may have failed silently");
+      if (data.count !== 1) throw new Error(`Expected 1 record, found ${data.count}`);
+
+      await callFn("seedTestBooking", { action: "deleteEmailVerificationCode", id: data.record.id });
+      return `Passed — guest type code created. Check Resend dashboard to confirm email says 'Thank you for creating your HostKeep account' not 'Founding Member'`;
+    },
+  },
+
+  {
+    id: "vf_b2_host_code_created",
+    group: "verificationFlow",
+    label: "Business — host/founding type creates code with founding member email",
+    claudeHint: "Check base44/functions/sendVerificationCode/entry.ts — no type or type: 'host' must create a code and send the founding member email. Check Resend dashboard to confirm founding member language is used.",
+    run: async () => {
+      const testEmail = "hello@hostkeepdigital.co.uk";
+
+      const { data: existing } = await callFn("seedTestBooking", { action: "readEmailVerificationCode", email: testEmail });
+      if (existing.record) await callFn("seedTestBooking", { action: "deleteEmailVerificationCode", id: existing.record.id });
+
+      await callFn("sendVerificationCode", { email: testEmail, full_name: "Test Host" });
+      await new Promise(r => setTimeout(r, 1000));
+
+      const { data } = await callFn("seedTestBooking", { action: "readEmailVerificationCode", email: testEmail });
+      if (!data.record) throw new Error("No code record created for host type");
+
+      await callFn("seedTestBooking", { action: "deleteEmailVerificationCode", id: data.record.id });
+      return `Passed — host type code created. Check Resend dashboard to confirm founding member language is used`;
+    },
+  },
+
+  {
+    id: "vf_b3_guest_signup_to_signin",
+    group: "verificationFlow",
+    label: "Business — guest signs up, verifies email, and can sign in (end-to-end regression)",
+    claudeHint: "This is the end-to-end regression for all three sign-up bugs. If any step fails: (1) customSignUp — check UserCredentials and User are created. (2) verifyEmailCode — check old codes are deleted not marked used, check records[0] returns the right code. (3) customSignIn — check email_verified: true was written by verifyEmailCode.",
+    run: async () => {
+      const testEmail = `test-guest-${Date.now()}@integration-hostkeep.test`;
+      const testPassword = "TestPassword123!";
+      let userId = null;
+      let credId = null;
+
+      try {
+        // Step 1 — sign up
+        const { status: signUpStatus, data: signUpData } = await callFn("customSignUp", {
+          email: testEmail,
+          password: testPassword,
+          forename: "Integration",
+          surname: "Test",
+        });
+        if (signUpStatus !== 200 || !signUpData.success) throw new Error(`customSignUp failed: ${JSON.stringify(signUpData)}`);
+
+        await new Promise(r => setTimeout(r, 1000));
+
+        // Step 2 — read the code from DB
+        const { data: codeData } = await callFn("seedTestBooking", { action: "readEmailVerificationCode", email: testEmail });
+        if (!codeData.record) throw new Error("No EmailVerificationCode found after customSignUp — sendVerificationCode may have failed silently inside customSignUp");
+        const code = codeData.record.code;
+
+        // Step 3 — verify the code
+        const { data: verifyData } = await callFn("verifyEmailCode", { email: testEmail, code, type: "guest" });
+        if (!verifyData.valid) throw new Error(`verifyEmailCode returned valid: false — code in DB was '${code}' but verification failed. Check if old codes are being deleted or if records[0] returns the wrong code.`);
+
+        // Step 4 — sign in
+        const { status: signInStatus, data: signInData } = await callFn("customSignIn", {
+          email: testEmail,
+          password: testPassword,
+        });
+        if (signInStatus !== 200 || !signInData.success) throw new Error(`customSignIn failed after successful verification: ${JSON.stringify(signInData)}. If error is email_not_verified, verifyEmailCode did not write email_verified: true to UserCredentials.`);
+        if (!signInData.session_token) throw new Error("Sign in succeeded but no session_token returned");
+
+        return `Passed — full guest flow: sign up → verify email → sign in with session_token`;
+      } finally {
+        // Cleanup all created records
+        const { data: credData } = await callFn("seedTestBooking", { action: "readUserCredentials", email: testEmail });
+        if (credData.record) {
+          credId = credData.record.id;
+          userId = credData.record.user_id;
+          await callFn("seedTestBooking", { action: "deleteUserCredentials", id: credId });
+        }
+        if (userId) await callFn("seedTestBooking", { action: "deleteUser", id: userId });
+        await callFn("seedTestBooking", { action: "deleteGuest", email: testEmail });
+        const { data: roleData } = await callFn("seedTestBooking", { action: "readUserRole", user_id: userId || "none", role: "guest" });
+        if (roleData?.userRole?.id) await callFn("seedTestBooking", { action: "deleteUserRole", id: roleData.userRole.id });
+        const { data: codeClean } = await callFn("seedTestBooking", { action: "readEmailVerificationCode", email: testEmail });
+        if (codeClean.record) await callFn("seedTestBooking", { action: "deleteEmailVerificationCode", id: codeClean.record.id });
+      }
+    },
+  },
+
+  {
+    id: "vf_b4_resend_invalidates_old",
+    group: "verificationFlow",
+    label: "Business — resending code makes old code invalid, new code works",
+    claudeHint: "Check base44/functions/sendVerificationCode/entry.ts — the resend path must delete the old code. Check base44/functions/verifyEmailCode/entry.ts — records[0] must be the new code not the old one. This is the direct regression test for bug 1.",
+    run: async () => {
+      const testEmail = "hello@hostkeepdigital.co.uk";
+
+      // Clean slate
+      const { data: existing } = await callFn("seedTestBooking", { action: "readEmailVerificationCode", email: testEmail });
+      if (existing.record) await callFn("seedTestBooking", { action: "deleteEmailVerificationCode", id: existing.record.id });
+
+      // Send first code
+      await callFn("sendVerificationCode", { email: testEmail, name: "Test", type: "guest" });
+      await new Promise(r => setTimeout(r, 500));
+      const { data: firstData } = await callFn("seedTestBooking", { action: "readEmailVerificationCode", email: testEmail });
+      const firstCode = firstData.record?.code;
+      if (!firstCode) throw new Error("First code not found in DB");
+
+      // Send second code (resend)
+      await callFn("sendVerificationCode", { email: testEmail, name: "Test", type: "guest" });
+      await new Promise(r => setTimeout(r, 500));
+      const { data: secondData } = await callFn("seedTestBooking", { action: "readEmailVerificationCode", email: testEmail });
+      const secondCode = secondData.record?.code;
+      if (!secondCode) throw new Error("Second code not found in DB");
+      if (secondData.count !== 1) throw new Error(`Expected 1 code after resend, found ${secondData.count} — old code was not deleted`);
+
+      // Try first code — should fail
+      const { data: firstVerify } = await callFn("verifyEmailCode", { email: testEmail, code: firstCode });
+      if (firstVerify.valid !== false) throw new Error(`Old code '${firstCode}' should be invalid after resend but returned valid: true`);
+
+      // Try second code — should succeed
+      const { data: secondVerify } = await callFn("verifyEmailCode", { email: testEmail, code: secondCode });
+      if (!secondVerify.valid) throw new Error(`New code '${secondCode}' should be valid but returned valid: false`);
+
+      // Cleanup any remaining
+      const { data: finalClean } = await callFn("seedTestBooking", { action: "readEmailVerificationCode", email: testEmail });
+      if (finalClean.record) await callFn("seedTestBooking", { action: "deleteEmailVerificationCode", id: finalClean.record.id });
+
+      return `Passed — old code rejected after resend, new code accepted`;
+    },
+  },
+
   // ── processDepositRefunds ─────────────────────────────────────────────
+  
   {
     id: "pdr_reachable",
     group: "processDepositRefunds",
