@@ -72,7 +72,7 @@ export default function EmailVerificationStep({ email, onVerified, onBack, messa
     setResending(true);
     setError("");
     setCode("");
-    await base44.functions.invoke("sendVerificationCode", { email });
+    await base44.functions.invoke("sendVerificationCode", { email, type: isGuest ? "guest" : "host" });
     setResending(false);
     setResendCooldown(60);
   };
