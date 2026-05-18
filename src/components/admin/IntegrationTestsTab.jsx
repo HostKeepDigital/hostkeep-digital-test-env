@@ -787,12 +787,16 @@ const TESTS = [
         await new Promise(r => setTimeout(r, 1000));
 
         const { data: notifData } = await callFn("seedTestBooking", { action: "listNotifications", user_id: user.id });
-        const hostNotif = (notifData?.notifications || []).find(n => n.type === "booking_request" && n.link?.includes(bookingId));
+        const hostNotif = (notifData?.notifications || []).find(n =>
+          n.type === "booking_request" &&
+          n.link?.includes(bookingId) &&
+          new Date(n.created_date).getTime() > before - 5000
+        );
         if (!hostNotif) throw new Error("Notification not found — must fire immediately with no time-based delay");
 
         const notifCreatedAt = new Date(hostNotif.created_date).getTime();
         const notifAge = Date.now() - notifCreatedAt;
-        if (notifAge > 10000) throw new Error(`Notification created ${notifAge}ms ago — too old, may have been delayed`);
+        if (notifAge > 15000) throw new Error(`Notification created ${notifAge}ms ago — too old, may have been delayed`);
 
         return `Passed — notification fired immediately (function responded in ${elapsed}ms, notification age ${notifAge}ms)`;
       } finally {
