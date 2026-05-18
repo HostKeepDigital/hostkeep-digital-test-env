@@ -84,7 +84,7 @@ async function sendResendEmail(to, subject, html) {
 
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
-  const { email, full_name } = await req.json();
+  const { email, full_name, name, type } = await req.json();
 
   if (!email) {
     return Response.json({ error: 'Email is required' }, { status: 400 });
@@ -107,7 +107,8 @@ Deno.serve(async (req) => {
     used: false,
   });
 
-  const firstName = (full_name || email).split(' ')[0];
+  const firstName = (name || full_name || '').split(' ')[0] || 'there';
+  const isGuest = type === 'guest';
 
   await sendResendEmail(
     email.toLowerCase().trim(),
@@ -116,7 +117,10 @@ Deno.serve(async (req) => {
       heading: "Verify your email address",
       body: `
         <p>Hi ${firstName},</p>
-        <p>Thank you for applying to join HostKeep as a Founding Member.</p>
+        <p>${isGuest
+          ? 'Thank you for creating your HostKeep account.'
+          : 'Thank you for applying to join HostKeep as a Founding Member.'
+        }</p>
         <p>Please use the verification code below to confirm your email address. This code expires in <strong>10 minutes</strong>.</p>
         <div style="margin:28px 0;text-align:center;">
           <span style="display:inline-block;background-color:#f0fdf4;border:2px solid #0d9488;border-radius:10px;padding:16px 40px;font-size:32px;font-weight:bold;color:#0d9488;letter-spacing:8px;">${code}</span>
