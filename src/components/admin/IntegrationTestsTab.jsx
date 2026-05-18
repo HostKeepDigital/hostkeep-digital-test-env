@@ -288,7 +288,6 @@ const TESTS = [
       return `Skipped — requires a non-admin session token to test. Verify manually by calling resolveComplaint with a guest session.`;
     },
   },
-  // NEW
   {
     id: "resc_complaint_not_found",
     group: "resolveComplaint",
@@ -309,7 +308,6 @@ const TESTS = [
   },
 
   // ── sendNotification ──────────────────────────────────────────────────
-  // NEW
   {
     id: "sn_missing_fields",
     group: "sendNotification",
@@ -854,6 +852,200 @@ const TESTS = [
     },
   },
 
+  // ── submitHostVerification ───────────────────────────────────────────
+  {
+    id: "shv_smoke_shape",
+    group: "submitHostVerification",
+    label: "Smoke — function exists and returns correct shape",
+    claudeHint: "base44/functions/submitHostVerification/entry.ts does not exist yet — build it. Must accept session_token and return { success: true } or { success: false, error }.",
+    run: async (sessionToken) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      const { status, data } = await callFn("submitHostVerification", {
+        session_token: sessionToken,
+        phone: "+441234567890",
+        phone_verified: true,
+        property_address: "Test Address, Cornwall, TR1 1AA",
+      });
+      if (status === 404 || data?.error === "unrecognised_function") throw new Error("Function not found — submitHostVerification has not been built yet");
+      if (typeof data.success === "undefined") throw new Error(`Response missing success field: ${JSON.stringify(data)}`);
+      return `Passed — function reachable, shape correct (success: ${data.success})`;
+    },
+  },
+  {
+    id: "shv_smoke_no_session",
+    group: "submitHostVerification",
+    label: "Smoke — rejects request with no session token",
+    claudeHint: "base44/functions/submitHostVerification/entry.ts — missing session_token must return 401.",
+    run: async () => {
+      const { status } = await callFn("submitHostVerification", {
+        phone: "+441234567890",
+        phone_verified: true,
+      });
+      if (status !== 401) throw new Error(`Expected 401, got ${status}`);
+      return "Passed — correctly returned 401 with no session";
+    },
+  },
+  {
+    id: "shv_smoke_missing_fields",
+    group: "submitHostVerification",
+    label: "Smoke — rejects when phone or phone_verified absent",
+    claudeHint: "base44/functions/submitHostVerification/entry.ts — missing phone or phone_verified must return 400 with missing_fields error.",
+    run: async (sessionToken) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      const { status, data } = await callFn("submitHostVerification", {
+        session_token: sessionToken,
+        // phone intentionally omitted
+      });
+      if (status !== 400) throw new Error(`Expected 400, got ${status}: ${JSON.stringify(data)}`);
+      if (data.error !== "missing_fields") throw new Error(`Expected missing_fields, got: ${JSON.stringify(data)}`);
+      return "Passed — missing phone correctly returns 400 missing_fields";
+    },
+  },
+  {
+    id: "shv_func_creates_host_role",
+    group: "submitHostVerification",
+    label: "Functional — creates host UserRole with approval_status pending",
+    claudeHint: "base44/functions/submitHostVerification/entry.ts — must create or update a UserRole with role: 'host' and approval_status: 'pending' for the session user. If failing, check UserRole.create uses serviceRole not the user client.",
+    run: async (sessionToken, user) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      if (!user?.id) throw new Error("No user ID");
+
+      // Clean up any existing test host role first
+      const { data: existingRole } = await callFn("seedTestBooking", { action: "readUserRole", user_id: user.id, role: "host" });
+      if (existingRole?.userRole?.id) {
+        await callFn("seedTestBooking", { action: "deleteUserRole", id: existingRole.userRole.id });
+      }
+
+      try {
+        const { status, data } = await callFn("submitHostVerification", {
+          session_token: sessionToken,
+          phone: "+441234567890",
+          phone_verified: true,
+          property_address: "Integration Test Address, Cornwall, TR1 1AA",
+        });
+        if (status !== 200 || !data.success) throw new Error(`submitHostVerification failed: ${JSON.stringify(data)}`);
+
+        await new Promise(r => setTimeout(r, 1000));
+
+        const { data: roleData } = await callFn("seedTestBooking", { action: "readUserRole", user_id: user.id, role: "host" });
+        if (!roleData?.userRole) throw new Error("Host UserRole not created — addUserRole is likely using the frontend client. Must use serviceRole in the backend function.");
+        if (roleData.userRole.approval_status !== "pending") throw new Error(`Expected approval_status 'pending', got '${roleData.userRole.approval_status}'`);
+
+        return `Passed — host UserRole created with approval_status: pending`;
+      } finally {
+        const { data: cleanupRole } = await callFn("seedTestBooking", { action: "readUserRole", user_id: user.id, role: "host" });
+        if (cleanupRole?.userRole?.id) {
+          await callFn("seedTestBooking", { action: "deleteUserRole", id: cleanupRole.userRole.id });
+        }
+      }
+    },
+  },
+  {
+    id: "shv_func_sends_admin_notification",
+    group: "submitHostVerification",
+    label: "Functional — admin receives notification when host submits verification",
+    claudeHint: "base44/functions/submitHostVerification/entry.ts — must call sendNotification for the admin user after successful submission. Check admin user_id is hardcoded or looked up via UserRole where role: admin.",
+    run: async (sessionToken, user) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      if (!user?.id) throw new Error("No user ID");
+
+      await callFn("seedTestBooking", { action: "listNotificationsAndClean", user_id: user.id, title_prefix: "[Test]" });
+
+      const { status, data } = await callFn("submitHostVerification", {
+        session_token: sessionToken,
+        phone: "+441234567890",
+        phone_verified: true,
+        property_address: "Integration Test Address, Cornwall, TR1 1AA",
+      });
+      if (status !== 200 || !data.success) throw new Error(`Function failed: ${JSON.stringify(data)}`);
+
+      await new Promise(r => setTimeout(r, 1000));
+
+      const { data: notifData } = await callFn("seedTestBooking", { action: "listNotifications", user_id: user.id });
+      const adminNotif = (notifData?.notifications || []).find(n => n.link === "/AdminPanel");
+      if (!adminNotif) throw new Error("No admin notification found — submitHostVerification must call sendNotification with link: /AdminPanel");
+
+      await callFn("seedTestBooking", { action: "deleteNotification", id: adminNotif.id });
+
+      const { data: cleanupRole } = await callFn("seedTestBooking", { action: "readUserRole", user_id: user.id, role: "host" });
+      if (cleanupRole?.userRole?.id) {
+        await callFn("seedTestBooking", { action: "deleteUserRole", id: cleanupRole.userRole.id });
+      }
+
+      return `Passed — admin notification created with correct link`;
+    },
+  },
+
+  // ── uploadVerificationDocument ────────────────────────────────────────
+  {
+    id: "uvd_smoke_shape",
+    group: "uploadVerificationDocument",
+    label: "Smoke — function exists and returns correct shape",
+    claudeHint: "base44/functions/uploadVerificationDocument/entry.ts does not exist yet — build it. Must accept session_token, document_type, file_url and return { success: true, id } or error.",
+    run: async (sessionToken) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      const { status, data } = await callFn("uploadVerificationDocument", {
+        session_token: sessionToken,
+        document_type: "government_id",
+        file_url: "https://example.com/test-doc.jpg",
+      });
+      if (status === 404 || data?.error === "unrecognised_function") throw new Error("Function not found — uploadVerificationDocument has not been built yet");
+      if (typeof data.success === "undefined") throw new Error(`Response missing success field: ${JSON.stringify(data)}`);
+      return `Passed — function reachable (success: ${data.success})`;
+    },
+  },
+  {
+    id: "uvd_smoke_no_session",
+    group: "uploadVerificationDocument",
+    label: "Smoke — rejects request with no session token",
+    claudeHint: "base44/functions/uploadVerificationDocument/entry.ts — missing session_token must return 401.",
+    run: async () => {
+      const { status } = await callFn("uploadVerificationDocument", {
+        document_type: "government_id",
+        file_url: "https://example.com/test-doc.jpg",
+      });
+      if (status !== 401) throw new Error(`Expected 401, got ${status}`);
+      return "Passed — correctly returned 401 with no session";
+    },
+  },
+  {
+    id: "uvd_smoke_missing_fields",
+    group: "uploadVerificationDocument",
+    label: "Smoke — rejects when document_type or file_url absent",
+    claudeHint: "base44/functions/uploadVerificationDocument/entry.ts — missing document_type or file_url must return 400 missing_fields.",
+    run: async (sessionToken) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      const { status, data } = await callFn("uploadVerificationDocument", {
+        session_token: sessionToken,
+        document_type: "government_id",
+        // file_url intentionally omitted
+      });
+      if (status !== 400) throw new Error(`Expected 400, got ${status}: ${JSON.stringify(data)}`);
+      if (data.error !== "missing_fields") throw new Error(`Expected missing_fields, got: ${JSON.stringify(data)}`);
+      return "Passed — missing file_url correctly returns 400 missing_fields";
+    },
+  },
+  {
+    id: "uvd_func_creates_record",
+    group: "uploadVerificationDocument",
+    label: "Functional — creates VerificationDocuments record and returns id",
+    claudeHint: "base44/functions/uploadVerificationDocument/entry.ts — must create a VerificationDocuments record via serviceRole with verification_status: 'pending' and return { success: true, id }. If failing, check entity write uses serviceRole not user client.",
+    run: async (sessionToken, user) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      if (!user?.id) throw new Error("No user ID");
+
+      const { status, data } = await callFn("uploadVerificationDocument", {
+        session_token: sessionToken,
+        document_type: "government_id",
+        file_url: "https://example.com/integration-test-doc.jpg",
+      });
+      if (status !== 200 || !data.success) throw new Error(`Function failed: ${JSON.stringify(data)}`);
+      if (!data.id) throw new Error("Response missing id — function must return the created record id for cleanup");
+
+      return `Passed — VerificationDocuments record created with id: ${data.id}`;
+    },
+  },
+
   // ── processDepositRefunds ─────────────────────────────────────────────
   {
     id: "pdr_reachable",
@@ -870,7 +1062,7 @@ const TESTS = [
       return `Passed — processed: ${data.processed}, skipped: ${data.skipped}, errors: ${data.errors}, total: ${data.total}`;
     },
   },
-  // NEW
+ 
   {
     id: "pdr_skips_frozen",
     group: "processDepositRefunds",
