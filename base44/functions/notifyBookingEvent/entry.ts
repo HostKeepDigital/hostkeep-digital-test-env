@@ -91,6 +91,19 @@ Deno.serve(async (req) => {
       }
     }
 
+    if (event_type === "cancelled_by_host") {
+      if (booking.guest_id) {
+        await notify(booking.guest_id, "booking_cancelled", "Booking Cancelled by Host",
+          `Unfortunately your booking from ${booking.check_in} to ${booking.check_out} has been cancelled by the host.`,
+          `/Search`, booking.guest_email);
+      }
+      if (booking.host_id) {
+        await notify(booking.host_id, "booking_cancelled", "You Cancelled a Booking",
+          `You have cancelled the booking for ${booking.guest_name || "a guest"} (${booking.check_in} to ${booking.check_out}).`,
+          `/HostBookings?booking=${booking.id}`, hostEmail);
+      }
+    }
+
     if (event_type === "checked_in" && booking.guest_id) {
       await notify(booking.guest_id, "booking_checked_in", "Welcome! Enjoy Your Stay 🏡",
         `Your stay from ${booking.check_in} to ${booking.check_out} has started. Have a wonderful time!`,
