@@ -636,7 +636,6 @@ const TESTS = [
   },
 
   {
-    {
     id: "nbe_func_cancelled_by_host",
     group: "notifyBookingEvent",
     label: "Functional — cancelled_by_host event notifies guest and host",
