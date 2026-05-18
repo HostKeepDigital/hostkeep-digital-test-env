@@ -1424,6 +1424,412 @@ const TESTS = [
     },
   },
 
+  // ── adminSetDocumentsVerified ─────────────────────────────────────────
+
+  {
+    id: "asdv_smoke_no_session",
+    group: "adminSetDocumentsVerified",
+    label: "Smoke — rejects request with no session token",
+    claudeHint: "base44/functions/adminSetDocumentsVerified/entry.ts has NO auth check — anyone can call it. This test will return 200 not 401 until session validation and admin role check are added. Fix: add session_token validation + admin role check at the top of the function.",
+    run: async () => {
+      const { status } = await callFn("adminSetDocumentsVerified", {
+        user_id: "test_user_id",
+        documents_verified: true,
+      });
+      if (status !== 401) throw new Error(`Expected 401, got ${status} — function has no auth check, this is a security hole`);
+      return "Passed — correctly returned 401 with no session";
+    },
+  },
+
+  {
+    id: "asdv_smoke_missing_user_id",
+    group: "adminSetDocumentsVerified",
+    label: "Smoke — returns 400 when user_id is absent",
+    claudeHint: "base44/functions/adminSetDocumentsVerified/entry.ts — after adding auth, missing user_id must return 400 with { error: 'missing_user_id' }.",
+    run: async (sessionToken) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      const { status, data } = await callFn("adminSetDocumentsVerified", {
+        session_token: sessionToken,
+        documents_verified: true,
+      });
+      if (status !== 400) throw new Error(`Expected 400, got ${status}: ${JSON.stringify(data)}`);
+      if (data.error !== "missing_user_id") throw new Error(`Expected missing_user_id, got: ${JSON.stringify(data)}`);
+      return "Passed — missing user_id correctly returns 400";
+    },
+  },
+
+  {
+    id: "asdv_smoke_shape",
+    group: "adminSetDocumentsVerified",
+    label: "Smoke — function exists and returns correct shape",
+    claudeHint: "base44/functions/adminSetDocumentsVerified/entry.ts — must return { success: true/false } for all outcomes.",
+    run: async (sessionToken) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      const { data } = await callFn("adminSetDocumentsVerified", {
+        session_token: sessionToken,
+        user_id: "000000000000000000000000",
+        documents_verified: true,
+      });
+      if (typeof data.success === "undefined") throw new Error(`Response missing success field: ${JSON.stringify(data)}`);
+      return `Passed — function reachable, shape correct`;
+    },
+  },
+
+  {
+    id: "asdv_func_sets_documents_verified",
+    group: "adminSetDocumentsVerified",
+    label: "Functional — sets documents_verified: true on User entity",
+    claudeHint: "base44/functions/adminSetDocumentsVerified/entry.ts — must update User.documents_verified via serviceRole. Verify via seedTestBooking readUser that the User entity was updated.",
+    run: async (sessionToken) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      const testEmail = `asdv-f1-${Date.now()}@integration.test`;
+
+      const { data: userData } = await callFn("seedTestBooking", {
+        action: "createUser",
+        user: { email: testEmail, forename: "Test", surname: "User", documents_verified: false, stripe_verified: false, subscription_active: false },
+      });
+      const userId = userData?.id;
+      if (!userId) throw new Error("Failed to create test user");
+
+      const { data: credData } = await callFn("seedTestBooking", {
+        action: "createUserCredentials",
+        userCredentials: { email: testEmail, password_hash: "test_hash", user_id: userId, email_verified: true },
+      });
+
+      try {
+        const { data } = await callFn("adminSetDocumentsVerified", {
+          session_token: sessionToken,
+          user_id: userId,
+          documents_verified: true,
+        });
+        if (!data.success) throw new Error(`Function failed: ${JSON.stringify(data)}`);
+
+        const { data: readData } = await callFn("seedTestBooking", { action: "readUser", id: userId });
+        if (readData.user?.documents_verified !== true) throw new Error(`documents_verified not true on User — got: ${readData.user?.documents_verified}`);
+
+        return `Passed — documents_verified: true confirmed on User entity`;
+      } finally {
+        await callFn("seedTestBooking", { action: "deleteUser", id: userId });
+        if (credData?.id) await callFn("seedTestBooking", { action: "deleteUserCredentials", id: credData.id });
+        await callFn("seedTestBooking", { action: "listNotificationsAndClean", user_id: userId, title_prefix: "Documents" });
+      }
+    },
+  },
+
+  {
+    id: "asdv_func_founding_member_not_written",
+    group: "adminSetDocumentsVerified",
+    label: "Functional — does not write documents_verified to FoundingMember (rule violation check)",
+    claudeHint: "base44/functions/adminSetDocumentsVerified/entry.ts — the FoundingMember.documents_verified write must be REMOVED. Gate flags must never be stored on FoundingMember — this is a permanent project rule. Remove the FoundingMember filter and update block entirely.",
+    run: async (sessionToken) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      const testEmail = `asdv-f2-${Date.now()}@integration.test`;
+
+      const { data: userData } = await callFn("seedTestBooking", {
+        action: "createUser",
+        user: { email: testEmail, forename: "Test", surname: "User", documents_verified: false },
+      });
+      const userId = userData?.id;
+      if (!userId) throw new Error("Failed to create test user");
+
+      const { data: credData } = await callFn("seedTestBooking", {
+        action: "createUserCredentials",
+        userCredentials: { email: testEmail, password_hash: "test_hash", user_id: userId, email_verified: true },
+      });
+
+      try {
+        await callFn("adminSetDocumentsVerified", {
+          session_token: sessionToken,
+          user_id: userId,
+          documents_verified: true,
+        });
+
+        const { data: fmData } = await callFn("seedTestBooking", { action: "readFoundingMember", user_id: userId });
+        if (fmData.record !== null) throw new Error(`FoundingMember record found with documents_verified data — this violates the project rule that gate flags must never be stored on FoundingMember`);
+
+        return `Passed — no FoundingMember written to`;
+      } finally {
+        await callFn("seedTestBooking", { action: "deleteUser", id: userId });
+        if (credData?.id) await callFn("seedTestBooking", { action: "deleteUserCredentials", id: credData.id });
+        await callFn("seedTestBooking", { action: "listNotificationsAndClean", user_id: userId, title_prefix: "Documents" });
+      }
+    },
+  },
+
+  {
+    id: "asdv_func_approved_notification",
+    group: "adminSetDocumentsVerified",
+    label: "Functional — approval creates bell notification for host",
+    claudeHint: "base44/functions/adminSetDocumentsVerified/entry.ts — documents_verified: true must call sendNotification for the host. Currently no sendNotification call exists in this function.",
+    run: async (sessionToken) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      const testEmail = `asdv-f3-${Date.now()}@integration.test`;
+
+      const { data: userData } = await callFn("seedTestBooking", {
+        action: "createUser",
+        user: { email: testEmail, forename: "Test", surname: "User", documents_verified: false, stripe_verified: false, subscription_active: false },
+      });
+      const userId = userData?.id;
+      if (!userId) throw new Error("Failed to create test user");
+
+      const { data: credData } = await callFn("seedTestBooking", {
+        action: "createUserCredentials",
+        userCredentials: { email: testEmail, password_hash: "test_hash", user_id: userId, email_verified: true },
+      });
+
+      try {
+        const { data } = await callFn("adminSetDocumentsVerified", {
+          session_token: sessionToken,
+          user_id: userId,
+          documents_verified: true,
+        });
+        if (!data.success) throw new Error(`Function failed: ${JSON.stringify(data)}`);
+
+        await new Promise(r => setTimeout(r, 1000));
+
+        const { data: notifData } = await callFn("seedTestBooking", { action: "listNotifications", user_id: userId });
+        const notif = (notifData?.notifications || []).find(n =>
+          n.title?.toLowerCase().includes("document") || n.title?.toLowerCase().includes("verified")
+        );
+        if (!notif) throw new Error("No approval notification found for host — add sendNotification call to adminSetDocumentsVerified");
+
+        return `Passed — approval notification created with title: "${notif.title}"`;
+      } finally {
+        await callFn("seedTestBooking", { action: "deleteUser", id: userId });
+        if (credData?.id) await callFn("seedTestBooking", { action: "deleteUserCredentials", id: credData.id });
+        await callFn("seedTestBooking", { action: "listNotificationsAndClean", user_id: userId, title_prefix: "Documents" });
+      }
+    },
+  },
+
+  {
+    id: "asdv_func_rejected_notification",
+    group: "adminSetDocumentsVerified",
+    label: "Functional — rejection creates bell notification with reason for host",
+    claudeHint: "base44/functions/adminSetDocumentsVerified/entry.ts — documents_verified: false must call sendNotification with rejection_reason in the body. Add rejection_reason and rejection_notes to the function signature and wire into notification body.",
+    run: async (sessionToken) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      const testEmail = `asdv-f4-${Date.now()}@integration.test`;
+
+      const { data: userData } = await callFn("seedTestBooking", {
+        action: "createUser",
+        user: { email: testEmail, forename: "Test", surname: "User", documents_verified: false },
+      });
+      const userId = userData?.id;
+      if (!userId) throw new Error("Failed to create test user");
+
+      const { data: credData } = await callFn("seedTestBooking", {
+        action: "createUserCredentials",
+        userCredentials: { email: testEmail, password_hash: "test_hash", user_id: userId, email_verified: true },
+      });
+
+      try {
+        const { data } = await callFn("adminSetDocumentsVerified", {
+          session_token: sessionToken,
+          user_id: userId,
+          documents_verified: false,
+          rejection_reason: "image_unclear",
+          rejection_notes: "The image was too dark to read clearly",
+        });
+        if (!data.success) throw new Error(`Function failed: ${JSON.stringify(data)}`);
+
+        await new Promise(r => setTimeout(r, 1000));
+
+        const { data: notifData } = await callFn("seedTestBooking", { action: "listNotifications", user_id: userId });
+        const notif = (notifData?.notifications || []).find(n =>
+          n.title?.toLowerCase().includes("document") || n.title?.toLowerCase().includes("not accepted") || n.title?.toLowerCase().includes("rejected")
+        );
+        if (!notif) throw new Error("No rejection notification found — add sendNotification call for the rejection path");
+        const body = notif.body?.toLowerCase() || "";
+        if (!body.includes("unclear") && !body.includes("image")) throw new Error(`Rejection reason not in notification body — got: "${notif.body}"`);
+
+        return `Passed — rejection notification created with reason in body`;
+      } finally {
+        await callFn("seedTestBooking", { action: "deleteUser", id: userId });
+        if (credData?.id) await callFn("seedTestBooking", { action: "deleteUserCredentials", id: credData.id });
+        await callFn("seedTestBooking", { action: "listNotificationsAndClean", user_id: userId, title_prefix: "Documents" });
+        await callFn("seedTestBooking", { action: "listNotificationsAndClean", user_id: userId, title_prefix: "Your documents" });
+      }
+    },
+  },
+
+  {
+    id: "asdv_biz_no_gates",
+    group: "adminSetDocumentsVerified",
+    label: "Business — approved with no other gates: notification mentions both Stripe and subscription",
+    claudeHint: "base44/functions/adminSetDocumentsVerified/entry.ts — after setting documents_verified: true, read User.stripe_verified and User.subscription_active. Both false → notification body must mention both Stripe account and subscription still needed.",
+    run: async (sessionToken) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      const testEmail = `asdv-b1-${Date.now()}@integration.test`;
+
+      const { data: userData } = await callFn("seedTestBooking", {
+        action: "createUser",
+        user: { email: testEmail, forename: "Test", surname: "User", documents_verified: false, stripe_verified: false, subscription_active: false },
+      });
+      const userId = userData?.id;
+      if (!userId) throw new Error("Failed to create test user");
+      const { data: credData } = await callFn("seedTestBooking", {
+        action: "createUserCredentials",
+        userCredentials: { email: testEmail, password_hash: "test_hash", user_id: userId, email_verified: true },
+      });
+
+      try {
+        await callFn("adminSetDocumentsVerified", { session_token: sessionToken, user_id: userId, documents_verified: true });
+        await new Promise(r => setTimeout(r, 1000));
+
+        const { data: notifData } = await callFn("seedTestBooking", { action: "listNotifications", user_id: userId });
+        const notif = (notifData?.notifications || []).find(n => n.title?.toLowerCase().includes("document") || n.title?.toLowerCase().includes("verified"));
+        if (!notif) throw new Error("No approval notification found");
+
+        const body = notif.body?.toLowerCase() || "";
+        if (!body.includes("stripe") && !body.includes("bank")) throw new Error(`Body should mention Stripe — got: "${notif.body}"`);
+        if (!body.includes("subscription")) throw new Error(`Body should mention subscription — got: "${notif.body}"`);
+
+        return `Passed — notification correctly mentions both Stripe and subscription needed`;
+      } finally {
+        await callFn("seedTestBooking", { action: "deleteUser", id: userId });
+        if (credData?.id) await callFn("seedTestBooking", { action: "deleteUserCredentials", id: credData.id });
+        await callFn("seedTestBooking", { action: "listNotificationsAndClean", user_id: userId, title_prefix: "Documents" });
+      }
+    },
+  },
+
+  {
+    id: "asdv_biz_stripe_done",
+    group: "adminSetDocumentsVerified",
+    label: "Business — approved with Stripe done: notification mentions subscription only",
+    claudeHint: "base44/functions/adminSetDocumentsVerified/entry.ts — User.stripe_verified: true, subscription_active: false → notification must mention subscription only, must NOT mention Stripe.",
+    run: async (sessionToken) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      const testEmail = `asdv-b2-${Date.now()}@integration.test`;
+
+      const { data: userData } = await callFn("seedTestBooking", {
+        action: "createUser",
+        user: { email: testEmail, forename: "Test", surname: "User", documents_verified: false, stripe_verified: true, subscription_active: false },
+      });
+      const userId = userData?.id;
+      if (!userId) throw new Error("Failed to create test user");
+      const { data: credData } = await callFn("seedTestBooking", {
+        action: "createUserCredentials",
+        userCredentials: { email: testEmail, password_hash: "test_hash", user_id: userId, email_verified: true },
+      });
+
+      try {
+        await callFn("adminSetDocumentsVerified", { session_token: sessionToken, user_id: userId, documents_verified: true });
+        await new Promise(r => setTimeout(r, 1000));
+
+        const { data: notifData } = await callFn("seedTestBooking", { action: "listNotifications", user_id: userId });
+        const notif = (notifData?.notifications || []).find(n => n.title?.toLowerCase().includes("document") || n.title?.toLowerCase().includes("verified"));
+        if (!notif) throw new Error("No approval notification found");
+
+        const body = notif.body?.toLowerCase() || "";
+        if (body.includes("stripe") || body.includes("bank account")) throw new Error(`Body mentions Stripe but Stripe is already done — got: "${notif.body}"`);
+        if (!body.includes("subscription")) throw new Error(`Body should mention subscription — got: "${notif.body}"`);
+
+        return `Passed — notification mentions subscription only`;
+      } finally {
+        await callFn("seedTestBooking", { action: "deleteUser", id: userId });
+        if (credData?.id) await callFn("seedTestBooking", { action: "deleteUserCredentials", id: credData.id });
+        await callFn("seedTestBooking", { action: "listNotificationsAndClean", user_id: userId, title_prefix: "Documents" });
+      }
+    },
+  },
+
+  {
+    id: "asdv_biz_subscription_done",
+    group: "adminSetDocumentsVerified",
+    label: "Business — approved with subscription done: notification mentions Stripe only",
+    claudeHint: "base44/functions/adminSetDocumentsVerified/entry.ts — User.stripe_verified: false, subscription_active: true → notification must mention Stripe only, must NOT mention subscription.",
+    run: async (sessionToken) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      const testEmail = `asdv-b3-${Date.now()}@integration.test`;
+
+      const { data: userData } = await callFn("seedTestBooking", {
+        action: "createUser",
+        user: { email: testEmail, forename: "Test", surname: "User", documents_verified: false, stripe_verified: false, subscription_active: true },
+      });
+      const userId = userData?.id;
+      if (!userId) throw new Error("Failed to create test user");
+      const { data: credData } = await callFn("seedTestBooking", {
+        action: "createUserCredentials",
+        userCredentials: { email: testEmail, password_hash: "test_hash", user_id: userId, email_verified: true },
+      });
+
+      try {
+        await callFn("adminSetDocumentsVerified", { session_token: sessionToken, user_id: userId, documents_verified: true });
+        await new Promise(r => setTimeout(r, 1000));
+
+        const { data: notifData } = await callFn("seedTestBooking", { action: "listNotifications", user_id: userId });
+        const notif = (notifData?.notifications || []).find(n => n.title?.toLowerCase().includes("document") || n.title?.toLowerCase().includes("verified"));
+        if (!notif) throw new Error("No approval notification found");
+
+        const body = notif.body?.toLowerCase() || "";
+        if (body.includes("subscription")) throw new Error(`Body mentions subscription but it is already done — got: "${notif.body}"`);
+        if (!body.includes("stripe") && !body.includes("bank")) throw new Error(`Body should mention Stripe — got: "${notif.body}"`);
+
+        return `Passed — notification mentions Stripe only`;
+      } finally {
+        await callFn("seedTestBooking", { action: "deleteUser", id: userId });
+        if (credData?.id) await callFn("seedTestBooking", { action: "deleteUserCredentials", id: credData.id });
+        await callFn("seedTestBooking", { action: "listNotificationsAndClean", user_id: userId, title_prefix: "Documents" });
+      }
+    },
+  },
+
+  {
+    id: "asdv_biz_all_gates",
+    group: "adminSetDocumentsVerified",
+    label: "Business — all gates open: documents confirmed sent first, congratulations sent second",
+    claudeHint: "base44/functions/adminSetDocumentsVerified/entry.ts — when stripe_verified: true AND subscription_active: true AND documents now verified, send TWO notifications: documents confirmed first, then congratulations/publish notification. Order matters — documents must be sent before congratulations.",
+    run: async (sessionToken) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      const testEmail = `asdv-b4-${Date.now()}@integration.test`;
+
+      const { data: userData } = await callFn("seedTestBooking", {
+        action: "createUser",
+        user: { email: testEmail, forename: "Test", surname: "User", documents_verified: false, stripe_verified: true, subscription_active: true },
+      });
+      const userId = userData?.id;
+      if (!userId) throw new Error("Failed to create test user");
+      const { data: credData } = await callFn("seedTestBooking", {
+        action: "createUserCredentials",
+        userCredentials: { email: testEmail, password_hash: "test_hash", user_id: userId, email_verified: true },
+      });
+
+      try {
+        const { data } = await callFn("adminSetDocumentsVerified", { session_token: sessionToken, user_id: userId, documents_verified: true });
+        if (!data.success) throw new Error(`Function failed: ${JSON.stringify(data)}`);
+
+        await new Promise(r => setTimeout(r, 1500));
+
+        const { data: notifData } = await callFn("seedTestBooking", { action: "listNotifications", user_id: userId });
+        const notifications = notifData?.notifications || [];
+
+        const docsNotif = notifications.find(n =>
+          n.title?.toLowerCase().includes("document") || n.title?.toLowerCase().includes("verified")
+        );
+        const congratsNotif = notifications.find(n =>
+          n.title?.toLowerCase().includes("approved") || n.title?.toLowerCase().includes("publish") || n.title?.toLowerCase().includes("congratulations")
+        );
+
+        if (!docsNotif) throw new Error(`Documents verified notification not found — titles found: ${notifications.map(n => n.title).join(", ")}`);
+        if (!congratsNotif) throw new Error(`Congratulations/publish notification not found — two notifications must be sent when all gates open`);
+
+        const docsTime = new Date(docsNotif.created_date).getTime();
+        const congratsTime = new Date(congratsNotif.created_date).getTime();
+        if (docsTime > congratsTime) throw new Error("Documents notification must be created before congratulations notification");
+
+        return `Passed — two notifications created in correct order: "${docsNotif.title}" then "${congratsNotif.title}"`;
+      } finally {
+        await callFn("seedTestBooking", { action: "deleteUser", id: userId });
+        if (credData?.id) await callFn("seedTestBooking", { action: "deleteUserCredentials", id: credData.id });
+        await callFn("seedTestBooking", { action: "listNotificationsAndClean", user_id: userId, title_prefix: "Documents" });
+        await callFn("seedTestBooking", { action: "listNotificationsAndClean", user_id: userId, title_prefix: "You're fully" });
+        await callFn("seedTestBooking", { action: "listNotificationsAndClean", user_id: userId, title_prefix: "Congratulations" });
+      }
+    },
+  },
+
   // ── processDepositRefunds ─────────────────────────────────────────────
   
   {
