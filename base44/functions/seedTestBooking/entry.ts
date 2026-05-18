@@ -195,6 +195,24 @@ if (action === "createEmailVerificationCode") {
       return Response.json({ deleted: true });
     }
 
+    if (action === "updateUser") {
+      const { id, updates } = body;
+      if (!id || !updates) {
+        return Response.json({ error: "missing_fields" }, { status: 400 });
+      }
+      await sr.entities.User.update(id, updates);
+      return Response.json({ updated: true });
+    }
+
+    if (action === "readFoundingMember") {
+      const { user_id } = body;
+      if (!user_id) {
+        return Response.json({ error: "missing_fields" }, { status: 400 });
+      }
+      const records = await sr.entities.FoundingMember.filter({ user_id });
+      return Response.json({ record: records?.[0] || null });
+    }
+
     return Response.json({ error: "unrecognised_action" }, { status: 400 });
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 });
