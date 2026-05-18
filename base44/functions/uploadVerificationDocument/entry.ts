@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           service_key: serviceKey,
           user_id: adminUserId,
-          type: "general", 
+          type: "general",
           title: "New verification document uploaded",
           body: `A ${formattedType} document has been uploaded and is awaiting review.`,
           link: "/AdminPanel",
