@@ -1436,7 +1436,7 @@ const TESTS = [
         user_id: "test_user_id",
         documents_verified: true,
       });
-      if (status !== 401) throw new Error(`Expected 401, got ${status} — function has no auth check, this is a security hole`);
+      if (status !== 401) throw new Error(`Expected 401, got ${status} — function ran without auth check (crashed on invalid user_id before returning, but auth was never checked)`);
       return "Passed — correctly returned 401 with no session";
     },
   },
