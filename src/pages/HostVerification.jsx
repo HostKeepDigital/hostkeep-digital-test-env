@@ -59,7 +59,7 @@ export default function HostVerification() {
       } catch (_) {}
     };
     checkDocFailStatus();
-  }, [user?.id]); 
+  }, [user?.id]);
 
   useEffect(() => {
     if (!docFailedStatus || !user?.id) return;
