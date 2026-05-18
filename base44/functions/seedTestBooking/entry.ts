@@ -113,6 +113,15 @@ Deno.serve(async (req) => {
       return Response.json({ deleted_count: toDelete.length });
     }
 
+    if (action === "readUserRole") {
+      const { user_id, role } = body;
+      if (!user_id || !role) {
+        return Response.json({ error: "missing_fields" }, { status: 400 });
+      }
+      const userRoles = await sr.entities.UserRole.filter({ user_id, role });
+      return Response.json({ userRole: userRoles?.[0] || null });
+    }
+
     return Response.json({ error: "unrecognised_action" }, { status: 400 });
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 });
