@@ -62,7 +62,8 @@ Deno.serve(async (req) => {
       const appId = Deno.env.get("BASE44_APP_ID");
       const serviceKey = Deno.env.get("LOCK_ACCESS_TOKEN");
 
-      await fetch(`https://hostkeep-digital-test-env.base44.app/functions/sendNotification`, {
+      const APP_URL = Deno.env.get("APP_URL") || "https://hostkeep-digital-test-env.base44.app";
+        await fetch(`${APP_URL}/functions/sendNotification`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
