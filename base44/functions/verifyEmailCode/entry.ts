@@ -109,14 +109,19 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         from: "HostKeep <hello@hostkeepdigital.co.uk>",
         to: [email],
-        subject: "You're on the list — HostKeep",
+        subject: type === "guest" ? "Welcome to HostKeep!" : "You're on the list — HostKeep",
         html: buildEmail({
-          heading: "You're on the list!",
-          body: `
+          heading: type === "guest" ? "Email verified!" : "You're on the list!",
+          body: type === "guest" ? `
+            <p>Your email address has been verified and your HostKeep account is ready.</p>
+            <p>You can now sign in and start browsing our hand-picked Cornwall properties.</p>
+          ` : `
             <p>Thank you for verifying your email and registering your interest as a Founding Member of HostKeep.</p>
             <p>We're reviewing applications and will be in touch within 24 hours to let you know if you've made it into the beta.</p>
             <p>You don't need to do anything right now — we'll contact you at this email address.</p>
           `,
+          buttonText: type === "guest" ? "Browse Properties" : null,
+          buttonUrl: type === "guest" ? "https://hostkeep-digital-test-env.base44.app" : null,
         }),
       }),
     });
