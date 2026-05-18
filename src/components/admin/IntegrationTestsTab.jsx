@@ -383,7 +383,7 @@ const TESTS = [
 
       // Step 3 — clean up test records
       for (const record of testRecords) {
-        try { await base44.entities.Notification.delete(record.id); } catch (_) {}
+        try { await callFn("seedTestBooking", { action: "deleteNotification", id: record.id }); } catch (_) {}
       }
 
       if (missingFromDb.length > 0) throw new Error(`DB records missing for types: ${missingFromDb.join(", ")}`);
@@ -744,6 +744,112 @@ const TESTS = [
         await callFn("seedTestBooking", { action: "delete", id: bookingId });
         await callFn("seedTestBooking", { action: "listNotificationsAndClean", user_id: user.id, title_prefix: "Stay Completed" });
         await callFn("seedTestBooking", { action: "listNotificationsAndClean", user_id: "test_guest_nbe", title_prefix: "Stay Complete" });
+      }
+    },
+  },
+
+  {
+    id: "nbe_biz_immediate_notify",
+    group: "notifyBookingEvent",
+    label: "Business — booking request notification fires immediately regardless of time",
+    claudeHint: "Check base44/functions/notifyBookingEvent/entry.ts — notification must fire immediately on event with no time-based delay or suppression. Notification record must exist within 10 seconds of function call.",
+    run: async (sessionToken, user) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      if (!user?.id) throw new Error("No user ID");
+
+      const { data: createData } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: user.id,
+          guest_id: "test_guest_nbe",
+          guest_name: "Integration Test Guest",
+          guest_email: "hello@hostkeepdigital.co.uk",
+          property_id: "test_property_nbe",
+          booking_status: "pending",
+          check_in: "2026-08-01",
+          check_out: "2026-08-07",
+          nights: 6,
+          total_amount: 600,
+          security_deposit: 200,
+        },
+      });
+      const bookingId = createData?.id;
+      if (!bookingId) throw new Error("Failed to seed test booking");
+
+      try {
+        const before = Date.now();
+        const { status, data } = await callFn("notifyBookingEvent", {
+          session_token: sessionToken,
+          booking_id: bookingId,
+          event_type: "requested",
+        });
+        const elapsed = Date.now() - before;
+        if (status !== 200 || !data.success) throw new Error(`Function failed: ${JSON.stringify(data)}`);
+
+        await new Promise(r => setTimeout(r, 1000));
+
+        const { data: notifData } = await callFn("seedTestBooking", { action: "listNotifications", user_id: user.id });
+        const hostNotif = (notifData?.notifications || []).find(n => n.type === "booking_request" && n.link?.includes(bookingId));
+        if (!hostNotif) throw new Error("Notification not found — must fire immediately with no time-based delay");
+
+        const notifCreatedAt = new Date(hostNotif.created_date).getTime();
+        const notifAge = Date.now() - notifCreatedAt;
+        if (notifAge > 10000) throw new Error(`Notification created ${notifAge}ms ago — too old, may have been delayed`);
+
+        return `Passed — notification fired immediately (function responded in ${elapsed}ms, notification age ${notifAge}ms)`;
+      } finally {
+        await callFn("seedTestBooking", { action: "delete", id: bookingId });
+        await callFn("seedTestBooking", { action: "listNotificationsAndClean", user_id: user.id, title_prefix: "New Booking" });
+      }
+    },
+  },
+
+  {
+    id: "nbe_biz_duplicate_guard",
+    group: "notifyBookingEvent",
+    label: "Business — duplicate event calls do not create duplicate notifications",
+    claudeHint: "Check base44/functions/notifyBookingEvent/entry.ts — calling the same event twice for the same booking must not create two Notification records. Add deduplication: before creating, filter Notification for user_id + type + link and skip if a record already exists within the last 60 seconds.",
+    run: async (sessionToken, user) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      if (!user?.id) throw new Error("No user ID");
+
+      const { data: createData } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: user.id,
+          guest_id: "test_guest_nbe",
+          guest_name: "Integration Test Guest",
+          guest_email: "hello@hostkeepdigital.co.uk",
+          property_id: "test_property_nbe",
+          booking_status: "pending",
+          check_in: "2026-08-01",
+          check_out: "2026-08-07",
+          nights: 6,
+          total_amount: 600,
+          security_deposit: 200,
+        },
+      });
+      const bookingId = createData?.id;
+      if (!bookingId) throw new Error("Failed to seed test booking");
+
+      try {
+        await callFn("seedTestBooking", { action: "listNotificationsAndClean", user_id: user.id, title_prefix: "New Booking" });
+
+        await callFn("notifyBookingEvent", { session_token: sessionToken, booking_id: bookingId, event_type: "requested" });
+        await callFn("notifyBookingEvent", { session_token: sessionToken, booking_id: bookingId, event_type: "requested" });
+
+        await new Promise(r => setTimeout(r, 1000));
+
+        const { data: notifData } = await callFn("seedTestBooking", { action: "listNotifications", user_id: user.id });
+        const dupes = (notifData?.notifications || []).filter(n => n.type === "booking_request" && n.link?.includes(bookingId));
+
+        if (dupes.length > 1) throw new Error(`Duplicate guard missing — ${dupes.length} identical notifications created for the same event. Add deduplication check in notifyBookingEvent before calling sendNotification.`);
+        if (dupes.length === 0) throw new Error("No notification created at all — check event handling");
+
+        return `Passed — duplicate event call correctly produced only 1 notification`;
+      } finally {
+        await callFn("seedTestBooking", { action: "delete", id: bookingId });
+        await callFn("seedTestBooking", { action: "listNotificationsAndClean", user_id: user.id, title_prefix: "New Booking" });
       }
     },
   },
