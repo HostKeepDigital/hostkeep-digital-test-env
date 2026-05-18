@@ -636,6 +636,63 @@ const TESTS = [
   },
 
   {
+    {
+    id: "nbe_func_cancelled_by_host",
+    group: "notifyBookingEvent",
+    label: "Functional — cancelled_by_host event notifies guest and host",
+    claudeHint: "Check base44/functions/notifyBookingEvent/entry.ts — event_type 'cancelled_by_host' must notify guest (booking_cancelled, link /Search) and host (booking_cancelled, link /HostBookings?booking=).",
+    run: async (sessionToken, user) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      if (!user?.id) throw new Error("No user ID");
+
+      const { data: createData } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: user.id,
+          guest_id: "test_guest_nbe",
+          guest_name: "Integration Test Guest",
+          guest_email: "hello@hostkeepdigital.co.uk",
+          property_id: "test_property_nbe",
+          booking_status: "confirmed",
+          check_in: "2026-08-01",
+          check_out: "2026-08-07",
+          nights: 6,
+          total_amount: 600,
+          security_deposit: 200,
+        },
+      });
+      const bookingId = createData?.id;
+      if (!bookingId) throw new Error("Failed to seed test booking");
+
+      try {
+        const { status, data } = await callFn("notifyBookingEvent", {
+          session_token: sessionToken,
+          booking_id: bookingId,
+          event_type: "cancelled_by_host",
+        });
+        if (status !== 200 || !data.success) throw new Error(`Function failed: ${JSON.stringify(data)}`);
+
+        await new Promise(r => setTimeout(r, 1000));
+
+        const { data: hostNotifData } = await callFn("seedTestBooking", { action: "listNotifications", user_id: user.id });
+        const hostNotif = (hostNotifData?.notifications || []).find(n => n.type === "booking_cancelled" && n.link?.includes(bookingId));
+        if (!hostNotif) throw new Error("No booking_cancelled confirmation notification for host");
+
+        const { data: guestNotifData } = await callFn("seedTestBooking", { action: "listNotifications", user_id: "test_guest_nbe" });
+        const guestNotif = (guestNotifData?.notifications || []).find(n => n.type === "booking_cancelled");
+        if (!guestNotif) throw new Error("No booking_cancelled notification for guest");
+        if (guestNotif.link !== "/Search") throw new Error(`Guest link should be /Search, got '${guestNotif.link}'`);
+
+        return `Passed — both host and guest notified correctly on host cancellation`;
+      } finally {
+        await callFn("seedTestBooking", { action: "delete", id: bookingId });
+        await callFn("seedTestBooking", { action: "listNotificationsAndClean", user_id: user.id, title_prefix: "You Cancelled" });
+        await callFn("seedTestBooking", { action: "listNotificationsAndClean", user_id: "test_guest_nbe", title_prefix: "Booking Cancelled" });
+      }
+    },
+  },
+
+  {
     id: "nbe_func_completed",
     group: "notifyBookingEvent",
     label: "Functional — completed event creates notifications for both host and guest",
