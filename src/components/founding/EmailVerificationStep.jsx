@@ -43,26 +43,24 @@ export default function EmailVerificationStep({ email, onVerified, onBack, messa
     setVerifying(false);
 
     if (data?.valid) {
-    // Only update FoundingMember status for founding member flow
-    if (!isGuest) {
-      try {
-        const members = await base44.entities.FoundingMember.filter({
-          email: email.toLowerCase().trim(),
-        });
-        if (members && members.length > 0) {
-          const member = members[0];
-          if (member.approval_status === "interest") {
-            await base44.entities.FoundingMember.update(member.id, {
-              approval_status: "pending",
-            });
+      // Only update FoundingMember status for founding member flow
+      if (!isGuest) {
+        try {
+          const members = await base44.entities.FoundingMember.filter({
+            email: email.toLowerCase().trim(),
+          });
+          if (members && members.length > 0) {
+            const member = members[0];
+            if (member.approval_status === "interest") {
+              await base44.entities.FoundingMember.update(member.id, {
+                approval_status: "pending",
+              });
+            }
           }
+        } catch (err) {
+          console.error("Failed to update approval_status to pending after verification:", err);
         }
-      } catch (err) {
-        console.error("Failed to update approval_status to pending after verification:", err);
       }
-    }
-    onVerified();
-
       onVerified();
     } else {
       setError("Incorrect or expired code. Please try again or request a new code.");
