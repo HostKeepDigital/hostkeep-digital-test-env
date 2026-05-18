@@ -117,7 +117,7 @@ Deno.serve(async (req) => {
 
     // Send verification code
     try {
-      await serviceRole.functions.invoke('sendVerificationCode', { email: normalisedEmail, name: forename });
+      await serviceRole.functions.invoke('sendVerificationCode', { email: normalisedEmail, name: forename, type: 'guest' });
     } catch (err) {
       console.error('Failed to send verification code:', err.message);
       // Don't throw - email sending is optional
