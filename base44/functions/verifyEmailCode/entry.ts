@@ -62,7 +62,7 @@ function buildEmail({ heading, body, buttonText, buttonUrl }) {
 
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
-  const { email, code } = await req.json();
+  const { email, code, type } = await req.json();
 
   if (!email || !code) {
     return Response.json({ valid: false });
