@@ -84,7 +84,7 @@ async function sendResendEmail(to, subject, html) {
 
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
-  const { email, full_name } = await req.json();
+  const { email, full_name, name, type } = await req.json();
 
   if (!email) {
     return Response.json({ error: 'Email is required' }, { status: 400 });
