@@ -1,6 +1,6 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.25";
 
-Deno.serve(async (req) => {
+Deno.serve(async (req) => { 
   try {
     const base44 = createClientFromRequest(req);
     const sr = base44.asServiceRole;
@@ -120,79 +120,6 @@ Deno.serve(async (req) => {
       }
       const userRoles = await sr.entities.UserRole.filter({ user_id, role });
       return Response.json({ userRole: userRoles?.[0] || null });
-    }
-
-    if (action === "createEmailVerificationCode") {
-      const { email, code, expires_at } = body;
-      if (!email || !code || !expires_at) {
-        return Response.json({ error: "missing_fields" }, { status: 400 });
-      }
-      const created = await sr.entities.EmailVerificationCode.create({ email, code, expires_at, used: false });
-      return Response.json({ id: created.id });
-    }
-
-    if (action === "readEmailVerificationCode") {
-      const { email } = body;
-      if (!email) {
-        return Response.json({ error: "missing_fields" }, { status: 400 });
-      }
-      const records = await sr.entities.EmailVerificationCode.filter({ email });
-      return Response.json({ record: records?.[0] || null, count: records?.length || 0 });
-    }
-
-    if (action === "deleteEmailVerificationCode") {
-      const { id } = body;
-      if (!id) {
-        return Response.json({ error: "missing_fields" }, { status: 400 });
-      }
-      await sr.entities.EmailVerificationCode.delete(id);
-      return Response.json({ deleted: true });
-    }
-
-    if (action === "createUserCredentials") {
-      const { userCredentials } = body;
-      if (!userCredentials) {
-        return Response.json({ error: "missing_fields" }, { status: 400 });
-      }
-      const created = await sr.entities.UserCredentials.create(userCredentials);
-      return Response.json({ id: created.id });
-    }
-
-    if (action === "readUserCredentials") {
-      const { email } = body;
-      if (!email) {
-        return Response.json({ error: "missing_fields" }, { status: 400 });
-      }
-      const records = await sr.entities.UserCredentials.filter({ email });
-      return Response.json({ record: records?.[0] || null });
-    }
-
-    if (action === "deleteUserCredentials") {
-      const { id } = body;
-      if (!id) {
-        return Response.json({ error: "missing_fields" }, { status: 400 });
-      }
-      await sr.entities.UserCredentials.delete(id);
-      return Response.json({ deleted: true });
-    }
-
-    if (action === "deleteUser") {
-      const { id } = body;
-      if (!id) {
-        return Response.json({ error: "missing_fields" }, { status: 400 });
-      }
-      await sr.entities.User.delete(id);
-      return Response.json({ deleted: true });
-    }
-
-    if (action === "deleteGuest") {
-      const { email } = body;
-      if (!email) {
-        return Response.json({ error: "missing_fields" }, { status: 400 });
-      }
-      const guests = await sr.entities.Guest.filter({ email });
-      await Promise.all((guests || []).map((g) => sr.entities.Guest.delete(g.id)));
-      return Response.json({ deleted: true });
     }
 
     return Response.json({ error: "unrecognised_action" }, { status: 400 });
