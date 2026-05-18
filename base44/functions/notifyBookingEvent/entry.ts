@@ -35,6 +35,13 @@ Deno.serve(async (req) => {
 
     const notify = async (user_id, type, title, notifBody, link, email_to) => {
       try {
+        const existing = await serviceRole.entities.Notification.filter({ user_id, type, link });
+        const sixtySecondsAgo = new Date(Date.now() - 60000);
+        const isDupe = existing?.some(n => new Date(n.created_date) > sixtySecondsAgo);
+        if (isDupe) {
+          console.log(`Duplicate notification skipped [${type}] for ${user_id}`);
+          return;
+        }
         await serviceRole.functions.invoke("sendNotification", {
           service_key: LOCK,
           user_id, type, title,
