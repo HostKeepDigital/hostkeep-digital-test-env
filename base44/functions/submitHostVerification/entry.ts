@@ -56,7 +56,7 @@ Deno.serve(async (req) => {
     }
 
     // Step 4 — Notify admin
-    const adminRoles = await sr.entities.UserRole.filter({ role: "admin" });
+    const adminRoles = await sr.entities.UserSession.filter({ role: "admin" });
     if (adminRoles?.length > 0) {
       const adminUserId = adminRoles[0].user_id;
       const appId = Deno.env.get("BASE44_APP_ID");
