@@ -195,6 +195,24 @@ if (action === "createEmailVerificationCode") {
       return Response.json({ deleted: true });
     }
 
+    if (action === "createUser") {
+      const { user } = body;
+      if (!user) {
+        return Response.json({ error: "missing_fields" }, { status: 400 });
+      }
+      const created = await sr.entities.User.create(user);
+      return Response.json({ id: created.id });
+    }
+
+    if (action === "readUser") {
+      const { id } = body;
+      if (!id) {
+        return Response.json({ error: "missing_fields" }, { status: 400 });
+      }
+      const users = await sr.entities.User.filter({ id });
+      return Response.json({ user: users?.[0] || null });
+    }
+
     if (action === "updateUser") {
       const { id, updates } = body;
       if (!id || !updates) {
