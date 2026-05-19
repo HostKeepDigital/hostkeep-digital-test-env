@@ -18,12 +18,13 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: "booking_not_found" }, { status: 404 });
     }
 
-    const rental_release_due_at = new Date(new Date(check_in_time).getTime() + 86400000).toISOString();
+    const check_in_time_resolved = check_in_time || new Date().toISOString();
+    const rental_release_due_at = new Date(new Date(check_in_time_resolved).getTime() + 86400000).toISOString();
 
     await base44.asServiceRole.entities.Booking.update(booking.id, {
       booking_status: "checked_in",
       rental_release_due_at,
-      checked_in_at: check_in_time,
+      checked_in_at: check_in_time_resolved,
       ...(notes ? { check_in_notes: notes } : {}),
     });
 
