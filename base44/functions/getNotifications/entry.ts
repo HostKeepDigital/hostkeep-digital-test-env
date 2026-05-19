@@ -25,13 +25,13 @@ Deno.serve(async (req) => {
 
     const { user_id } = session;
 
-    const notifications = await sr.entities.Notification.filter(
-      { user_id },
-      "-created_date",
-      20
-    );
+    const allNotifications = await sr.entities.Notification.filter({ user_id });
 
-    return Response.json({ success: true, notifications: notifications || [] });
+    const notifications = (allNotifications || [])
+      .sort((a, b) => new Date(b.created_date).getTime() - new Date(a.created_date).getTime())
+      .slice(0, 50);
+
+    return Response.json({ success: true, notifications });
   } catch (err) {
     return Response.json({ success: false, error: err.message }, { status: 500 });
   }
