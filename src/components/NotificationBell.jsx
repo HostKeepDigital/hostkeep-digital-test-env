@@ -181,30 +181,30 @@ export default function NotificationBell() {
                     key={n.id}
                     to={n.link}
                     onClick={() => handleClick(n)}
-                    className={`flex gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-50 dark:border-gray-700 ${!n.read ? typeConfig(n.type).bg : ""}`}
-                  >
+                    className={`flex gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-50 dark:border-gray-700 ${!n.read ? "dark:bg-gray-700" : ""}`}
+                    >
                     <span className="text-xl flex-shrink-0 mt-0.5">{typeConfig(n.type).icon}</span>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm ${!n.read ? "font-semibold text-gray-900 dark:text-gray-100" : "font-medium text-gray-700 dark:text-gray-300"}`}>{n.title}</p>
+                      <p className={`text-sm ${!n.read ? "font-semibold text-gray-900 dark:text-white" : "font-medium text-gray-700 dark:text-gray-300"}`}>{n.title}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{n.body}</p>
                       <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{relativeTime(n.created_date)}</p>
                     </div>
                     {!n.read && <span className={`w-2 h-2 rounded-full ${typeConfig(n.type).dot} flex-shrink-0 mt-1.5`} />}
-                  </Link>
+                    </Link>
                 ) : (
                   <div
                     key={n.id}
                     onClick={() => handleClick(n)}
-                    className={`flex gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-50 dark:border-gray-700 cursor-pointer ${!n.read ? typeConfig(n.type).bg : ""}`}
-                  >
+                    className={`flex gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-50 dark:border-gray-700 cursor-pointer ${!n.read ? "dark:bg-gray-700" : ""}`}
+                    >
                     <span className="text-xl flex-shrink-0 mt-0.5">{typeConfig(n.type).icon}</span>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm ${!n.read ? "font-semibold text-gray-900 dark:text-gray-100" : "font-medium text-gray-700 dark:text-gray-300"}`}>{n.title}</p>
+                      <p className={`text-sm ${!n.read ? "font-semibold text-gray-900 dark:text-white" : "font-medium text-gray-700 dark:text-gray-300"}`}>{n.title}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{n.body}</p>
                       <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{relativeTime(n.created_date)}</p>
                     </div>
                     {!n.read && <span className={`w-2 h-2 rounded-full ${typeConfig(n.type).dot} flex-shrink-0 mt-1.5`} />}
-                  </div>
+                    </div>
                 )
               ))
             )}
