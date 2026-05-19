@@ -1957,6 +1957,22 @@ export default function IntegrationTestsTab({ sessionToken }) {
         </div>
       </div>
 
+      {(() => {
+        const totalTests = TESTS.length;
+        const totalPassed = TESTS.filter(t => results[t.id]?.status === "pass").length;
+        const totalFailed = TESTS.filter(t => results[t.id]?.status === "fail").length;
+        const totalRun = totalPassed + totalFailed;
+        if (totalRun === 0) return null;
+        return (
+          <div className={`flex items-center gap-4 px-5 py-3 rounded-xl border text-sm font-medium ${totalFailed > 0 ? "bg-red-50 border-red-200 text-red-800" : "bg-green-50 border-green-200 text-green-800"}`}>
+            <span>{totalRun}/{totalTests} tests run</span>
+            <span className="text-green-700">{totalPassed} passed</span>
+            {totalFailed > 0 && <span className="text-red-700">{totalFailed} failed</span>}
+            {totalFailed === 0 && totalRun === totalTests && <span>✅ All tests passing</span>}
+          </div>
+        );
+      })()}
+
       <div className="space-y-6">
         {GROUPS.map(group => {
           const groupTests = TESTS.filter(t => t.group === group);
