@@ -1538,7 +1538,7 @@ const TESTS = [
       if (!userId) throw new Error("Failed to resolve user_id");
       await callFn("seedTestBooking", { action: "updateUser", id: userId, updates: { stripe_verified: true, subscription_active: true } });
       try {
-        await callFn("adminSetDocumentsVerified", { session_token: sessionToken, user_id: userId, email: testEmail, documents_verified: true });
+        const { data } = await callFn("adminSetDocumentsVerified", { session_token: sessionToken, user_id: userId, email: testEmail, documents_verified: true });
         if (!data.success) throw new Error(`Function failed: ${JSON.stringify(data)}`);
         await new Promise(r => setTimeout(r, 1500));
         const { data: notifData } = await callFn("seedTestBooking", { action: "listNotifications", user_id: userId });
