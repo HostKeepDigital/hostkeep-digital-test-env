@@ -1402,7 +1402,7 @@ const TESTS = [
       const userId = credData?.record?.user_id;
       if (!userId) throw new Error("Failed to resolve user_id from UserCredentials");
       try {
-        const { data } = await callFn("adminSetDocumentsVerified", { session_token: sessionToken, user_id: userId, documents_verified: false, rejection_reason: "image_unclear", rejection_notes: "The image was too dark to read clearly" });
+        const { data } = await callFn("adminSetDocumentsVerified", { session_token: sessionToken, user_id: userId, email: testEmail, documents_verified: false, rejection_reason: "image_unclear", rejection_notes: "The image was too dark to read clearly" });
         if (!data.success) throw new Error(`Function failed: ${JSON.stringify(data)}`);
         await new Promise(r => setTimeout(r, 1000));
         const { data: notifData } = await callFn("seedTestBooking", { action: "listNotifications", user_id: userId });
@@ -1538,7 +1538,7 @@ const TESTS = [
       if (!userId) throw new Error("Failed to resolve user_id");
       await callFn("seedTestBooking", { action: "updateUser", id: userId, updates: { stripe_verified: true, subscription_active: true } });
       try {
-        const { data } = await callFn("adminSetDocumentsVerified", { session_token: sessionToken, user_id: userId, email: testEmail, documents_verified: true });
+        await callFn("adminSetDocumentsVerified", { session_token: sessionToken, user_id: userId, email: testEmail, documents_verified: true });
         if (!data.success) throw new Error(`Function failed: ${JSON.stringify(data)}`);
         await new Promise(r => setTimeout(r, 1500));
         const { data: notifData } = await callFn("seedTestBooking", { action: "listNotifications", user_id: userId });
