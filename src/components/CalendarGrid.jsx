@@ -79,15 +79,16 @@ export default function CalendarGrid({ events, monthStart, monthEnd, onEventClic
                       <button
                         key={event.id}
                         onClick={() => onEventClick(event)}
-                        className="w-full text-left text-white rounded px-1.5 py-0.5 text-[10px] font-medium leading-tight truncate block hover:opacity-80 transition-opacity"
+                        aria-label={`${event.guest_name || event.cleaner_name || event.company_name || event.type} — click to view details`}
+                        className="w-full text-left text-white rounded px-1.5 py-1 text-xs sm:text-sm font-medium leading-tight truncate block hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-white transition-opacity min-h-[28px] sm:min-h-[32px] flex items-center"
                         style={{ backgroundColor: event.color }}
                       >
                         {event.guest_name || event.cleaner_name || event.company_name || event.type}
                       </button>
                     ))}
                     {dayEvents.length > 3 && (
-                      <span className="text-[10px] text-gray-400 pl-1">+{dayEvents.length - 3} more</span>
-                    )}
+                      <span className="text-xs text-gray-400 pl-1">+{dayEvents.length - 3} more</span>
+                      )}
                   </div>
                 </div>
               );
