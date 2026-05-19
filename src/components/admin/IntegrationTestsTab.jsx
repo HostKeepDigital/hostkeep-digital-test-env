@@ -26,14 +26,20 @@ function buildClaudePrompt(failedTests) {
   return lines.join("\n");
 }
 
-const callFn = async (name, body = {}) => {
-  const res = await fetch(`/functions/${name}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const data = await res.json();
-  return { status: res.status, data };
+const callFn = async (name, body = {}, retries = 3) => {
+  for (let attempt = 0; attempt < retries; attempt++) {
+    const res = await fetch(`/functions/${name}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (res.status === 429 && attempt < retries - 1) {
+      await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
+      continue;
+    }
+    const data = await res.json();
+    return { status: res.status, data };
+  }
 };
 
 const TESTS = [
@@ -1906,6 +1912,7 @@ export default function IntegrationTestsTab({ sessionToken }) {
     const groupTests = TESTS.filter(t => t.group === group);
     for (const test of groupTests) {
       await runTest(test);
+      await new Promise(r => setTimeout(r, 300));
     }
     setRunningGroup(null);
   };
@@ -1913,6 +1920,7 @@ export default function IntegrationTestsTab({ sessionToken }) {
   const runAll = async () => {
     for (const test of TESTS) {
       await runTest(test);
+      await new Promise(r => setTimeout(r, 300));
     }
   };
 
