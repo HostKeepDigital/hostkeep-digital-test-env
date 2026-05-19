@@ -73,15 +73,21 @@ export default function NotificationBell() {
 
     load();
 
-     const interval = setInterval(async () => {
-      if (!sessionToken) return;
-      try {
-        const data = await callFn("getNotifications", { session_token: sessionToken });
-        setNotifications(data.notifications || []);
-      } catch (_) {}
-    }, 30000);
+    const interval = setInterval(load, 10000);
 
-    return () => clearInterval(interval);
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") load();
+    };
+    const handleFocus = () => load();
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("focus", handleFocus);
+    };
   }, [user?.id, sessionToken]);
 
   // Close on outside click
