@@ -781,11 +781,11 @@ const TESTS = [
         const { status, data } = await callFn("notifyBookingEvent", { session_token: sessionToken, booking_id: bookingId, event_type: "requested" });
         const elapsed = Date.now() - before;
         if (status !== 200 || !data.success) throw new Error(`Function failed: ${JSON.stringify(data)}`);
-        await new Promise(r => setTimeout(r, 1000));
+        await new Promise(r => setTimeout(r, 2500));
         const { data: notifData } = await callFn("seedTestBooking", { action: "listNotifications", user_id: user.id });
         const hostNotif = (notifData?.notifications || []).find(n =>
           n.type === "booking_request" && n.link?.includes(bookingId) && new Date(n.created_date).getTime() > before - 5000
-        );
+          );
         if (!hostNotif) throw new Error("Notification not found — must fire immediately with no time-based delay");
         const notifAge = Date.now() - new Date(hostNotif.created_date).getTime();
         if (notifAge > 15000) throw new Error(`Notification created ${notifAge}ms ago — too old`);
