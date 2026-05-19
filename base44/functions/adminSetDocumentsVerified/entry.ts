@@ -63,17 +63,23 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: "missing_user_id" }, { status: 400 });
     }
 
-    // Update User.documents_verified — never FoundingMember
-    await base44.asServiceRole.entities.User.update(user_id, { documents_verified: !!documents_verified });
-
-    // Get user email for notifications via UserCredentials
+    // Get user email via UserCredentials then User by email — never User.update(user_id) directly
     const creds = await base44.asServiceRole.entities.UserCredentials.filter({ user_id });
     const userEmail = creds?.[0]?.email || null;
+    if (!userEmail) {
+      return Response.json({ success: false, error: "User not found" }, { status: 404 });
+    }
+
+    const users = await base44.asServiceRole.entities.User.filter({ email: userEmail });
+    const user = users?.[0];
+    if (!user) {
+      return Response.json({ success: false, error: "User not found" }, { status: 404 });
+    }
+
+    // Update User.documents_verified using the correct internal record id
+    await base44.asServiceRole.entities.User.update(user.id, { documents_verified: !!documents_verified });
 
     if (documents_verified) {
-      // Read gate state from User to determine notification content
-      const users = await base44.asServiceRole.entities.User.filter({ email: userEmail });
-      const user = users?.[0];
       const stripeVerified = user?.stripe_verified || false;
       const subscriptionActive = user?.subscription_active || false;
 
