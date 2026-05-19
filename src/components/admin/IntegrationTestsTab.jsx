@@ -1314,7 +1314,7 @@ const TESTS = [
       const userId = credData?.record?.user_id;
       if (!userId) throw new Error("Failed to resolve user_id from UserCredentials");
       try {
-        const { data } = await callFn("adminSetDocumentsVerified", { session_token: sessionToken, user_id: userId, documents_verified: true });
+        const { data } = await callFn("adminSetDocumentsVerified", { session_token: sessionToken, user_id: userId, email: testEmail, documents_verified: true });
         if (!data.success) throw new Error(`Function failed: ${JSON.stringify(data)}`);
         const { data: readData } = await callFn("seedTestBooking", { action: "readUser", id: userId });
         if (readData.user?.documents_verified !== true) throw new Error(`documents_verified not true on User — got: ${readData.user?.documents_verified}`);
@@ -1343,7 +1343,7 @@ const TESTS = [
       const userId = credData?.record?.user_id;
       if (!userId) throw new Error("Failed to resolve user_id from UserCredentials");
       try {
-        await callFn("adminSetDocumentsVerified", { session_token: sessionToken, user_id: userId, documents_verified: true });
+        await callFn("adminSetDocumentsVerified", { session_token: sessionToken, user_id: userId, email: testEmail, documents_verified: true });
         const { data: fmData } = await callFn("seedTestBooking", { action: "readFoundingMember", user_id: userId });
         if (fmData.record !== null) throw new Error(`FoundingMember record found — violates project rule that gate flags must never be stored on FoundingMember`);
         return `Passed — no FoundingMember written to`;
@@ -1371,7 +1371,7 @@ const TESTS = [
       const userId = credData?.record?.user_id;
       if (!userId) throw new Error("Failed to resolve user_id from UserCredentials");
       try {
-        const { data } = await callFn("adminSetDocumentsVerified", { session_token: sessionToken, user_id: userId, documents_verified: true });
+        const { data } = await callFn("adminSetDocumentsVerified", { session_token: sessionToken, user_id: userId, email: testEmail, documents_verified: true });
         if (!data.success) throw new Error(`Function failed: ${JSON.stringify(data)}`);
         await new Promise(r => setTimeout(r, 1000));
         const { data: notifData } = await callFn("seedTestBooking", { action: "listNotifications", user_id: userId });
@@ -1436,7 +1436,7 @@ const TESTS = [
       const userId = credData?.record?.user_id;
       if (!userId) throw new Error("Failed to resolve user_id");
       try {
-        await callFn("adminSetDocumentsVerified", { session_token: sessionToken, user_id: userId, documents_verified: true });
+        await callFn("adminSetDocumentsVerified", { session_token: sessionToken, user_id: userId, email: testEmail, documents_verified: true });
         await new Promise(r => setTimeout(r, 1000));
         const { data: notifData } = await callFn("seedTestBooking", { action: "listNotifications", user_id: userId });
         const notif = (notifData?.notifications || []).find(n => n.title?.toLowerCase().includes("document") || n.title?.toLowerCase().includes("verified"));
@@ -1470,7 +1470,7 @@ const TESTS = [
       if (!userId) throw new Error("Failed to resolve user_id");
       await callFn("seedTestBooking", { action: "updateUser", id: userId, updates: { stripe_verified: true, subscription_active: false } });
       try {
-        await callFn("adminSetDocumentsVerified", { session_token: sessionToken, user_id: userId, documents_verified: true });
+        await callFn("adminSetDocumentsVerified", { session_token: sessionToken, user_id: userId, email: testEmail, documents_verified: true });
         await new Promise(r => setTimeout(r, 1000));
         const { data: notifData } = await callFn("seedTestBooking", { action: "listNotifications", user_id: userId });
         const notif = (notifData?.notifications || []).find(n => n.title?.toLowerCase().includes("document") || n.title?.toLowerCase().includes("verified"));
@@ -1504,7 +1504,7 @@ const TESTS = [
       if (!userId) throw new Error("Failed to resolve user_id");
       await callFn("seedTestBooking", { action: "updateUser", id: userId, updates: { stripe_verified: false, subscription_active: true } });
       try {
-        await callFn("adminSetDocumentsVerified", { session_token: sessionToken, user_id: userId, documents_verified: true });
+        await callFn("adminSetDocumentsVerified", { session_token: sessionToken, user_id: userId, email: testEmail, documents_verified: true });
         await new Promise(r => setTimeout(r, 1000));
         const { data: notifData } = await callFn("seedTestBooking", { action: "listNotifications", user_id: userId });
         const notif = (notifData?.notifications || []).find(n => n.title?.toLowerCase().includes("document") || n.title?.toLowerCase().includes("verified"));
@@ -1538,7 +1538,7 @@ const TESTS = [
       if (!userId) throw new Error("Failed to resolve user_id");
       await callFn("seedTestBooking", { action: "updateUser", id: userId, updates: { stripe_verified: true, subscription_active: true } });
       try {
-        const { data } = await callFn("adminSetDocumentsVerified", { session_token: sessionToken, user_id: userId, documents_verified: true });
+        await callFn("adminSetDocumentsVerified", { session_token: sessionToken, user_id: userId, email: testEmail, documents_verified: true });
         if (!data.success) throw new Error(`Function failed: ${JSON.stringify(data)}`);
         await new Promise(r => setTimeout(r, 1500));
         const { data: notifData } = await callFn("seedTestBooking", { action: "listNotifications", user_id: userId });
