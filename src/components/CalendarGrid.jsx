@@ -37,7 +37,8 @@ export default function CalendarGrid({ events, monthStart, monthEnd, onEventClic
       <div className="grid grid-cols-7 border-b border-gray-200 bg-gray-50">
         {DAY_HEADERS.map((d) => (
           <div key={d} className="py-2 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide">
-            {d}
+            <span className="hidden sm:inline">{d}</span>
+            <span className="sm:hidden">{d.charAt(0)}</span>
           </div>
         ))}
       </div>
@@ -56,7 +57,7 @@ export default function CalendarGrid({ events, monthStart, monthEnd, onEventClic
                 <div
                   key={dayKey}
                   data-day={dayKey}
-                  className={`min-h-[80px] p-1.5 ${!inMonth ? "bg-gray-50" : "bg-white"}`}
+                  className={`min-h-[80px] sm:min-h-[100px] p-1 sm:p-1.5 ${!inMonth ? "bg-gray-50" : "bg-white"}`}
                 >
                   {/* Date number */}
                   <div className="flex justify-end mb-1">
