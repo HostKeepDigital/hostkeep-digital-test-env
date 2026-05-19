@@ -41,8 +41,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { session_token, user_id, documents_verified, rejection_reason, rejection_notes } = body;
-
+    const { session_token, user_id, email: emailParam, documents_verified, rejection_reason, rejection_notes } = body;
     // Auth — session required
     if (!session_token) {
       return Response.json({ success: false, error: "Unauthorized" }, { status: 401 });
@@ -63,11 +62,10 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: "missing_user_id" }, { status: 400 });
     }
 
-    // Get user email via UserCredentials then User by email — never User.update(user_id) directly
-    const creds = await base44.asServiceRole.entities.UserCredentials.filter({ user_id });
-    const userEmail = creds?.[0]?.email || null;
+    // Get User by email — email must be passed by caller (admin panel knows the user's email)
+    const userEmail = emailParam?.toLowerCase().trim() || null;
     if (!userEmail) {
-      return Response.json({ success: false, error: "User not found" }, { status: 404 });
+      return Response.json({ success: false, error: "email_required" }, { status: 400 });
     }
 
     const users = await base44.asServiceRole.entities.User.filter({ email: userEmail });
@@ -76,9 +74,8 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: "User not found" }, { status: 404 });
     }
 
-    // Update User.documents_verified using the correct internal record id
+    // Update User.documents_verified using the internal record id from the filter result
     await base44.asServiceRole.entities.User.update(user.id, { documents_verified: !!documents_verified });
-
     if (documents_verified) {
       const stripeVerified = user?.stripe_verified || false;
       const subscriptionActive = user?.subscription_active || false;
