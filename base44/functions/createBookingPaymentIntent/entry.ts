@@ -29,14 +29,16 @@ Deno.serve(async (req) => {
     }
 
     // Load booking and verify guest
-    const booking = await base44.entities.Booking.get(booking_id);
+    const bookings = await base44.entities.Booking.filter({ id: booking_id });
+    const booking = bookings?.[0];
     if (!booking || booking.guest_id !== user.id) {
       return Response.json({ error: 'Booking not found or unauthorized' }, { status: 404 });
     }
 
-    // Load host user and check Stripe Connect
-    const host = await base44.asServiceRole.entities.User.get(booking.host_id);
-    if (!host?.stripe_connect_account_id) {
+    // Load host UserRole and check Stripe Connect
+    const hostRoles = await base44.asServiceRole.entities.UserRole.filter({ user_id: booking.host_id, role: 'host' });
+    const hostRole = hostRoles?.[0];
+    if (!hostRole?.stripe_connect_account_id || hostRole?.stripe_connect_status !== 'verified') {
       return Response.json(
         { error: 'Host has not connected their bank account' },
         { status: 400 }
