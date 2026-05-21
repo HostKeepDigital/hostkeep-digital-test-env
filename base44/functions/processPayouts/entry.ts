@@ -130,6 +130,7 @@ Deno.serve(async (req) => {
           // Bell notification to host — always fires after cancellation
           try {
             await base44.functions.invoke('sendNotification', {
+              service_key: Deno.env.get('LOCK_ACCESS_TOKEN'),
               user_id: booking.host_id,
               type: 'booking_cancelled',
               title: 'Booking Cancelled — Non-Payment',
