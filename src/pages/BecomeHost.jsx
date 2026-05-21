@@ -66,10 +66,10 @@ export default function BecomeHost() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 to-blue-50 py-12 px-4">
+    <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
-          <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-teal-100 dark:bg-teal-900/40 rounded-full flex items-center justify-center mx-auto mb-4">
             <Building2 className="w-8 h-8 text-teal-600" />
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
@@ -85,7 +85,7 @@ export default function BecomeHost() {
             <Card key={idx}>
               <CardContent className="pt-6">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 bg-teal-100 dark:bg-teal-900/40 rounded-lg flex items-center justify-center flex-shrink-0">
                     <benefit.icon className="w-6 h-6 text-teal-600" />
                   </div>
                   <div>
@@ -113,7 +113,7 @@ export default function BecomeHost() {
             <Button
               onClick={handleUpgrade}
               size="lg"
-              className="bg-teal-600 hover:bg-teal-700"
+              className="bg-teal-600 hover:bg-teal-700 text-white"
             >
               Apply as a Founding Host
             </Button>
