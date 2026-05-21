@@ -110,25 +110,29 @@ Deno.serve(async (req) => {
   const firstName = (name || full_name || '').split(' ')[0] || 'there';
   const isGuest = type === 'guest';
 
-  await sendResendEmail(
-    email.toLowerCase().trim(),
-    "Your HostKeep Verification Code",
-    buildEmail({
-      heading: "Verify your email address",
-      body: `
-        <p>Hi ${firstName},</p>
-        <p>${isGuest
-          ? 'Thank you for creating your HostKeep account.'
-          : 'Thank you for applying to join HostKeep as a Founding Member.'
-        }</p>
-        <p>Please use the verification code below to confirm your email address. This code expires in <strong>10 minutes</strong>.</p>
-        <div style="margin:28px 0;text-align:center;">
-          <span style="display:inline-block;background-color:#f0fdf4;border:2px solid #0d9488;border-radius:10px;padding:16px 40px;font-size:32px;font-weight:bold;color:#0d9488;letter-spacing:8px;">${code}</span>
-        </div>
-        <p style="color:#6b7280;font-size:13px;">If you did not request this, please ignore this email.</p>
-      `,
-    })
-  );
+  try {
+    await sendResendEmail(
+      email.toLowerCase().trim(),
+      "Your HostKeep Verification Code",
+      buildEmail({
+        heading: "Verify your email address",
+        body: `
+          <p>Hi ${firstName},</p>
+          <p>${isGuest
+            ? 'Thank you for creating your HostKeep account.'
+            : 'Thank you for applying to join HostKeep as a Founding Member.'
+          }</p>
+          <p>Please use the verification code below to confirm your email address. This code expires in <strong>10 minutes</strong>.</p>
+          <div style="margin:28px 0;text-align:center;">
+            <span style="display:inline-block;background-color:#f0fdf4;border:2px solid #0d9488;border-radius:10px;padding:16px 40px;font-size:32px;font-weight:bold;color:#0d9488;letter-spacing:8px;">${code}</span>
+          </div>
+          <p style="color:#6b7280;font-size:13px;">If you did not request this, please ignore this email.</p>
+        `,
+      })
+    );
+  } catch (emailErr) {
+    console.error("Verification email failed to send — code still valid:", emailErr);
+  }
 
   return Response.json({ success: true });
 });
