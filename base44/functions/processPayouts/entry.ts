@@ -118,53 +118,6 @@ Deno.serve(async (req) => {
           const hostStripeAccountId = hostRoles?.[0]?.stripe_connect_account_id;
           const isSuperStrict = booking.cancellation_policy_snapshot?.type === 'super_strict';
 
-          if (isSuperStrict) {
-            // 50% to host, 50% to guest
-            await stripe.refunds.create({
-              payment_intent: booking.stripe_deposit_intent_id,
-              amount: Math.round((booking.deposit_amount * 0.5) * 100),
-            });
-
-            await stripe.transfers.create({
-              amount: Math.round((booking.deposit_amount * 0.5) * 100),
-              currency: 'gbp',
-              destination: hostStripeAccountId,
-            });
-
-            const guestRefund = (booking.deposit_amount * 0.5).toFixed(2);
-            const hostAmount = (booking.deposit_amount * 0.5).toFixed(2);
-
-            await base44.functions.invoke('sendEmail', {
-              to: booking.guest_email,
-              subject: 'Booking Cancelled - Non-Payment',
-              body: `Your booking has been cancelled due to non-payment. As per the Super Strict cancellation policy, 50% of your deposit (£${hostAmount}) has been retained by the host. The remaining 50% (£${guestRefund}) has been returned to you.`,
-            });
-
-            await base44.functions.invoke('sendEmail', {
-              to: hostEmail,
-              subject: 'Booking Cancelled - Non-Payment',
-              body: `${booking.guest_name}'s booking has been automatically cancelled due to non-payment. £${hostAmount} (50% of the deposit) has been transferred to your account.`,
-            });
-          } else {
-            // Full refund to guest
-            await stripe.refunds.create({
-              payment_intent: booking.stripe_deposit_intent_id,
-              amount: Math.round(booking.deposit_amount * 100),
-            });
-
-            await base44.functions.invoke('sendEmail', {
-              to: booking.guest_email,
-              subject: 'Booking Cancelled - Non-Payment',
-              body: `Your booking has been cancelled due to non-payment. Your deposit of £${booking.deposit_amount.toFixed(2)} has been returned to you in full.`,
-            });
-
-            await base44.functions.invoke('sendEmail', {
-              to: hostEmail,
-              subject: 'Booking Cancelled - Non-Payment',
-              body: `${booking.guest_name}'s booking has been automatically cancelled due to non-payment. The guest's deposit has been returned to them in full.`,
-            });
-          }
-
           // Write cancellation state first — before any Stripe calls
           await base44.asServiceRole.entities.Booking.update(booking.id, {
             booking_status: 'cancelled',
@@ -174,13 +127,60 @@ Deno.serve(async (req) => {
 
           results.job2_cancelled++;
 
-          // Stripe refund/transfer best-effort after state is written
-          if (booking.stripe_deposit_intent_id) {
-            try {
-              await stripe.paymentIntents.cancel(booking.stripe_deposit_intent_id);
-            } catch (_) {
-              // Ignore if already cancelled
+          // Stripe and email best-effort after state is written
+          try {
+            if (isSuperStrict) {
+              await stripe.refunds.create({
+                payment_intent: booking.stripe_deposit_intent_id,
+                amount: Math.round((booking.deposit_amount * 0.5) * 100),
+              });
+
+              await stripe.transfers.create({
+                amount: Math.round((booking.deposit_amount * 0.5) * 100),
+                currency: 'gbp',
+                destination: hostStripeAccountId,
+              });
+
+              const guestRefund = (booking.deposit_amount * 0.5).toFixed(2);
+              const hostAmount = (booking.deposit_amount * 0.5).toFixed(2);
+
+              await base44.functions.invoke('sendEmail', {
+                to: booking.guest_email,
+                subject: 'Booking Cancelled - Non-Payment',
+                body: `Your booking has been cancelled due to non-payment. As per the Super Strict cancellation policy, 50% of your deposit (£${hostAmount}) has been retained by the host. The remaining 50% (£${guestRefund}) has been returned to you.`,
+              });
+
+              await base44.functions.invoke('sendEmail', {
+                to: hostEmail,
+                subject: 'Booking Cancelled - Non-Payment',
+                body: `${booking.guest_name}'s booking (${booking.booking_reference || booking.id}) has been automatically cancelled due to non-payment. £${hostAmount} (50% of the deposit) has been transferred to your account.`,
+              });
+            } else {
+              await stripe.refunds.create({
+                payment_intent: booking.stripe_deposit_intent_id,
+                amount: Math.round(booking.deposit_amount * 100),
+              });
+
+              await base44.functions.invoke('sendEmail', {
+                to: booking.guest_email,
+                subject: 'Booking Cancelled - Non-Payment',
+                body: `Your booking has been cancelled due to non-payment. Your deposit of £${booking.deposit_amount.toFixed(2)} has been returned to you in full.`,
+              });
+
+              await base44.functions.invoke('sendEmail', {
+                to: hostEmail,
+                subject: 'Booking Cancelled - Non-Payment',
+                body: `${booking.guest_name}'s booking (${booking.booking_reference || booking.id}) has been automatically cancelled due to non-payment. The guest's deposit has been returned to them in full.`,
+              });
             }
+
+            if (booking.stripe_deposit_intent_id) {
+              try {
+                await stripe.paymentIntents.cancel(booking.stripe_deposit_intent_id);
+              } catch (_) {}
+            }
+          } catch (stripeErr) {
+            results.errors.push(`Job 2 - Stripe/email for booking ${booking.id}: ${stripeErr.message}`);
           }
         }
       } catch (err) {
