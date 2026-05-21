@@ -127,6 +127,17 @@ Deno.serve(async (req) => {
 
           results.job2_cancelled++;
 
+          // Bell notification to host — always fires after cancellation
+          try {
+            await base44.functions.invoke('sendNotification', {
+              user_id: booking.host_id,
+              type: 'booking_cancelled',
+              title: 'Booking Cancelled — Non-Payment',
+              body: `${booking.guest_name}'s booking (${booking.booking_reference || booking.id}) has been automatically cancelled due to non-payment. Check-in: ${booking.check_in}.`,
+              link: `/HostBookings?booking=${booking.id}`,
+            });
+          } catch (_) {}
+
           // Stripe and email best-effort after state is written
           try {
             if (isSuperStrict) {
