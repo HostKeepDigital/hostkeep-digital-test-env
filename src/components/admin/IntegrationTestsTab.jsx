@@ -2318,6 +2318,446 @@ const TESTS = [
       return `Passed — booking_status set to cancelled immediately, dates released for rebooking`;
     },
   },
+
+  // ── createBookingPaymentIntent ─────────────────────────────────────────
+  {
+    id: "cbpi_smoke_no_session",
+    group: "createBookingPaymentIntent",
+    label: "Smoke — rejects request with no session token",
+    claudeHint: "Check base44/functions/createBookingPaymentIntent/entry.ts — missing session_token must return 401.",
+    run: async () => {
+      const { status } = await callFn("createBookingPaymentIntent", { booking_id: "test" });
+      if (status !== 401) throw new Error(`Expected 401, got ${status}`);
+      return `Passed — correctly returned 401 with no session`;
+    },
+  },
+  {
+    id: "cbpi_smoke_no_booking_id",
+    group: "createBookingPaymentIntent",
+    label: "Smoke — rejects request with no booking_id",
+    claudeHint: "Check base44/functions/createBookingPaymentIntent/entry.ts — missing booking_id must return 400.",
+    run: async (sessionToken) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      const { status, data } = await callFn("createBookingPaymentIntent", { session_token: sessionToken });
+      if (status !== 400) throw new Error(`Expected 400, got ${status}: ${JSON.stringify(data)}`);
+      return `Passed — correctly returned 400 with no booking_id`;
+    },
+  },
+  {
+    id: "cbpi_smoke_returns_secrets",
+    group: "createBookingPaymentIntent",
+    label: "Smoke — returns rental_client_secret in response shape",
+    claudeHint: "Check base44/functions/createBookingPaymentIntent/entry.ts — successful response must contain rental_client_secret.",
+    run: async (sessionToken) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      const { data } = await callFn("createBookingPaymentIntent", {
+        session_token: sessionToken,
+        booking_id: "nonexistent_booking_test_id",
+      });
+      if (typeof data.rental_client_secret === "undefined" && !data.error)
+        throw new Error(`Response missing rental_client_secret and no error returned: ${JSON.stringify(data)}`);
+      return `Passed — response shape correct (error or secret present)`;
+    },
+  },
+  {
+    id: "cbpi_func_no_booking_get",
+    group: "createBookingPaymentIntent",
+    label: "Functional — does not use Booking.get() — uses filter() instead",
+    claudeHint: "Check base44/functions/createBookingPaymentIntent/entry.ts — Booking.get() is forbidden. Must use Booking.filter({ id: booking_id })[0] instead. If Booking.get() is present the function will 404.",
+    run: async (sessionToken, user) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      if (!user?.id) throw new Error("No user ID");
+      const { data: created } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: user.id,
+          guest_id: user.id,
+          guest_name: "CBPI Filter Test",
+          guest_email: "regression@hostkeepdigital-test.invalid",
+          property_id: "regression-test-property-id",
+          check_in: new Date(Date.now() + 70 * 86400000).toISOString().split("T")[0],
+          check_out: new Date(Date.now() + 77 * 86400000).toISOString().split("T")[0],
+          booking_status: "awaiting_payment",
+          total_amount: 500,
+          deposit_amount: 100,
+          remaining_balance: 400,
+          security_deposit: 200,
+          subtotal: 450,
+          cleaning_fee: 50,
+        },
+      });
+      const bookingId = created?.id;
+      if (!bookingId) throw new Error(`seedTestBooking failed: ${JSON.stringify(created)}`);
+      try {
+        const { status, data } = await callFn("createBookingPaymentIntent", {
+          session_token: sessionToken,
+          booking_id: bookingId,
+        });
+        if (status === 500 && data?.error?.includes("get is not a function"))
+          throw new Error(`Booking.get() called — forbidden pattern detected`);
+        if (status === 404 && data?.error?.includes("not found"))
+          throw new Error(`Booking.get() returned 404 — must use Booking.filter() instead`);
+        return `Passed — function reached booking without using Booking.get()`;
+      } finally {
+        await callFn("seedTestBooking", { action: "delete", id: bookingId });
+      }
+    },
+  },
+  {
+    id: "cbpi_func_no_user_get",
+    group: "createBookingPaymentIntent",
+    label: "Functional — does not use User.get() for host lookup — uses UserRole instead",
+    claudeHint: "Check base44/functions/createBookingPaymentIntent/entry.ts — User.get() is forbidden. Host Stripe Connect check must use UserRole.filter({ user_id: host_id, role: 'host' }) and read stripe_connect_account_id from there.",
+    run: async (sessionToken, user) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      if (!user?.id) throw new Error("No user ID");
+      const { data: created } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: "regression-test-no-user-get",
+          guest_id: user.id,
+          guest_name: "CBPI No User Get Test",
+          guest_email: "regression@hostkeepdigital-test.invalid",
+          property_id: "regression-test-property-id",
+          check_in: new Date(Date.now() + 70 * 86400000).toISOString().split("T")[0],
+          check_out: new Date(Date.now() + 77 * 86400000).toISOString().split("T")[0],
+          booking_status: "awaiting_payment",
+          total_amount: 500,
+          deposit_amount: 100,
+          remaining_balance: 400,
+          security_deposit: 200,
+          subtotal: 450,
+          cleaning_fee: 50,
+        },
+      });
+      const bookingId = created?.id;
+      if (!bookingId) throw new Error(`seedTestBooking failed: ${JSON.stringify(created)}`);
+      try {
+        const { status, data } = await callFn("createBookingPaymentIntent", {
+          session_token: sessionToken,
+          booking_id: bookingId,
+        });
+        if (status === 500) throw new Error(`Function crashed with 500 — likely User.get() 404: ${data?.error}`);
+        if (data?.error?.includes("stripe_connect_account_id") && data?.error?.includes("User"))
+          throw new Error(`User.get() used for Stripe check — must use UserRole instead`);
+        return `Passed — function did not crash on unknown host_id, no User.get() 404`;
+      } finally {
+        await callFn("seedTestBooking", { action: "delete", id: bookingId });
+      }
+    },
+  },
+  {
+    id: "cbpi_func_host_no_stripe_blocked",
+    group: "createBookingPaymentIntent",
+    label: "Functional — host without verified Stripe Connect returns 400",
+    claudeHint: "Check base44/functions/createBookingPaymentIntent/entry.ts — if UserRole.stripe_connect_status !== 'verified', must return 400 with error 'Host has not connected their bank account'.",
+    run: async (sessionToken, user) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      if (!user?.id) throw new Error("No user ID");
+      const { data: created } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: "regression-test-no-stripe",
+          guest_id: user.id,
+          guest_name: "CBPI No Stripe Test",
+          guest_email: "regression@hostkeepdigital-test.invalid",
+          property_id: "regression-test-property-id",
+          check_in: new Date(Date.now() + 70 * 86400000).toISOString().split("T")[0],
+          check_out: new Date(Date.now() + 77 * 86400000).toISOString().split("T")[0],
+          booking_status: "awaiting_payment",
+          total_amount: 500,
+          deposit_amount: 100,
+          remaining_balance: 400,
+          security_deposit: 200,
+          subtotal: 450,
+          cleaning_fee: 50,
+        },
+      });
+      const bookingId = created?.id;
+      if (!bookingId) throw new Error(`seedTestBooking failed: ${JSON.stringify(created)}`);
+      try {
+        const { status, data } = await callFn("createBookingPaymentIntent", {
+          session_token: sessionToken,
+          booking_id: bookingId,
+        });
+        if (status !== 400) throw new Error(`Expected 400, got ${status}: ${JSON.stringify(data)}`);
+        return `Passed — host without Stripe Connect correctly blocked with 400`;
+      } finally {
+        await callFn("seedTestBooking", { action: "delete", id: bookingId });
+      }
+    },
+  },
+  {
+    id: "cbpi_func_stripe_customer_saved",
+    group: "createBookingPaymentIntent",
+    label: "Functional — stripe_customer_id written to Booking after intent creation",
+    claudeHint: "Check base44/functions/createBookingPaymentIntent/entry.ts — after creating Stripe customer, stripe_customer_id must be written back to the Booking entity via Booking.update().",
+    run: async (sessionToken, user) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      if (!user?.id) throw new Error("No user ID");
+      const { data: created } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: user.id,
+          guest_id: user.id,
+          guest_name: "CBPI Customer Save Test",
+          guest_email: "regression@hostkeepdigital-test.invalid",
+          property_id: "regression-test-property-id",
+          check_in: new Date(Date.now() + 70 * 86400000).toISOString().split("T")[0],
+          check_out: new Date(Date.now() + 77 * 86400000).toISOString().split("T")[0],
+          booking_status: "awaiting_payment",
+          total_amount: 500,
+          deposit_amount: 100,
+          remaining_balance: 400,
+          security_deposit: 200,
+          subtotal: 450,
+          cleaning_fee: 50,
+        },
+      });
+      const bookingId = created?.id;
+      if (!bookingId) throw new Error(`seedTestBooking failed: ${JSON.stringify(created)}`);
+      try {
+        const { status, data } = await callFn("createBookingPaymentIntent", {
+          session_token: sessionToken,
+          booking_id: bookingId,
+        });
+        if (status !== 200) throw new Error(`Function failed: ${JSON.stringify(data)}`);
+        await new Promise(r => setTimeout(r, 1000));
+        const { data: readBack } = await callFn("seedTestBooking", { action: "read", id: bookingId });
+        if (!readBack?.booking?.stripe_customer_id)
+          throw new Error(`stripe_customer_id not written to Booking after intent creation`);
+        return `Passed — stripe_customer_id written: ${readBack.booking.stripe_customer_id}`;
+      } finally {
+        await callFn("seedTestBooking", { action: "delete", id: bookingId });
+      }
+    },
+  },
+  {
+    id: "cbpi_func_payment_method_saved",
+    group: "createBookingPaymentIntent",
+    label: "Functional — stripe_payment_method_id field exists on Booking entity",
+    claudeHint: "Check Booking entity schema — stripe_payment_method_id must exist as a string field. Without it Job 1 in processPayouts cannot charge the saved card off-session.",
+    run: async (sessionToken, user) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      if (!user?.id) throw new Error("No user ID");
+      const { data: created } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: user.id,
+          guest_id: user.id,
+          guest_name: "CBPI Payment Method Test",
+          guest_email: "regression@hostkeepdigital-test.invalid",
+          property_id: "regression-test-property-id",
+          check_in: new Date(Date.now() + 70 * 86400000).toISOString().split("T")[0],
+          check_out: new Date(Date.now() + 77 * 86400000).toISOString().split("T")[0],
+          booking_status: "awaiting_payment",
+          total_amount: 500,
+          deposit_amount: 100,
+          remaining_balance: 400,
+          stripe_payment_method_id: "pm_test_placeholder",
+        },
+      });
+      const bookingId = created?.id;
+      if (!bookingId) throw new Error(`seedTestBooking failed — stripe_payment_method_id field may not exist on Booking entity: ${JSON.stringify(created)}`);
+      try {
+        const { data: readBack } = await callFn("seedTestBooking", { action: "read", id: bookingId });
+        if (typeof readBack?.booking?.stripe_payment_method_id === "undefined")
+          throw new Error(`stripe_payment_method_id field does not exist on Booking entity — add it to the schema`);
+        return `Passed — stripe_payment_method_id field exists on Booking entity`;
+      } finally {
+        await callFn("seedTestBooking", { action: "delete", id: bookingId });
+      }
+    },
+  },
+  {
+    id: "cbpi_func_56_day_deposit_only",
+    group: "createBookingPaymentIntent",
+    label: "Functional — booking more than 56 days out charges deposit only and sets balance_payment_status to pending",
+    claudeHint: "Check base44/functions/createBookingPaymentIntent/entry.ts — daysUntilCheckIn > 56 must set chargeAmount to deposit_amount and balance_payment_status to 'pending'.",
+    run: async (sessionToken, user) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      if (!user?.id) throw new Error("No user ID");
+      const { data: created } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: user.id,
+          guest_id: user.id,
+          guest_name: "CBPI 56 Day Test",
+          guest_email: "regression@hostkeepdigital-test.invalid",
+          property_id: "regression-test-property-id",
+          check_in: new Date(Date.now() + 70 * 86400000).toISOString().split("T")[0],
+          check_out: new Date(Date.now() + 77 * 86400000).toISOString().split("T")[0],
+          booking_status: "awaiting_payment",
+          total_amount: 500,
+          deposit_amount: 100,
+          remaining_balance: 400,
+          security_deposit: 0,
+          subtotal: 450,
+          cleaning_fee: 50,
+        },
+      });
+      const bookingId = created?.id;
+      if (!bookingId) throw new Error(`seedTestBooking failed: ${JSON.stringify(created)}`);
+      try {
+        const { status, data } = await callFn("createBookingPaymentIntent", {
+          session_token: sessionToken,
+          booking_id: bookingId,
+        });
+        if (status !== 200) throw new Error(`Function failed: ${JSON.stringify(data)}`);
+        await new Promise(r => setTimeout(r, 1000));
+        const { data: readBack } = await callFn("seedTestBooking", { action: "read", id: bookingId });
+        if (readBack?.booking?.balance_payment_status !== "pending")
+          throw new Error(`Expected balance_payment_status 'pending', got '${readBack?.booking?.balance_payment_status}'`);
+        if (!readBack?.booking?.balance_due_date)
+          throw new Error(`balance_due_date not written to Booking`);
+        return `Passed — deposit only charged, balance_payment_status: pending, balance_due_date set`;
+      } finally {
+        await callFn("seedTestBooking", { action: "delete", id: bookingId });
+      }
+    },
+  },
+  {
+    id: "cbpi_func_within_56_days_full_charge",
+    group: "createBookingPaymentIntent",
+    label: "Functional — booking within 56 days charges full amount and sets balance_payment_status to not_applicable",
+    claudeHint: "Check base44/functions/createBookingPaymentIntent/entry.ts — daysUntilCheckIn <= 56 must set chargeAmount to total_amount and balance_payment_status to 'not_applicable'.",
+    run: async (sessionToken, user) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      if (!user?.id) throw new Error("No user ID");
+      const { data: created } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: user.id,
+          guest_id: user.id,
+          guest_name: "CBPI Within 56 Day Test",
+          guest_email: "regression@hostkeepdigital-test.invalid",
+          property_id: "regression-test-property-id",
+          check_in: new Date(Date.now() + 30 * 86400000).toISOString().split("T")[0],
+          check_out: new Date(Date.now() + 37 * 86400000).toISOString().split("T")[0],
+          booking_status: "awaiting_payment",
+          total_amount: 500,
+          deposit_amount: 100,
+          remaining_balance: 400,
+          security_deposit: 0,
+          subtotal: 450,
+          cleaning_fee: 50,
+        },
+      });
+      const bookingId = created?.id;
+      if (!bookingId) throw new Error(`seedTestBooking failed: ${JSON.stringify(created)}`);
+      try {
+        const { status, data } = await callFn("createBookingPaymentIntent", {
+          session_token: sessionToken,
+          booking_id: bookingId,
+        });
+        if (status !== 200) throw new Error(`Function failed: ${JSON.stringify(data)}`);
+        await new Promise(r => setTimeout(r, 1000));
+        const { data: readBack } = await callFn("seedTestBooking", { action: "read", id: bookingId });
+        if (readBack?.booking?.balance_payment_status !== "not_applicable")
+          throw new Error(`Expected balance_payment_status 'not_applicable', got '${readBack?.booking?.balance_payment_status}'`);
+        return `Passed — full amount charged, balance_payment_status: not_applicable`;
+      } finally {
+        await callFn("seedTestBooking", { action: "delete", id: bookingId });
+      }
+    },
+  },
+  {
+    id: "cbpi_biz_minimum_charge",
+    group: "createBookingPaymentIntent",
+    label: "Business — booking with no deposit set uses minimum £1 charge and still saves stripe_customer_id",
+    claudeHint: "Check base44/functions/createBookingPaymentIntent/entry.ts — if deposit_amount is 0 or absent, chargeAmount must be at least 100 (£1 in pence) to save the card. stripe_customer_id must still be written to Booking.",
+    run: async (sessionToken, user) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      if (!user?.id) throw new Error("No user ID");
+      const { data: created } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: user.id,
+          guest_id: user.id,
+          guest_name: "CBPI Min Charge Test",
+          guest_email: "regression@hostkeepdigital-test.invalid",
+          property_id: "regression-test-property-id",
+          check_in: new Date(Date.now() + 70 * 86400000).toISOString().split("T")[0],
+          check_out: new Date(Date.now() + 77 * 86400000).toISOString().split("T")[0],
+          booking_status: "awaiting_payment",
+          total_amount: 500,
+          deposit_amount: 0,
+          remaining_balance: 500,
+          security_deposit: 0,
+          subtotal: 450,
+          cleaning_fee: 50,
+        },
+      });
+      const bookingId = created?.id;
+      if (!bookingId) throw new Error(`seedTestBooking failed: ${JSON.stringify(created)}`);
+      try {
+        const { status, data } = await callFn("createBookingPaymentIntent", {
+          session_token: sessionToken,
+          booking_id: bookingId,
+        });
+        if (status !== 200) throw new Error(`Function failed with no deposit set: ${JSON.stringify(data)}`);
+        await new Promise(r => setTimeout(r, 1000));
+        const { data: readBack } = await callFn("seedTestBooking", { action: "read", id: bookingId });
+        if (!readBack?.booking?.stripe_customer_id)
+          throw new Error(`stripe_customer_id not saved when deposit_amount is 0`);
+        return `Passed — minimum £1 charge created, stripe_customer_id saved`;
+      } finally {
+        await callFn("seedTestBooking", { action: "delete", id: bookingId });
+      }
+    },
+  },
+  {
+    id: "cbpi_biz_booking_reference_generated",
+    group: "createBookingPaymentIntent",
+    label: "Business — booking_reference in format HKD-[initials]-[DDMMYYYY] written to Booking",
+    claudeHint: "Check base44/functions/createBookingPaymentIntent/entry.ts — booking_reference must be generated from guest_name initials and check_in date and written to Booking entity. Format: HKD-SJM-14072026.",
+    run: async (sessionToken, user) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      if (!user?.id) throw new Error("No user ID");
+      const checkIn = new Date(Date.now() + 70 * 86400000).toISOString().split("T")[0];
+      const { data: created } = await callFn("seedTestBooking", {
+        action: "create",
+        booking: {
+          host_id: user.id,
+          guest_id: user.id,
+          guest_name: "Sarah Jane Mitchell",
+          guest_email: "regression@hostkeepdigital-test.invalid",
+          property_id: "regression-test-property-id",
+          check_in: checkIn,
+          check_out: new Date(Date.now() + 77 * 86400000).toISOString().split("T")[0],
+          booking_status: "awaiting_payment",
+          total_amount: 500,
+          deposit_amount: 100,
+          remaining_balance: 400,
+          security_deposit: 0,
+          subtotal: 450,
+          cleaning_fee: 50,
+        },
+      });
+      const bookingId = created?.id;
+      if (!bookingId) throw new Error(`seedTestBooking failed: ${JSON.stringify(created)}`);
+      try {
+        const { status, data } = await callFn("createBookingPaymentIntent", {
+          session_token: sessionToken,
+          booking_id: bookingId,
+        });
+        if (status !== 200) throw new Error(`Function failed: ${JSON.stringify(data)}`);
+        await new Promise(r => setTimeout(r, 1000));
+        const { data: readBack } = await callFn("seedTestBooking", { action: "read", id: bookingId });
+        const ref = readBack?.booking?.booking_reference;
+        if (!ref) throw new Error(`booking_reference not written to Booking entity`);
+        if (!ref.startsWith("HKD-"))
+          throw new Error(`booking_reference format wrong — expected HKD-[initials]-[date], got: ${ref}`);
+        const datePart = checkIn.split("-");
+        const expectedDate = `${datePart[2]}${datePart[1]}${datePart[0]}`;
+        if (!ref.includes("SJM") || !ref.includes(expectedDate))
+          throw new Error(`booking_reference missing initials or date — got: ${ref}`);
+        return `Passed — booking_reference generated correctly: ${ref}`;
+      } finally {
+        await callFn("seedTestBooking", { action: "delete", id: bookingId });
+      }
+    },
+  },
 ];
 
 
