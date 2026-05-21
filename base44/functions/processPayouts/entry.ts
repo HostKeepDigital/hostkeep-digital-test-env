@@ -28,10 +28,6 @@ Deno.serve(async (req) => {
         const balanceDueDate = new Date(booking.balance_due_date);
 
         if (now > balanceDueDate) {
-          // Skip if nothing to charge
-          if (!booking.remaining_balance || booking.remaining_balance <= 0) {
-            continue;
-          }
           // Attempt charge
           try {
             await stripe.paymentIntents.create({
