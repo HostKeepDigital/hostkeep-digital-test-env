@@ -2766,14 +2766,14 @@ const TESTS = [
     label: "Smoke — function returns 200 and success true",
     claudeHint: "Check base44/functions/registerFoundingMember/entry.ts — must return { success: true } for valid in-area request.",
     run: async () => {
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       const { status, data } = await callFn("registerFoundingMember", {
         forename: "Support", middle_name: "", surname: "Test",
         email: "support@hostkeepdigital.co.uk",
         postcode: "TR1 1AA", role: "host",
       });
-      // Cleanup
-      const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
-      if (sr?.data?.id) await callFn("seedTestBooking", { action: "deleteFoundingMember", id: sr.data.id });
+      await new Promise(r => setTimeout(r, 1500));
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       if (status !== 200) throw new Error(`Expected 200, got ${status}`);
       if (!data.success) throw new Error(`Expected success true, got: ${JSON.stringify(data)}`);
       return `Passed — function returned 200 and success: true`;
@@ -2785,16 +2785,17 @@ const TESTS = [
     label: "Functional — stores forename, middle_name, surname not full_name",
     claudeHint: "Check base44/functions/registerFoundingMember/entry.ts and FoundingMember entity schema — must store forename, middle_name, surname as separate fields. full_name must not be used.",
     run: async () => {
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       const { status, data } = await callFn("registerFoundingMember", {
         forename: "Support", middle_name: "Jane", surname: "Test",
         email: "support@hostkeepdigital.co.uk",
         postcode: "TR1 1AA", role: "host",
       });
       if (status !== 200) throw new Error(`Function failed: ${JSON.stringify(data)}`);
+      await new Promise(r => setTimeout(r, 1500));
       const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
       const member = sr?.data;
-      // Cleanup
-      if (member?.id) await callFn("seedTestBooking", { action: "deleteFoundingMember", id: member.id });
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       if (!member) throw new Error(`FoundingMember record not found after creation`);
       if (member.full_name) throw new Error(`full_name field still being used — must use forename/middle_name/surname`);
       if (member.forename !== "Support") throw new Error(`forename wrong: got '${member.forename}'`);
@@ -2809,14 +2810,16 @@ const TESTS = [
     label: "Functional — creates FoundingMember at approval_status interest with email_verified false",
     claudeHint: "Check base44/functions/registerFoundingMember/entry.ts — Cornwall postcode must create record with approval_status: 'interest' and email_verified: false.",
     run: async () => {
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       await callFn("registerFoundingMember", {
         forename: "Support", middle_name: "", surname: "Test",
         email: "support@hostkeepdigital.co.uk",
         postcode: "TR1 1AA", role: "host",
       });
+      await new Promise(r => setTimeout(r, 1500));
       const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
       const member = sr?.data;
-      if (member?.id) await callFn("seedTestBooking", { action: "deleteFoundingMember", id: member.id });
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       if (!member) throw new Error(`FoundingMember not created`);
       if (member.approval_status !== "interest") throw new Error(`Expected 'interest', got '${member.approval_status}'`);
       if (member.email_verified !== false) throw new Error(`email_verified should be false on creation, got: ${member.email_verified}`);
@@ -2829,14 +2832,16 @@ const TESTS = [
     label: "Functional — creates FoundingMember at out_of_area for non-Cornwall postcode",
     claudeHint: "Check base44/functions/registerFoundingMember/entry.ts — non TR/PL/EX postcode must create record with approval_status: 'out_of_area'.",
     run: async () => {
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       await callFn("registerFoundingMember", {
         forename: "Support", middle_name: "", surname: "Test",
         email: "support@hostkeepdigital.co.uk",
         postcode: "SW1A 1AA", role: "host",
       });
+      await new Promise(r => setTimeout(r, 1500));
       const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
       const member = sr?.data;
-      if (member?.id) await callFn("seedTestBooking", { action: "deleteFoundingMember", id: member.id });
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       if (!member) throw new Error(`FoundingMember not created for out of area`);
       if (member.approval_status !== "out_of_area") throw new Error(`Expected 'out_of_area', got '${member.approval_status}'`);
       return `Passed — out_of_area correctly set for non-Cornwall postcode`;
@@ -2848,18 +2853,19 @@ const TESTS = [
     label: "Functional — duplicate email and role returns duplicate_email error",
     claudeHint: "Check base44/functions/registerFoundingMember/entry.ts — same email + role must return { error: 'duplicate_email', status: existing approval_status }.",
     run: async () => {
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       await callFn("registerFoundingMember", {
         forename: "Support", middle_name: "", surname: "Test",
         email: "support@hostkeepdigital.co.uk",
         postcode: "TR1 1AA", role: "host",
       });
+      await new Promise(r => setTimeout(r, 1500));
       const { data } = await callFn("registerFoundingMember", {
         forename: "Support", middle_name: "", surname: "Test",
         email: "support@hostkeepdigital.co.uk",
         postcode: "TR1 1AA", role: "host",
       });
-      const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
-      if (sr?.data?.id) await callFn("seedTestBooking", { action: "deleteFoundingMember", id: sr.data.id });
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       if (data.error !== "duplicate_email") throw new Error(`Expected duplicate_email error, got: ${JSON.stringify(data)}`);
       return `Passed — duplicate correctly detected, status: ${data.status}`;
     },
@@ -2870,14 +2876,16 @@ const TESTS = [
     label: "Business — out of area host gets out_of_area not rejected — can be notified when area opens",
     claudeHint: "Check base44/functions/registerFoundingMember/entry.ts — out_of_area status must never be 'rejected'. The record must exist so admin can notify them when their area launches.",
     run: async () => {
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       await callFn("registerFoundingMember", {
         forename: "Support", middle_name: "", surname: "Test",
         email: "support@hostkeepdigital.co.uk",
         postcode: "SW1A 1AA", role: "host",
       });
+      await new Promise(r => setTimeout(r, 1500));
       const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
       const member = sr?.data;
-      if (member?.id) await callFn("seedTestBooking", { action: "deleteFoundingMember", id: member.id });
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       if (!member) throw new Error(`FoundingMember not created for out of area signup`);
       if (member.approval_status === "rejected") throw new Error(`Out of area must not be set to rejected — must be out_of_area so admin can notify them later`);
       if (member.approval_status !== "out_of_area") throw new Error(`Expected out_of_area, got: ${member.approval_status}`);
@@ -2892,6 +2900,7 @@ const TESTS = [
     label: "Smoke — function returns 200 with valid field always",
     claudeHint: "Check base44/functions/verifyEmailCode/entry.ts — must always return 200 with a valid boolean. Must not crash on missing fields.",
     run: async () => {
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       const { status, data } = await callFn("verifyEmailCode", { email: "support@hostkeepdigital.co.uk", code: "000000" });
       if (status !== 200) throw new Error(`Expected 200, got ${status}`);
       if (typeof data.valid !== "boolean") throw new Error(`Missing valid boolean field in response`);
@@ -2916,18 +2925,20 @@ const TESTS = [
     label: "Functional — invalid code returns valid false and does not advance FoundingMember",
     claudeHint: "Check base44/functions/verifyEmailCode/entry.ts — wrong code must return { valid: false } and FoundingMember must stay at interest.",
     run: async () => {
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       await callFn("registerFoundingMember", {
         forename: "Support", middle_name: "", surname: "Test",
         email: "support@hostkeepdigital.co.uk",
         postcode: "TR1 1AA", role: "host",
       });
+      await new Promise(r => setTimeout(r, 1500));
       await callFn("sendVerificationCode", { email: "support@hostkeepdigital.co.uk", name: "Support", type: "host" });
+      await new Promise(r => setTimeout(r, 1000));
       const { data } = await callFn("verifyEmailCode", { email: "support@hostkeepdigital.co.uk", code: "000000" });
+      await new Promise(r => setTimeout(r, 1000));
       const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
       const member = sr?.data;
-      // Cleanup
-      await callFn("seedTestBooking", { action: "deleteVerificationCodes", email: "support@hostkeepdigital.co.uk" });
-      if (member?.id) await callFn("seedTestBooking", { action: "deleteFoundingMember", id: member.id });
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       if (data.valid !== false) throw new Error(`Expected valid: false for wrong code`);
       if (member?.approval_status !== "interest") throw new Error(`FoundingMember status changed on wrong code — got: ${member?.approval_status}`);
       return `Passed — invalid code rejected, FoundingMember stays at interest`;
@@ -2939,22 +2950,23 @@ const TESTS = [
     label: "Functional — valid code advances FoundingMember from interest to pending and sets email_verified true",
     claudeHint: "Check base44/functions/verifyEmailCode/entry.ts — on valid code, must find FoundingMember by email and set approval_status: 'pending' and email_verified: true. This logic must be in the backend, not the frontend EmailVerificationStep.jsx.",
     run: async () => {
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       await callFn("registerFoundingMember", {
         forename: "Support", middle_name: "", surname: "Test",
         email: "support@hostkeepdigital.co.uk",
         postcode: "TR1 1AA", role: "host",
       });
+      await new Promise(r => setTimeout(r, 1500));
       await callFn("sendVerificationCode", { email: "support@hostkeepdigital.co.uk", name: "Support", type: "host" });
+      await new Promise(r => setTimeout(r, 1000));
       const codeRecord = await callFn("seedTestBooking", { action: "findVerificationCode", email: "support@hostkeepdigital.co.uk" });
       const code = codeRecord?.data?.code;
       if (!code) throw new Error(`Could not read verification code from EmailVerificationCode entity`);
       const { data } = await callFn("verifyEmailCode", { email: "support@hostkeepdigital.co.uk", code });
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise(r => setTimeout(r, 1500));
       const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
       const member = sr?.data;
-      // Cleanup
-      if (member?.id) await callFn("seedTestBooking", { action: "deleteFoundingMember", id: member.id });
-      await callFn("seedTestBooking", { action: "deleteVerificationCodes", email: "support@hostkeepdigital.co.uk" });
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       if (data.valid !== true) throw new Error(`Code verification returned valid: false`);
       if (member?.approval_status !== "pending") throw new Error(`Expected 'pending', got '${member?.approval_status}'`);
       if (member?.email_verified !== true) throw new Error(`email_verified not set to true after verification`);
@@ -2967,20 +2979,22 @@ const TESTS = [
     label: "Functional — used verification code deleted after successful verification",
     claudeHint: "Check base44/functions/verifyEmailCode/entry.ts — EmailVerificationCode record must be deleted after use to prevent reuse.",
     run: async () => {
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       await callFn("registerFoundingMember", {
         forename: "Support", middle_name: "", surname: "Test",
         email: "support@hostkeepdigital.co.uk",
         postcode: "TR1 1AA", role: "host",
       });
+      await new Promise(r => setTimeout(r, 1500));
       await callFn("sendVerificationCode", { email: "support@hostkeepdigital.co.uk", name: "Support", type: "host" });
+      await new Promise(r => setTimeout(r, 1000));
       const codeRecord = await callFn("seedTestBooking", { action: "findVerificationCode", email: "support@hostkeepdigital.co.uk" });
       const code = codeRecord?.data?.code;
       if (!code) throw new Error(`Could not read verification code`);
       await callFn("verifyEmailCode", { email: "support@hostkeepdigital.co.uk", code });
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise(r => setTimeout(r, 1500));
       const afterRecord = await callFn("seedTestBooking", { action: "findVerificationCode", email: "support@hostkeepdigital.co.uk" });
-      const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
-      if (sr?.data?.id) await callFn("seedTestBooking", { action: "deleteFoundingMember", id: sr.data.id });
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       if (afterRecord?.data?.code) throw new Error(`Verification code still exists after use — not deleted`);
       return `Passed — used code correctly deleted`;
     },
@@ -2991,12 +3005,14 @@ const TESTS = [
     label: "Functional — valid code does not crash when no FoundingMember exists for email",
     claudeHint: "Check base44/functions/verifyEmailCode/entry.ts — guest flow has no FoundingMember. Must complete cleanly without crashing.",
     run: async () => {
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       await callFn("sendVerificationCode", { email: "support@hostkeepdigital.co.uk", name: "Support", type: "guest" });
+      await new Promise(r => setTimeout(r, 1000));
       const codeRecord = await callFn("seedTestBooking", { action: "findVerificationCode", email: "support@hostkeepdigital.co.uk" });
       const code = codeRecord?.data?.code;
       if (!code) throw new Error(`Could not read verification code`);
       const { status, data } = await callFn("verifyEmailCode", { email: "support@hostkeepdigital.co.uk", code });
-      await callFn("seedTestBooking", { action: "deleteVerificationCodes", email: "support@hostkeepdigital.co.uk" });
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       if (status === 500) throw new Error(`Function crashed when no FoundingMember exists — 500 returned`);
       if (data.valid !== true) throw new Error(`Expected valid: true, got: ${JSON.stringify(data)}`);
       return `Passed — guest flow completes without crash, valid: true`;
@@ -3008,20 +3024,23 @@ const TESTS = [
     label: "Business — host who verifies email has FoundingMember at pending not interest",
     claudeHint: "Check base44/functions/verifyEmailCode/entry.ts — after verification the admin panel must show this host in Pending, not Interest. approval_status must be 'pending' in the FoundingMember record.",
     run: async () => {
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       await callFn("registerFoundingMember", {
         forename: "Support", middle_name: "", surname: "Test",
         email: "support@hostkeepdigital.co.uk",
         postcode: "TR1 1AA", role: "host",
       });
+      await new Promise(r => setTimeout(r, 1500));
       await callFn("sendVerificationCode", { email: "support@hostkeepdigital.co.uk", name: "Support", type: "host" });
+      await new Promise(r => setTimeout(r, 1000));
       const codeRecord = await callFn("seedTestBooking", { action: "findVerificationCode", email: "support@hostkeepdigital.co.uk" });
       const code = codeRecord?.data?.code;
       if (!code) throw new Error(`Could not read verification code`);
       await callFn("verifyEmailCode", { email: "support@hostkeepdigital.co.uk", code });
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise(r => setTimeout(r, 1500));
       const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
       const member = sr?.data;
-      if (member?.id) await callFn("seedTestBooking", { action: "deleteFoundingMember", id: member.id });
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       if (member?.approval_status !== "pending") throw new Error(`Host not in Pending after email verification — got: ${member?.approval_status}. Admin will not see them in the Pending section.`);
       return `Passed — host correctly appears in Pending after email verification`;
     },
@@ -3034,27 +3053,25 @@ const TESTS = [
     label: "Smoke — function returns 200 with session_token",
     claudeHint: "Check base44/functions/setOnboardingPassword/entry.ts — must return { success: true, session_token } for valid founding member email and password.",
     run: async () => {
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       await callFn("registerFoundingMember", {
         forename: "Support", middle_name: "", surname: "Test",
         email: "support@hostkeepdigital.co.uk",
         postcode: "TR1 1AA", role: "host",
       });
+      await new Promise(r => setTimeout(r, 1500));
       const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
       if (sr?.data?.id) {
         await callFn("seedTestBooking", { action: "updateFoundingMember", id: sr.data.id, updates: { approval_status: "invited" } });
       }
+      await new Promise(r => setTimeout(r, 1000));
       const { status, data } = await callFn("setOnboardingPassword", {
         email: "support@hostkeepdigital.co.uk",
         password: "TestPassword123!",
         forename: "Support", middle_name: "", surname: "Test",
       });
-      // Cleanup
-      await callFn("seedTestBooking", { action: "deleteUserCredentialsByEmail", email: "support@hostkeepdigital.co.uk" });
-      await callFn("seedTestBooking", { action: "deleteUserSession", email: "support@hostkeepdigital.co.uk" });
-      const after = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
-      if (after?.data?.id) await callFn("seedTestBooking", { action: "deleteFoundingMember", id: after.data.id });
-      const userRecord = await callFn("seedTestBooking", { action: "findUser", email: "support@hostkeepdigital.co.uk" });
-      if (userRecord?.data?.id) await callFn("seedTestBooking", { action: "deleteUser", id: userRecord.data.id });
+      await new Promise(r => setTimeout(r, 1500));
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       if (status !== 200) throw new Error(`Expected 200, got ${status}: ${JSON.stringify(data)}`);
       if (!data.session_token) throw new Error(`Missing session_token in response`);
       return `Passed — session_token returned correctly`;
@@ -3066,29 +3083,27 @@ const TESTS = [
     label: "Functional — FoundingMember advances from invited to password_protected",
     claudeHint: "Check base44/functions/setOnboardingPassword/entry.ts — after password set, FoundingMember.approval_status must be 'password_protected'.",
     run: async () => {
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       await callFn("registerFoundingMember", {
         forename: "Support", middle_name: "", surname: "Test",
         email: "support@hostkeepdigital.co.uk",
         postcode: "TR1 1AA", role: "host",
       });
+      await new Promise(r => setTimeout(r, 1500));
       const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
       if (sr?.data?.id) {
         await callFn("seedTestBooking", { action: "updateFoundingMember", id: sr.data.id, updates: { approval_status: "invited" } });
       }
+      await new Promise(r => setTimeout(r, 1000));
       await callFn("setOnboardingPassword", {
         email: "support@hostkeepdigital.co.uk",
         password: "TestPassword123!",
         forename: "Support", middle_name: "", surname: "Test",
       });
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise(r => setTimeout(r, 1500));
       const after = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
       const member = after?.data;
-      // Cleanup
-      await callFn("seedTestBooking", { action: "deleteUserCredentialsByEmail", email: "support@hostkeepdigital.co.uk" });
-      await callFn("seedTestBooking", { action: "deleteUserSession", email: "support@hostkeepdigital.co.uk" });
-      if (member?.id) await callFn("seedTestBooking", { action: "deleteFoundingMember", id: member.id });
-      const userRecord = await callFn("seedTestBooking", { action: "findUser", email: "support@hostkeepdigital.co.uk" });
-      if (userRecord?.data?.id) await callFn("seedTestBooking", { action: "deleteUser", id: userRecord.data.id });
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       if (member?.approval_status !== "password_protected") throw new Error(`Expected 'password_protected', got '${member?.approval_status}'`);
       return `Passed — FoundingMember correctly advanced to password_protected`;
     },
@@ -3099,29 +3114,27 @@ const TESTS = [
     label: "Functional — user_id written to FoundingMember after password set",
     claudeHint: "Check base44/functions/setOnboardingPassword/entry.ts — user_id must be written to FoundingMember so CreateProperty can find the record later via user_id lookup.",
     run: async () => {
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       await callFn("registerFoundingMember", {
         forename: "Support", middle_name: "", surname: "Test",
         email: "support@hostkeepdigital.co.uk",
         postcode: "TR1 1AA", role: "host",
       });
+      await new Promise(r => setTimeout(r, 1500));
       const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
       if (sr?.data?.id) {
         await callFn("seedTestBooking", { action: "updateFoundingMember", id: sr.data.id, updates: { approval_status: "invited" } });
       }
+      await new Promise(r => setTimeout(r, 1000));
       await callFn("setOnboardingPassword", {
         email: "support@hostkeepdigital.co.uk",
         password: "TestPassword123!",
         forename: "Support", middle_name: "", surname: "Test",
       });
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise(r => setTimeout(r, 1500));
       const after = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
       const member = after?.data;
-      // Cleanup
-      await callFn("seedTestBooking", { action: "deleteUserCredentialsByEmail", email: "support@hostkeepdigital.co.uk" });
-      await callFn("seedTestBooking", { action: "deleteUserSession", email: "support@hostkeepdigital.co.uk" });
-      if (member?.id) await callFn("seedTestBooking", { action: "deleteFoundingMember", id: member.id });
-      const userRecord = await callFn("seedTestBooking", { action: "findUser", email: "support@hostkeepdigital.co.uk" });
-      if (userRecord?.data?.id) await callFn("seedTestBooking", { action: "deleteUser", id: userRecord.data.id });
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       if (!member?.user_id) throw new Error(`user_id not written to FoundingMember after password set`);
       return `Passed — user_id written: ${member.user_id}`;
     },
@@ -3132,31 +3145,27 @@ const TESTS = [
     label: "Functional — UserProfile created with forename, middle_name, surname after password set",
     claudeHint: "Check base44/functions/setOnboardingPassword/entry.ts — UserProfile must be created with forename, middle_name, surname so Settings shows correct data immediately after first login.",
     run: async () => {
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       await callFn("registerFoundingMember", {
         forename: "Support", middle_name: "Jane", surname: "Test",
         email: "support@hostkeepdigital.co.uk",
         postcode: "TR1 1AA", role: "host",
       });
+      await new Promise(r => setTimeout(r, 1500));
       const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
       if (sr?.data?.id) {
         await callFn("seedTestBooking", { action: "updateFoundingMember", id: sr.data.id, updates: { approval_status: "invited" } });
       }
+      await new Promise(r => setTimeout(r, 1000));
       await callFn("setOnboardingPassword", {
         email: "support@hostkeepdigital.co.uk",
         password: "TestPassword123!",
         forename: "Support", middle_name: "Jane", surname: "Test",
       });
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise(r => setTimeout(r, 1500));
       const profileRecord = await callFn("seedTestBooking", { action: "findUserProfile", email: "support@hostkeepdigital.co.uk" });
       const profile = profileRecord?.data;
-      // Cleanup
-      await callFn("seedTestBooking", { action: "deleteUserCredentialsByEmail", email: "support@hostkeepdigital.co.uk" });
-      await callFn("seedTestBooking", { action: "deleteUserSession", email: "support@hostkeepdigital.co.uk" });
-      await callFn("seedTestBooking", { action: "deleteUserProfile", email: "support@hostkeepdigital.co.uk" });
-      const after = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
-      if (after?.data?.id) await callFn("seedTestBooking", { action: "deleteFoundingMember", id: after.data.id });
-      const userRecord = await callFn("seedTestBooking", { action: "findUser", email: "support@hostkeepdigital.co.uk" });
-      if (userRecord?.data?.id) await callFn("seedTestBooking", { action: "deleteUser", id: userRecord.data.id });
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       if (!profile) throw new Error(`UserProfile not created after password set`);
       if (profile.forename !== "Support") throw new Error(`forename wrong: ${profile.forename}`);
       if (profile.middle_name !== "Jane") throw new Error(`middle_name wrong: ${profile.middle_name}`);
@@ -3170,7 +3179,7 @@ const TESTS = [
     label: "Functional — existing UserCredentials not duplicated for existing guest applying as host",
     claudeHint: "Check base44/functions/setOnboardingPassword/entry.ts — if UserCredentials already exist for this email, must update not create. Duplicate create throws a constraint error and breaks the flow.",
     run: async () => {
-      // Simulate existing guest credentials
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       await callFn("seedTestBooking", {
         action: "createUserCredentials",
         userCredentials: {
@@ -3183,22 +3192,19 @@ const TESTS = [
         email: "support@hostkeepdigital.co.uk",
         postcode: "TR1 1AA", role: "host",
       });
+      await new Promise(r => setTimeout(r, 1500));
       const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
       if (sr?.data?.id) {
         await callFn("seedTestBooking", { action: "updateFoundingMember", id: sr.data.id, updates: { approval_status: "invited" } });
       }
+      await new Promise(r => setTimeout(r, 1000));
       const { status, data } = await callFn("setOnboardingPassword", {
         email: "support@hostkeepdigital.co.uk",
         password: "TestPassword123!",
         forename: "Support", middle_name: "", surname: "Test",
       });
-      // Cleanup
-      await callFn("seedTestBooking", { action: "deleteUserCredentialsByEmail", email: "support@hostkeepdigital.co.uk" });
-      await callFn("seedTestBooking", { action: "deleteUserSession", email: "support@hostkeepdigital.co.uk" });
-      const after = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
-      if (after?.data?.id) await callFn("seedTestBooking", { action: "deleteFoundingMember", id: after.data.id });
-      const userRecord = await callFn("seedTestBooking", { action: "findUser", email: "support@hostkeepdigital.co.uk" });
-      if (userRecord?.data?.id) await callFn("seedTestBooking", { action: "deleteUser", id: userRecord.data.id });
+      await new Promise(r => setTimeout(r, 1500));
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       if (status === 500) throw new Error(`Function crashed — likely duplicate UserCredentials error: ${JSON.stringify(data)}`);
       if (!data.success) throw new Error(`Expected success, got: ${JSON.stringify(data)}`);
       return `Passed — existing credentials handled without duplicate error`;
@@ -3210,27 +3216,25 @@ const TESTS = [
     label: "Business — user is immediately logged in after setting password — session_token in response",
     claudeHint: "Check base44/functions/setOnboardingPassword/entry.ts — session_token must be returned so the frontend can store it and the user lands logged in without a separate sign in step.",
     run: async () => {
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       await callFn("registerFoundingMember", {
         forename: "Support", middle_name: "", surname: "Test",
         email: "support@hostkeepdigital.co.uk",
         postcode: "TR1 1AA", role: "host",
       });
+      await new Promise(r => setTimeout(r, 1500));
       const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
       if (sr?.data?.id) {
         await callFn("seedTestBooking", { action: "updateFoundingMember", id: sr.data.id, updates: { approval_status: "invited" } });
       }
+      await new Promise(r => setTimeout(r, 1000));
       const { data } = await callFn("setOnboardingPassword", {
         email: "support@hostkeepdigital.co.uk",
         password: "TestPassword123!",
         forename: "Support", middle_name: "", surname: "Test",
       });
-      // Cleanup
-      await callFn("seedTestBooking", { action: "deleteUserCredentialsByEmail", email: "support@hostkeepdigital.co.uk" });
-      await callFn("seedTestBooking", { action: "deleteUserSession", email: "support@hostkeepdigital.co.uk" });
-      const after = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
-      if (after?.data?.id) await callFn("seedTestBooking", { action: "deleteFoundingMember", id: after.data.id });
-      const userRecord = await callFn("seedTestBooking", { action: "findUser", email: "support@hostkeepdigital.co.uk" });
-      if (userRecord?.data?.id) await callFn("seedTestBooking", { action: "deleteUser", id: userRecord.data.id });
+      await new Promise(r => setTimeout(r, 1500));
+      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
       if (!data.session_token) throw new Error(`No session_token returned — user would need to sign in again after setting password`);
       if (!data.expires_at) throw new Error(`No expires_at on session — session management broken`);
       return `Passed — session_token returned, user immediately logged in`;
