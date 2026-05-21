@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
     const rentalReleaseDueAt = addHours(checkInAt14, 24).toISOString();
 
     // Update booking with payment data
-    await base44.entities.Booking.update(booking_id, {
+    await base44client.asServiceRole.entities.Booking.update(booking_id, {
       stripe_customer_id: customerId,
       stripe_rental_intent_id: rentalIntent.id,
       stripe_deposit_intent_id: depositIntentId,
