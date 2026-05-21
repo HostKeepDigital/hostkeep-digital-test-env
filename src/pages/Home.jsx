@@ -207,8 +207,8 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white">
       {/* HERO SECTION */}
-      <section className="relative bg-gradient-to-br from-teal-600 via-teal-700 to-emerald-800 overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://lh3.googleusercontent.com/d/1dO0GP74-0q34O64CKSL0gGCan9qeELf5')] bg-cover bg-center opacity-20" />
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('https://lh3.googleusercontent.com/d/1dO0GP74-0q34O64CKSL0gGCan9qeELf5')] bg-cover bg-center" />
 
         <div className="relative max-w-7xl mx-auto px-4 py-20 md:py-32">
           <motion.div
@@ -216,10 +216,10 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center text-white mb-12"
           >
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">
+            <h1 className="text-4xl md:text-6xl font-bold mb-6" style={{ textShadow: "2px 2px 4px rgba(0,0,0,0.5)" }}>
               Find Your Perfect<br />Holiday Home
             </h1>
-            <p className="text-xl md:text-2xl text-teal-100 max-w-2xl mx-auto">
+            <p className="text-xl md:text-2xl max-w-2xl mx-auto" style={{ textShadow: "1px 1px 3px rgba(0,0,0,0.5)" }}>
               Book directly with owners. No hidden fees. Just unforgettable stays.
             </p>
           </motion.div>
