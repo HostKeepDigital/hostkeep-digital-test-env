@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
           if (isSuperStrict) {
             // 50% to host, 50% to guest
             await stripe.refunds.create({
-              payment_intent: booking.stripe_rental_intent_id,
+              payment_intent: booking.stripe_deposit_intent_id,
               amount: Math.round((booking.deposit_amount * 0.5) * 100),
             });
 
@@ -203,12 +203,15 @@ Deno.serve(async (req) => {
         const releaseDueAt = new Date(booking.rental_release_due_at);
 
         if (now > releaseDueAt) {
-          const host = await base44.asServiceRole.entities.User.get(booking.host_id);
+          const hostCreds = await base44.asServiceRole.entities.UserCredentials.filter({ user_id: booking.host_id });
+          const hostEmail = hostCreds?.[0]?.email;
+          const hostRoles = await base44.asServiceRole.entities.UserRole.filter({ user_id: booking.host_id, role: 'host' });
+          const hostStripeAccountId = hostRoles?.[0]?.stripe_connect_account_id;
 
           await stripe.transfers.create({
             amount: Math.round(booking.total_amount * 100),
             currency: 'gbp',
-            destination: host.stripe_connect_account_id,
+            destination: hostStripeAccountId,
             metadata: { booking_id: booking.id },
           });
 
@@ -274,9 +277,10 @@ Deno.serve(async (req) => {
             body: `Your security deposit of £${booking.security_deposit.toFixed(2)} has been returned. Funds will appear in your account within 5-10 business days.`,
           });
 
-          const host = await base44.asServiceRole.entities.User.get(booking.host_id);
+          const hostCreds = await base44.asServiceRole.entities.UserCredentials.filter({ user_id: booking.host_id });
+          const hostEmail = hostCreds?.[0]?.email;
           await base44.functions.invoke('sendEmail', {
-            to: host.email,
+            to: hostEmail,
             subject: 'Deposit Returned to Guest',
             body: `The security deposit for ${booking.guest_name}'s stay has been returned to the guest.`,
           });
