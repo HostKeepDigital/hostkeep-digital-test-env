@@ -17,27 +17,21 @@ Deno.serve(async (req) => {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const userId = session.user_id;
 
     if (!booking_id) {
       return Response.json({ error: 'booking_id is required' }, { status: 400 });
     }
 
     // Load booking and verify guest
-    const bookings = await base44.entities.Booking.filter({ id: booking_id });
+    const bookings = await base44client.asServiceRole.entities.Booking.filter({ id: booking_id });
     const booking = bookings?.[0];
-    if (!booking || booking.guest_id !== user.id) {
+    if (!booking || booking.guest_id !== userId) {
       return Response.json({ error: 'Booking not found or unauthorized' }, { status: 404 });
     }
 
     // Load host UserRole and check Stripe Connect
-    const hostRoles = await base44.asServiceRole.entities.UserRole.filter({ user_id: booking.host_id, role: 'host' });
-    const hostRole = hostRoles?.[0];
+    const hostRoles = await base44client.asServiceRole.entities.UserRole.filter({ user_id: booking.host_id, role: 'host' });const hostRole = hostRoles?.[0];
     if (!hostRole?.stripe_connect_account_id || hostRole?.stripe_connect_status !== 'verified') {
       return Response.json(
         { error: 'Host has not connected their bank account' },
