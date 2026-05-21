@@ -2759,220 +2759,18 @@ const TESTS = [
     },
   },
 
-  // ── registerFoundingMember ────────────────────────────────────────────
-  {
-    id: "rfm_smoke_executes",
-    group: "registerFoundingMember",
-    label: "Smoke — function returns 200 and success true",
-    claudeHint: "Check base44/functions/registerFoundingMember/entry.ts — must return { success: true } for valid in-area request.",
-    run: async () => {
-      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
-      const { status, data } = await callFn("registerFoundingMember", {
-        forename: "Support", middle_name: "", surname: "Test",
-        email: "support@hostkeepdigital.co.uk",
-        postcode: "TR1 1AA", role: "host",
-      });
-      await new Promise(r => setTimeout(r, 1500));
-      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
-      if (status !== 200) throw new Error(`Expected 200, got ${status}`);
-      if (!data.success) throw new Error(`Expected success true, got: ${JSON.stringify(data)}`);
-      return `Passed — function returned 200 and success: true`;
-    },
-  },
-  {
-    id: "rfm_func_stores_name_parts",
-    group: "registerFoundingMember",
-    label: "Functional — stores forename, middle_name, surname not full_name",
-    claudeHint: "Check base44/functions/registerFoundingMember/entry.ts and FoundingMember entity schema — must store forename, middle_name, surname as separate fields. full_name must not be used.",
-    run: async () => {
-      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
-      const { status, data } = await callFn("registerFoundingMember", {
-        forename: "Support", middle_name: "Jane", surname: "Test",
-        email: "support@hostkeepdigital.co.uk",
-        postcode: "TR1 1AA", role: "host",
-      });
-      if (status !== 200) throw new Error(`Function failed: ${JSON.stringify(data)}`);
-      await new Promise(r => setTimeout(r, 1500));
-      const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
-      const member = sr?.data;
-      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
-      if (!member) throw new Error(`FoundingMember record not found after creation`);
-      if (member.full_name) throw new Error(`full_name field still being used — must use forename/middle_name/surname`);
-      if (member.forename !== "Support") throw new Error(`forename wrong: got '${member.forename}'`);
-      if (member.middle_name !== "Jane") throw new Error(`middle_name wrong: got '${member.middle_name}'`);
-      if (member.surname !== "Test") throw new Error(`surname wrong: got '${member.surname}'`);
-      return `Passed — forename: ${member.forename}, middle_name: ${member.middle_name}, surname: ${member.surname}`;
-    },
-  },
-  {
-    id: "rfm_func_interest_status",
-    group: "registerFoundingMember",
-    label: "Functional — creates FoundingMember at approval_status interest with email_verified false",
-    claudeHint: "Check base44/functions/registerFoundingMember/entry.ts — Cornwall postcode must create record with approval_status: 'interest' and email_verified: false.",
-    run: async () => {
-      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
-      await callFn("registerFoundingMember", {
-        forename: "Support", middle_name: "", surname: "Test",
-        email: "support@hostkeepdigital.co.uk",
-        postcode: "TR1 1AA", role: "host",
-      });
-      await new Promise(r => setTimeout(r, 1500));
-      const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
-      const member = sr?.data;
-      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
-      if (!member) throw new Error(`FoundingMember not created`);
-      if (member.approval_status !== "interest") throw new Error(`Expected 'interest', got '${member.approval_status}'`);
-      if (member.email_verified !== false) throw new Error(`email_verified should be false on creation, got: ${member.email_verified}`);
-      return `Passed — approval_status: interest, email_verified: false`;
-    },
-  },
-  {
-    id: "rfm_func_out_of_area",
-    group: "registerFoundingMember",
-    label: "Functional — creates FoundingMember at out_of_area for non-Cornwall postcode",
-    claudeHint: "Check base44/functions/registerFoundingMember/entry.ts — non TR/PL/EX postcode must create record with approval_status: 'out_of_area'.",
-    run: async () => {
-      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
-      await callFn("registerFoundingMember", {
-        forename: "Support", middle_name: "", surname: "Test",
-        email: "support@hostkeepdigital.co.uk",
-        postcode: "SW1A 1AA", role: "host",
-      });
-      await new Promise(r => setTimeout(r, 1500));
-      const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
-      const member = sr?.data;
-      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
-      if (!member) throw new Error(`FoundingMember not created for out of area`);
-      if (member.approval_status !== "out_of_area") throw new Error(`Expected 'out_of_area', got '${member.approval_status}'`);
-      return `Passed — out_of_area correctly set for non-Cornwall postcode`;
-    },
-  },
-  {
-    id: "rfm_func_duplicate_email",
-    group: "registerFoundingMember",
-    label: "Functional — duplicate email and role returns duplicate_email error",
-    claudeHint: "Check base44/functions/registerFoundingMember/entry.ts — same email + role must return { error: 'duplicate_email', status: existing approval_status }.",
-    run: async () => {
-      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
-      await callFn("registerFoundingMember", {
-        forename: "Support", middle_name: "", surname: "Test",
-        email: "support@hostkeepdigital.co.uk",
-        postcode: "TR1 1AA", role: "host",
-      });
-      await new Promise(r => setTimeout(r, 1500));
-      const { data } = await callFn("registerFoundingMember", {
-        forename: "Support", middle_name: "", surname: "Test",
-        email: "support@hostkeepdigital.co.uk",
-        postcode: "TR1 1AA", role: "host",
-      });
-      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
-      if (data.error !== "duplicate_email") throw new Error(`Expected duplicate_email error, got: ${JSON.stringify(data)}`);
-      return `Passed — duplicate correctly detected, status: ${data.status}`;
-    },
-  },
-  {
-    id: "rfm_biz_out_of_area_not_rejected",
-    group: "registerFoundingMember",
-    label: "Business — out of area host gets out_of_area not rejected — can be notified when area opens",
-    claudeHint: "Check base44/functions/registerFoundingMember/entry.ts — out_of_area status must never be 'rejected'. The record must exist so admin can notify them when their area launches.",
-    run: async () => {
-      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
-      await callFn("registerFoundingMember", {
-        forename: "Support", middle_name: "", surname: "Test",
-        email: "support@hostkeepdigital.co.uk",
-        postcode: "SW1A 1AA", role: "host",
-      });
-      await new Promise(r => setTimeout(r, 1500));
-      const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
-      const member = sr?.data;
-      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
-      if (!member) throw new Error(`FoundingMember not created for out of area signup`);
-      if (member.approval_status === "rejected") throw new Error(`Out of area must not be set to rejected — must be out_of_area so admin can notify them later`);
-      if (member.approval_status !== "out_of_area") throw new Error(`Expected out_of_area, got: ${member.approval_status}`);
-      return `Passed — out of area host stored correctly for future notification`;
-    },
-  },
+  // registerFoundingMember / verifyEmailCode / setOnboardingPassword / getUserProfile / saveUserProfile
+  // tests are defined in ./tests/*.tests.js and imported+spread into TESTS above
 
-  // ── verifyEmailCode ───────────────────────────────────────────────────
-  {
-    id: "vec_smoke_executes",
-    group: "verifyEmailCode",
-    label: "Smoke — function returns 200 with valid field always",
-    claudeHint: "Check base44/functions/verifyEmailCode/entry.ts — must always return 200 with a valid boolean. Must not crash on missing fields.",
-    run: async () => {
-      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
-      const { status, data } = await callFn("verifyEmailCode", { email: "support@hostkeepdigital.co.uk", code: "000000" });
-      if (status !== 200) throw new Error(`Expected 200, got ${status}`);
-      if (typeof data.valid !== "boolean") throw new Error(`Missing valid boolean field in response`);
-      return `Passed — returns 200 with valid: ${data.valid}`;
-    },
-  },
-  {
-    id: "vec_smoke_missing_fields",
-    group: "verifyEmailCode",
-    label: "Smoke — missing fields return valid false not a crash",
-    claudeHint: "Check base44/functions/verifyEmailCode/entry.ts — missing email or code must return { valid: false } with 200, not a 500.",
-    run: async () => {
-      const { status, data } = await callFn("verifyEmailCode", {});
-      if (status === 500) throw new Error(`Function crashed on missing fields — returned 500`);
-      if (data.valid !== false) throw new Error(`Expected valid: false on missing fields, got: ${JSON.stringify(data)}`);
-      return `Passed — missing fields handled gracefully, valid: false`;
-    },
-  },
-  {
-    id: "vec_func_invalid_code",
-    group: "verifyEmailCode",
-    label: "Functional — invalid code returns valid false and does not advance FoundingMember",
-    claudeHint: "Check base44/functions/verifyEmailCode/entry.ts — wrong code must return { valid: false } and FoundingMember must stay at interest.",
-    run: async () => {
-      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
-      await callFn("registerFoundingMember", {
-        forename: "Support", middle_name: "", surname: "Test",
-        email: "support@hostkeepdigital.co.uk",
-        postcode: "TR1 1AA", role: "host",
-      });
-      await new Promise(r => setTimeout(r, 1500));
-      await callFn("sendVerificationCode", { email: "support@hostkeepdigital.co.uk", name: "Support", type: "host" });
-      await new Promise(r => setTimeout(r, 1000));
-      const { data } = await callFn("verifyEmailCode", { email: "support@hostkeepdigital.co.uk", code: "000000" });
-      await new Promise(r => setTimeout(r, 1000));
-      const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
-      const member = sr?.data;
-      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
-      if (data.valid !== false) throw new Error(`Expected valid: false for wrong code`);
-      if (member?.approval_status !== "interest") throw new Error(`FoundingMember status changed on wrong code — got: ${member?.approval_status}`);
-      return `Passed — invalid code rejected, FoundingMember stays at interest`;
-    },
-  },
-  {
-    id: "vec_func_advances_founding_member",
-    group: "verifyEmailCode",
-    label: "Functional — valid code advances FoundingMember from interest to pending and sets email_verified true",
-    claudeHint: "Check base44/functions/verifyEmailCode/entry.ts — on valid code, must find FoundingMember by email and set approval_status: 'pending' and email_verified: true. This logic must be in the backend, not the frontend EmailVerificationStep.jsx.",
-    run: async () => {
-      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
-      await callFn("registerFoundingMember", {
-        forename: "Support", middle_name: "", surname: "Test",
-        email: "support@hostkeepdigital.co.uk",
-        postcode: "TR1 1AA", role: "host",
-      });
-      await new Promise(r => setTimeout(r, 1500));
-      await callFn("sendVerificationCode", { email: "support@hostkeepdigital.co.uk", name: "Support", type: "host" });
-      await new Promise(r => setTimeout(r, 1000));
-      const codeRecord = await callFn("seedTestBooking", { action: "findVerificationCode", email: "support@hostkeepdigital.co.uk" });
-      const code = codeRecord?.data?.code;
-      if (!code) throw new Error(`Could not read verification code from EmailVerificationCode entity`);
-      const { data } = await callFn("verifyEmailCode", { email: "support@hostkeepdigital.co.uk", code });
-      await new Promise(r => setTimeout(r, 1500));
-      const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
-      const member = sr?.data;
-      await callFn("seedTestBooking", { action: "cleanupTestEmail", email: "support@hostkeepdigital.co.uk" });
-      if (data.valid !== true) throw new Error(`Code verification returned valid: false`);
-      if (member?.approval_status !== "pending") throw new Error(`Expected 'pending', got '${member?.approval_status}'`);
-      if (member?.email_verified !== true) throw new Error(`email_verified not set to true after verification`);
-      return `Passed — FoundingMember advanced to pending, email_verified: true`;
-    },
-  },
+  ...registerFoundingMemberTests,
+  ...verifyEmailCodeTests,
+  ...setOnboardingPasswordTests,
+  ...getUserProfileTests,
+  ...saveUserProfileTests,
+];
+
+// ── tests moved to ./tests/*.tests.js ──
+
   {
     id: "vec_func_deletes_used_code",
     group: "verifyEmailCode",
@@ -3304,13 +3102,6 @@ const TESTS = [
       if (p?.middle_name !== "Page") throw new Error(`Settings page would show wrong middle_name: ${p?.middle_name}`);
       if (p?.surname !== "Test") throw new Error(`Settings page would show wrong surname: ${p?.surname}`);
       if (p?.phone !== "07700900000") throw new Error(`Settings page would show wrong phone: ${p?.phone}`);
-      return `Passed — Settings page would display correct data immediately after save`;
-    },
-  },
-];
-
-
-
 export default function IntegrationTestsTab({ sessionToken }) {
   const { user } = useAuth();
   const [results, setResults] = useState({});
