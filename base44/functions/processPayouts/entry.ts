@@ -53,9 +53,10 @@ Deno.serve(async (req) => {
               body: `Your remaining balance of £${booking.remaining_balance.toFixed(2)} has been successfully collected. Your booking is confirmed.`,
             });
 
-            const host = await base44.asServiceRole.entities.User.get(booking.host_id);
+            const hostCreds = await base44.asServiceRole.entities.UserCredentials.filter({ user_id: booking.host_id });
+            const hostEmail = hostCreds?.[0]?.email;
             await base44.functions.invoke('sendEmail', {
-              to: host.email,
+              to: hostEmail,
               subject: 'Full Payment Received',
               body: `Full payment has been received from ${booking.guest_name}. Their booking is confirmed.`,
             });
@@ -75,9 +76,10 @@ Deno.serve(async (req) => {
               body: `We were unable to collect your remaining balance of £${booking.remaining_balance.toFixed(2)}. You have 7 days to make payment or your booking will be automatically cancelled.`,
             });
 
-            const host = await base44.asServiceRole.entities.User.get(booking.host_id);
+            const hostCreds = await base44.asServiceRole.entities.UserCredentials.filter({ user_id: booking.host_id });
+            const hostEmail = hostCreds?.[0]?.email;
             await base44.functions.invoke('sendEmail', {
-              to: host.email,
+              to: hostEmail,
               subject: 'Guest Payment Failed',
               body: `We were unable to collect the full balance payment from ${booking.guest_name}. They have been given 7 days to make payment.`,
             });
@@ -106,7 +108,10 @@ Deno.serve(async (req) => {
         const daysSinceFailed = differenceInDays(now, failedAt);
 
         if (daysSinceFailed > 7) {
-          const host = await base44.asServiceRole.entities.User.get(booking.host_id);
+          const hostCreds = await base44.asServiceRole.entities.UserCredentials.filter({ user_id: booking.host_id });
+          const hostEmail = hostCreds?.[0]?.email;
+          const hostRoles = await base44.asServiceRole.entities.UserRole.filter({ user_id: booking.host_id, role: 'host' });
+          const hostStripeAccountId = hostRoles?.[0]?.stripe_connect_account_id;
           const isSuperStrict = booking.cancellation_policy_snapshot?.type === 'super_strict';
 
           if (isSuperStrict) {
