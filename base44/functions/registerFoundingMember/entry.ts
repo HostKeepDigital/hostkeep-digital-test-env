@@ -2,9 +2,9 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.25";
 
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
-  const { full_name, email, postcode, role, is_existing_guest } = await req.json();
+  const { forename, middle_name, surname, email, postcode, role, is_existing_guest } = await req.json();
 
-  if (!full_name || !email || !postcode || !role) {
+  if (!forename || !surname || !email || !postcode || !role) {
     return Response.json({ error: "Missing required fields" }, { status: 400 });
   }
 
@@ -23,12 +23,15 @@ Deno.serve(async (req) => {
 
   // Create FoundingMember record
   await base44.asServiceRole.entities.FoundingMember.create({
-    full_name: full_name.trim(),
+    forename: forename.trim(),
+    middle_name: middle_name?.trim() || "",
+    surname: surname.trim(),
     email: email.toLowerCase().trim(),
     postcode: cleanPostcode,
     role,
-    approval_status: is_existing_guest ? "guest_pending_application" : outOfArea ? "out_of_area" : "interest",
+    approval_status: is_existing_guest ? "pending" : outOfArea ? "out_of_area" : "interest",
     email_verified: false,
+    is_founding_member: true,
     signup_timestamp: new Date().toISOString(),
   });
 
