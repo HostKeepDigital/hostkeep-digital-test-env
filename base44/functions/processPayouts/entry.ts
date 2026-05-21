@@ -28,6 +28,10 @@ Deno.serve(async (req) => {
         const balanceDueDate = new Date(booking.balance_due_date);
 
         if (now > balanceDueDate) {
+          // Skip if nothing to charge
+          if (!booking.remaining_balance || booking.remaining_balance <= 0) {
+            continue;
+          }
           // Attempt charge
           try {
             await stripe.paymentIntents.create({
@@ -124,7 +128,7 @@ Deno.serve(async (req) => {
             await stripe.transfers.create({
               amount: Math.round((booking.deposit_amount * 0.5) * 100),
               currency: 'gbp',
-              destination: host.stripe_connect_account_id,
+              destination: hostStripeAccountId,
             });
 
             const guestRefund = (booking.deposit_amount * 0.5).toFixed(2);
@@ -137,14 +141,14 @@ Deno.serve(async (req) => {
             });
 
             await base44.functions.invoke('sendEmail', {
-              to: host.email,
+              to: hostEmail,
               subject: 'Booking Cancelled - Non-Payment',
               body: `${booking.guest_name}'s booking has been automatically cancelled due to non-payment. £${hostAmount} (50% of the deposit) has been transferred to your account.`,
             });
           } else {
             // Full refund to guest
             await stripe.refunds.create({
-              payment_intent: booking.stripe_rental_intent_id,
+              payment_intent: booking.stripe_deposit_intent_id,
               amount: Math.round(booking.deposit_amount * 100),
             });
 
@@ -155,7 +159,7 @@ Deno.serve(async (req) => {
             });
 
             await base44.functions.invoke('sendEmail', {
-              to: host.email,
+              to: hostEmail,
               subject: 'Booking Cancelled - Non-Payment',
               body: `${booking.guest_name}'s booking has been automatically cancelled due to non-payment. The guest's deposit has been returned to them in full.`,
             });
@@ -214,7 +218,7 @@ Deno.serve(async (req) => {
           });
 
           await base44.functions.invoke('sendEmail', {
-            to: host.email,
+            to: hostEmail,
             subject: 'Rental Payment Released',
             body: `Your rental payment of £${booking.total_amount.toFixed(2)} has been released to your account.`,
           });
