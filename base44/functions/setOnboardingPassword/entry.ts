@@ -23,31 +23,11 @@ async function findUserByEmail(serviceRole, email) {
     };
   }
 
-  // 2. Host
-  const hosts = await serviceRole.entities.Host.filter({ email });
-  if (hosts && hosts.length > 0) {
+  // 2. User entity (post-beta or existing guest applying as host)
+  const users = await serviceRole.entities.User.filter({ email });
+  if (users && users.length > 0) {
     return {
-      user: hosts[0],
-      role: "host",
-      founding_member_id: null,
-    };
-  }
-
-  // 3. Cleaner
-  const cleaners = await serviceRole.entities.Cleaner.filter({ email });
-  if (cleaners && cleaners.length > 0) {
-    return {
-      user: cleaners[0],
-      role: "cleaner",
-      founding_member_id: null,
-    };
-  }
-
-  // 4. Guest
-  const guests = await serviceRole.entities.Guest.filter({ email });
-  if (guests && guests.length > 0) {
-    return {
-      user: guests[0],
+      user: users[0],
       role: "guest",
       founding_member_id: null,
     };
@@ -88,12 +68,20 @@ Deno.serve(async (req) => {
 
     const { role, founding_member_id } = userLookup;
 
-    // Store credentials
-    await serviceRole.entities.UserCredentials.create({
-      email: normalisedEmail,
-      password_hash,
-      founding_member_id,
-    });
+    // Store credentials — update if already exist, create if not
+    const existingCreds = await serviceRole.entities.UserCredentials.filter({ email: normalisedEmail });
+    if (existingCreds && existingCreds.length > 0) {
+      await serviceRole.entities.UserCredentials.update(existingCreds[0].id, {
+        password_hash,
+        founding_member_id: founding_member_id || existingCreds[0].founding_member_id,
+      });
+    } else {
+      await serviceRole.entities.UserCredentials.create({
+        email: normalisedEmail,
+        password_hash,
+        founding_member_id,
+      });
+    }
 
     // Move FoundingMember from invited → password_protected, and stamp user_id
     if (founding_member_id) {
