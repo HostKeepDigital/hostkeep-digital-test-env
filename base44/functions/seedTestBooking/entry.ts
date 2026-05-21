@@ -303,7 +303,57 @@ if (action === "createEmailVerificationCode") {
       return Response.json({ data: records?.[0] || null });
     }
 
-    return Response.json({ error: "unrecognised_action" }, { status: 400 });
+    if (action === "cleanupTestEmail") {
+      const { email } = body;
+      if (!email) return Response.json({ error: "missing_email" }, { status: 400 });
+      const norm = email.toLowerCase().trim();
+
+      const results = {};
+
+      try {
+        const fm = await sr.entities.FoundingMember.filter({ email: norm });
+        await Promise.all((fm || []).map(r => sr.entities.FoundingMember.delete(r.id)));
+        results.founding_members = fm?.length || 0;
+      } catch (e) { results.founding_members_error = e.message; }
+
+      try {
+        const creds = await sr.entities.UserCredentials.filter({ email: norm });
+        await Promise.all((creds || []).map(r => sr.entities.UserCredentials.delete(r.id)));
+        results.credentials = creds?.length || 0;
+      } catch (e) { results.credentials_error = e.message; }
+
+      try {
+        const sessions = await sr.entities.UserSession.filter({ email: norm });
+        await Promise.all((sessions || []).map(r => sr.entities.UserSession.delete(r.id)));
+        results.sessions = sessions?.length || 0;
+      } catch (e) { results.sessions_error = e.message; }
+
+      try {
+        const profiles = await sr.entities.UserProfile.filter({ email: norm });
+        await Promise.all((profiles || []).map(r => sr.entities.UserProfile.delete(r.id)));
+        results.profiles = profiles?.length || 0;
+      } catch (e) { results.profiles_error = e.message; }
+
+      try {
+        const users = await sr.entities.User.filter({ email: norm });
+        await Promise.all((users || []).map(r => sr.entities.User.delete(r.id)));
+        results.users = users?.length || 0;
+      } catch (e) { results.users_error = e.message; }
+
+      try {
+        const codes = await sr.entities.EmailVerificationCode.filter({ email: norm });
+        await Promise.all((codes || []).map(r => sr.entities.EmailVerificationCode.delete(r.id)));
+        results.verification_codes = codes?.length || 0;
+      } catch (e) { results.verification_codes_error = e.message; }
+
+      try {
+        const guests = await sr.entities.Guest.filter({ email: norm });
+        await Promise.all((guests || []).map(r => sr.entities.Guest.delete(r.id)));
+        results.guests = guests?.length || 0;
+      } catch (e) { results.guests_error = e.message; }
+
+      return Response.json({ cleaned: true, results });
+    }
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 });
   }
