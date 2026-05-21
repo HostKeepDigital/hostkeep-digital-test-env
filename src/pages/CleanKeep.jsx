@@ -104,7 +104,7 @@ export default function CleanKeep() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <div className="min-h-screen bg-white">
       {/* Hero Section */}
       <section className="pt-20 pb-16 px-4">
         <div className="max-w-5xl mx-auto text-center">
@@ -113,14 +113,14 @@ export default function CleanKeep() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-white rounded-full shadow-sm border border-blue-100">
+            <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-white dark:bg-gray-800 rounded-full shadow-sm border border-blue-100 dark:border-blue-900">
               <Sparkles className="w-4 h-4 text-blue-600" />
               <span className="text-sm font-medium text-blue-700">
                 The Cleaner Network by HostKeep
               </span>
             </div>
 
-            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-4">
+            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-4 dark:text-white">
               CleanKeep
             </h1>
 
@@ -180,12 +180,12 @@ export default function CleanKeep() {
                       <Card
                         className={`h-full hover:shadow-xl transition-all duration-300 border-2 group cursor-pointer ${
                           shouldHighlight
-                            ? "border-blue-500 bg-blue-50/50"
+                            ? "border-blue-500 dark:bg-blue-900/20 bg-blue-50/50"
                             : "hover:border-blue-300"
                         }`}
                       >
                         <CardHeader className="text-center pb-4">
-                          <div className="mx-auto w-16 h-16 rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                          <div className="mx-auto w-16 h-16 rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-800/40 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                             <option.icon className="w-8 h-8 text-blue-600" />
                           </div>
                           <CardTitle className="text-lg mb-2">
@@ -222,7 +222,7 @@ export default function CleanKeep() {
       {/* Why CleanKeep Exists */}
       <section className="py-16 px-4 bg-gray-50">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-6">
+          <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-6 dark:text-white">
             Why CleanKeep Exists
           </h2>
           <p className="text-lg text-center text-gray-600 mb-12">
@@ -302,7 +302,7 @@ export default function CleanKeep() {
       {/* A Dedicated Cleaning Marketplace */}
       <section className="py-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6 dark:text-white">
             A Dedicated Cleaning Marketplace Inside HostKeep
           </h2>
           <p className="text-lg text-gray-600 mb-8">
@@ -340,9 +340,9 @@ export default function CleanKeep() {
       </section>
 
       {/* Simple Transparent Pricing */}
-      <section className="py-16 px-4 bg-gradient-to-b from-blue-50 to-white">
+      <section className="py-16 px-4 bg-gray-50">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12 dark:text-white">
             Simple, Transparent Pricing
           </h2>
 
@@ -350,7 +350,7 @@ export default function CleanKeep() {
             <Card className="border-2">
               <CardHeader>
                 <CardTitle className="text-2xl">CleanKeep Solo Basic</CardTitle>
-                <div className="text-4xl font-bold text-gray-900 mt-2">
+                <div className="text-4xl font-bold text-gray-900 mt-2 dark:text-white">
                   £9.99
                   <span className="text-lg text-gray-500">/month</span>
                 </div>
@@ -379,7 +379,7 @@ export default function CleanKeep() {
                   CleanKeep Solo Pro
                   <Badge className="bg-blue-600">Popular</Badge>
                 </CardTitle>
-                <div className="text-4xl font-bold text-gray-900 mt-2">
+                <div className="text-4xl font-bold text-gray-900 mt-2 dark:text-white">
                   £19.99
                   <span className="text-lg text-gray-500">/month</span>
                 </div>
@@ -412,7 +412,7 @@ export default function CleanKeep() {
       {/* How It Works */}
       <section className="py-16 px-4">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12 dark:text-white">
             How It Works
           </h2>
 
@@ -464,7 +464,7 @@ export default function CleanKeep() {
         <div className="max-w-4xl mx-auto space-y-16">
           {/* Cleaner Dashboard */}
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">
+            <h2 className="text-3xl font-bold text-gray-900 mb-6 dark:text-white">
               Cleaner Dashboard
             </h2>
             <p className="text-lg text-gray-600 mb-6">
@@ -480,7 +480,7 @@ export default function CleanKeep() {
               ].map((item, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center gap-2 p-4 bg-white rounded-lg"
+                  className="flex items-center gap-2 p-4 bg-white dark:bg-gray-800 rounded-lg"
                 >
                   <CheckCircle className="w-5 h-5 text-blue-500" />
                   <span className="text-gray-700">{item}</span>
@@ -494,7 +494,7 @@ export default function CleanKeep() {
 
           {/* Built Into Growing Ecosystem */}
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">
+            <h2 className="text-3xl font-bold text-gray-900 mb-6 dark:text-white">
               Built Into a Growing Ecosystem
             </h2>
             <p className="text-lg text-gray-600 mb-6">
@@ -553,7 +553,7 @@ export default function CleanKeep() {
 
           {/* Why Cleaners Choose CleanKeep */}
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-8 dark:text-white">
               Why Cleaners Choose CleanKeep
             </h2>
             <div className="grid md:grid-cols-2 gap-4">
@@ -567,7 +567,7 @@ export default function CleanKeep() {
               ].map((item, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center gap-3 p-4 bg-white rounded-lg text-left"
+                  className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800 rounded-lg text-left"
                 >
                   <CheckCircle className="w-6 h-6 text-blue-500 flex-shrink-0" />
                   <span className="text-gray-700">{item}</span>
