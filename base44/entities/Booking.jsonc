@@ -120,6 +120,10 @@
       ],
       "default": "request"
     },
+    "booking_reference": {
+      "type": "string",
+      "description": "Human-readable booking reference e.g. HKD-SJM-14072026"
+    },
     "request_timestamp": {
       "type": "string",
       "format": "date-time",
@@ -156,6 +160,10 @@
     "stripe_customer_id": {
       "type": "string",
       "description": "Stripe Customer ID for the guest's saved card"
+    },
+    "stripe_payment_method_id": {
+      "type": "string",
+      "description": "Stripe PaymentMethod ID saved after guest confirms payment, used for off-session charges"
     },
     "stripe_rental_intent_id": {
       "type": "string",
