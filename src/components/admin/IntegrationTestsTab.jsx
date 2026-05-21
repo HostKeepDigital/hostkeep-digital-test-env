@@ -2758,6 +2758,551 @@ const TESTS = [
       }
     },
   },
+
+  // ── registerFoundingMember ────────────────────────────────────────────
+  {
+    id: "rfm_smoke_executes",
+    group: "registerFoundingMember",
+    label: "Smoke — function returns 200 and success true",
+    claudeHint: "Check base44/functions/registerFoundingMember/entry.ts — must return { success: true } for valid in-area request.",
+    run: async () => {
+      const { status, data } = await callFn("registerFoundingMember", {
+        forename: "Support", middle_name: "", surname: "Test",
+        email: "support@hostkeepdigital.co.uk",
+        postcode: "TR1 1AA", role: "host",
+      });
+      // Cleanup
+      const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
+      if (sr?.data?.id) await callFn("seedTestBooking", { action: "deleteFoundingMember", id: sr.data.id });
+      if (status !== 200) throw new Error(`Expected 200, got ${status}`);
+      if (!data.success) throw new Error(`Expected success true, got: ${JSON.stringify(data)}`);
+      return `Passed — function returned 200 and success: true`;
+    },
+  },
+  {
+    id: "rfm_func_stores_name_parts",
+    group: "registerFoundingMember",
+    label: "Functional — stores forename, middle_name, surname not full_name",
+    claudeHint: "Check base44/functions/registerFoundingMember/entry.ts and FoundingMember entity schema — must store forename, middle_name, surname as separate fields. full_name must not be used.",
+    run: async () => {
+      const { status, data } = await callFn("registerFoundingMember", {
+        forename: "Support", middle_name: "Jane", surname: "Test",
+        email: "support@hostkeepdigital.co.uk",
+        postcode: "TR1 1AA", role: "host",
+      });
+      if (status !== 200) throw new Error(`Function failed: ${JSON.stringify(data)}`);
+      const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
+      const member = sr?.data;
+      // Cleanup
+      if (member?.id) await callFn("seedTestBooking", { action: "deleteFoundingMember", id: member.id });
+      if (!member) throw new Error(`FoundingMember record not found after creation`);
+      if (member.full_name) throw new Error(`full_name field still being used — must use forename/middle_name/surname`);
+      if (member.forename !== "Support") throw new Error(`forename wrong: got '${member.forename}'`);
+      if (member.middle_name !== "Jane") throw new Error(`middle_name wrong: got '${member.middle_name}'`);
+      if (member.surname !== "Test") throw new Error(`surname wrong: got '${member.surname}'`);
+      return `Passed — forename: ${member.forename}, middle_name: ${member.middle_name}, surname: ${member.surname}`;
+    },
+  },
+  {
+    id: "rfm_func_interest_status",
+    group: "registerFoundingMember",
+    label: "Functional — creates FoundingMember at approval_status interest with email_verified false",
+    claudeHint: "Check base44/functions/registerFoundingMember/entry.ts — Cornwall postcode must create record with approval_status: 'interest' and email_verified: false.",
+    run: async () => {
+      await callFn("registerFoundingMember", {
+        forename: "Support", middle_name: "", surname: "Test",
+        email: "support@hostkeepdigital.co.uk",
+        postcode: "TR1 1AA", role: "host",
+      });
+      const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
+      const member = sr?.data;
+      if (member?.id) await callFn("seedTestBooking", { action: "deleteFoundingMember", id: member.id });
+      if (!member) throw new Error(`FoundingMember not created`);
+      if (member.approval_status !== "interest") throw new Error(`Expected 'interest', got '${member.approval_status}'`);
+      if (member.email_verified !== false) throw new Error(`email_verified should be false on creation, got: ${member.email_verified}`);
+      return `Passed — approval_status: interest, email_verified: false`;
+    },
+  },
+  {
+    id: "rfm_func_out_of_area",
+    group: "registerFoundingMember",
+    label: "Functional — creates FoundingMember at out_of_area for non-Cornwall postcode",
+    claudeHint: "Check base44/functions/registerFoundingMember/entry.ts — non TR/PL/EX postcode must create record with approval_status: 'out_of_area'.",
+    run: async () => {
+      await callFn("registerFoundingMember", {
+        forename: "Support", middle_name: "", surname: "Test",
+        email: "support@hostkeepdigital.co.uk",
+        postcode: "SW1A 1AA", role: "host",
+      });
+      const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
+      const member = sr?.data;
+      if (member?.id) await callFn("seedTestBooking", { action: "deleteFoundingMember", id: member.id });
+      if (!member) throw new Error(`FoundingMember not created for out of area`);
+      if (member.approval_status !== "out_of_area") throw new Error(`Expected 'out_of_area', got '${member.approval_status}'`);
+      return `Passed — out_of_area correctly set for non-Cornwall postcode`;
+    },
+  },
+  {
+    id: "rfm_func_duplicate_email",
+    group: "registerFoundingMember",
+    label: "Functional — duplicate email and role returns duplicate_email error",
+    claudeHint: "Check base44/functions/registerFoundingMember/entry.ts — same email + role must return { error: 'duplicate_email', status: existing approval_status }.",
+    run: async () => {
+      await callFn("registerFoundingMember", {
+        forename: "Support", middle_name: "", surname: "Test",
+        email: "support@hostkeepdigital.co.uk",
+        postcode: "TR1 1AA", role: "host",
+      });
+      const { data } = await callFn("registerFoundingMember", {
+        forename: "Support", middle_name: "", surname: "Test",
+        email: "support@hostkeepdigital.co.uk",
+        postcode: "TR1 1AA", role: "host",
+      });
+      const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
+      if (sr?.data?.id) await callFn("seedTestBooking", { action: "deleteFoundingMember", id: sr.data.id });
+      if (data.error !== "duplicate_email") throw new Error(`Expected duplicate_email error, got: ${JSON.stringify(data)}`);
+      return `Passed — duplicate correctly detected, status: ${data.status}`;
+    },
+  },
+  {
+    id: "rfm_biz_out_of_area_not_rejected",
+    group: "registerFoundingMember",
+    label: "Business — out of area host gets out_of_area not rejected — can be notified when area opens",
+    claudeHint: "Check base44/functions/registerFoundingMember/entry.ts — out_of_area status must never be 'rejected'. The record must exist so admin can notify them when their area launches.",
+    run: async () => {
+      await callFn("registerFoundingMember", {
+        forename: "Support", middle_name: "", surname: "Test",
+        email: "support@hostkeepdigital.co.uk",
+        postcode: "SW1A 1AA", role: "host",
+      });
+      const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
+      const member = sr?.data;
+      if (member?.id) await callFn("seedTestBooking", { action: "deleteFoundingMember", id: member.id });
+      if (!member) throw new Error(`FoundingMember not created for out of area signup`);
+      if (member.approval_status === "rejected") throw new Error(`Out of area must not be set to rejected — must be out_of_area so admin can notify them later`);
+      if (member.approval_status !== "out_of_area") throw new Error(`Expected out_of_area, got: ${member.approval_status}`);
+      return `Passed — out of area host stored correctly for future notification`;
+    },
+  },
+
+  // ── verifyEmailCode ───────────────────────────────────────────────────
+  {
+    id: "vec_smoke_executes",
+    group: "verifyEmailCode",
+    label: "Smoke — function returns 200 with valid field always",
+    claudeHint: "Check base44/functions/verifyEmailCode/entry.ts — must always return 200 with a valid boolean. Must not crash on missing fields.",
+    run: async () => {
+      const { status, data } = await callFn("verifyEmailCode", { email: "support@hostkeepdigital.co.uk", code: "000000" });
+      if (status !== 200) throw new Error(`Expected 200, got ${status}`);
+      if (typeof data.valid !== "boolean") throw new Error(`Missing valid boolean field in response`);
+      return `Passed — returns 200 with valid: ${data.valid}`;
+    },
+  },
+  {
+    id: "vec_smoke_missing_fields",
+    group: "verifyEmailCode",
+    label: "Smoke — missing fields return valid false not a crash",
+    claudeHint: "Check base44/functions/verifyEmailCode/entry.ts — missing email or code must return { valid: false } with 200, not a 500.",
+    run: async () => {
+      const { status, data } = await callFn("verifyEmailCode", {});
+      if (status === 500) throw new Error(`Function crashed on missing fields — returned 500`);
+      if (data.valid !== false) throw new Error(`Expected valid: false on missing fields, got: ${JSON.stringify(data)}`);
+      return `Passed — missing fields handled gracefully, valid: false`;
+    },
+  },
+  {
+    id: "vec_func_invalid_code",
+    group: "verifyEmailCode",
+    label: "Functional — invalid code returns valid false and does not advance FoundingMember",
+    claudeHint: "Check base44/functions/verifyEmailCode/entry.ts — wrong code must return { valid: false } and FoundingMember must stay at interest.",
+    run: async () => {
+      await callFn("registerFoundingMember", {
+        forename: "Support", middle_name: "", surname: "Test",
+        email: "support@hostkeepdigital.co.uk",
+        postcode: "TR1 1AA", role: "host",
+      });
+      await callFn("sendVerificationCode", { email: "support@hostkeepdigital.co.uk", name: "Support", type: "host" });
+      const { data } = await callFn("verifyEmailCode", { email: "support@hostkeepdigital.co.uk", code: "000000" });
+      const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
+      const member = sr?.data;
+      // Cleanup
+      await callFn("seedTestBooking", { action: "deleteVerificationCodes", email: "support@hostkeepdigital.co.uk" });
+      if (member?.id) await callFn("seedTestBooking", { action: "deleteFoundingMember", id: member.id });
+      if (data.valid !== false) throw new Error(`Expected valid: false for wrong code`);
+      if (member?.approval_status !== "interest") throw new Error(`FoundingMember status changed on wrong code — got: ${member?.approval_status}`);
+      return `Passed — invalid code rejected, FoundingMember stays at interest`;
+    },
+  },
+  {
+    id: "vec_func_advances_founding_member",
+    group: "verifyEmailCode",
+    label: "Functional — valid code advances FoundingMember from interest to pending and sets email_verified true",
+    claudeHint: "Check base44/functions/verifyEmailCode/entry.ts — on valid code, must find FoundingMember by email and set approval_status: 'pending' and email_verified: true. This logic must be in the backend, not the frontend EmailVerificationStep.jsx.",
+    run: async () => {
+      await callFn("registerFoundingMember", {
+        forename: "Support", middle_name: "", surname: "Test",
+        email: "support@hostkeepdigital.co.uk",
+        postcode: "TR1 1AA", role: "host",
+      });
+      await callFn("sendVerificationCode", { email: "support@hostkeepdigital.co.uk", name: "Support", type: "host" });
+      const codeRecord = await callFn("seedTestBooking", { action: "findVerificationCode", email: "support@hostkeepdigital.co.uk" });
+      const code = codeRecord?.data?.code;
+      if (!code) throw new Error(`Could not read verification code from EmailVerificationCode entity`);
+      const { data } = await callFn("verifyEmailCode", { email: "support@hostkeepdigital.co.uk", code });
+      await new Promise(r => setTimeout(r, 500));
+      const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
+      const member = sr?.data;
+      // Cleanup
+      if (member?.id) await callFn("seedTestBooking", { action: "deleteFoundingMember", id: member.id });
+      await callFn("seedTestBooking", { action: "deleteVerificationCodes", email: "support@hostkeepdigital.co.uk" });
+      if (data.valid !== true) throw new Error(`Code verification returned valid: false`);
+      if (member?.approval_status !== "pending") throw new Error(`Expected 'pending', got '${member?.approval_status}'`);
+      if (member?.email_verified !== true) throw new Error(`email_verified not set to true after verification`);
+      return `Passed — FoundingMember advanced to pending, email_verified: true`;
+    },
+  },
+  {
+    id: "vec_func_deletes_used_code",
+    group: "verifyEmailCode",
+    label: "Functional — used verification code deleted after successful verification",
+    claudeHint: "Check base44/functions/verifyEmailCode/entry.ts — EmailVerificationCode record must be deleted after use to prevent reuse.",
+    run: async () => {
+      await callFn("registerFoundingMember", {
+        forename: "Support", middle_name: "", surname: "Test",
+        email: "support@hostkeepdigital.co.uk",
+        postcode: "TR1 1AA", role: "host",
+      });
+      await callFn("sendVerificationCode", { email: "support@hostkeepdigital.co.uk", name: "Support", type: "host" });
+      const codeRecord = await callFn("seedTestBooking", { action: "findVerificationCode", email: "support@hostkeepdigital.co.uk" });
+      const code = codeRecord?.data?.code;
+      if (!code) throw new Error(`Could not read verification code`);
+      await callFn("verifyEmailCode", { email: "support@hostkeepdigital.co.uk", code });
+      await new Promise(r => setTimeout(r, 500));
+      const afterRecord = await callFn("seedTestBooking", { action: "findVerificationCode", email: "support@hostkeepdigital.co.uk" });
+      const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
+      if (sr?.data?.id) await callFn("seedTestBooking", { action: "deleteFoundingMember", id: sr.data.id });
+      if (afterRecord?.data?.code) throw new Error(`Verification code still exists after use — not deleted`);
+      return `Passed — used code correctly deleted`;
+    },
+  },
+  {
+    id: "vec_func_no_crash_guest_flow",
+    group: "verifyEmailCode",
+    label: "Functional — valid code does not crash when no FoundingMember exists for email",
+    claudeHint: "Check base44/functions/verifyEmailCode/entry.ts — guest flow has no FoundingMember. Must complete cleanly without crashing.",
+    run: async () => {
+      await callFn("sendVerificationCode", { email: "support@hostkeepdigital.co.uk", name: "Support", type: "guest" });
+      const codeRecord = await callFn("seedTestBooking", { action: "findVerificationCode", email: "support@hostkeepdigital.co.uk" });
+      const code = codeRecord?.data?.code;
+      if (!code) throw new Error(`Could not read verification code`);
+      const { status, data } = await callFn("verifyEmailCode", { email: "support@hostkeepdigital.co.uk", code });
+      await callFn("seedTestBooking", { action: "deleteVerificationCodes", email: "support@hostkeepdigital.co.uk" });
+      if (status === 500) throw new Error(`Function crashed when no FoundingMember exists — 500 returned`);
+      if (data.valid !== true) throw new Error(`Expected valid: true, got: ${JSON.stringify(data)}`);
+      return `Passed — guest flow completes without crash, valid: true`;
+    },
+  },
+  {
+    id: "vec_biz_host_appears_in_pending",
+    group: "verifyEmailCode",
+    label: "Business — host who verifies email has FoundingMember at pending not interest",
+    claudeHint: "Check base44/functions/verifyEmailCode/entry.ts — after verification the admin panel must show this host in Pending, not Interest. approval_status must be 'pending' in the FoundingMember record.",
+    run: async () => {
+      await callFn("registerFoundingMember", {
+        forename: "Support", middle_name: "", surname: "Test",
+        email: "support@hostkeepdigital.co.uk",
+        postcode: "TR1 1AA", role: "host",
+      });
+      await callFn("sendVerificationCode", { email: "support@hostkeepdigital.co.uk", name: "Support", type: "host" });
+      const codeRecord = await callFn("seedTestBooking", { action: "findVerificationCode", email: "support@hostkeepdigital.co.uk" });
+      const code = codeRecord?.data?.code;
+      if (!code) throw new Error(`Could not read verification code`);
+      await callFn("verifyEmailCode", { email: "support@hostkeepdigital.co.uk", code });
+      await new Promise(r => setTimeout(r, 500));
+      const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
+      const member = sr?.data;
+      if (member?.id) await callFn("seedTestBooking", { action: "deleteFoundingMember", id: member.id });
+      if (member?.approval_status !== "pending") throw new Error(`Host not in Pending after email verification — got: ${member?.approval_status}. Admin will not see them in the Pending section.`);
+      return `Passed — host correctly appears in Pending after email verification`;
+    },
+  },
+
+  // ── setOnboardingPassword ─────────────────────────────────────────────
+  {
+    id: "sop_smoke_executes",
+    group: "setOnboardingPassword",
+    label: "Smoke — function returns 200 with session_token",
+    claudeHint: "Check base44/functions/setOnboardingPassword/entry.ts — must return { success: true, session_token } for valid founding member email and password.",
+    run: async () => {
+      await callFn("registerFoundingMember", {
+        forename: "Support", middle_name: "", surname: "Test",
+        email: "support@hostkeepdigital.co.uk",
+        postcode: "TR1 1AA", role: "host",
+      });
+      const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
+      if (sr?.data?.id) {
+        await callFn("seedTestBooking", { action: "updateFoundingMember", id: sr.data.id, updates: { approval_status: "invited" } });
+      }
+      const { status, data } = await callFn("setOnboardingPassword", {
+        email: "support@hostkeepdigital.co.uk",
+        password: "TestPassword123!",
+        forename: "Support", middle_name: "", surname: "Test",
+      });
+      // Cleanup
+      await callFn("seedTestBooking", { action: "deleteUserCredentialsByEmail", email: "support@hostkeepdigital.co.uk" });
+      await callFn("seedTestBooking", { action: "deleteUserSession", email: "support@hostkeepdigital.co.uk" });
+      const after = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
+      if (after?.data?.id) await callFn("seedTestBooking", { action: "deleteFoundingMember", id: after.data.id });
+      const userRecord = await callFn("seedTestBooking", { action: "findUser", email: "support@hostkeepdigital.co.uk" });
+      if (userRecord?.data?.id) await callFn("seedTestBooking", { action: "deleteUser", id: userRecord.data.id });
+      if (status !== 200) throw new Error(`Expected 200, got ${status}: ${JSON.stringify(data)}`);
+      if (!data.session_token) throw new Error(`Missing session_token in response`);
+      return `Passed — session_token returned correctly`;
+    },
+  },
+  {
+    id: "sop_func_advances_status",
+    group: "setOnboardingPassword",
+    label: "Functional — FoundingMember advances from invited to password_protected",
+    claudeHint: "Check base44/functions/setOnboardingPassword/entry.ts — after password set, FoundingMember.approval_status must be 'password_protected'.",
+    run: async () => {
+      await callFn("registerFoundingMember", {
+        forename: "Support", middle_name: "", surname: "Test",
+        email: "support@hostkeepdigital.co.uk",
+        postcode: "TR1 1AA", role: "host",
+      });
+      const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
+      if (sr?.data?.id) {
+        await callFn("seedTestBooking", { action: "updateFoundingMember", id: sr.data.id, updates: { approval_status: "invited" } });
+      }
+      await callFn("setOnboardingPassword", {
+        email: "support@hostkeepdigital.co.uk",
+        password: "TestPassword123!",
+        forename: "Support", middle_name: "", surname: "Test",
+      });
+      await new Promise(r => setTimeout(r, 1000));
+      const after = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
+      const member = after?.data;
+      // Cleanup
+      await callFn("seedTestBooking", { action: "deleteUserCredentialsByEmail", email: "support@hostkeepdigital.co.uk" });
+      await callFn("seedTestBooking", { action: "deleteUserSession", email: "support@hostkeepdigital.co.uk" });
+      if (member?.id) await callFn("seedTestBooking", { action: "deleteFoundingMember", id: member.id });
+      const userRecord = await callFn("seedTestBooking", { action: "findUser", email: "support@hostkeepdigital.co.uk" });
+      if (userRecord?.data?.id) await callFn("seedTestBooking", { action: "deleteUser", id: userRecord.data.id });
+      if (member?.approval_status !== "password_protected") throw new Error(`Expected 'password_protected', got '${member?.approval_status}'`);
+      return `Passed — FoundingMember correctly advanced to password_protected`;
+    },
+  },
+  {
+    id: "sop_func_user_id_written",
+    group: "setOnboardingPassword",
+    label: "Functional — user_id written to FoundingMember after password set",
+    claudeHint: "Check base44/functions/setOnboardingPassword/entry.ts — user_id must be written to FoundingMember so CreateProperty can find the record later via user_id lookup.",
+    run: async () => {
+      await callFn("registerFoundingMember", {
+        forename: "Support", middle_name: "", surname: "Test",
+        email: "support@hostkeepdigital.co.uk",
+        postcode: "TR1 1AA", role: "host",
+      });
+      const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
+      if (sr?.data?.id) {
+        await callFn("seedTestBooking", { action: "updateFoundingMember", id: sr.data.id, updates: { approval_status: "invited" } });
+      }
+      await callFn("setOnboardingPassword", {
+        email: "support@hostkeepdigital.co.uk",
+        password: "TestPassword123!",
+        forename: "Support", middle_name: "", surname: "Test",
+      });
+      await new Promise(r => setTimeout(r, 1000));
+      const after = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
+      const member = after?.data;
+      // Cleanup
+      await callFn("seedTestBooking", { action: "deleteUserCredentialsByEmail", email: "support@hostkeepdigital.co.uk" });
+      await callFn("seedTestBooking", { action: "deleteUserSession", email: "support@hostkeepdigital.co.uk" });
+      if (member?.id) await callFn("seedTestBooking", { action: "deleteFoundingMember", id: member.id });
+      const userRecord = await callFn("seedTestBooking", { action: "findUser", email: "support@hostkeepdigital.co.uk" });
+      if (userRecord?.data?.id) await callFn("seedTestBooking", { action: "deleteUser", id: userRecord.data.id });
+      if (!member?.user_id) throw new Error(`user_id not written to FoundingMember after password set`);
+      return `Passed — user_id written: ${member.user_id}`;
+    },
+  },
+  {
+    id: "sop_func_profile_saved",
+    group: "setOnboardingPassword",
+    label: "Functional — UserProfile created with forename, middle_name, surname after password set",
+    claudeHint: "Check base44/functions/setOnboardingPassword/entry.ts — UserProfile must be created with forename, middle_name, surname so Settings shows correct data immediately after first login.",
+    run: async () => {
+      await callFn("registerFoundingMember", {
+        forename: "Support", middle_name: "Jane", surname: "Test",
+        email: "support@hostkeepdigital.co.uk",
+        postcode: "TR1 1AA", role: "host",
+      });
+      const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
+      if (sr?.data?.id) {
+        await callFn("seedTestBooking", { action: "updateFoundingMember", id: sr.data.id, updates: { approval_status: "invited" } });
+      }
+      await callFn("setOnboardingPassword", {
+        email: "support@hostkeepdigital.co.uk",
+        password: "TestPassword123!",
+        forename: "Support", middle_name: "Jane", surname: "Test",
+      });
+      await new Promise(r => setTimeout(r, 1000));
+      const profileRecord = await callFn("seedTestBooking", { action: "findUserProfile", email: "support@hostkeepdigital.co.uk" });
+      const profile = profileRecord?.data;
+      // Cleanup
+      await callFn("seedTestBooking", { action: "deleteUserCredentialsByEmail", email: "support@hostkeepdigital.co.uk" });
+      await callFn("seedTestBooking", { action: "deleteUserSession", email: "support@hostkeepdigital.co.uk" });
+      await callFn("seedTestBooking", { action: "deleteUserProfile", email: "support@hostkeepdigital.co.uk" });
+      const after = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
+      if (after?.data?.id) await callFn("seedTestBooking", { action: "deleteFoundingMember", id: after.data.id });
+      const userRecord = await callFn("seedTestBooking", { action: "findUser", email: "support@hostkeepdigital.co.uk" });
+      if (userRecord?.data?.id) await callFn("seedTestBooking", { action: "deleteUser", id: userRecord.data.id });
+      if (!profile) throw new Error(`UserProfile not created after password set`);
+      if (profile.forename !== "Support") throw new Error(`forename wrong: ${profile.forename}`);
+      if (profile.middle_name !== "Jane") throw new Error(`middle_name wrong: ${profile.middle_name}`);
+      if (profile.surname !== "Test") throw new Error(`surname wrong: ${profile.surname}`);
+      return `Passed — UserProfile created with correct name parts`;
+    },
+  },
+  {
+    id: "sop_func_no_duplicate_credentials",
+    group: "setOnboardingPassword",
+    label: "Functional — existing UserCredentials not duplicated for existing guest applying as host",
+    claudeHint: "Check base44/functions/setOnboardingPassword/entry.ts — if UserCredentials already exist for this email, must update not create. Duplicate create throws a constraint error and breaks the flow.",
+    run: async () => {
+      // Simulate existing guest credentials
+      await callFn("seedTestBooking", {
+        action: "createUserCredentials",
+        userCredentials: {
+          email: "support@hostkeepdigital.co.uk",
+          password_hash: "existinghashfortest",
+        },
+      });
+      await callFn("registerFoundingMember", {
+        forename: "Support", middle_name: "", surname: "Test",
+        email: "support@hostkeepdigital.co.uk",
+        postcode: "TR1 1AA", role: "host",
+      });
+      const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
+      if (sr?.data?.id) {
+        await callFn("seedTestBooking", { action: "updateFoundingMember", id: sr.data.id, updates: { approval_status: "invited" } });
+      }
+      const { status, data } = await callFn("setOnboardingPassword", {
+        email: "support@hostkeepdigital.co.uk",
+        password: "TestPassword123!",
+        forename: "Support", middle_name: "", surname: "Test",
+      });
+      // Cleanup
+      await callFn("seedTestBooking", { action: "deleteUserCredentialsByEmail", email: "support@hostkeepdigital.co.uk" });
+      await callFn("seedTestBooking", { action: "deleteUserSession", email: "support@hostkeepdigital.co.uk" });
+      const after = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
+      if (after?.data?.id) await callFn("seedTestBooking", { action: "deleteFoundingMember", id: after.data.id });
+      const userRecord = await callFn("seedTestBooking", { action: "findUser", email: "support@hostkeepdigital.co.uk" });
+      if (userRecord?.data?.id) await callFn("seedTestBooking", { action: "deleteUser", id: userRecord.data.id });
+      if (status === 500) throw new Error(`Function crashed — likely duplicate UserCredentials error: ${JSON.stringify(data)}`);
+      if (!data.success) throw new Error(`Expected success, got: ${JSON.stringify(data)}`);
+      return `Passed — existing credentials handled without duplicate error`;
+    },
+  },
+  {
+    id: "sop_biz_immediately_logged_in",
+    group: "setOnboardingPassword",
+    label: "Business — user is immediately logged in after setting password — session_token in response",
+    claudeHint: "Check base44/functions/setOnboardingPassword/entry.ts — session_token must be returned so the frontend can store it and the user lands logged in without a separate sign in step.",
+    run: async () => {
+      await callFn("registerFoundingMember", {
+        forename: "Support", middle_name: "", surname: "Test",
+        email: "support@hostkeepdigital.co.uk",
+        postcode: "TR1 1AA", role: "host",
+      });
+      const sr = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
+      if (sr?.data?.id) {
+        await callFn("seedTestBooking", { action: "updateFoundingMember", id: sr.data.id, updates: { approval_status: "invited" } });
+      }
+      const { data } = await callFn("setOnboardingPassword", {
+        email: "support@hostkeepdigital.co.uk",
+        password: "TestPassword123!",
+        forename: "Support", middle_name: "", surname: "Test",
+      });
+      // Cleanup
+      await callFn("seedTestBooking", { action: "deleteUserCredentialsByEmail", email: "support@hostkeepdigital.co.uk" });
+      await callFn("seedTestBooking", { action: "deleteUserSession", email: "support@hostkeepdigital.co.uk" });
+      const after = await callFn("seedTestBooking", { action: "findFoundingMember", email: "support@hostkeepdigital.co.uk" });
+      if (after?.data?.id) await callFn("seedTestBooking", { action: "deleteFoundingMember", id: after.data.id });
+      const userRecord = await callFn("seedTestBooking", { action: "findUser", email: "support@hostkeepdigital.co.uk" });
+      if (userRecord?.data?.id) await callFn("seedTestBooking", { action: "deleteUser", id: userRecord.data.id });
+      if (!data.session_token) throw new Error(`No session_token returned — user would need to sign in again after setting password`);
+      if (!data.expires_at) throw new Error(`No expires_at on session — session management broken`);
+      return `Passed — session_token returned, user immediately logged in`;
+    },
+  },
+
+  // ── getUserProfile + saveUserProfile ──────────────────────────────────
+  {
+    id: "gup_smoke_executes",
+    group: "getUserProfile",
+    label: "Smoke — returns 200 with correct profile shape",
+    claudeHint: "Check base44/functions/getUserProfile/entry.ts — must return { success: true, profile: { forename, middle_name, surname, phone, location } }.",
+    run: async (sessionToken, user) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      const { status, data } = await callFn("getUserProfile", {
+        session_token: sessionToken, email: user?.email,
+      });
+      if (status !== 200) throw new Error(`Expected 200, got ${status}`);
+      if (!data.success) throw new Error(`Expected success: true`);
+      if (typeof data.profile?.forename === "undefined") throw new Error(`Missing forename in profile shape`);
+      if (typeof data.profile?.surname === "undefined") throw new Error(`Missing surname in profile shape`);
+      if (typeof data.profile?.middle_name === "undefined") throw new Error(`Missing middle_name in profile shape`);
+      return `Passed — profile shape correct, forename: ${data.profile.forename}`;
+    },
+  },
+  {
+    id: "sup_func_saves_and_reads_back",
+    group: "saveUserProfile",
+    label: "Functional — saves forename, middle_name, surname and reads back correctly",
+    claudeHint: "Check base44/functions/saveUserProfile/entry.ts and getUserProfile/entry.ts — save must write all three name fields and get must return them correctly. full_name must never appear.",
+    run: async (sessionToken, user) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      const { data: saveData } = await callFn("saveUserProfile", {
+        session_token: sessionToken, email: user?.email,
+        forename: "Integration", middle_name: "Test", surname: "Runner",
+        phone: "", location: "",
+      });
+      if (!saveData?.success) throw new Error(`saveUserProfile failed: ${JSON.stringify(saveData)}`);
+      const { data: getData } = await callFn("getUserProfile", {
+        session_token: sessionToken, email: user?.email,
+      });
+      const p = getData?.profile;
+      if (p?.forename !== "Integration") throw new Error(`forename wrong: ${p?.forename}`);
+      if (p?.middle_name !== "Test") throw new Error(`middle_name wrong: ${p?.middle_name}`);
+      if (p?.surname !== "Runner") throw new Error(`surname wrong: ${p?.surname}`);
+      if (p?.full_name !== undefined && p?.full_name !== null) throw new Error(`full_name should not exist in profile response`);
+      return `Passed — forename: ${p.forename}, middle_name: ${p.middle_name}, surname: ${p.surname}`;
+    },
+  },
+  {
+    id: "sup_biz_settings_shows_correct_name",
+    group: "saveUserProfile",
+    label: "Business — after saving profile, Settings page would show correct name immediately",
+    claudeHint: "Check base44/functions/getUserProfile/entry.ts — profile must be readable immediately after save. No caching or delay. forename, middle_name, surname must all be correct.",
+    run: async (sessionToken, user) => {
+      if (!sessionToken) throw new Error("No session token — log in first");
+      await callFn("saveUserProfile", {
+        session_token: sessionToken, email: user?.email,
+        forename: "Settings", middle_name: "Page", surname: "Test",
+        phone: "07700900000", location: "Cornwall, UK",
+      });
+      const { data } = await callFn("getUserProfile", {
+        session_token: sessionToken, email: user?.email,
+      });
+      const p = data?.profile;
+      if (p?.forename !== "Settings") throw new Error(`Settings page would show wrong forename: ${p?.forename}`);
+      if (p?.middle_name !== "Page") throw new Error(`Settings page would show wrong middle_name: ${p?.middle_name}`);
+      if (p?.surname !== "Test") throw new Error(`Settings page would show wrong surname: ${p?.surname}`);
+      if (p?.phone !== "07700900000") throw new Error(`Settings page would show wrong phone: ${p?.phone}`);
+      return `Passed — Settings page would display correct data immediately after save`;
+    },
+  },
 ];
 
 
