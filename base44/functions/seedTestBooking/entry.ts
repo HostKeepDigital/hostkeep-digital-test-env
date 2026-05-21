@@ -222,6 +222,87 @@ if (action === "createEmailVerificationCode") {
       return Response.json({ record: records?.[0] || null });
     }
 
+    if (action === "findFoundingMember") {
+      const { email } = body;
+      if (!email) return Response.json({ error: "missing_email" }, { status: 400 });
+      const records = await sr.entities.FoundingMember.filter({ email: email.toLowerCase().trim() });
+      return Response.json({ data: records?.[0] || null });
+    }
+
+    if (action === "deleteFoundingMember") {
+      const { id } = body;
+      if (!id) return Response.json({ error: "missing_id" }, { status: 400 });
+      await sr.entities.FoundingMember.delete(id);
+      return Response.json({ deleted: true });
+    }
+
+    if (action === "updateFoundingMember") {
+      const { id, updates } = body;
+      if (!id || !updates) return Response.json({ error: "missing_fields" }, { status: 400 });
+      await sr.entities.FoundingMember.update(id, updates);
+      return Response.json({ updated: true });
+    }
+
+    if (action === "createFoundingMember") {
+      const { foundingMember } = body;
+      if (!foundingMember) return Response.json({ error: "missing_fields" }, { status: 400 });
+      const created = await sr.entities.FoundingMember.create(foundingMember);
+      return Response.json({ data: created });
+    }
+
+    if (action === "findVerificationCode") {
+      const { email } = body;
+      if (!email) return Response.json({ error: "missing_email" }, { status: 400 });
+      const records = await sr.entities.EmailVerificationCode.filter({ email: email.toLowerCase().trim() });
+      return Response.json({ data: records?.[0] || null });
+    }
+
+    if (action === "deleteVerificationCodes") {
+      const { email } = body;
+      if (!email) return Response.json({ error: "missing_email" }, { status: 400 });
+      const records = await sr.entities.EmailVerificationCode.filter({ email: email.toLowerCase().trim() });
+      await Promise.all((records || []).map(r => sr.entities.EmailVerificationCode.delete(r.id)));
+      return Response.json({ deleted: records?.length || 0 });
+    }
+
+    if (action === "findUserProfile") {
+      const { email } = body;
+      if (!email) return Response.json({ error: "missing_email" }, { status: 400 });
+      const records = await sr.entities.UserProfile.filter({ email: email.toLowerCase().trim() });
+      return Response.json({ data: records?.[0] || null });
+    }
+
+    if (action === "deleteUserProfile") {
+      const { email } = body;
+      if (!email) return Response.json({ error: "missing_email" }, { status: 400 });
+      const records = await sr.entities.UserProfile.filter({ email: email.toLowerCase().trim() });
+      await Promise.all((records || []).map(r => sr.entities.UserProfile.delete(r.id)));
+      return Response.json({ deleted: records?.length || 0 });
+    }
+
+    if (action === "deleteUserSession") {
+      const { email } = body;
+      if (!email) return Response.json({ error: "missing_email" }, { status: 400 });
+      const records = await sr.entities.UserSession.filter({ email: email.toLowerCase().trim() });
+      await Promise.all((records || []).map(r => sr.entities.UserSession.delete(r.id)));
+      return Response.json({ deleted: records?.length || 0 });
+    }
+
+    if (action === "deleteUserCredentialsByEmail") {
+      const { email } = body;
+      if (!email) return Response.json({ error: "missing_email" }, { status: 400 });
+      const records = await sr.entities.UserCredentials.filter({ email: email.toLowerCase().trim() });
+      await Promise.all((records || []).map(r => sr.entities.UserCredentials.delete(r.id)));
+      return Response.json({ deleted: records?.length || 0 });
+    }
+
+    if (action === "findUser") {
+      const { email } = body;
+      if (!email) return Response.json({ error: "missing_email" }, { status: 400 });
+      const records = await sr.entities.User.filter({ email: email.toLowerCase().trim() });
+      return Response.json({ data: records?.[0] || null });
+    }
+
     return Response.json({ error: "unrecognised_action" }, { status: 400 });
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 });
