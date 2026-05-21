@@ -219,7 +219,7 @@ export default function Home() {
             <h1 className="text-4xl md:text-6xl font-bold mb-6" style={{ textShadow: "2px 2px 4px rgba(0,0,0,0.5)" }}>
               Find Your Perfect<br />Holiday Home
             </h1>
-            <p className="text-xl md:text-2xl max-w-2xl mx-auto" style={{ textShadow: "1px 1px 3px rgba(0,0,0,0.5)" }}>
+            <p className="text-xl md:text-2xl max-w-2xl mx-auto" style={{ textShadow: "-1px -1px 0 rgba(0,0,0,0.4), 1px -1px 0 rgba(0,0,0,0.4), -1px 1px 0 rgba(0,0,0,0.4), 1px 1px 0 rgba(0,0,0,0.4), 0 0 3px rgba(0,0,0,0.3)" }}>
               Book directly with owners. No hidden fees. Just unforgettable stays.
             </p>
           </motion.div>
