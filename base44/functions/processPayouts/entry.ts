@@ -165,15 +165,7 @@ Deno.serve(async (req) => {
             });
           }
 
-          // Cancel deposit PaymentIntent if exists
-          if (booking.stripe_deposit_intent_id) {
-            try {
-              await stripe.paymentIntents.cancel(booking.stripe_deposit_intent_id);
-            } catch (_) {
-              // Ignore if already cancelled
-            }
-          }
-
+          // Write cancellation state first — before any Stripe calls
           await base44.asServiceRole.entities.Booking.update(booking.id, {
             booking_status: 'cancelled',
             balance_payment_status: 'overdue',
@@ -181,6 +173,15 @@ Deno.serve(async (req) => {
           });
 
           results.job2_cancelled++;
+
+          // Stripe refund/transfer best-effort after state is written
+          if (booking.stripe_deposit_intent_id) {
+            try {
+              await stripe.paymentIntents.cancel(booking.stripe_deposit_intent_id);
+            } catch (_) {
+              // Ignore if already cancelled
+            }
+          }
         }
       } catch (err) {
         results.errors.push(`Job 2 - Booking ${booking.id}: ${err.message}`);
