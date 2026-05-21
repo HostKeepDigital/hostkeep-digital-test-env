@@ -248,7 +248,7 @@ export default function CleanerSignup() {
   const showUpgradeMessage = formData.subscription_plan === "basic";
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 py-12 px-4">
       <div className="max-w-4xl mx-auto">
 
         {/* HERO SECTION */}
@@ -278,7 +278,7 @@ export default function CleanerSignup() {
         </div>
 
         {/* WHY CLEANKEEP */}
-        <Card className="mb-8 bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200">
+        <Card className="mb-8 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border-blue-200 dark:border-blue-800">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Star className="w-6 h-6 text-blue-600" />

@@ -104,7 +104,7 @@ export default function CleanKeep() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       {/* Hero Section */}
       <section className="pt-20 pb-16 px-4">
         <div className="max-w-5xl mx-auto text-center">
@@ -220,7 +220,7 @@ export default function CleanKeep() {
       </section>
 
       {/* Why CleanKeep Exists */}
-      <section className="py-16 px-4 bg-gray-50">
+      <section className="py-16 px-4 bg-gray-50 dark:bg-gray-800">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-6 dark:text-white">
             Why CleanKeep Exists
@@ -340,7 +340,7 @@ export default function CleanKeep() {
       </section>
 
       {/* Simple Transparent Pricing */}
-      <section className="py-16 px-4 bg-gray-50">
+      <section className="py-16 px-4 bg-gray-50 dark:bg-gray-800">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12 dark:text-white">
             Simple, Transparent Pricing
@@ -460,7 +460,7 @@ export default function CleanKeep() {
       </section>
 
       {/* Additional Sections */}
-      <section className="py-16 px-4 bg-gray-50">
+      <section className="py-16 px-4 bg-gray-50 dark:bg-gray-800">
         <div className="max-w-4xl mx-auto space-y-16">
           {/* Cleaner Dashboard */}
           <div className="text-center">
