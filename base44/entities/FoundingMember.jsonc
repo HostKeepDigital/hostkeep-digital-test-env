@@ -2,9 +2,17 @@
   "name": "FoundingMember",
   "type": "object",
   "properties": {
-    "full_name": {
+    "forename": {
       "type": "string",
-      "description": "Full name of the founding member (onboarding record only)"
+      "description": "Forename of the founding member"
+    },
+    "middle_name": {
+      "type": "string",
+      "description": "Middle name of the founding member"
+    },
+    "surname": {
+      "type": "string",
+      "description": "Surname of the founding member"
     },
     "email": {
       "type": "string",
@@ -52,14 +60,22 @@
       "type": "string",
       "enum": [
         "interest",
-        "pending_application",
+        "pending",
         "invited",
         "password_protected",
         "awaiting_document_verification",
         "documentation_failed_attempt_1",
         "documentation_failed_attempt_2",
-        "guest_pending_application",
-        "approved"
+        "approved",
+        "waitlist",
+        "rejected",
+        "rejected_pending_application",
+        "out_of_area",
+        "banned_email_verification",
+        "banned_documentation_failure",
+        "banned_fraud",
+        "banned_manual_admin_action",
+        "banned"
       ],
       "default": "interest",
       "description": "Admin approval + onboarding status."
@@ -68,25 +84,20 @@
       "type": "string",
       "description": "Reason recorded when a member is banned"
     },
-    "documents_verified": {
+    "email_verified": {
       "type": "boolean",
       "default": false,
-      "description": "Admin has approved the member's verification documents"
+      "description": "Whether the member has verified their email address"
+    },
+    "is_founding_member": {
+      "type": "boolean",
+      "default": true,
+      "description": "Founding member badge flag"
     },
     "documents_submitted_at": {
       "type": "string",
       "format": "date-time",
       "description": "When the member last submitted their verification documents"
-    },
-    "stripe_verified": {
-      "type": "boolean",
-      "default": false,
-      "description": "Stripe Connect account is connected and charges enabled"
-    },
-    "subscription_active": {
-      "type": "boolean",
-      "default": false,
-      "description": "Member has an active HostKeep subscription"
     },
     "ref_code": {
       "type": "string",
@@ -94,7 +105,8 @@
     }
   },
   "required": [
-    "full_name",
+    "forename",
+    "surname",
     "email",
     "role",
     "postcode"
