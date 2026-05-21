@@ -62,7 +62,7 @@ function buildEmail({ heading, body, buttonText, buttonUrl }) {
 
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
-  const { email, code } = await req.json();
+  const { email, code, type } = await req.json();
 
   if (!email || !code) {
     return Response.json({ valid: false });
@@ -87,7 +87,7 @@ Deno.serve(async (req) => {
   // Delete the used code
   await base44.asServiceRole.entities.EmailVerificationCode.delete(record.id);
 
-  // Mark email as verified in UserCredentials
+  // Mark email as verified in UserCredentials if they exist
   try {
     const credentials = await base44.asServiceRole.entities.UserCredentials.filter({ email });
     if (credentials && credentials.length > 0) {
@@ -95,6 +95,28 @@ Deno.serve(async (req) => {
     }
   } catch (err) {
     console.error("Failed to update email_verified on UserCredentials:", err);
+  }
+
+  // Advance FoundingMember from interest → pending and set email_verified: true
+  // This must happen in the backend — not the frontend
+  try {
+    const members = await base44.asServiceRole.entities.FoundingMember.filter({ email: email.toLowerCase().trim() });
+    if (members && members.length > 0) {
+      const member = members[0];
+      if (member.approval_status === "interest") {
+        await base44.asServiceRole.entities.FoundingMember.update(member.id, {
+          approval_status: "pending",
+          email_verified: true,
+        });
+      } else {
+        // Already past interest — just mark email verified
+        await base44.asServiceRole.entities.FoundingMember.update(member.id, {
+          email_verified: true,
+        });
+      }
+    }
+  } catch (err) {
+    console.error("Failed to update FoundingMember after verification:", err);
   }
 
   // Send branded thank-you email
