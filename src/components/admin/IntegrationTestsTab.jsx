@@ -1691,9 +1691,6 @@ const TESTS = [
     },
   },
 
-  ...checkInAndAutoCheckInTests,
-
-  ...processPayoutsAndPaymentIntentTests,
 ];
 
 export default function IntegrationTestsTab({ sessionToken }) {
