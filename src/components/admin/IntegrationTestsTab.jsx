@@ -2,8 +2,8 @@ import { useState } from "react";
 import { CheckCircle2, XCircle, Loader2, Play, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/AuthContext";
-import processPayoutsAndPaymentIntentTests from "./tests/processPayoutsAndPaymentIntent";
-import checkInAndAutoCheckInTests from "./tests/checkInBooking";
+import processPayoutsAndPaymentIntentTests from "./tests/processPayoutsAndPaymentIntent.js";
+import checkInAndAutoCheckInTests from "./tests/checkInBooking.js";
 
 function buildClaudePrompt(failedTests) {
   const lines = [
@@ -12,7 +12,7 @@ function buildClaudePrompt(failedTests) {
     "App ID: 698eee4108bd1d9467648326",
     "Stack: Base44 (Deno/TypeScript backend, React/Vite frontend), Stripe, Resend",
     "",
-    "FAILED TESTS:", 
+    "FAILED TESTS:",
     "",
   ];
   failedTests.forEach((t, i) => {
