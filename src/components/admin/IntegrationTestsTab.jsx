@@ -12,7 +12,7 @@ function buildClaudePrompt(failedTests) {
     "App ID: 698eee4108bd1d9467648326",
     "Stack: Base44 (Deno/TypeScript backend, React/Vite frontend), Stripe, Resend",
     "",
-    "FAILED TESTS:",
+    "FAILED TESTS:", 
     "",
   ];
   failedTests.forEach((t, i) => {
