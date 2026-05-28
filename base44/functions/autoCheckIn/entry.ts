@@ -6,11 +6,18 @@ Deno.serve(async (req) => {
     const sr = base44.asServiceRole;
 
     const now = new Date();
-    const rental_release_due_at = new Date(now.getTime() + 86400000).toISOString();
 
     const confirmedBookings = await sr.entities.Booking.filter({ booking_status: "confirmed" });
 
-    const eligible = confirmedBookings.filter(b => new Date(b.check_in) <= now);
+    // Fallback only: advance once 24h past the scheduled check-in (14:00) has elapsed
+    // and the guest still hasn't self-checked-in. (14:00 matches createBookingPaymentIntent.)
+    const eligible = confirmedBookings.filter(b => {
+      if (!b.check_in) return false;
+      const checkInAt14 = new Date(b.check_in);
+      checkInAt14.setHours(14, 0, 0, 0);
+      const graceDeadline = new Date(checkInAt14.getTime() + 86400000);
+      return graceDeadline <= now;
+    });
 
     const results = [];
 
@@ -18,7 +25,8 @@ Deno.serve(async (req) => {
       try {
         await sr.entities.Booking.update(booking.id, {
           booking_status: "checked_in",
-          rental_release_due_at,
+          checked_in_at: now.toISOString(),
+          rental_release_due_at: now.toISOString(),
         });
         results.push({ booking_id: booking.id, status: "advanced" });
       } catch (err) {
