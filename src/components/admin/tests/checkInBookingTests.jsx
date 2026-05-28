@@ -54,19 +54,25 @@ export const checkInBookingTests = [
     },
   },
   {
-    id: "cib_unknown_id_returns_404",
-    group: "checkInBooking",
-    label: "Smoke — unknown booking_id returns 404",
-    claudeHint: "If the booking lookup returns nothing, function must return 404 'booking_not_found'.",
-    run: async () => {
-      const { status, data } = await callFn("checkInBooking", { booking_id: "regression-nonexistent-id" });
-      if (status !== 404) throw new Error(`Expected 404, got ${status}`);
-      if (data?.error !== "booking_not_found")
-        throw new Error(`Expected 'booking_not_found', got '${data?.error}'`);
-      return "Passed — unknown booking correctly rejected";
+      id: "cib_unknown_id_returns_404",
+      group: "checkInBooking",
+      label: "Smoke — deleted (nonexistent) booking_id returns 404",
+      claudeHint: "If the booking lookup returns no record, function must return 404 'booking_not_found'. Uses seed-then-delete to get a real-format Base44 ID that's guaranteed not to exist.",
+      run: async () => {
+        // Seed and immediately delete so we have a real Base44-generated ID that
+        // no longer exists in the DB. A hard-coded string like "nonexistent" would
+        // trip Base44's ID-format validation and hit the catch (500) — a different
+        // failure mode than the realistic "valid ID, deleted record" case.
+        const seeded = await seedBooking({ guest_name: "CIB Deleted For 404" });
+        if (!seeded) throw new Error("Could not seed booking for delete test");
+        await cleanup(seeded);
+        const { status, data } = await callFn("checkInBooking", { booking_id: seeded });
+        if (status !== 404) throw new Error(`Expected 404, got ${status}`);
+        if (data?.error !== "booking_not_found")
+          throw new Error(`Expected 'booking_not_found', got '${data?.error}'`);
+        return "Passed — deleted booking ID correctly returns 404";
+      },
     },
-  },
-
   // ── FUNCTIONAL ─────────────────────────────────────────
   {
     id: "cib_default_uses_now",
