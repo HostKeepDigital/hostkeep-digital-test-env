@@ -28,6 +28,7 @@ function buildClaudePrompt(failedTests) {
 
 const TESTS = [
   ...autoCheckInTests,
+  ...checkInBookingTests,
   // ── releaseRentalPayments ──────────────────────────────────────────────
   {
     id: "rrp_executes",
