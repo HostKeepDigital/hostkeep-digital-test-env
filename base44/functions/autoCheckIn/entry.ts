@@ -9,13 +9,17 @@ Deno.serve(async (req) => {
 
     const confirmedBookings = await sr.entities.Booking.filter({ booking_status: "confirmed" });
 
-    // Fallback only: advance once 24h past the scheduled check-in (14:00) has elapsed
-    // and the guest still hasn't self-checked-in. (14:00 matches createBookingPaymentIntent.)
+    // Fallback only: advance once 24h past the booking's OWN check-in time has elapsed.
+    // check_in_time is the per-property time snapshotted onto the booking at creation
+    // (see "check-in time retention" pin). Fallback to "15:00" for legacy bookings that
+    // pre-date the snapshot. Reading the booking — never the live Property — is what
+    // guarantees an edited property time can't shift existing bookings.
     const eligible = confirmedBookings.filter(b => {
       if (!b.check_in) return false;
-      const checkInAt14 = new Date(b.check_in);
-      checkInAt14.setHours(14, 0, 0, 0);
-      const graceDeadline = new Date(checkInAt14.getTime() + 86400000);
+      const [hh, mm] = String(b.check_in_time || "15:00").split(":").map(Number);
+      const checkInAt = new Date(b.check_in);
+      checkInAt.setHours(Number.isFinite(hh) ? hh : 15, Number.isFinite(mm) ? mm : 0, 0, 0);
+      const graceDeadline = new Date(checkInAt.getTime() + 86400000);
       return graceDeadline <= now;
     });
 
