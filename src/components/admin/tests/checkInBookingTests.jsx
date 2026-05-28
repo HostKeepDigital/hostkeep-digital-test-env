@@ -19,6 +19,8 @@ const seedBooking = async (overrides) => {
       guest_name: "CheckInBooking Test",
       guest_email: "regression@hostkeepdigital-test.invalid",
       property_id: "regression-test-property-id",
+      check_in: dateOnly(Date.now()),
+      check_out: dateOnly(Date.now() + DAY),
       subtotal: 500, cleaning_fee: 50, total_amount: 550,
       rental_frozen: false,
       booking_status: "confirmed",
