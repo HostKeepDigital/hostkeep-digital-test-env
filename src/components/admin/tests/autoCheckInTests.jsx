@@ -253,4 +253,73 @@ export const autoCheckInTests = [
       } finally { await cleanup(id); }
     },
   },
+  {
+    id: "aci_business_manual_normal_time_untouched",
+    group: "autoCheckIn",
+    label: "Business — manual check-in at scheduled time is never re-touched; payout clock preserved",
+    claudeHint: "If a booking is already 'checked_in' from a normal-time self-check-in, autoCheckIn must NOT advance it again or reset rental_release_due_at — would risk double payout.",
+    run: async () => {
+      let id;
+      const checkedInAt = new Date().toISOString();
+      const manualDue = new Date(Date.now() + DAY).toISOString(); // 24h after manual check-in
+      try {
+        id = await seedBooking({
+          guest_name: "ACI Manual Normal Time",
+          check_in: dateOnly(Date.now()),               // scheduled check-in is today
+          check_out: dateOnly(Date.now() + DAY * 2),
+          booking_status: "checked_in",
+          checked_in_at: checkedInAt,
+          rental_payment_status: "held",
+          rental_release_due_at: manualDue,
+        });
+        if (!id) throw new Error("seedTestBooking failed");
+        const { status, data } = await callFn("autoCheckIn");
+        assertRanOk(status, data);
+        await new Promise(r => setTimeout(r, 1000));
+        const b = await readBooking(id);
+        if (b?.booking_status !== "checked_in")
+          throw new Error(`Status changed — expected 'checked_in', got '${b?.booking_status}'`);
+        if (b?.rental_release_due_at !== manualDue)
+          throw new Error("rental_release_due_at was overwritten — would risk double payout");
+        if (b?.checked_in_at !== checkedInAt)
+          throw new Error("checked_in_at was overwritten");
+        return "Passed — normal-time manual check-in untouched, payout clock preserved";
+      } finally { await cleanup(id); }
+    },
+  },
+  {
+    id: "aci_business_no_double_advance_on_rerun",
+    group: "autoCheckIn",
+    label: "Business — autoCheckIn rerun on an already-checked-in booking does not re-advance or reset the payout clock",
+    claudeHint: "Cron runs hourly. If a booking was auto-checked-in on a previous run, a later run must not touch it. Re-stamping rental_release_due_at could re-trigger releaseRentalPayments → double payout.",
+    run: async () => {
+      let id;
+      // Simulate state immediately after a prior autoCheckIn run: status checked_in,
+      // checked_in_at and rental_release_due_at both stamped ~1 hour ago by that run.
+      const priorRunAt = new Date(Date.now() - 3600000).toISOString();
+      try {
+        id = await seedBooking({
+          guest_name: "ACI Already Auto-Checked-In",
+          check_in: dateOnly(Date.now() - DAY * 2),
+          check_out: dateOnly(Date.now() - DAY),
+          booking_status: "checked_in",
+          checked_in_at: priorRunAt,
+          rental_payment_status: "held",
+          rental_release_due_at: priorRunAt,
+        });
+        if (!id) throw new Error("seedTestBooking failed");
+        const { status, data } = await callFn("autoCheckIn");
+        assertRanOk(status, data);
+        await new Promise(r => setTimeout(r, 1000));
+        const b = await readBooking(id);
+        if (b?.booking_status !== "checked_in")
+          throw new Error(`Status changed — expected 'checked_in', got '${b?.booking_status}'`);
+        if (b?.rental_release_due_at !== priorRunAt)
+          throw new Error("rental_release_due_at was reset — would re-trigger release cron → double payout");
+        if (b?.checked_in_at !== priorRunAt)
+          throw new Error("checked_in_at was overwritten on rerun");
+        return "Passed — rerun left already-checked-in booking untouched; no double-payout risk";
+      } finally { await cleanup(id); }
+    },
+  },
 ];
