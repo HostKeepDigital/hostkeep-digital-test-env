@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/AuthContext";
 import { callFn } from "./tests/testHelpers";
 import { autoCheckInTests } from "./tests/autoCheckInTests";
+import { checkInBookingTests } from "./tests/checkInBookingTests";
 
 
 function buildClaudePrompt(failedTests) {
