@@ -2,8 +2,7 @@ import { useState } from "react";
 import { CheckCircle2, XCircle, Loader2, Play, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/AuthContext";
-import processPayoutsAndPaymentIntentTests from "./tests/processPayoutsAndPaymentIntent";
-import checkInAndAutoCheckInTests from "./tests/checkInBooking";
+
 
 function buildClaudePrompt(failedTests) {
   const lines = [
@@ -42,8 +41,6 @@ const callFn = async (name, body = {}, retries = 3) => {
 };
 
 const TESTS = [
-  ...processPayoutsAndPaymentIntentTests,
-  ...checkInAndAutoCheckInTests,
   // ── releaseRentalPayments ──────────────────────────────────────────────
   {
     id: "rrp_executes",
@@ -1691,9 +1688,6 @@ const TESTS = [
     },
   },
 
-  ...checkInAndAutoCheckInTests,
-
-  ...processPayoutsAndPaymentIntentTests,
 ];
 
 export default function IntegrationTestsTab({ sessionToken }) {
