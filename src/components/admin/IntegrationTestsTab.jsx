@@ -2,6 +2,8 @@ import { useState } from "react";
 import { CheckCircle2, XCircle, Loader2, Play, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/AuthContext";
+import { callFn } from "./tests/testHelpers";
+import { autoCheckInTests } from "./tests/autoCheckInTests";
 
 
 function buildClaudePrompt(failedTests) {
@@ -24,23 +26,8 @@ function buildClaudePrompt(failedTests) {
   return lines.join("\n");
 }
 
-const callFn = async (name, body = {}, retries = 3) => {
-  for (let attempt = 0; attempt < retries; attempt++) {
-    const res = await fetch(`/functions/${name}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    if (res.status === 429 && attempt < retries - 1) {
-      await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
-      continue;
-    }
-    const data = await res.json();
-    return { status: res.status, data };
-  }
-};
-
 const TESTS = [
+  ...autoCheckInTests,
   // ── releaseRentalPayments ──────────────────────────────────────────────
   {
     id: "rrp_executes",
