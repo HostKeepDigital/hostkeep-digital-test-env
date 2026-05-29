@@ -5,6 +5,12 @@ import { useAuth } from "@/lib/AuthContext";
 import { callFn } from "./tests/testHelpers";
 import { autoCheckInTests } from "./tests/autoCheckInTests";
 import { checkInBookingTests } from "./tests/checkInBookingTests";
+import { foundingOpsTests } from "./tests/foundingOps";
+import { getUserProfileTests } from "./tests/getUserProfile";
+import { registerFoundingMemberTests } from "./tests/registerFoundingMember";
+import { saveUserProfileTests } from "./tests/saveUserProfile";
+import { setOnboardingPasswordTests } from "./tests/setOnboardingPassword";
+import { verifyEmailCodeTests } from "./tests/verifyEmailCode";
 
 
 
@@ -29,10 +35,62 @@ function buildClaudePrompt(failedTests) {
 }
 
 const TESTS = [
+  {
+    id: "framework_all_test_files_registered",
+    group: "Framework",
+    label: "Framework — every test file in tests/ is wired into the TESTS array",
+    claudeHint: "A test file exists in src/components/admin/tests/ but its tests are not spread into the TESTS array in IntegrationTestsTab.jsx, so they never run. Add the missing import + spread. This guard catches the silent-unwired-suite bug.",
+    run: async () => {
+      const HELPER_FILES = ["testHelpers"];
+      const modules = import.meta.glob("./tests/*.jsx", { eager: true });
+      const registeredIds = new Set(TESTS.map(t => t.id));
+      const unregistered = [];
+      const noSuite = [];
+
+      for (const path in modules) {
+        const fileName = path.split("/").pop().replace(".jsx", "");
+        if (HELPER_FILES.includes(fileName)) continue;
+
+        const mod = modules[path];
+        // Find the exported test array: default export, or any named export that is a non-empty array of {id,run}
+        let suite = Array.isArray(mod.default) ? mod.default : null;
+        if (!suite) {
+          for (const key in mod) {
+            const val = mod[key];
+            if (Array.isArray(val) && val.length > 0 && val[0] && typeof val[0].run === "function" && val[0].id) {
+              suite = val;
+              break;
+            }
+          }
+        }
+
+        if (!suite) { noSuite.push(fileName); continue; }
+
+        const notRegistered = suite.map(t => t.id).filter(id => !registeredIds.has(id));
+        if (notRegistered.length > 0) {
+          unregistered.push(`${fileName} → ${notRegistered.length} unrun test(s): ${notRegistered.slice(0, 3).join(", ")}${notRegistered.length > 3 ? "…" : ""}`);
+        }
+      }
+
+      if (noSuite.length > 0) {
+        throw new Error(`Files in tests/ with no detectable test array (export name mismatch?): ${noSuite.join(", ")}`);
+      }
+      if (unregistered.length > 0) {
+        throw new Error(`UNREGISTERED — these test files exist but are NOT spread into TESTS, so they silently never run: ${unregistered.join(" | ")}`);
+      }
+
+      const checked = Object.keys(modules).length - HELPER_FILES.filter(h => modules[`./tests/${h}.jsx`]).length;
+      return `Passed — all ${checked} test files in tests/ are registered and running`;
+    },
+  },
   ...autoCheckInTests,
   ...checkInBookingTests,
-  ...registerFoundingMemberTests,
   ...foundingOpsTests,
+  ...getUserProfileTests,
+  ...registerFoundingMemberTests,
+  ...saveUserProfileTests,
+  ...setOnboardingPasswordTests,
+  ...verifyEmailCodeTests,
   // ── releaseRentalPayments ──────────────────────────────────────────────
   {
     id: "rrp_executes",
