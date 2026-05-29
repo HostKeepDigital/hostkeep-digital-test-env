@@ -74,6 +74,12 @@ const ACTIVE_STATUSES = new Set([
   "rejected_pending_application",
 ]);
 
+const memberName = (m) =>
+  [m?.forename, m?.middle_name, m?.surname].filter(Boolean).join(" ") ||
+  m?.full_name ||
+  m?.email ||
+  "Unknown";
+
 // ── UK SECTORS (full UK coverage) ───────────────────────────────────────────
 
 const SECTORS = [
