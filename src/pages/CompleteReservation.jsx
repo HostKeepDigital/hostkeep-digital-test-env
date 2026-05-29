@@ -35,6 +35,8 @@ export default function CompleteReservation() {
   const navigate = useNavigate();
 
   // Form state
+  const [paymentOption, setPaymentOption] = useState("deposit");
+  const [customAmount, setCustomAmount] = useState("");
   const [guestName, setGuestName] = useState(
     currentUser ? [currentUser.forename, currentUser.surname].filter(Boolean).join(" ") : ""
   );
