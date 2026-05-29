@@ -229,20 +229,6 @@ if (action === "createEmailVerificationCode") {
       return Response.json({ data: records?.[0] || null });
     }
 
-    if (action === "readFoundingMemberByEmail") {
-      const { email } = body;
-      if (!email) return Response.json({ error: "missing_email" }, { status: 400 });
-      const records = await sr.entities.FoundingMember.filter({ email: email.toLowerCase().trim() });
-      return Response.json({ record: records?.[0] || null });
-    }
-
-    if (action === "deleteFoundingMemberByEmail") {
-      const { email } = body;
-      if (!email) return Response.json({ error: "missing_email" }, { status: 400 });
-      const records = await sr.entities.FoundingMember.filter({ email: email.toLowerCase().trim() });
-      await Promise.all((records || []).map(r => sr.entities.FoundingMember.delete(r.id)));
-      return Response.json({ deleted: true, count: records?.length || 0 });
-    }
     if (action === "deleteFoundingMember") {
       const { id } = body;
       if (!id) return Response.json({ error: "missing_id" }, { status: 400 });
