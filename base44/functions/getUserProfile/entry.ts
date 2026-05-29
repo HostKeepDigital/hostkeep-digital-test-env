@@ -14,21 +14,16 @@ Deno.serve(async (req) => {
     const base44 = base44client;
     const sr = base44.asServiceRole;
 
-    // Cross-user access guard: only admins may fetch another user's profile
+    // Cross-user access guard: only admins may target another user.
     const { target_user_id } = body;
     if (target_user_id && session.role !== "admin") {
       return Response.json({ success: false, error: "forbidden" }, { status: 403 });
     }
 
-    // Derive identity from the session — never require the caller to pass their own email.
-    // Admin may target another user by email; everyone else resolves to their own session email.
+    // Identity comes from the session. (Admin cross-user fetch by id is intentionally
+    // not supported here — would require a User.filter({id}) lookup, which is forbidden.)
     let lookupEmail = session.email;
-    if (target_user_id && session.role === "admin") {
-      const targetUsers = await sr.entities.User.filter({ id: target_user_id });
-      lookupEmail = targetUsers?.[0]?.email || null;
-    } else if (email && session.role === "admin") {
-      lookupEmail = email;
-    }
+    if (email && session.role === "admin") lookupEmail = email;
     if (!lookupEmail) return Response.json({ success: true, profile: {} });
     const norm = lookupEmail.toLowerCase().trim();
 const records = await sr.entities.UserProfile.filter({ email: norm });
