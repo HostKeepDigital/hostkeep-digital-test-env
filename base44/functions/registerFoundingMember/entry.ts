@@ -3,7 +3,7 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.25";
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
   const parsedBody = await req.json();
-  const { forename, middle_name, surname, email, postcode, role, is_existing_guest } = parsedBody;
+  const { forename, middle_name, surname, email, postcode, role, is_existing_guest, ref_code } = parsedBody;
 
   if (!forename || !surname || !email || !postcode || !role) {
     return Response.json({ error: "Missing required fields" }, { status: 400 });
@@ -38,6 +38,7 @@ Deno.serve(async (req) => {
     email_verified: false,
     is_founding_member: true,
     signup_timestamp: new Date().toISOString(),
+    ...(ref_code ? { ref_code: String(ref_code).trim() } : {}),
   });
 
   return Response.json({ success: true, out_of_area: outOfArea });
