@@ -13,8 +13,24 @@ Deno.serve(async (req) => {
     }
     const base44 = base44client;
     const sr = base44.asServiceRole;
-    if (!email) return Response.json({ success: false, error: "email required" }, { status: 400 });
-    const norm = email.toLowerCase().trim();
+
+    // Cross-user access guard: only admins may fetch another user's profile
+    const { target_user_id } = body;
+    if (target_user_id && session.role !== "admin") {
+      return Response.json({ success: false, error: "forbidden" }, { status: 403 });
+    }
+
+    // Derive identity from the session — never require the caller to pass their own email.
+    // Admin may target another user by email; everyone else resolves to their own session email.
+    let lookupEmail = session.email;
+    if (target_user_id && session.role === "admin") {
+      const targetUsers = await sr.entities.User.filter({ id: target_user_id });
+      lookupEmail = targetUsers?.[0]?.email || null;
+    } else if (email && session.role === "admin") {
+      lookupEmail = email;
+    }
+    if (!lookupEmail) return Response.json({ success: true, profile: {} });
+    const norm = lookupEmail.toLowerCase().trim();
 const records = await sr.entities.UserProfile.filter({ email: norm });
 let u = records?.[0] || null;
 
@@ -34,8 +50,8 @@ if (!u) {
   }
 }
 
-if (!u) return Response.json({ success: true, profile: null });
-return Response.json({ success: true, profile: { forename: u.forename || "", middle_name: u.middle_name || "", surname: u.surname || "", phone: u.phone || "", location: u.location || "", notification_preferences: u.notification_preferences || null } });} catch (e) {
+if (!u) return Response.json({ success: true, profile: { email: norm } });
+return Response.json({ success: true, profile: { email: norm, forename: u.forename || "", middle_name: u.middle_name || "", surname: u.surname || "", phone: u.phone || "", location: u.location || "", notification_preferences: u.notification_preferences || null } });} catch (e) {
     console.error("getUserProfile error:", e);
     return Response.json({ success: false, error: e.message }, { status: 500 });
   }
