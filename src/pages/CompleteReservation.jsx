@@ -140,19 +140,35 @@ export default function CompleteReservation() {
 
   const cleaningFee = property?.cleaning_fee || 0;
   const securityDeposit = property?.security_deposit || 0;
-  const total = subtotal + cleaningFee + securityDeposit;
+  const rentalTotal = subtotal + cleaningFee;             // excludes security deposit
+  const total = rentalTotal + securityDeposit;            // grand total
 
   const isWithin56Days = checkIn
     ? differenceInDays(parseISO(checkIn), startOfDay(new Date())) <= 56
     : false;
 
-  const depositAmount = (() => {
-    if (isWithin56Days) return total;
-    if (!property?.deposit_enabled || !property?.deposit_value) return 0;
+  // Host's configured deposit value, derived off rentalTotal. Defaults to £1
+  // if the host hasn't set one (the minimum to save card details in Stripe).
+  const hostDeposit = (() => {
+    if (!property?.deposit_enabled || !property?.deposit_value) return 1;
     if (property.deposit_type === "percentage") {
-      return Number(((total * property.deposit_value) / 100).toFixed(2));
+      return Number(((rentalTotal * property.deposit_value) / 100).toFixed(2));
     }
     return property.deposit_value;
+  })();
+
+  const customAmountNum = Number(customAmount);
+  const customAmountValid =
+    customAmount !== "" &&
+    !Number.isNaN(customAmountNum) &&
+    customAmountNum > hostDeposit &&
+    customAmountNum <= rentalTotal;
+
+  const depositAmount = (() => {
+    if (isWithin56Days) return total;                     // <=56 days: always full
+    if (paymentOption === "full") return total;          // includes security deposit
+    if (paymentOption === "custom") return customAmountValid ? customAmountNum : 0;
+    return hostDeposit;                                   // default: "deposit" option
   })();
 
   const hostStripeVerified = hostCredentials?.stripe_connect_status === "verified";
@@ -177,6 +193,9 @@ export default function CompleteReservation() {
     if (!agreedHouseRules) newErrors.agreedHouseRules = "Required";
     if (!agreedCancellation) newErrors.agreedCancellation = "Required";
     if (!agreedTerms) newErrors.agreedTerms = "Required";
+    if (!isWithin56Days && paymentOption === "custom" && !customAmountValid) {
+      newErrors.customAmount = `Enter an amount above £${hostDeposit.toFixed(2)} and at or below £${rentalTotal.toFixed(2)}`;
+    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -229,6 +248,7 @@ export default function CompleteReservation() {
       decision_deadline: new Date(Date.now() + 86400000).toISOString(),
       guest_message: guestMessage,
       payment_link_id: crypto.randomUUID().slice(0, 8),
+      payment_option: isWithin56Days ? "full" : paymentOption,
     });
   };
 
@@ -382,34 +402,160 @@ export default function CompleteReservation() {
                     <span>£{total.toFixed(2)}</span>
                   </div>
 
-                  {isWithin56Days ? (
+                  {isWithin56Days && (
                     <div className="border-t border-gray-100 pt-3 flex justify-between text-sm font-semibold text-[#0d9488]">
                       <span>Full payment due now</span>
-                      <span>£{total.toFixed(2)}</span>
-                    </div>
-                  ) : depositAmount > 0 ? (
-                    <>
-                      <div className="border-t border-gray-100 pt-3 flex justify-between text-sm font-semibold text-[#0d9488]">
-                        <span>Deposit due now</span>
-                        <span>£{depositAmount.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between text-sm text-gray-600">
-                        <span>Remaining balance</span>
-                        <span>£{(total - depositAmount).toFixed(2)}</span>
-                      </div>
-                      <p className="text-xs text-gray-500">
-                        Balance due by {balanceDueDate} (56 days before check-in)
-                      </p>
-                    </>
-                  ) : (
-                    <div className="border-t border-gray-100 pt-3 flex justify-between text-sm font-semibold text-[#0d9488]">
-                      <span>Amount due now</span>
                       <span>£{total.toFixed(2)}</span>
                     </div>
                   )}
                 </div>
               </CardContent>
             </Card>
+
+            {/* Payment option (only >56 days) */}
+            {!isWithin56Days && (
+              <Card className="border-0 shadow-sm">
+                <CardContent className="p-5">
+                  <h3 className="font-semibold text-[#1E3A5F] text-base mb-1">Payment option</h3>
+                  <p className="text-xs text-gray-500 mb-4">
+                    Choose how much to pay now. The remainder is auto-charged 56 days before check-in.
+                  </p>
+
+                  <div className="space-y-2.5">
+                    {/* Option A — pay deposit */}
+                    <label
+                      className={`flex items-start gap-3 p-3.5 rounded-lg border cursor-pointer transition-colors ${
+                        paymentOption === "deposit"
+                          ? "border-[#0d9488] bg-teal-50/60"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="payment_option"
+                        value="deposit"
+                        checked={paymentOption === "deposit"}
+                        onChange={() => setPaymentOption("deposit")}
+                        className="mt-1 accent-[#0d9488]"
+                      />
+                      <div className="flex-1">
+                        <div className="flex justify-between items-baseline">
+                          <span className="text-sm font-semibold text-[#1E3A5F]">Pay deposit only</span>
+                          <span className="text-sm font-semibold text-[#1E3A5F]">£{hostDeposit.toFixed(2)}</span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          Secures your booking and saves your card for the remaining balance.
+                        </p>
+                      </div>
+                    </label>
+
+                    {/* Option B — pay custom amount */}
+                    <label
+                      className={`flex items-start gap-3 p-3.5 rounded-lg border cursor-pointer transition-colors ${
+                        paymentOption === "custom"
+                          ? "border-[#0d9488] bg-teal-50/60"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="payment_option"
+                        value="custom"
+                        checked={paymentOption === "custom"}
+                        onChange={() => setPaymentOption("custom")}
+                        className="mt-1 accent-[#0d9488]"
+                      />
+                      <div className="flex-1">
+                        <span className="text-sm font-semibold text-[#1E3A5F]">Pay a custom amount</span>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          Anything above £{hostDeposit.toFixed(2)} up to £{rentalTotal.toFixed(2)} (rental only).
+                        </p>
+                        {paymentOption === "custom" && (
+                          <div className="mt-2">
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">£</span>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min={hostDeposit + 0.01}
+                                max={rentalTotal}
+                                placeholder={(hostDeposit + 1).toFixed(2)}
+                                value={customAmount}
+                                onChange={(e) => {
+                                  setCustomAmount(e.target.value);
+                                  setErrors((prev) => ({ ...prev, customAmount: null }));
+                                }}
+                                className={`pl-7 h-10 ${
+                                  errors.customAmount
+                                    ? "border-red-500 focus-visible:ring-red-300"
+                                    : "focus-visible:ring-[#0d9488]/30 border-gray-200"
+                                }`}
+                              />
+                            </div>
+                            {errors.customAmount && (
+                              <p className="text-xs text-red-500 mt-1">{errors.customAmount}</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </label>
+
+                    {/* Option C — pay in full */}
+                    <label
+                      className={`flex items-start gap-3 p-3.5 rounded-lg border cursor-pointer transition-colors ${
+                        paymentOption === "full"
+                          ? "border-[#0d9488] bg-teal-50/60"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="payment_option"
+                        value="full"
+                        checked={paymentOption === "full"}
+                        onChange={() => setPaymentOption("full")}
+                        className="mt-1 accent-[#0d9488]"
+                      />
+                      <div className="flex-1">
+                        <div className="flex justify-between items-baseline">
+                          <span className="text-sm font-semibold text-[#1E3A5F]">Pay in full now</span>
+                          <span className="text-sm font-semibold text-[#1E3A5F]">£{total.toFixed(2)}</span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          Includes the £{securityDeposit.toFixed(2)} refundable security deposit.
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+
+                  {/* Dynamic "what happens" summary */}
+                  <div className="mt-5 pt-4 border-t border-gray-100 space-y-2">
+                    <div className="flex justify-between text-sm font-semibold text-[#0d9488]">
+                      <span>Paying now</span>
+                      <span>£{depositAmount.toFixed(2)}</span>
+                    </div>
+                    {paymentOption !== "full" && (
+                      <>
+                        <div className="flex justify-between text-sm text-gray-600">
+                          <span>Remaining balance (incl. security deposit)</span>
+                          <span>£{(total - depositAmount).toFixed(2)}</span>
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          Auto-charged on {balanceDueDate} (56 days before check-in).
+                        </p>
+                      </>
+                    )}
+                    <div className="flex items-start gap-2 mt-3 p-3 rounded-lg bg-[#f4f4f5]">
+                      <Info className="w-4 h-4 text-[#1E3A5F] flex-shrink-0 mt-0.5" />
+                      <p className="text-xs text-gray-700 leading-relaxed">
+                        Your security deposit of <strong>£{securityDeposit.toFixed(2)}</strong> is held during your stay and
+                        refunded <strong>48 hours after checkout</strong>, provided no complaint is raised by the host.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Cancellation policy */}
             {cancellationPolicy && (
