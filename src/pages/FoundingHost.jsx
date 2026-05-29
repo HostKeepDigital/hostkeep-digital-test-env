@@ -110,7 +110,10 @@ export default function FoundingHost() {
     setSubmitting(true);
     try {
       const result = await base44.functions.invoke("registerFoundingMember", {
-        full_name: fullName(), email: form.email.toLowerCase().trim(),
+        forename: form.forename.trim(),
+        middle_name: form.middle_name.trim(),
+        surname: form.surname.trim(),
+        email: form.email.toLowerCase().trim(),
         postcode: form.postcode.toUpperCase().trim(), role: "host",
         is_existing_guest: isGuest,
         ...(refCode ? { ref_code: refCode } : {}),
