@@ -56,9 +56,9 @@ const registerFoundingMemberTests = [
         forename: "Second", surname: "User", email: testEmail,
         role: "host", postcode: "TR1 1AA",
       });
-      if (status !== 409 && data.error !== "already_registered") throw new Error(`Expected 409 or already_registered, got ${status}: ${JSON.stringify(data)}`);
+      if (data.error !== "duplicate_email") throw new Error(`Expected duplicate_email, got ${status}: ${JSON.stringify(data)}`);
       await callFn("seedTestBooking", { action: "deleteFoundingMemberByEmail", email: testEmail });
-      return `Passed — duplicate email correctly rejected`;
+      return `Passed — duplicate email correctly returned duplicate_email`;
     },
   },
   {
