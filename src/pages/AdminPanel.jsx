@@ -76,7 +76,6 @@ const ACTIVE_STATUSES = new Set([
 
 const memberName = (m) =>
   [m?.forename, m?.middle_name, m?.surname].filter(Boolean).join(" ") ||
-  m?.full_name ||
   m?.email ||
   "Unknown";
 
