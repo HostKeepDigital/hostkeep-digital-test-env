@@ -244,6 +244,18 @@ if (action === "createEmailVerificationCode") {
       return Response.json({ deleted: true, count: records?.length || 0 });
     }
 
+    if (action === "deleteAllTestData") {
+      const members = await sr.entities.FoundingMember.list();
+      const testMembers = (members || []).filter(m => (m.email || "").includes("@integration.test"));
+      await Promise.all(testMembers.map(m => sr.entities.FoundingMember.delete(m.id)));
+
+      const creds = await sr.entities.UserCredentials.list();
+      const testCreds = (creds || []).filter(c => (c.email || "").includes("@integration.test"));
+      await Promise.all(testCreds.map(c => sr.entities.UserCredentials.delete(c.id)));
+
+      return Response.json({ deleted: { members: testMembers.length, credentials: testCreds.length } });
+    }
+
     if (action === "deleteFoundingMember") {
       const { id } = body;
       if (!id) return Response.json({ error: "missing_id" }, { status: 400 });
