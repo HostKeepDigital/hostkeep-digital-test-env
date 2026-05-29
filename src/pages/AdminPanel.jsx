@@ -864,6 +864,8 @@ const handleDocBan = async (member) => {
   const bannedFraudMembers       = byStatus("banned_fraud");
   const bannedManualMembers      = byStatus("banned_manual_admin_action");
   const bannedAdminMembers       = byStatus("banned");
+  const KNOWN_STATUSES = new Set(["interest","pending","invited","password_protected","awaiting_document_verification","documentation_failed_attempt_1","documentation_failed_attempt_2","approved","waitlist","rejected_pending_application","rejected","out_of_area","banned_email_verification","banned_documentation_failure","banned_fraud","banned_manual_admin_action","banned"]);
+  const unbucketedMembers = members.filter(m => !KNOWN_STATUSES.has(m.approval_status));
 
   const activeHosts    = members.filter(m => m.role === "host"    && ACTIVE_STATUSES.has(m.approval_status)).length;
   const activeCleaners = members.filter(m => m.role === "cleaner" && ACTIVE_STATUSES.has(m.approval_status)).length;
@@ -1556,6 +1558,12 @@ const handleDocBan = async (member) => {
               <Section title="Banned" count={bannedEmailMembers.length + bannedDocMembers.length + bannedFraudMembers.length + bannedManualMembers.length + bannedAdminMembers.length} accent="red">
                 <MemberTable members={[...bannedEmailMembers, ...bannedDocMembers, ...bannedFraudMembers, ...bannedManualMembers, ...bannedAdminMembers]} showDeleteButton={canDelete} />
               </Section>
+
+              {unbucketedMembers.length > 0 && (
+                <Section title="Other / Unknown Status" count={unbucketedMembers.length} accent="gray">
+                  <MemberTable members={unbucketedMembers} showDeleteButton={canDelete} />
+                </Section>
+              )}
             </>
           )}
         </div>
