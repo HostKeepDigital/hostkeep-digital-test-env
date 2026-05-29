@@ -7,6 +7,7 @@ import { autoCheckInTests } from "./tests/autoCheckInTests";
 import { checkInBookingTests } from "./tests/checkInBookingTests";
 
 
+
 function buildClaudePrompt(failedTests) {
   const lines = [
     "I ran the HostKeep integration tests and the following tests failed. Please help me fix them.",
