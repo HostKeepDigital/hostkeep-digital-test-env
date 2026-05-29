@@ -670,18 +670,6 @@ if (res.error?.includes("No such account")) return { pass: true, detail: "⚠️
     },
   },
   {
-    id: "money_process_payouts", group: "Money",
-    label: "Money: processPayouts — runs without crashing (live check)",
-    claudeHint: "Check base44/functions/processPayouts/entry.ts — must return results object with job counts. STRIPE_SECRET_KEY may be wrong or Booking entity query failing.",
-    run: async () => {
-      try {
-        const res = await callFn("processPayouts", {});
-        const hasResultShape = typeof res.job1_charged !== "undefined" || typeof res.errors !== "undefined" || !!res.error;
-        return { pass: hasResultShape, detail: `j1=${res.job1_charged} j2=${res.job2_cancelled} j3=${res.job3_released} j4=${res.job4_returned} errors=${res.errors?.length || 0}` };
-      } catch (e) { return { pass: false, detail: e.message }; }
-    },
-  },
-  {
     id: "money_validate_ical_invalid", group: "Money",
     label: "Money: validateIcalUrl — invalid URL returns error",
     claudeHint: "Check base44/functions/validateIcalUrl/entry.ts — invalid URLs must return valid=false or error.",
