@@ -445,8 +445,11 @@ export default function AdminPanel() {
 
   const fetchMembers = async () => {
     setLoading(true);
-    const data = await base44.entities.FoundingMember.list("-signup_timestamp", 500);
-    setMembers(data || []);
+    const res = await callFn("foundingOps", { op: "listMembers", session_token: getSessionToken() });
+    const data = (res.members || []).sort((a, b) =>
+      new Date(b.signup_timestamp || 0) - new Date(a.signup_timestamp || 0)
+    );
+    setMembers(data);
     setLoading(false);
   };
 
@@ -502,7 +505,7 @@ export default function AdminPanel() {
     setML(member.id, "approve");
     try {
       await base44.functions.invoke("promoteUserToInvited", { member_id: member.id, session_token: localStorage.getItem("session_token") });
-      toast.success(`${member.full_name} approved — invite email sent`);
+      toast.success(`${memberName(member)} approved — invite email sent`);
     } catch (e) {
       toast.error("Approval failed");
       console.error(e);
@@ -522,14 +525,14 @@ export default function AdminPanel() {
         body: `Thank you for applying to join HostKeep.<br><br>Our founding spots are currently full, but we've added you to our waitlist.<br><br>You'll be among the first to know when a spot opens up.`,
       }),
     });
-    toast.success(`${member.full_name} moved to waitlist`);
+    toast.success(`${memberName(member)} moved to waitlist`);
     setML(member.id, null);
     fetchMembers();
   };
 
   const handleReject = async (member) => {
     setML(member.id, "reject");
-    const note = window.prompt(`Rejection reason for ${member.full_name}:`);
+    const note = window.prompt(`Rejection reason for ${memberName(member)}:`);
     if (!note?.trim()) { setML(member.id, null); return; }
     await base44.entities.FoundingMember.update(member.id, { approval_status: "rejected" });
     await base44.functions.invoke("sendEmail", {
@@ -540,13 +543,13 @@ export default function AdminPanel() {
         body: `Thank you for applying to join HostKeep.<br><br>After reviewing your application, we are unable to approve it at this time.<br><br><strong>Reason:</strong><br>${note.trim()}<br><br>If you have questions, contact <a href="mailto:hello@hostkeepdigital.co.uk" style="color:#0d9488;">hello@hostkeepdigital.co.uk</a>.`,
       }),
     });
-    toast.success(`${member.full_name} rejected`);
+    toast.success(`${memberName(member)} rejected`);
     setML(member.id, null);
     fetchMembers();
   };
 
 const handleDelete = async (member) => {
- if (!window.confirm(`Delete ${member.full_name}? This will remove their account and all credentials. This cannot be undone.`)) return;
+ if (!window.confirm(`Delete ${memberName(member)}? This will remove their account and all credentials. This cannot be undone.`)) return;
  setML(member.id, "delete");
  try {
    await base44.functions.invoke("deleteAccount", { admin_delete_email: member.email, session_token: localStorage.getItem("session_token") });
@@ -563,7 +566,7 @@ const handleApproveGuestAsHost = async (member) => {
  setML(member.id, "approve_guest");
  try {
    await base44.functions.invoke("approveGuestAsHost", { member_id: member.id });
-   toast.success(`${member.full_name} approved as host — can now access Host Dashboard`);
+   toast.success(`${memberName(member)} approved as host — can now access Host Dashboard`);
  } catch (e) {
    toast.error("Approval failed");
    console.error(e);
@@ -573,16 +576,16 @@ const handleApproveGuestAsHost = async (member) => {
 };
 
 const handleBan = async (member) => {
-   const reason = window.prompt(`Ban reason for ${member.full_name} (this will strip their founding member access and auto-promote the next waitlisted person in their area):`);
+   const reason = window.prompt(`Ban reason for ${memberName(member)} (this will strip their founding member access and auto-promote the next waitlisted person in their area):`);
    if (reason === null) return;
    setML(member.id, "ban");
    try {
      const res = await base44.functions.invoke("banFoundingMember", { member_id: member.id, ban_reason: reason || "Admin action", session_token: localStorage.getItem("session_token") });
      const promoted = res.data?.promoted;
      if (promoted) {
-       toast.success(`${member.full_name} banned. Waitlist member ${promoted.full_name} has been invited.`);
+       toast.success(`${memberName(member)} banned. Waitlist member ${memberName(promoted)} has been invited.`);
      } else {
-       toast.success(`${member.full_name} banned. No eligible waitlist members found to promote.`);
+       toast.success(`${memberName(member)} banned. No eligible waitlist members found to promote.`);
      }
    } catch (e) {
      toast.error("Ban failed");
@@ -625,7 +628,7 @@ const handleDocApprove = async (member) => {
        await base44.functions.invoke("checkApprovalGates", { user_id: member.user_id });
      }
 
-     toast.success(`${member.full_name} — document approved`);
+     toast.success(`${memberName(member)} — document approved`);
    } catch (e) {
      toast.error("Approval failed");
      console.error(e);
@@ -664,7 +667,7 @@ const handleDocFail = async (member, isAttempt2) => {
         body: `Your verification document has been reviewed by our team and deemed unsatisfactory.<br><br>${attemptBody}<br><br>You will find the upload option on your property verification page, in the same place as when you first submitted your document.<br><br>If you have any questions, contact <a href="mailto:hello@hostkeepdigital.co.uk">hello@hostkeepdigital.co.uk</a>.`,
       }),
      });
-     toast.success(`${member.full_name} — document failed, member notified`);
+     toast.success(`${memberName(member)} — document failed, member notified`);
    } catch (e) {
      toast.error("Document fail action failed");
      console.error(e);
@@ -674,7 +677,7 @@ const handleDocFail = async (member, isAttempt2) => {
   };
 
 const handleResetMember = async (member) => {
-  if (!window.confirm(`Reset ${member.full_name} back to Pending? This clears their onboarding progress.`)) return;
+  if (!window.confirm(`Reset ${memberName(member)} back to Pending? This clears their onboarding progress.`)) return;
   setML(member.id, "reset");
   try {
     await base44.entities.FoundingMember.update(member.id, {
@@ -690,7 +693,7 @@ const handleResetMember = async (member) => {
         await base44.entities.VerificationDocuments.update(doc.id, { verification_status: "pending" });
       }
     }
-    toast.success(`${member.full_name} reset to Pending`);
+    toast.success(`${memberName(member)} reset to Pending`);
   } catch (e) {
     toast.error("Reset failed");
     console.error(e);
@@ -700,11 +703,11 @@ const handleResetMember = async (member) => {
 };
 
 const handleDeleteMember = async (member) => {
-  if (!window.confirm(`Permanently delete ${member.full_name} and all associated records? This cannot be undone.`)) return;
+  if (!window.confirm(`Permanently delete ${memberName(member)} and all associated records? This cannot be undone.`)) return;
   setML(member.id, "delete");
   try {
     await base44.functions.invoke("deleteFoundingMember", { member_id: member.id, user_id: member.user_id, session_token: getSessionToken() });
-    toast.success(`${member.full_name} and all associated records deleted`);
+    toast.success(`${memberName(member)} and all associated records deleted`);
   } catch (e) {
     toast.error("Delete failed: " + e.message);
     console.error(e);
@@ -742,12 +745,12 @@ const DOC_LABELS = { government_id: "Government ID", selfie: "Selfie with ID", u
       subject: "Your verification documents have been approved — HostKeep",
       html: buildEmail({
         heading: "Documents Approved ✓",
-        body: `Great news, ${member.full_name?.split(" ")[0] || "there"} — your verification documents have been reviewed and approved by our team.<br><br>You're almost ready to publish your property on HostKeep. To go live, you'll need two more things in place:<br><br><strong>1. A HostKeep subscription</strong> — choose the plan that works best for you from your dashboard.<br><br><strong>2. A connected Stripe account</strong> — this is how you'll receive payments from guests directly and securely.<br><br>Once both are confirmed, your property will be ready to publish and visible to guests across Cornwall.<br><br>If you have any questions or need a hand getting set up, we're always happy to help — just drop us a message at <a href="mailto:hello@hostkeepdigital.co.uk" style="color:#0d9488;">hello@hostkeepdigital.co.uk</a>.`,
+        body: `Great news, ${memberName(member)?.split(" ")[0] || "there"} — your verification documents have been reviewed and approved by our team.<br><br>You're almost ready to publish your property on HostKeep. To go live, you'll need two more things in place:<br><br><strong>1. A HostKeep subscription</strong> — choose the plan that works best for you from your dashboard.<br><br><strong>2. A connected Stripe account</strong> — this is how you'll receive payments from guests directly and securely.<br><br>Once both are confirmed, your property will be ready to publish and visible to guests across Cornwall.<br><br>If you have any questions or need a hand getting set up, we're always happy to help — just drop us a message at <a href="mailto:hello@hostkeepdigital.co.uk" style="color:#0d9488;">hello@hostkeepdigital.co.uk</a>.`,
         buttonText: "Go to My Dashboard",
         buttonUrl: "https://hostkeepdigital.co.uk/HostDashboard",
       }),
     });
-    toast.success(`${member.full_name} — all documents approved`);
+    toast.success(`${memberName(member)} — all documents approved`);
   } else {
     // At least one rejected — build summary and advance fail state
     const summaryLines = Object.entries(decisions)
@@ -774,7 +777,7 @@ const DOC_LABELS = { government_id: "Government ID", selfie: "Selfie with ID", u
         body: `Your verification documents have been reviewed by our team. Here is a summary of the outcome:<br><br>${summaryLines}<br><br>The following document(s) require attention: <strong>${failedLabels.join(" and ")}</strong>.<br><br>Please log in and resubmit only the failed documents at your earliest convenience.<br><br>If you have any questions, contact us at <a href="mailto:hello@hostkeepdigital.co.uk">hello@hostkeepdigital.co.uk</a>.`,
       }),
     });
-    toast.success(`${member.full_name} — decision submitted, member notified`);
+    toast.success(`${memberName(member)} — decision submitted, member notified`);
   }
   await fetchMembers();
   await queryClient.invalidateQueries(["all-verification-docs"]);
@@ -807,7 +810,7 @@ const handleDocBan = async (member) => {
         body: `We are writing to inform you that your HostKeep account has been suspended.<br><br>After three attempts, we were unable to approve your verification documentation. As a result, your account and any associated properties have been suspended and you will no longer be able to publish on HostKeep.<br><br>If you believe this is an error, please contact us at <a href="mailto:hello@hostkeepdigital.co.uk">hello@hostkeepdigital.co.uk</a>.`,
       }),
     });
-    toast.success(`${member.full_name} banned — documentation failure`);
+    toast.success(`${memberName(member)} banned — documentation failure`);
   } catch (e) {
     toast.error("Ban action failed");
     console.error(e);
@@ -955,7 +958,7 @@ const handleDocBan = async (member) => {
 
               return (
                 <tr key={m.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3 font-medium text-gray-900">{m.full_name}</td>
+                  <td className="px-4 py-3 font-medium text-gray-900">{[m.forename, m.middle_name, m.surname].filter(Boolean).join(" ") || "—"}</td>
                   <td className="px-4 py-3 text-gray-500">{m.email}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${m.role==="host" ? "bg-teal-50 text-teal-700" : "bg-purple-50 text-purple-700"}`}>
