@@ -450,19 +450,29 @@ export default function AdminPanel() {
 
   const fetchMembers = async () => {
     setLoading(true);
-    const res = await callFn("foundingOps", { op: "listMembers", session_token: getSessionToken() });
-    if (!res || !Array.isArray(res.members)) {
-      console.error("foundingOps listMembers failed:", res);
-      toast.error(res?.error ? `Could not load members: ${res.error}` : "Could not load members — check admin session");
+    try {
+      const res = await base44.functions.invoke("foundingOps", {
+        op: "listMembers",
+        session_token: getSessionToken(),
+      });
+      const payload = res?.data ?? res;
+      if (!payload || !Array.isArray(payload.members)) {
+        console.error("foundingOps listMembers failed:", payload);
+        toast.error(payload?.error ? `Could not load members: ${payload.error}` : "Could not load members");
+        setMembers([]);
+        return;
+      }
+      const data = payload.members.sort((a, b) =>
+        new Date(b.signup_timestamp || 0) - new Date(a.signup_timestamp || 0)
+      );
+      setMembers(data);
+    } catch (e) {
+      console.error("foundingOps invoke threw:", e);
+      toast.error("Could not load members — check admin session");
       setMembers([]);
+    } finally {
       setLoading(false);
-      return;
     }
-    const data = res.members.sort((a, b) =>
-      new Date(b.signup_timestamp || 0) - new Date(a.signup_timestamp || 0)
-    );
-    setMembers(data);
-    setLoading(false);
   };
 
   const fetchSubscriptions = async () => {
