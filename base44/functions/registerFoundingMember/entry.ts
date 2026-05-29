@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
     role,
   });
   if (existing && existing.length > 0) {
-    return Response.json({ error: "duplicate_email", status: existing[0].approval_status });
+    return Response.json({ error: "duplicate_email", status: existing[0].approval_status }, { status: 200 });
   }
 
   // Create FoundingMember record
