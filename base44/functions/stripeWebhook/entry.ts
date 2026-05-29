@@ -1,4 +1,4 @@
-import { createClientFromRequest } from "npm:@base44/sdk@0.8.25";
+import { createClientFromRequest } from "npm:@base44/sdk@0.8.25"; 
 import Stripe from 'npm:stripe@14';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
