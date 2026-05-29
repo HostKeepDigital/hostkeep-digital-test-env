@@ -83,10 +83,10 @@ const registerFoundingMemberTests = [
     },
   },
   {
-    id: "rfm_func_sends_verification_email",
+    id: "rfm_func_creates_record_in_interest_state",
     group: "registerFoundingMember",
-    label: "Functional — sends verification email and creates EmailVerificationCode record",
-    claudeHint: "Check base44/functions/registerFoundingMember/entry.ts — must call sendVerificationCode or equivalent to create an EmailVerificationCode and send the founding member email.",
+    label: "Functional — creates the FoundingMember record (does NOT send the code; that is sendVerificationCode's job)",
+    claudeHint: "registerFoundingMember is beta-only and owns record creation ONLY. Sending the verification code is a separate, permanent function (sendVerificationCode) called by FoundingHost.jsx. This test must assert the record is created in 'interest' state, NOT that an EmailVerificationCode exists.",
     run: async () => {
       const testEmail = `rfm-verify-${Date.now()}@integration.test`;
       const { status, data } = await callFn("registerFoundingMember", {
@@ -94,12 +94,13 @@ const registerFoundingMemberTests = [
         role: "host", postcode: "TR1 1AA",
       });
       if (status !== 200 && status !== 201) throw new Error(`Expected 200/201, got ${status}: ${JSON.stringify(data)}`);
-      await new Promise(r => setTimeout(r, 1000));
-      const { data: codeData } = await callFn("seedTestBooking", { action: "readEmailVerificationCode", email: testEmail });
+      await new Promise(r => setTimeout(r, 500));
+      const { data: readData } = await callFn("seedTestBooking", { action: "readFoundingMemberByEmail", email: testEmail });
       await callFn("seedTestBooking", { action: "deleteFoundingMemberByEmail", email: testEmail });
-      if (codeData?.record?.id) await callFn("seedTestBooking", { action: "deleteEmailVerificationCode", id: codeData.record.id });
-      if (!codeData?.record) throw new Error("No EmailVerificationCode found after registerFoundingMember — verification email may not have been sent");
-      return `Passed — EmailVerificationCode created, verification email triggered`;
+      if (!readData?.record) throw new Error("No FoundingMember record created by registerFoundingMember");
+      if (readData.record.approval_status !== "interest") throw new Error(`Expected approval_status 'interest', got '${readData.record.approval_status}'`);
+      if (!readData.record.signup_timestamp) throw new Error("signup_timestamp not set on created record");
+      return `Passed — FoundingMember created in 'interest' state (code-send correctly delegated to sendVerificationCode)`;
     },
   },
   {
