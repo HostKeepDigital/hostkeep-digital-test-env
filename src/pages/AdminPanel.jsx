@@ -451,7 +451,14 @@ export default function AdminPanel() {
   const fetchMembers = async () => {
     setLoading(true);
     const res = await callFn("foundingOps", { op: "listMembers", session_token: getSessionToken() });
-    const data = (res.members || []).sort((a, b) =>
+    if (!res || !Array.isArray(res.members)) {
+      console.error("foundingOps listMembers failed:", res);
+      toast.error(res?.error ? `Could not load members: ${res.error}` : "Could not load members — check admin session");
+      setMembers([]);
+      setLoading(false);
+      return;
+    }
+    const data = res.members.sort((a, b) =>
       new Date(b.signup_timestamp || 0) - new Date(a.signup_timestamp || 0)
     );
     setMembers(data);
