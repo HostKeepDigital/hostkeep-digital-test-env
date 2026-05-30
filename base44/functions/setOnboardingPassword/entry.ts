@@ -41,30 +41,43 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const serviceRole = base44.asServiceRole;
 
-    const { email, password, forename, middle_name, surname } = await req.json();
+    const { onboarding_token, password, forename, middle_name, surname } = await req.json();
 
-    if (!email || !password) {
+    if (!onboarding_token || !password) {
       return Response.json(
         { success: false, error: "missing_fields" },
         { status: 400 }
       );
     }
 
-    const normalisedEmail = email.toLowerCase().trim();
+    // The onboarding_token is the admin-issued credential. Identity is derived from the
+    // FoundingMember it matches — NEVER from a caller-supplied email. This is the gate that
+    // stops anyone who merely knows an email from setting that account's password.
+    const matches = await serviceRole.entities.FoundingMember.filter({ onboarding_token });
+    const member = matches?.[0];
+    if (!member) {
+      return Response.json({ success: false, error: "invalid_token" }, { status: 401 });
+    }
+
+    // Reject expired tokens.
+    if (!member.onboarding_expires_at || new Date(member.onboarding_expires_at) < new Date()) {
+      return Response.json({ success: false, error: "token_expired" }, { status: 410 });
+    }
+
+    const normalisedEmail = (member.email || "").toLowerCase().trim();
+    if (!normalisedEmail) {
+      return Response.json({ success: false, error: "member_has_no_email" }, { status: 400 });
+    }
 
     // Hash password
     const salt = Deno.env.get("HASH_SALT") || "";
     const password_hash = await hashPassword(password, salt);
 
-    // Find user across all possible user types
-    const userLookup = await findUserByEmail(serviceRole, normalisedEmail);
-
-    if (!userLookup) {
-      return Response.json(
-        { success: false, error: "user_not_found" },
-        { status: 404 }
-      );
-    }
+    const userLookup = {
+      user: member,
+      role: member.role || "host",
+      founding_member_id: member.id,
+    };
 
     const { role, founding_member_id } = userLookup;
 
