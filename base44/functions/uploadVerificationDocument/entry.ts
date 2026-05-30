@@ -37,21 +37,16 @@ Deno.serve(async (req) => {
     const adminRoles = await sr.entities.UserRole.filter({ role: "admin" });
     if (adminRoles?.length > 0) {
       const adminUserId = adminRoles[0].user_id;
-      const appId = Deno.env.get("BASE44_APP_ID");
       const serviceKey = Deno.env.get("LOCK_ACCESS_TOKEN");
       const formattedType = document_type.replace(/_/g, " ");
 
-      await fetch(`/api/apps/${appId}/functions/sendNotification`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          service_key: serviceKey,
-          user_id: adminUserId,
-          type: "general",
-          title: "New verification document uploaded",
-          body: `A ${formattedType} document has been uploaded and is awaiting review.`,
-          link: "/AdminPanel",
-        }),
+      await sr.functions.invoke("sendNotification", {
+        service_key: serviceKey,
+        user_id: adminUserId,
+        type: "general",
+        title: "New verification document uploaded",
+        body: `A ${formattedType} document has been uploaded and is awaiting review.`,
+        link: "/AdminPanel",
       });
     }
 
