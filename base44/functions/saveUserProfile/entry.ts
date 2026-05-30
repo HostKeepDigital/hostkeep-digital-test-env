@@ -13,13 +13,25 @@ Deno.serve(async (req) => {
     }
     const base44 = base44client;
     const sr = base44.asServiceRole;
-    if (!email || !forename || !surname) return Response.json({ success: false, error: "missing fields" }, { status: 400 });
-    const norm = email.toLowerCase().trim();
+
+    // Identity comes from the session — NEVER from the request body.
+    // target_user_id / body email are deliberately ignored so a caller cannot write to another user's profile.
+    const norm = (session.email || "").toLowerCase().trim();
+    if (!norm) return Response.json({ success: false, error: "no_session_email" }, { status: 400 });
+
+    // Merge/patch: only fields actually present in the payload are changed; omitted fields are preserved.
+    const patch = {};
+    if (forename !== undefined) patch.forename = forename;
+    if (middle_name !== undefined) patch.middle_name = middle_name;
+    if (surname !== undefined) patch.surname = surname;
+    if (phone !== undefined) patch.phone = phone;
+    if (location !== undefined) patch.location = location;
+
     const existing = await sr.entities.UserProfile.filter({ email: norm });
     if (existing.length > 0) {
-      await sr.entities.UserProfile.update(existing[0].id, { forename, middle_name: middle_name || "", surname, phone: phone || "", location: location || "" });
+      await sr.entities.UserProfile.update(existing[0].id, patch);
     } else {
-      await sr.entities.UserProfile.create({ email: norm, forename, middle_name: middle_name || "", surname, phone: phone || "", location: location || "" });
+      await sr.entities.UserProfile.create({ email: norm, forename: "", middle_name: "", surname: "", phone: "", location: "", ...patch });
     }
     return Response.json({ success: true });
   } catch (e) {
