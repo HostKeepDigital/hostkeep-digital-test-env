@@ -236,6 +236,13 @@ if (action === "createEmailVerificationCode") {
       return Response.json({ record: records?.[0] || null });
     }
 
+    if (action === "readUserProfileById") {
+      const { user_id } = body;
+      if (!user_id) return Response.json({ error: "missing_user_id" }, { status: 400 });
+      const records = await sr.entities.UserProfile.filter({ user_id });
+      return Response.json({ profile: records?.[0] || null });
+    }
+
     if (action === "deleteFoundingMemberByEmail") {
       const { email } = body;
       if (!email) return Response.json({ error: "missing_email" }, { status: 400 });
