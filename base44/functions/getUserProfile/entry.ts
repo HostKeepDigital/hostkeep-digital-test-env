@@ -27,6 +27,7 @@ Deno.serve(async (req) => {
     if (!lookupEmail) return Response.json({ success: true, profile: {} });
     const norm = lookupEmail.toLowerCase().trim();
 const records = await sr.entities.UserProfile.filter({ email: norm });
+const profileCount = records?.length || 0;
 let u = records?.[0] || null;
 
 // Fallback to User entity if no UserProfile exists yet
@@ -45,8 +46,8 @@ if (!u) {
   }
 }
 
-if (!u) return Response.json({ success: true, profile: { email: norm } });
-return Response.json({ success: true, profile: { email: norm, forename: u.forename || "", middle_name: u.middle_name || "", surname: u.surname || "", phone: u.phone || "", location: u.location || "", notification_preferences: u.notification_preferences || null } });} catch (e) {
+if (!u) return Response.json({ success: true, profile: { email: norm }, profile_count: profileCount });
+return Response.json({ success: true, profile: { email: norm, forename: u.forename || "", middle_name: u.middle_name || "", surname: u.surname || "", phone: u.phone || "", location: u.location || "", notification_preferences: u.notification_preferences || null }, profile_count: profileCount });} catch (e) {
     console.error("getUserProfile error:", e);
     return Response.json({ success: false, error: e.message }, { status: 500 });
   }
