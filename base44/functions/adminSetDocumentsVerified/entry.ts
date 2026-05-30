@@ -63,8 +63,7 @@ Deno.serve(async (req) => {
     }
 
     // The User entity has no email field, so it is addressed by id. User.get() returns 404 in
-    // all contexts here, so use filter({ id }) — the working pattern used by seedTestBooking's
-    // readUser and onNewUserRole.
+    // all contexts here, so use filter({ id }) — the working pattern from onNewUserRole.
     const users = await base44.asServiceRole.entities.User.filter({ id: user_id });
     const user = users?.[0];
     if (!user) {
