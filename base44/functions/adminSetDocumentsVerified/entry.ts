@@ -62,20 +62,19 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: "missing_user_id" }, { status: 400 });
     }
 
-    // Get User by email — email must be passed by caller (admin panel knows the user's email)
-    const userEmail = emailParam?.toLowerCase().trim() || null;
-    if (!userEmail) {
-      return Response.json({ success: false, error: "email_required" }, { status: 400 });
+    // The User entity has no email field — look it up via the user_id we were given.
+    // Update by user_id directly (the working pattern used elsewhere, e.g. banFoundingMember).
+    let user;
+    try {
+      user = await base44.asServiceRole.entities.User.get(user_id);
+    } catch (_) {
+      user = null;
     }
-
-    const users = await base44.asServiceRole.entities.User.filter({ email: userEmail });
-    const user = users?.[0];
     if (!user) {
       return Response.json({ success: false, error: "User not found" }, { status: 404 });
     }
 
-    // Update User.documents_verified using the internal record id from the filter result
-    await base44.asServiceRole.entities.User.update(user.id, { documents_verified: !!documents_verified });
+    await base44.asServiceRole.entities.User.update(user_id, { documents_verified: !!documents_verified });
     if (documents_verified) {
       const stripeVerified = user?.stripe_verified || false;
       const subscriptionActive = user?.subscription_active || false;
