@@ -145,17 +145,43 @@ const saveUserProfileTests = [
     run: async (sessionToken, user) => {
       if (!sessionToken) throw new Error("No session token — log in first");
       if (!user?.id) throw new Error("No user ID");
-      const poisonId = "000000000000000000000099";
-      await callFn("saveUserProfile", {
-        session_token: sessionToken,
-        target_user_id: poisonId,
-        forename: "INJECTED",
-        surname: "ATTACKER",
+
+      // Seed a SECOND real user with a known profile, so we can prove the write didn't bleed onto them.
+      const victimEmail = `sup-victim-${Date.now()}@integration.test`;
+      const seedRes = await callFn("seedTestBooking", {
+        action: "createUserProfile",
+        userProfile: { email: victimEmail, forename: "VICTIM_SAFE", surname: "Untouched" },
       });
-      await new Promise(r => setTimeout(r, 500));
-      const { data: targetData } = await callFn("seedTestBooking", { action: "readUserProfileById", user_id: poisonId });
-      if (targetData?.profile?.forename === "INJECTED") throw new Error(`Cross-user write succeeded — attacker forename written to target user's profile`);
-      return `Passed — target_user_id in payload ignored, own profile updated only`;
+      const victimId = seedRes?.data?.id;
+      if (!victimId) throw new Error("Failed to seed victim UserProfile");
+
+      try {
+        // Attacker (us) tries to redirect the write at the victim via both known vectors.
+        await callFn("saveUserProfile", {
+          session_token: sessionToken,
+          target_user_id: victimId,
+          email: victimEmail,            // also try to hijack via body email
+          forename: "INJECTED",
+          surname: "ATTACKER",
+        });
+        await new Promise(r => setTimeout(r, 700));
+
+        // 1) Victim's profile must be UNCHANGED.
+        const { data: victimData } = await callFn("seedTestBooking", { action: "readUserProfileByEmail", email: victimEmail });
+        if (victimData?.profile?.forename !== "VICTIM_SAFE") {
+          throw new Error(`Cross-user write succeeded — victim forename is now '${victimData?.profile?.forename}'`);
+        }
+
+        // 2) The write must have landed on OUR OWN profile (proves it wrote, just to the right place).
+        const { data: ownData } = await callFn("getUserProfile", { session_token: sessionToken });
+        if (ownData?.profile?.forename !== "INJECTED") {
+          throw new Error(`Write did not land on caller's own profile — got '${ownData?.profile?.forename}'`);
+        }
+
+        return `Passed — target_user_id and body email both ignored; write hit caller's own profile, victim untouched`;
+      } finally {
+        await callFn("seedTestBooking", { action: "deleteUserProfileById", id: victimId });
+      }
     },
   },
 ];
