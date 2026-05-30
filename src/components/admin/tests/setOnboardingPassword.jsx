@@ -104,7 +104,7 @@ const setOnboardingPasswordTests = [
       const testEmail = `sop-expired-${Date.now()}@integration.test`;
       const fakeToken = `tok_expired_${Date.now()}`;
       const expiredAt = new Date(Date.now() - 1000).toISOString();
-      const { data: fmData } = await callFn("seedTestBooking", {
+      const { data: fmResp } = await callFn("seedTestBooking", {
         action: "createFoundingMember",
         foundingMember: {
           forename: "Expired", surname: "Test", email: testEmail,
@@ -114,6 +114,7 @@ const setOnboardingPasswordTests = [
           onboarding_expires_at: expiredAt,
         },
       });
+      const fmData = fmResp?.data;
       if (!fmData?.id) throw new Error("Failed to seed FoundingMember");
       try {
         const { status, data } = await callFn("setOnboardingPassword", {
@@ -137,7 +138,7 @@ const setOnboardingPasswordTests = [
       const fakeToken = `tok_hash_${Date.now()}`;
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
       const rawPassword = "TestPassword123!";
-      const { data: fmData } = await callFn("seedTestBooking", {
+      const { data: fmResp } = await callFn("seedTestBooking", {
         action: "createFoundingMember",
         foundingMember: {
           forename: "Hash", surname: "Test", email: testEmail,
@@ -147,6 +148,7 @@ const setOnboardingPasswordTests = [
           onboarding_expires_at: expiresAt,
         },
       });
+      const fmData = fmResp?.data;
       if (!fmData?.id) throw new Error("Failed to seed FoundingMember");
       try {
         const { status, data } = await callFn("setOnboardingPassword", { onboarding_token: fakeToken, password: rawPassword });
@@ -178,7 +180,7 @@ const setOnboardingPasswordTests = [
       const fakeToken = `tok_signin_${Date.now()}`;
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
       const rawPassword = "TestPassword123!";
-      const { data: fmData } = await callFn("seedTestBooking", {
+      const { data: fmResp } = await callFn("seedTestBooking", {
         action: "createFoundingMember",
         foundingMember: {
           forename: "SignIn", surname: "Test", email: testEmail,
@@ -188,6 +190,7 @@ const setOnboardingPasswordTests = [
           onboarding_expires_at: expiresAt,
         },
       });
+      const fmData = fmResp?.data;
       if (!fmData?.id) throw new Error("Failed to seed FoundingMember");
       try {
         const { status, data } = await callFn("setOnboardingPassword", { onboarding_token: fakeToken, password: rawPassword });
