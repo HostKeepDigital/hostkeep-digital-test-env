@@ -306,6 +306,20 @@ if (action === "createEmailVerificationCode") {
       return Response.json({ data: records?.[0] || null });
     }
 
+    if (action === "createUserProfile") {
+      const { userProfile } = body;
+      if (!userProfile?.email) return Response.json({ error: "missing_email" }, { status: 400 });
+      const created = await sr.entities.UserProfile.create({
+        email: userProfile.email.toLowerCase().trim(),
+        forename: userProfile.forename || "",
+        middle_name: userProfile.middle_name || "",
+        surname: userProfile.surname || "",
+        phone: userProfile.phone || "",
+        location: userProfile.location || "",
+      });
+      return Response.json({ data: created });
+    }
+
     if (action === "deleteUserProfile") {
       const { email } = body;
       if (!email) return Response.json({ error: "missing_email" }, { status: 400 });
