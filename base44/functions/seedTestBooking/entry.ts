@@ -176,6 +176,20 @@ if (action === "createEmailVerificationCode") {
       return Response.json({ deleted: true });
     }
 
+    if (action === "createUser") {
+      const { user } = body;
+      const created = await sr.entities.User.create({
+        forename: user?.forename || "Test",
+        middle_name: user?.middle_name || null,
+        surname: user?.surname || "User",
+        role: user?.role || "guest",
+        stripe_verified: user?.stripe_verified || false,
+        subscription_active: user?.subscription_active || false,
+        documents_verified: user?.documents_verified || false,
+      });
+      return Response.json({ data: created });
+    }
+
     if (action === "deleteUser") {
       const { id } = body;
       if (!id) {
