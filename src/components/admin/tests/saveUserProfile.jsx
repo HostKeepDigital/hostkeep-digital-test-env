@@ -149,10 +149,10 @@ const saveUserProfileTests = [
       // Seed a real victim profile keyed by email (UserProfile has no user_id — email is the key).
       const victimEmail = `sup-victim-${Date.now()}@integration.test`;
       const seedRes = await callFn("seedTestBooking", {
-        action: "createUserProfile",
-        userProfile: { email: victimEmail, forename: "VICTIM_SAFE", surname: "Untouched" },
-      });
-      if (!seedRes?.data?.id) throw new Error("Failed to seed victim UserProfile");
+          action: "createUserProfile",
+          userProfile: { email: victimEmail, forename: "VICTIM_SAFE", surname: "Untouched" },
+        });
+        if (!seedRes?.data?.data?.id) throw new Error("Failed to seed victim UserProfile");
 
       try {
         // Attempt the hijack via BOTH vectors: target_user_id AND body email (the real one for this entity).
