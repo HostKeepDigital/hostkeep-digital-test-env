@@ -60,7 +60,7 @@ const setOnboardingPasswordTests = [
       const testEmail = `sop-func-${Date.now()}@integration.test`;
       const fakeToken = `tok_integration_${Date.now()}`;
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
-      const { data: fmData } = await callFn("seedTestBooking", {
+      const { data: fmResp } = await callFn("seedTestBooking", {
         action: "createFoundingMember",
         foundingMember: {
           forename: "Integration", surname: "Test", email: testEmail,
@@ -70,6 +70,7 @@ const setOnboardingPasswordTests = [
           onboarding_expires_at: expiresAt,
         },
       });
+      const fmData = fmResp?.data;
       if (!fmData?.id) throw new Error("Failed to seed FoundingMember");
       try {
         const { status, data } = await callFn("setOnboardingPassword", {
