@@ -1358,13 +1358,12 @@ const TESTS = [
     claudeHint: "base44/functions/adminSetDocumentsVerified/entry.ts — must update User.documents_verified via serviceRole.",
     run: async (sessionToken) => {
       if (!sessionToken) throw new Error("No session token — log in first");
-      const testEmail = `asdv-f1-${Date.now()}@integration.test`;
-      const { data: signUpData } = await callFn("customSignUp", { email: testEmail, password: "TestPassword123!", forename: "Test", surname: "User" });
-      if (!signUpData.success) throw new Error(`customSignUp failed: ${JSON.stringify(signUpData)}`);
-      await new Promise(r => setTimeout(r, 500));
-      const { data: credData } = await callFn("seedTestBooking", { action: "readUserCredentials", email: testEmail });
-      const userId = credData?.record?.user_id;
-      if (!userId) throw new Error("Failed to resolve user_id from UserCredentials");
+      const { data: userResp } = await callFn("seedTestBooking", {
+        action: "createUser",
+        user: { forename: "Test", surname: "User", role: "host" },
+      });
+      const userId = userResp?.data?.id;
+      if (!userId) throw new Error("Failed to seed User");
       try {
         const { data } = await callFn("adminSetDocumentsVerified", { session_token: sessionToken, user_id: userId, email: testEmail, documents_verified: true });
         if (!data.success) throw new Error(`Function failed: ${JSON.stringify(data)}`);
