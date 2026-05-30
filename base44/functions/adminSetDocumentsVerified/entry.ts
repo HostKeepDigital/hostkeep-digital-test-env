@@ -67,7 +67,19 @@ Deno.serve(async (req) => {
     const users = await base44.asServiceRole.entities.User.filter({ id: user_id });
     const user = users?.[0];
     if (!user) {
-      return Response.json({ success: false, error: "User not found" }, { status: 404 });
+      const allUsers = await base44.asServiceRole.entities.User.list();
+      const byList = (allUsers || []).find(u => u.id === user_id);
+      return Response.json({
+        success: false,
+        error: "User not found",
+        debug: {
+          user_id_received: user_id,
+          filter_matched: users?.length || 0,
+          total_users: allUsers?.length || 0,
+          found_via_list: !!byList,
+          sample_ids: (allUsers || []).slice(0, 8).map(u => u.id),
+        },
+      }, { status: 404 });
     }
 
     await base44.asServiceRole.entities.User.update(user_id, { documents_verified: !!documents_verified });
