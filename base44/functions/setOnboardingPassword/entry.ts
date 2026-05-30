@@ -56,7 +56,7 @@ Deno.serve(async (req) => {
     const matches = await serviceRole.entities.FoundingMember.filter({ onboarding_token });
     const member = matches?.[0];
     if (!member) {
-      return Response.json({ success: false, error: "invalid_token" }, { status: 401 });
+      return Response.json({ success: false, error: "token_not_found" }, { status: 404 });
     }
 
     // Reject expired tokens.
