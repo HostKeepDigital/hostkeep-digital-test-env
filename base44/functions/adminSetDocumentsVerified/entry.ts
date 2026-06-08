@@ -58,31 +58,20 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: "Forbidden: Admin access required" }, { status: 403 });
     }
 
-    if (!user_id) {
+if (!user_id) {
       return Response.json({ success: false, error: "missing_user_id" }, { status: 400 });
     }
-
-    // The User entity has no email field, so it is addressed by id. User.get() returns 404 in
-    // all contexts here, so use filter({ id }) — the working pattern from onNewUserRole.
-    const users = await base44.asServiceRole.entities.User.filter({ id: user_id });
-    const user = users?.[0];
-    if (!user) {
-      const allUsers = await base44.asServiceRole.entities.User.list();
-      const byList = (allUsers || []).find(u => u.id === user_id);
-      return Response.json({
-        success: false,
-        error: "User not found",
-        debug: {
-          user_id_received: user_id,
-          filter_matched: users?.length || 0,
-          total_users: allUsers?.length || 0,
-          found_via_list: !!byList,
-          sample_ids: (allUsers || []).slice(0, 8).map(u => u.id),
-        },
-      }, { status: 404 });
+    if (!emailParam) {
+      return Response.json({ success: false, error: "missing_email" }, { status: 400 });
     }
 
-    await base44.asServiceRole.entities.User.update(user_id, { documents_verified: !!documents_verified });
+    const users = await base44.asServiceRole.entities.User.filter({ email: emailParam });
+    const user = users?.[0];
+    if (!user) {
+      return Response.json({ success: false, error: "User not found" }, { status: 404 });
+    }
+
+    await base44.asServiceRole.entities.User.update(user.id, { documents_verified: !!documents_verified });
     if (documents_verified) {
       const stripeVerified = user?.stripe_verified || false;
       const subscriptionActive = user?.subscription_active || false;
