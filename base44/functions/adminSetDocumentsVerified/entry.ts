@@ -91,7 +91,7 @@ if (!user_id) {
         user_list_total: allUsers?.length ?? "null",
         user_inList_docs_verified: userInList ? userInList.documents_verified : "NOT_IN_LIST",
       }
-    });
+    }); 
     // ── END DIAGNOSTIC ──
 
     await base44.asServiceRole.entities.User.update(user_id, { documents_verified: !!documents_verified });
