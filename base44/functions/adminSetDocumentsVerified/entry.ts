@@ -65,10 +65,34 @@ if (!user_id) {
       return Response.json({ success: false, error: "missing_email" }, { status: 400 });
     }
 
-    const creds = await base44.asServiceRole.entities.UserCredentials.filter({ email: emailParam });
-    if (!creds?.[0]) {
-      return Response.json({ success: false, error: "User not found" }, { status: 404 });
-    }
+    // ── TEMPORARY DIAGNOSTIC — remove once we read the output ──
+    const credsByEmail = await base44.asServiceRole.entities.UserCredentials.filter({ email: emailParam });
+    const allCreds = await base44.asServiceRole.entities.UserCredentials.list();
+    const credsListEmailMatch = (allCreds || []).filter(c => c.email === emailParam).length;
+
+    await base44.asServiceRole.entities.User.update(user_id, { documents_verified: true });
+    const userById = await base44.asServiceRole.entities.User.filter({ id: user_id });
+    const userByEmail = await base44.asServiceRole.entities.User.filter({ email: emailParam });
+    const allUsers = await base44.asServiceRole.entities.User.list();
+    const userInList = (allUsers || []).find(u => u.id === user_id);
+
+    return Response.json({
+      success: false,
+      diag: {
+        emailParam,
+        emailParamLen: emailParam?.length,
+        creds_filterByEmail_count: credsByEmail?.length ?? "null",
+        creds_list_total: allCreds?.length ?? "null",
+        creds_list_emailMatch: credsListEmailMatch,
+        creds_sampleEmails: (allCreds || []).slice(0, 5).map(c => c.email),
+        user_update_attempted_id: user_id,
+        user_filterById_count: userById?.length ?? "null",
+        user_filterByEmail_count: userByEmail?.length ?? "null",
+        user_list_total: allUsers?.length ?? "null",
+        user_inList_docs_verified: userInList ? userInList.documents_verified : "NOT_IN_LIST",
+      }
+    });
+    // ── END DIAGNOSTIC ──
 
     await base44.asServiceRole.entities.User.update(user_id, { documents_verified: !!documents_verified });
     if (documents_verified) {
