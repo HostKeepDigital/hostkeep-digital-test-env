@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { session_token, user_id, email: emailParam, documents_verified, rejection_reason, rejection_notes } = body;
+    const { session_token, user_id, email: emailParam, documents_verified, stripe_verified, subscription_active, rejection_reason, rejection_notes } = body;
     // Auth — session required
     if (!session_token) {
       return Response.json({ success: false, error: "Unauthorized" }, { status: 401 });
@@ -65,16 +65,15 @@ if (!user_id) {
       return Response.json({ success: false, error: "missing_email" }, { status: 400 });
     }
 
-    const users = await base44.asServiceRole.entities.User.filter({ email: emailParam });
-    const user = users?.[0];
-    if (!user) {
+    const creds = await base44.asServiceRole.entities.UserCredentials.filter({ email: emailParam });
+    if (!creds?.[0]) {
       return Response.json({ success: false, error: "User not found" }, { status: 404 });
     }
 
-    await base44.asServiceRole.entities.User.update(user.id, { documents_verified: !!documents_verified });
+    await base44.asServiceRole.entities.User.update(user_id, { documents_verified: !!documents_verified });
     if (documents_verified) {
-      const stripeVerified = user?.stripe_verified || false;
-      const subscriptionActive = user?.subscription_active || false;
+      const stripeVerified = stripe_verified ?? false;
+      const subscriptionActive = subscription_active ?? false;
 
       let notifBody = "Your documents have been verified.";
 
